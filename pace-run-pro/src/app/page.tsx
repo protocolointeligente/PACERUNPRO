@@ -1,15 +1,15 @@
 import Link from "next/link";
-import { Check, Zap, ArrowRight, Star } from "lucide-react";
+import { Zap, ArrowRight, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   platformStats,
-  pricingPlans,
   testimonials,
   landingFeatures,
   integrationLogos,
 } from "@/lib/mock-data";
+import { PricingSection } from "@/components/landing/pricing-section";
 
 export default function LandingPage() {
   return (
@@ -64,12 +64,12 @@ export default function LandingPage() {
             profissional e gestão completa de atletas — em um único lugar, em português.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/aluno/dashboard">
+            <Link href="/assinar">
               <Button variant="primary" size="lg" className="gap-2">
                 Começar grátis <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/treinador/dashboard">
+            <Link href="/aluno/dashboard">
               <Button variant="outline" size="lg">
                 Ver demonstração
               </Button>
@@ -169,71 +169,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="precos" className="py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-16 text-center">
-            <Badge variant="warning" className="mb-4">Preços</Badge>
-            <h2 className="font-display text-4xl font-extrabold sm:text-5xl">
-              Plano certo para{" "}
-              <span className="gradient-text">cada fase</span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-text-muted">
-              Comece grátis, sem cartão de crédito. Faça upgrade quando crescer.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {pricingPlans.map((plan) => (
-              <div
-                key={plan.id}
-                className={[
-                  "relative flex flex-col rounded-2xl border p-8 shadow-[0_8px_30px_rgba(0,0,0,0.35)] transition-all duration-200",
-                  plan.highlight
-                    ? "border-primary/60 bg-primary/10 backdrop-blur-sm"
-                    : "border-border bg-card",
-                ].join(" ")}
-              >
-                {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge variant="primary" className="shadow-lg shadow-primary/25">
-                      {plan.badge}
-                    </Badge>
-                  </div>
-                )}
-                <div className="mb-6">
-                  <h3 className="font-display text-xl font-bold text-white">{plan.name}</h3>
-                  <p className="mt-1 text-sm text-text-muted">{plan.subtitle}</p>
-                </div>
-                <div className="mb-8">
-                  <div className="flex items-end gap-1">
-                    <span className="font-display text-4xl font-extrabold text-white">
-                      R$ {plan.price}
-                    </span>
-                    <span className="mb-1 text-sm text-text-muted">/{plan.period}</span>
-                  </div>
-                </div>
-                <ul className="mb-8 flex-1 space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2.5 text-sm text-text-muted">
-                      <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/aluno/dashboard">
-                  <Button
-                    variant={plan.highlight ? "primary" : "outline"}
-                    size="md"
-                    className="w-full"
-                  >
-                    {plan.cta}
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <PricingSection />
 
       {/* Testimonials */}
       <section className="py-24 sm:py-32">
