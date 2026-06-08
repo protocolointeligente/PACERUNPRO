@@ -1,0 +1,643 @@
+// Pace Run Pro — modelo de dados
+// PostgreSQL + Prisma. Reflete as entidades centrais do produto:
+// gestão de atletas/treinadores, prescrição (corrida e força),
+// periodização, testes de performance, check-ins, integrações e cobrança.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Identidade & contas
+// ────────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  COACH
+  ATHLETE
+}
+
+enum Sex {
+  MASCULINO
+  FEMININO
+  OUTRO
+}
+
+enum Goal {
+  CINCO_KM
+  DEZ_KM
+  VINTE_E_UM_KM
+  QUARENTA_E_DOIS_KM
+  ULTRAMARATONA
+  EMAGRECIMENTO
+  PERFORMANCE
+  RETORNO_AS_CORRIDAS
+}
+
+enum ExperienceLevel {
+  INICIANTE
+  INTERMEDIARIO
+  AVANCADO
+  PRO
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String
+  avatarUrl     String?
+  role          UserRole @default(ATHLETE)
+  phone         String?
+  city          String?
+  state         String?
+  emailVerified DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  athlete       Athlete?
+  coach         Coach?
+  notifications Notification[]
+  subscriptions Subscription[]
+  payments      Payment[]
+  devices       ConnectedDevice[]
+  feedPosts     FeedPost[]
+  feedComments  FeedComment[]
+  feedLikes     FeedLike[]
+
+  @@map("users")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Atletas & treinadores
+// ────────────────────────────────────────────────────────────────────────────
+
+model Athlete {
+  id                String          @id @default(cuid())
+  userId            String          @unique
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coachId           String?
+  coach             Coach?          @relation(fields: [coachId], references: [id])
+
+  birthDate         DateTime?
+  sex               Sex?
+  heightCm          Float?
+  weightKg          Float?
+  goal              Goal?
+  level             ExperienceLevel @default(INICIANTE)
+  weeklyAvailability Int?           // dias por semana
+  availableMinutes   Int?           // minutos por sessão
+  injuryHistory      String?
+  raceDate           DateTime?
+  recentBestTime     String?
+  status             String          @default("ativo") // ativo | risco | inativo
+  adherenceRate      Float           @default(0) // 0–1
+  recoveryScore      Float           @default(0) // 0–1
+
+  metrics            Metric[]
+  checkins           CheckIn[]
+  performanceTests   PerformanceTest[]
+  trainingPlans      TrainingPlan[]
+  workoutLogs        WorkoutLog[]
+  races              Race[]
+  achievements       Achievement[]
+  teamMemberships    TeamMember[]
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("athletes")
+}
+
+model Coach {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credential   String?  // ex.: CREF 014626-G/MG
+  bio          String?
+  specialties  String[]
+
+  athletes     Athlete[]
+  teams        Team[]
+  trainingPlans TrainingPlan[]
+  exercises    Exercise[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("coaches")
+}
+
+model Team {
+  id        String       @id @default(cuid())
+  name      String
+  coachId   String
+  coach     Coach        @relation(fields: [coachId], references: [id])
+  members   TeamMember[]
+  createdAt DateTime     @default(now())
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  athleteId String
+  athlete   Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime @default(now())
+
+  @@unique([teamId, athleteId])
+  @@map("team_members")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Periodização & planos de treino
+// ────────────────────────────────────────────────────────────────────────────
+
+enum CyclePhase {
+  BASE
+  CONSTRUCAO
+  ESPECIFICO
+  POLIMENTO
+  COMPETICAO
+  RECUPERACAO
+}
+
+model TrainingPlan {
+  id          String   @id @default(cuid())
+  athleteId   String
+  athlete     Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  coachId     String
+  coach       Coach    @relation(fields: [coachId], references: [id])
+
+  name        String
+  goal        Goal
+  raceDate    DateTime?
+  macrocycle  String?  // nome/descrição do macrociclo
+  phase       CyclePhase @default(BASE)
+  startDate   DateTime
+  endDate     DateTime
+
+  weeks       TrainingWeek[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("training_plans")
+}
+
+model TrainingWeek {
+  id           String     @id @default(cuid())
+  planId       String
+  plan         TrainingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  weekNumber   Int
+  mesocycle    String?
+  phase        CyclePhase @default(BASE)
+  startDate    DateTime
+  endDate      DateTime
+  targetLoad   Float?     // carga semanal planejada (TRIMP/UA)
+  targetVolumeKm Float?
+  released     Boolean    @default(false) // liberação semanal pelo treinador
+  releasedAt   DateTime?
+
+  workouts     Workout[]
+
+  @@unique([planId, weekNumber])
+  @@map("training_weeks")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Treinos
+// ────────────────────────────────────────────────────────────────────────────
+
+enum WorkoutType {
+  RODAGEM_LEVE
+  INTERVALADO_CURTO
+  INTERVALADO_LONGO
+  TEMPO_RUN
+  FARTLEK
+  PROGRESSIVO
+  LONGAO
+  REGENERATIVO
+  SUBIDA
+  TECNICA
+  PROVA
+  FORCA
+  FUNCIONAL
+  MOBILIDADE
+  RECUPERACAO
+}
+
+enum WorkoutStatus {
+  AGENDADO
+  LIBERADO
+  CONCLUIDO
+  PERDIDO
+  AJUSTADO
+}
+
+model Workout {
+  id            String        @id @default(cuid())
+  weekId        String
+  week          TrainingWeek  @relation(fields: [weekId], references: [id], onDelete: Cascade)
+
+  date          DateTime
+  type          WorkoutType
+  title         String
+  status        WorkoutStatus @default(AGENDADO)
+
+  objective     String?
+  warmup        String?
+  mainSet       String?
+  cooldown      String?
+  notes         String?
+
+  targetPaceSecPerKm Int?
+  targetHrZone       String?
+  targetRpe          Int?
+  targetDistanceKm   Float?
+  targetDurationMin  Int?
+
+  videoUrl      String?
+  imageUrl      String?
+
+  strengthWorkout StrengthWorkout?
+  logs            WorkoutLog[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("workouts")
+}
+
+model WorkoutLog {
+  id           String   @id @default(cuid())
+  workoutId    String
+  workout      Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  athleteId    String
+  athlete      Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  distanceKm   Float?
+  durationSec  Int?
+  avgPaceSecPerKm Int?
+  avgHr        Int?
+  maxHr        Int?
+  cadence      Int?
+  elevationGainM Float?
+  calories     Int?
+  gpsTrack     Json?
+  splits       Json?
+
+  rpe          Int?
+  feeling      String?
+
+  createdAt    DateTime @default(now())
+
+  @@map("workout_logs")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Força & funcional
+// ────────────────────────────────────────────────────────────────────────────
+
+enum StrengthSplit {
+  AB
+  ABC
+  ABCD
+  ABCDE
+  FULL_BODY
+  UPPER_LOWER
+  PERSONALIZADA
+}
+
+model StrengthWorkout {
+  id        String        @id @default(cuid())
+  workoutId String        @unique
+  workout   Workout       @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  split     StrengthSplit @default(FULL_BODY)
+  label     String?       // ex.: "Treino A — Inferior + Core"
+  blocks    StrengthBlock[]
+
+  @@map("strength_workouts")
+}
+
+model StrengthBlock {
+  id                String          @id @default(cuid())
+  strengthWorkoutId String
+  strengthWorkout   StrengthWorkout @relation(fields: [strengthWorkoutId], references: [id], onDelete: Cascade)
+  exerciseId        String
+  exercise          Exercise        @relation(fields: [exerciseId], references: [id])
+
+  order             Int
+  sets              Int
+  reps              String  // ex.: "10-12" ou "30s"
+  load              String? // ex.: "60% 1RM" ou "peso corporal"
+  restSec           Int?
+  rpe               Int?
+  notes             String?
+
+  @@map("strength_blocks")
+}
+
+enum ExerciseCategory {
+  FORCA
+  HIPERTROFIA
+  CORE
+  MOBILIDADE
+  PLIOMETRIA
+  PREVENCAO
+  GLUTEOS
+  PANTURRILHAS
+  JOELHO
+  QUADRIL
+  TORNOZELO
+}
+
+model Exercise {
+  id            String           @id @default(cuid())
+  coachId       String?
+  coach         Coach?           @relation(fields: [coachId], references: [id])
+
+  name          String
+  category      ExerciseCategory
+  description   String?
+  execution     String?          // execução correta
+  commonMistakes String?         // erros comuns
+  musclesWorked String[]
+  imageUrl      String?
+
+  videos        ExerciseVideo[]
+  blocks        StrengthBlock[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("exercises")
+}
+
+model ExerciseVideo {
+  id         String   @id @default(cuid())
+  exerciseId String
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  url        String
+  title      String?
+  durationSec Int?
+
+  @@map("exercise_videos")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Testes de performance
+// ────────────────────────────────────────────────────────────────────────────
+
+enum TestType {
+  COOPER
+  CINCO_MINUTOS
+  TRES_KM
+  DOIS_MIL_E_QUATROCENTOS_M
+  VAM
+  RAST
+  LIMIAR
+}
+
+model PerformanceTest {
+  id          String   @id @default(cuid())
+  athleteId   String
+  athlete     Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  type        TestType
+  date        DateTime
+  distanceM   Float?
+  durationSec Int?
+  avgHr       Int?
+  maxHr       Int?
+
+  // resultados calculados
+  vo2max      Float?
+  vamKmh      Float?
+  thresholdPaceSecPerKm Int?
+  notes       String?
+
+  createdAt   DateTime @default(now())
+
+  @@map("performance_tests")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Check-ins & métricas
+// ────────────────────────────────────────────────────────────────────────────
+
+model CheckIn {
+  id         String   @id @default(cuid())
+  athleteId  String
+  athlete    Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  date       DateTime @default(now())
+  rpe        Int?     // 0-10
+  pain       Int?     // 0-10
+  sleep      Int?     // 0-10
+  fatigue    Int?     // 0-10
+  mood       Int?     // 0-10
+  notes      String?
+
+  flagged    Boolean  @default(false)
+  flagReason String?
+
+  createdAt  DateTime @default(now())
+
+  @@map("checkins")
+}
+
+model Metric {
+  id        String   @id @default(cuid())
+  athleteId String
+  athlete   Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  date      DateTime @default(now())
+  weightKg  Float?
+  bodyFatPct Float?
+  restingHr Int?
+  hrv       Float?
+  vo2max    Float?
+  notes     String?
+
+  @@map("metrics")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Provas, conquistas, comunidade
+// ────────────────────────────────────────────────────────────────────────────
+
+model Race {
+  id         String   @id @default(cuid())
+  athleteId  String
+  athlete    Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  name       String
+  date       DateTime
+  distanceKm Float
+  goalTime   String?
+  resultTime String?
+  location   String?
+
+  @@map("races")
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  athleteId   String
+  athlete     Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  icon        String?
+  earnedAt    DateTime @default(now())
+
+  @@map("achievements")
+}
+
+model FeedPost {
+  id        String   @id @default(cuid())
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  content   String
+  imageUrl  String?
+  workoutSummary Json?
+
+  comments  FeedComment[]
+  likes     FeedLike[]
+
+  createdAt DateTime @default(now())
+
+  @@map("feed_posts")
+}
+
+model FeedComment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+
+  @@map("feed_comments")
+}
+
+model FeedLike {
+  id       String   @id @default(cuid())
+  postId   String
+  post     FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@map("feed_likes")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Notificações, dispositivos, assinaturas e pagamentos
+// ────────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+enum DeviceProvider {
+  GARMIN
+  COROS
+  POLAR
+  SUUNTO
+  APPLE_WATCH
+  GOOGLE_FIT
+  STRAVA
+  HEALTHKIT
+}
+
+model ConnectedDevice {
+  id           String         @id @default(cuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider     DeviceProvider
+  externalId   String?
+  accessToken  String?
+  refreshToken String?
+  connectedAt  DateTime       @default(now())
+  lastSyncAt   DateTime?
+
+  @@unique([userId, provider])
+  @@map("connected_devices")
+}
+
+enum SubscriptionPlan {
+  FREE
+  ATHLETE
+  COACH
+  TEAM
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+model Subscription {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      SubscriptionPlan   @default(FREE)
+  status    SubscriptionStatus @default(TRIAL)
+  startedAt DateTime           @default(now())
+  renewsAt  DateTime?
+  canceledAt DateTime?
+
+  payments  Payment[]
+
+  @@map("subscriptions")
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  amountCents    Int
+  currency       String        @default("BRL")
+  status         PaymentStatus @default(PENDING)
+  method         String?       // pix | cartao | boleto
+  paidAt         DateTime?
+  createdAt      DateTime      @default(now())
+
+  @@map("payments")
+}
