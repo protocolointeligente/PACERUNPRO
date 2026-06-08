@@ -11,6 +11,7 @@ import {
   Activity,
   DollarSign,
   Settings,
+  Building2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -42,4 +43,11 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
   { href: "/treinador/gestao", label: "Gestão & vendas", icon: DollarSign },
   { href: "/treinador/admin", label: "Admin", icon: Settings },
+];
+
+export const adminNav: NavItem[] = [
+  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/assessorias", label: "Assessorias", icon: Building2 },
+  { href: "/admin/atletas", label: "Atletas B2C", icon: Users },
+  { href: "/admin/financeiro", label: "Financeiro", icon: DollarSign },
 ];

@@ -1078,3 +1078,192 @@ export const sourceColors: Record<string, string> = {
   coros: "#0066CC",
   apple: "#555555",
 };
+
+// ── Planos B2C (atleta avulso) ────────────────────────────────────────────
+
+export const b2cPlans = [
+  {
+    id: "mensal",
+    name: "Mensal",
+    price: 197,
+    pricePerMonth: 197,
+    totalPrice: 197,
+    months: 1,
+    discountPct: 0,
+    badge: null,
+    highlight: false,
+    description: "Comece sem compromisso",
+  },
+  {
+    id: "trimestral",
+    name: "Trimestral",
+    price: 167,
+    pricePerMonth: 167,
+    totalPrice: 501,
+    months: 3,
+    discountPct: 15,
+    badge: "15% OFF",
+    highlight: false,
+    description: "Ideal para uma corrida de preparação",
+  },
+  {
+    id: "semestral",
+    name: "Semestral",
+    price: 147,
+    pricePerMonth: 147,
+    totalPrice: 882,
+    months: 6,
+    discountPct: 25,
+    badge: "25% OFF",
+    highlight: true,
+    description: "Ciclo completo para sua prova",
+  },
+  {
+    id: "anual",
+    name: "Anual",
+    price: 127,
+    pricePerMonth: 127,
+    totalPrice: 1524,
+    months: 12,
+    discountPct: 35,
+    badge: "Melhor custo",
+    highlight: false,
+    description: "Evolução consistente o ano todo",
+  },
+];
+
+export const b2cIncludes = [
+  "Planilha de treino de corrida personalizada",
+  "Treino de força para corredores",
+  "Check-in inteligente semanal",
+  "Suporte direto com Treinador Ricardo Pace e equipe",
+  "Acesso completo ao app (GPS, gráficos, evolução)",
+  "Testes de performance com cálculo automático (Cooper, VAM, RAST)",
+  "Periodização completa até sua prova",
+  "Sincronização Garmin, Strava, Apple Watch",
+];
+
+// ── Planos B2B (assessorias) ──────────────────────────────────────────────
+
+export const b2bPlans = [
+  {
+    id: "b2b-starter",
+    name: "Starter",
+    price: 89,
+    maxAthletes: 20,
+    maxCoaches: 2,
+    highlight: false,
+    badge: null,
+    features: [
+      "Até 20 atletas",
+      "Até 2 treinadores",
+      "Prescrição corrida e força",
+      "Check-in inteligente",
+      "Relatórios PDF",
+      "1 integração (Strava ou Garmin)",
+      "Suporte por e-mail",
+    ],
+  },
+  {
+    id: "b2b-pro",
+    name: "Pro",
+    price: 189,
+    maxAthletes: 50,
+    maxCoaches: 5,
+    highlight: true,
+    badge: "Mais popular",
+    features: [
+      "Até 50 atletas",
+      "Até 5 treinadores",
+      "Tudo do Starter",
+      "Motor de prescrição inteligente com IA",
+      "Todas as integrações",
+      "Liberação semanal automatizada",
+      "Relatórios Excel e CSV",
+      "Suporte WhatsApp",
+    ],
+  },
+  {
+    id: "b2b-premium",
+    name: "Premium",
+    price: 389,
+    maxAthletes: 150,
+    maxCoaches: 15,
+    highlight: false,
+    badge: null,
+    features: [
+      "Até 150 atletas",
+      "Até 15 treinadores",
+      "Tudo do Pro",
+      "Painel financeiro do roster",
+      "Link de convite por treinador",
+      "Relatórios PDF estilo IronGuides",
+      "API básica para integrações",
+      "Gerente de conta",
+    ],
+  },
+  {
+    id: "b2b-unlimited",
+    name: "Ilimitado",
+    price: 997,
+    maxAthletes: null,
+    maxCoaches: null,
+    highlight: false,
+    badge: "White-label",
+    features: [
+      "Atletas e treinadores ilimitados",
+      "Tudo do Premium",
+      "White-label (domínio e logo próprios)",
+      "API completa para integrações",
+      "Painel administrativo multi-treinador",
+      "SLA 99,9% com suporte 24h",
+      "Onboarding dedicado",
+      "Contrato anual com desconto",
+    ],
+  },
+];
+
+// ── Super Admin ──────────────────────────────────────────────────────────
+
+export const superAdminStats = {
+  totalMrr: 63_480,
+  mrrGrowth: 0.138,
+  b2cAthletes: 312,
+  b2cMrr: 51_264,
+  b2bAssessorias: 48,
+  b2bMrr: 12_216,
+  pendingApproval: 3,
+  churned30d: 8,
+  newSignups30d: 34,
+  totalRevenue12m: 689_040,
+  mrrSeries: [
+    { month: "Jan", b2c: 34_100, b2b: 6_800 },
+    { month: "Fev", b2c: 37_500, b2b: 7_400 },
+    { month: "Mar", b2c: 39_800, b2b: 8_100 },
+    { month: "Abr", b2c: 42_600, b2b: 9_200 },
+    { month: "Mai", b2c: 47_400, b2b: 10_800 },
+    { month: "Jun", b2c: 51_264, b2b: 12_216 },
+  ],
+};
+
+export const assessoriaList = [
+  { id: "asc-1", name: "Run Tribe Assessoria", city: "São Paulo, SP", plan: "b2b-unlimited", coaches: 8, athletes: 340, mrr: 997, status: "ativo" as const, approvedAt: "Out 2024", contact: "contato@runtribe.com.br" },
+  { id: "asc-2", name: "Pace & Cia Esportes", city: "Belo Horizonte, MG", plan: "b2b-pro", coaches: 4, athletes: 47, mrr: 189, status: "ativo" as const, approvedAt: "Jan 2025", contact: "admin@paceecia.com.br" },
+  { id: "asc-3", name: "Runners BH", city: "Belo Horizonte, MG", plan: "b2b-premium", coaches: 7, athletes: 118, mrr: 389, status: "ativo" as const, approvedAt: "Fev 2025", contact: "suporte@runnersbh.com" },
+  { id: "asc-4", name: "Ultra Training SP", city: "São Paulo, SP", plan: "b2b-pro", coaches: 3, athletes: 38, mrr: 189, status: "ativo" as const, approvedAt: "Mar 2025", contact: "contato@ultratraining.com.br" },
+  { id: "asc-5", name: "Maratonistas do Sul", city: "Porto Alegre, RS", plan: "b2b-starter", coaches: 1, athletes: 14, mrr: 89, status: "ativo" as const, approvedAt: "Abr 2025", contact: "admin@maratonistassul.com.br" },
+  { id: "asc-6", name: "Sport Life Corridas", city: "Curitiba, PR", plan: "b2b-starter", coaches: 2, athletes: 19, mrr: 89, status: "pendente" as const, approvedAt: "—", contact: "contato@sportlife.com.br" },
+  { id: "asc-7", name: "Run Fast Academy", city: "Rio de Janeiro, RJ", plan: "b2b-pro", coaches: 4, athletes: 0, mrr: 189, status: "pendente" as const, approvedAt: "—", contact: "admin@runfast.com.br" },
+  { id: "asc-8", name: "Fortaleza Runners", city: "Fortaleza, CE", plan: "b2b-premium", coaches: 6, athletes: 0, mrr: 389, status: "pendente" as const, approvedAt: "—", contact: "suporte@fortalezarunners.com.br" },
+];
+
+export const b2cAthletesList = [
+  { id: "b2c-1", name: "Lucas Ferreira", city: "São Paulo, SP", plan: "anual", startDate: "Jan 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 127 },
+  { id: "b2c-2", name: "Priscila Nunes", city: "Belo Horizonte, MG", plan: "semestral", startDate: "Mar 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 147 },
+  { id: "b2c-3", name: "Gustavo Almeida", city: "Rio de Janeiro, RJ", plan: "mensal", startDate: "Mai 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 197 },
+  { id: "b2c-4", name: "Fernanda Costa", city: "Curitiba, PR", plan: "trimestral", startDate: "Abr 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 167 },
+  { id: "b2c-5", name: "Roberto Lima", city: "Porto Alegre, RS", plan: "anual", startDate: "Fev 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 127 },
+  { id: "b2c-6", name: "Tatiane Souza", city: "Salvador, BA", plan: "mensal", startDate: "Jun 2025", coachAssigned: "Ricardo Pace + Equipe", status: "pendente" as const, mrr: 197 },
+];
+
+export const pendingApprovals = assessoriaList.filter((a) => a.status === "pendente");
