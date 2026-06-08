@@ -753,3 +753,328 @@ export const integrationsList = [
   { id: "googlefit", name: "Google Fit", description: "Importe atividades do seu Android.", connected: false },
   { id: "strava", name: "Strava", description: "Compartilhe e importe atividades automaticamente.", connected: true },
 ];
+
+// ── Landing page ─────────────────────────────────────────────────────────
+
+export const platformStats = {
+  coaches: 480,
+  athletes: 12_400,
+  workoutsPrescribed: 318_000,
+  countriesActive: 6,
+};
+
+export const pricingPlans = [
+  {
+    id: "starter",
+    name: "Starter",
+    subtitle: "Para treinadores autônomos começando",
+    price: 197,
+    period: "mês",
+    highlight: false,
+    badge: null,
+    features: [
+      "Até 15 atletas",
+      "Prescrição de corrida e força",
+      "Check-in inteligente",
+      "Relatórios em PDF",
+      "1 integração (Strava ou Garmin)",
+      "Suporte por e-mail",
+    ],
+    cta: "Começar grátis",
+    ctaVariant: "secondary" as const,
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    subtitle: "Para treinadores em crescimento",
+    price: 397,
+    period: "mês",
+    highlight: true,
+    badge: "Mais popular",
+    features: [
+      "Até 50 atletas",
+      "Tudo do Starter",
+      "Motor de prescrição inteligente com IA",
+      "Todas as integrações (Garmin, Polar, Coros, Apple Watch)",
+      "Liberação semanal automatizada",
+      "Relatórios Excel e CSV",
+      "Suporte prioritário por WhatsApp",
+    ],
+    cta: "Começar grátis",
+    ctaVariant: "primary" as const,
+  },
+  {
+    id: "agency",
+    name: "Assessoria",
+    subtitle: "Para assessorias e equipes de treinadores",
+    price: 897,
+    period: "mês",
+    highlight: false,
+    badge: null,
+    features: [
+      "Atletas ilimitados",
+      "Múltiplos treinadores na mesma conta",
+      "Painel administrativo completo",
+      "White-label (domínio e logo próprios)",
+      "API para integrações customizadas",
+      "Relatórios PDF premium estilo IronGuides",
+      "Gerente de conta dedicado",
+    ],
+    cta: "Falar com consultor",
+    ctaVariant: "secondary" as const,
+  },
+];
+
+export const testimonials = [
+  {
+    id: "t1",
+    name: "Camila Andrade",
+    role: "Atleta — Meia Maratona de BH",
+    avatar: "CA",
+    quote:
+      "Batei meu recorde nos 21 km depois de 3 meses na plataforma. O motor de check-in percebeu que eu estava sobrecarregada antes de eu mesma perceber — e o treinador ajustou o plano na hora.",
+  },
+  {
+    id: "t2",
+    name: "Fernando Queiroz",
+    role: "Treinador — 62 atletas ativos",
+    avatar: "FQ",
+    quote:
+      "Antes eu gastava horas montando planilhas. Hoje prescrevo a semana de 60 atletas em 40 minutos, com as métricas de carga automáticas. A plataforma virou meu principal diferencial competitivo.",
+  },
+  {
+    id: "t3",
+    name: "Assessoria Run Tribe",
+    role: "8 treinadores · 340 atletas",
+    avatar: "RT",
+    quote:
+      "Migramos de três ferramentas separadas para o Pace Run Pro. Centralizar prescrição, check-in e relatórios em um único lugar reduziu nosso custo operacional em 60%.",
+  },
+];
+
+export const landingFeatures = [
+  {
+    persona: "Aluno",
+    color: "#38bdf8",
+    items: [
+      { icon: "📅", title: "Plano liberado semana a semana", description: "Sem ansiedade de ver o ciclo todo — só o que importa agora." },
+      { icon: "🤖", title: "Check-in inteligente pós-treino", description: "Responde em 60 segundos e o motor já ajusta a próxima sessão." },
+      { icon: "📊", title: "Evolução em gráficos", description: "Pace, FC, VO2máx, peso e carga semanal num só lugar." },
+      { icon: "⌚", title: "Sincroniza com seu relógio", description: "Garmin, Polar, Coros, Apple Watch — dados automáticos." },
+    ],
+  },
+  {
+    persona: "Treinador",
+    color: "#8b5cf6",
+    items: [
+      { icon: "🧠", title: "Prescrição inteligente com IA", description: "Sugestões de pace, volume e RPE baseadas no perfil de cada atleta." },
+      { icon: "🚨", title: "Alertas de risco automáticos", description: "Saiba antes do atleta se algo vai sair dos trilhos." },
+      { icon: "📄", title: "Relatórios PDF estilo IronGuides", description: "Profissionais, prontos para enviar ao atleta em 1 clique." },
+      { icon: "🔓", title: "Liberação semanal controlada", description: "O atleta só vê o que você liberar — você mantém o controle." },
+    ],
+  },
+  {
+    persona: "Assessoria",
+    color: "#84cc16",
+    items: [
+      { icon: "👥", title: "Multi-treinadores", description: "Vários treinadores numa única conta com visões separadas." },
+      { icon: "💰", title: "Gestão financeira integrada", description: "Controle de assinaturas, inadimplência e MRR da sua base." },
+      { icon: "🏷️", title: "White-label", description: "Sua logo, seu domínio — seus atletas nunca saem da sua marca." },
+      { icon: "📈", title: "Painel administrativo", description: "Visão completa da saúde da sua assessoria em tempo real." },
+    ],
+  },
+];
+
+export const integrationLogos = [
+  { id: "garmin", name: "Garmin Connect", color: "#009BDE" },
+  { id: "strava", name: "Strava", color: "#FC4C02" },
+  { id: "polar", name: "Polar Flow", color: "#D8001A" },
+  { id: "coros", name: "Coros", color: "#0066CC" },
+  { id: "suunto", name: "Suunto", color: "#0057A8" },
+  { id: "apple", name: "Apple Watch", color: "#555555" },
+  { id: "wahoo", name: "Wahoo", color: "#E30B17" },
+  { id: "google", name: "Google Fit", color: "#4285F4" },
+];
+
+// ── Admin ──────────────────────────────────────────────────────────────────
+
+export const adminOverview = {
+  mrr: 47850,
+  mrrGrowth: 0.122,
+  totalCoaches: 48,
+  coachesGrowth: 0.08,
+  totalAthletes: 1247,
+  athletesGrowth: 0.156,
+  activeSubscriptions: 1156,
+  churnRate: 0.028,
+  avgAthletesPerCoach: 25.9,
+  revenueByPlan: [
+    { plan: "Starter", count: 22, revenue: 4334 },
+    { plan: "Pro", count: 19, revenue: 7543 },
+    { plan: "Assessoria", count: 7, revenue: 6279 },
+  ],
+  mrrSeries: [
+    { month: "Jan", mrr: 32100 },
+    { month: "Fev", mrr: 35800 },
+    { month: "Mar", mrr: 38200 },
+    { month: "Abr", mrr: 40500 },
+    { month: "Mai", mrr: 44300 },
+    { month: "Jun", mrr: 47850 },
+  ],
+};
+
+export const adminCoaches = [
+  { id: "c1", name: "Ricardo Pace Júnior", credential: "CREF 014626-G/MG", plan: "Pro", athletes: 38, mrr: 397, status: "ativo", joinedAt: "Jan 2025" },
+  { id: "c2", name: "Fernando Queiroz", credential: "CREF 022140-G/SP", plan: "Assessoria", athletes: 62, mrr: 897, status: "ativo", joinedAt: "Fev 2025" },
+  { id: "c3", name: "Patrícia Melo", credential: "CREF 031822-G/RJ", plan: "Pro", athletes: 41, mrr: 397, status: "ativo", joinedAt: "Mar 2025" },
+  { id: "c4", name: "André Bastos", credential: "CREF 018903-G/MG", plan: "Starter", athletes: 12, mrr: 197, status: "ativo", joinedAt: "Abr 2025" },
+  { id: "c5", name: "Juliana Fonseca", credential: "CREF 027541-G/PR", plan: "Pro", athletes: 33, mrr: 397, status: "em risco", joinedAt: "Jan 2025" },
+  { id: "c6", name: "Run Tribe Assessoria", credential: "CNPJ 42.801.334/0001-99", plan: "Assessoria", athletes: 340, mrr: 897, status: "ativo", joinedAt: "Out 2024" },
+];
+
+export const adminRecentSubscriptions = [
+  { id: "sub-1", coachName: "Carolina Dias", plan: "Pro", action: "upgrade", from: "Starter", date: "06 jun 2026", mrr: 200 },
+  { id: "sub-2", coachName: "Lucas Motta", plan: "Starter", action: "novo", from: null, date: "05 jun 2026", mrr: 197 },
+  { id: "sub-3", coachName: "Mariana Castro", plan: "Assessoria", action: "novo", from: null, date: "04 jun 2026", mrr: 897 },
+  { id: "sub-4", coachName: "Paulo Drummond", plan: "Starter", action: "cancelamento", from: null, date: "03 jun 2026", mrr: -197 },
+  { id: "sub-5", coachName: "Bianca Lemos", plan: "Pro", action: "upgrade", from: "Starter", date: "02 jun 2026", mrr: 200 },
+];
+
+// ── Coach gestão (roster + financeiro) ───────────────────────────────────
+
+export const coachRosterStats = {
+  totalSlots: 50,
+  usedSlots: 38,
+  planName: "Pro",
+  mrr: 14_260,
+  mrrGrowth: 0.11,
+  churn30d: 1,
+  newAthletes30d: 4,
+  pendingInvoices: 2,
+};
+
+export const athleteRosterList = [
+  { id: "ath-1", name: "Camila Andrade", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "10 jul 2026", monthlyFee: 290, joinedAt: "Jan 2025" },
+  { id: "ath-2", name: "Bruno Lacerda", plan: "Pace Run Pro — Atleta", status: "risco" as const, billingStatus: "em dia" as const, nextBilling: "14 jul 2026", monthlyFee: 290, joinedAt: "Mar 2025" },
+  { id: "ath-3", name: "Marina Sales", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "01 jul 2026", monthlyFee: 350, joinedAt: "Nov 2024" },
+  { id: "ath-4", name: "Felipe Tannous", plan: "Pace Run Pro — Elite", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "20 jul 2026", monthlyFee: 490, joinedAt: "Set 2024" },
+  { id: "ath-5", name: "Renata Vidal", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "05 jul 2026", monthlyFee: 290, joinedAt: "Abr 2025" },
+  { id: "ath-6", name: "Diego Martins", plan: "Pace Run Pro — Atleta", status: "inativo" as const, billingStatus: "inadimplente" as const, nextBilling: "—", monthlyFee: 290, joinedAt: "Jun 2025" },
+  { id: "ath-7", name: "Ana Beatriz Lima", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "08 jul 2026", monthlyFee: 290, joinedAt: "Fev 2025" },
+  { id: "ath-8", name: "Thiago Ferraz", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "22 jul 2026", monthlyFee: 290, joinedAt: "Mai 2025" },
+];
+
+export const paymentHistory = [
+  { id: "pay-1", description: "Pace Run Pro — Atleta", period: "Jun 2026", amount: 290, status: "pago" as const, date: "01 jun 2026", invoice: "INV-2026-061" },
+  { id: "pay-2", description: "Pace Run Pro — Atleta", period: "Mai 2026", amount: 290, status: "pago" as const, date: "01 mai 2026", invoice: "INV-2026-051" },
+  { id: "pay-3", description: "Pace Run Pro — Atleta", period: "Abr 2026", amount: 290, status: "pago" as const, date: "01 abr 2026", invoice: "INV-2026-041" },
+  { id: "pay-4", description: "Pace Run Pro — Atleta", period: "Mar 2026", amount: 290, status: "pago" as const, date: "01 mar 2026", invoice: "INV-2026-031" },
+];
+
+// ── Atividades sincronizadas (Strava / Garmin) ────────────────────────────
+
+export interface SyncedActivity {
+  id: string;
+  source: "strava" | "garmin" | "polar" | "coros" | "apple";
+  sourceActivityId: string;
+  title: string;
+  date: string;
+  distanceKm: number;
+  durationSec: number;
+  avgPaceSecPerKm: number;
+  avgHrBpm: number;
+  maxHrBpm: number;
+  elevationM: number;
+  calories: number;
+  cadenceAvg?: number;
+  sufferScore?: number;
+  matchedWorkoutId?: string;
+  autoCheckInFilled: boolean;
+}
+
+export const syncedActivities: SyncedActivity[] = [
+  {
+    id: "act-1",
+    source: "garmin",
+    sourceActivityId: "14829301847",
+    title: "Corrida matinal",
+    date: "2026-06-07",
+    distanceKm: 9.12,
+    durationSec: 3240,
+    avgPaceSecPerKm: 355,
+    avgHrBpm: 162,
+    maxHrBpm: 178,
+    elevationM: 48,
+    calories: 512,
+    cadenceAvg: 168,
+    matchedWorkoutId: "w-today",
+    autoCheckInFilled: true,
+  },
+  {
+    id: "act-2",
+    source: "strava",
+    sourceActivityId: "11920384710",
+    title: "Longão de sábado",
+    date: "2026-06-06",
+    distanceKm: 18.3,
+    durationSec: 6480,
+    avgPaceSecPerKm: 354,
+    avgHrBpm: 148,
+    maxHrBpm: 165,
+    elevationM: 112,
+    calories: 1124,
+    cadenceAvg: 170,
+    sufferScore: 82,
+    matchedWorkoutId: "w-sat",
+    autoCheckInFilled: true,
+  },
+  {
+    id: "act-3",
+    source: "garmin",
+    sourceActivityId: "14801938274",
+    title: "Tempo Run",
+    date: "2026-06-04",
+    distanceKm: 6.0,
+    durationSec: 1800,
+    avgPaceSecPerKm: 300,
+    avgHrBpm: 172,
+    maxHrBpm: 183,
+    elevationM: 22,
+    calories: 388,
+    cadenceAvg: 178,
+    matchedWorkoutId: "w-wed",
+    autoCheckInFilled: false,
+  },
+  {
+    id: "act-4",
+    source: "apple",
+    sourceActivityId: "AW-887322901",
+    title: "Trote regenerativo",
+    date: "2026-06-02",
+    distanceKm: 5.1,
+    durationSec: 1860,
+    avgPaceSecPerKm: 364,
+    avgHrBpm: 132,
+    maxHrBpm: 145,
+    elevationM: 10,
+    calories: 278,
+    matchedWorkoutId: "w-mon",
+    autoCheckInFilled: true,
+  },
+];
+
+export const sourceLabels: Record<string, string> = {
+  strava: "Strava",
+  garmin: "Garmin Connect",
+  polar: "Polar Flow",
+  coros: "Coros",
+  apple: "Apple Watch",
+};
+
+export const sourceColors: Record<string, string> = {
+  strava: "#FC4C02",
+  garmin: "#009BDE",
+  polar: "#D8001A",
+  coros: "#0066CC",
+  apple: "#555555",
+};

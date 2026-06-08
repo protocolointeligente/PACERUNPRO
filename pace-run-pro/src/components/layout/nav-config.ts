@@ -9,6 +9,8 @@ import {
   FileBarChart,
   User,
   Activity,
+  DollarSign,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -38,4 +40,6 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/prescricao/corrida", label: "Prescrição corrida", icon: Activity },
   { href: "/treinador/prescricao/forca", label: "Prescrição força", icon: Dumbbell },
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
+  { href: "/treinador/gestao", label: "Gestão & vendas", icon: DollarSign },
+  { href: "/treinador/admin", label: "Admin", icon: Settings },
 ];

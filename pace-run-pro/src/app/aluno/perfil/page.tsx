@@ -8,6 +8,7 @@ import {
   Globe,
   LogOut,
   Pencil,
+  RefreshCw,
   Shield,
   Smartphone,
   Target,
@@ -18,7 +19,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { currentAthlete, integrationsList, personalRecords } from "@/lib/mock-data";
+import {
+  currentAthlete,
+  integrationsList,
+  personalRecords,
+  syncedActivities,
+  sourceLabels,
+  sourceColors,
+} from "@/lib/mock-data";
+import { normalizeActivity } from "@/lib/integrations/normalize-activity";
 import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
@@ -112,21 +121,121 @@ export default function ProfilePage() {
 
         {/* Devices */}
         <TabsContent value="dispositivos">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {integrationsList.map((d) => (
-              <Card key={d.id}>
-                <CardContent className="flex items-center gap-3 p-4">
-                  <span className={cn("flex h-10 w-10 items-center justify-center rounded-xl", d.connected ? "bg-success/15 text-success" : "bg-card-hover text-text-muted")}>
-                    <Smartphone className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">{d.name}</p>
-                    <p className="truncate text-xs text-text-muted">{d.description}</p>
-                  </div>
-                  <Badge variant={d.connected ? "success" : "outline"}>{d.connected ? "Conectado" : "Conectar"}</Badge>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="space-y-6">
+            {/* Integration cards */}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {integrationsList.map((d) => (
+                <Card key={d.id}>
+                  <CardContent className="flex items-center gap-3 p-4">
+                    <span
+                      className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                        d.connected ? "bg-success/15 text-success" : "bg-card-hover text-text-muted",
+                      )}
+                    >
+                      <Smartphone className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-white">{d.name}</p>
+                      <p className="truncate text-xs text-text-muted">{d.description}</p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <Badge variant={d.connected ? "success" : "outline"}>
+                        {d.connected ? "Conectado" : "Desconectado"}
+                      </Badge>
+                      {d.connected ? (
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] text-info hover:bg-info/10 transition-colors"
+                          >
+                            <RefreshCw className="h-3 w-3" />
+                            Sincronizar agora
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-md px-2 py-0.5 text-[11px] text-danger hover:bg-danger/10 transition-colors"
+                          >
+                            Desconectar
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="rounded-md px-2 py-0.5 text-[11px] text-primary hover:bg-primary/10 transition-colors"
+                        >
+                          Conectar
+                        </button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Synced activities */}
+            <div>
+              <h3 className="mb-3 font-display text-sm font-semibold text-white">
+                Atividades sincronizadas
+              </h3>
+              <div className="space-y-2.5">
+                {syncedActivities.map((raw) => {
+                  const act = normalizeActivity(raw);
+                  const color = sourceColors[act.source] ?? "#94a3b8";
+                  const label = sourceLabels[act.source] ?? act.source;
+                  const dateFormatted = new Date(act.date).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  });
+                  return (
+                    <Card key={act.id}>
+                      <CardContent className="p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1 space-y-1">
+                            {/* Source badge + title */}
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color }}>
+                                <span
+                                  className="h-2 w-2 rounded-full shrink-0"
+                                  style={{ backgroundColor: color }}
+                                />
+                                {label}
+                              </span>
+                              <span className="text-text-muted text-xs">{dateFormatted}</span>
+                            </div>
+                            <p className="font-display text-sm font-semibold text-white">{act.title}</p>
+                            {/* Metrics row */}
+                            <div className="flex flex-wrap gap-3 text-xs text-text-muted">
+                              <span>
+                                <span className="font-medium text-white">{act.distanceKm.toFixed(1)} km</span>
+                              </span>
+                              <span>Pace <span className="font-medium text-white">{act.pace}</span></span>
+                              <span>FC méd <span className="font-medium text-white">{act.avgHrBpm} bpm</span></span>
+                              <span>Calorias <span className="font-medium text-white">{act.calories} kcal</span></span>
+                              <span>Elevação <span className="font-medium text-white">{act.elevationM} m</span></span>
+                              <span>RPE estimado <span className="font-medium text-white">{act.estimatedRpe}</span></span>
+                            </div>
+                          </div>
+                          {/* Check-in badge or button */}
+                          <div className="shrink-0">
+                            {act.autoCheckInFilled ? (
+                              <Badge variant="success" className="whitespace-nowrap">
+                                auto check-in preenchido
+                              </Badge>
+                            ) : (
+                              <Button size="sm" variant="secondary" className="whitespace-nowrap text-xs">
+                                preencher check-in
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </TabsContent>
 
