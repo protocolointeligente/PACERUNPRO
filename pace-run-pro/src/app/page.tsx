@@ -64,7 +64,7 @@ export default function LandingPage() {
             profissional e gestão completa de atletas — em um único lugar, em português.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/assinar">
+            <Link href="/cadastro">
               <Button variant="primary" size="lg" className="gap-2">
                 Começar grátis <ArrowRight className="h-5 w-5" />
               </Button>
