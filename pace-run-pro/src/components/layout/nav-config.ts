@@ -19,6 +19,7 @@ import {
   BarChart2,
   Kanban,
   Palette,
+  Bot,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,6 +42,7 @@ export const athleteMoreNav: NavItem[] = [
   { href: "/aluno/planos", label: "Planos & periodização", icon: ClipboardList },
   { href: "/aluno/previsao", label: "Previsão de prova", icon: Target },
   { href: "/aluno/simulador", label: "Simulador de pace", icon: Gauge },
+  { href: "/aluno/ia-treinadora", label: "IA Treinadora", icon: Bot },
   { href: "/aluno/tenis", label: "Tênis tracker", icon: Shirt },
   { href: "/aluno/timeline", label: "Minha jornada", icon: CalendarDays },
   { href: "/aluno/analise-semanal", label: "Minha semana", icon: BarChart2 },

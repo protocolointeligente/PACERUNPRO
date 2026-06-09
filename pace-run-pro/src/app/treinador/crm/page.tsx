@@ -1,0 +1,445 @@
+"use client";
+
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Kanban,
+  List,
+  Plus,
+  X,
+  Share2,
+  Globe,
+  Users,
+  Calendar,
+  MessageCircle,
+  ArrowRight,
+  TrendingUp,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { crmLeads, type CrmLead, type LeadStage } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: (i: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.06, duration: 0.35, ease: "easeOut" as const },
+  }),
+};
+
+const STAGE_ORDER: LeadStage[] = ["novo", "contato", "proposta", "negociacao", "ganho", "perdido"];
+
+const STAGE_LABELS: Record<LeadStage, string> = {
+  novo: "Novo",
+  contato: "Contato",
+  proposta: "Proposta",
+  negociacao: "Negociação",
+  ganho: "Ganho",
+  perdido: "Perdido",
+};
+
+const KANBAN_STAGES: LeadStage[] = ["novo", "contato", "proposta", "ganho"];
+
+const STAGE_COLORS: Record<LeadStage, string> = {
+  novo: "bg-slate-600 text-slate-100",
+  contato: "bg-blue-700 text-blue-100",
+  proposta: "bg-amber-700 text-amber-100",
+  negociacao: "bg-orange-700 text-orange-100",
+  ganho: "bg-emerald-700 text-emerald-100",
+  perdido: "bg-red-900 text-red-200",
+};
+
+const AVATAR_COLORS: Record<LeadStage, string> = {
+  novo: "bg-slate-700 text-slate-200",
+  contato: "bg-blue-800 text-blue-200",
+  proposta: "bg-amber-800 text-amber-200",
+  negociacao: "bg-orange-800 text-orange-200",
+  ganho: "bg-emerald-800 text-emerald-200",
+  perdido: "bg-red-900 text-red-300",
+};
+
+const SOURCE_CONFIG: Record<CrmLead["source"], { label: string; icon: React.ReactNode; color: string }> = {
+  instagram: {
+    label: "Instagram",
+    icon: <Share2 className="h-3 w-3" />,
+    color: "bg-purple-900 text-purple-300",
+  },
+  indicacao: {
+    label: "Indicação",
+    icon: <Users className="h-3 w-3" />,
+    color: "bg-emerald-900 text-emerald-300",
+  },
+  site: {
+    label: "Site",
+    icon: <Globe className="h-3 w-3" />,
+    color: "bg-blue-900 text-blue-300",
+  },
+  evento: {
+    label: "Evento",
+    icon: <Calendar className="h-3 w-3" />,
+    color: "bg-orange-900 text-orange-300",
+  },
+  whatsapp: {
+    label: "WhatsApp",
+    icon: <MessageCircle className="h-3 w-3" />,
+    color: "bg-teal-900 text-teal-300",
+  },
+};
+
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+}
+
+function nextStage(stage: LeadStage): LeadStage {
+  const idx = STAGE_ORDER.indexOf(stage);
+  if (idx < STAGE_ORDER.length - 1) return STAGE_ORDER[idx + 1];
+  return stage;
+}
+
+function SourceBadge({ source }: { source: CrmLead["source"] }) {
+  const cfg = SOURCE_CONFIG[source];
+  return (
+    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", cfg.color)}>
+      {cfg.icon}
+      {cfg.label}
+    </span>
+  );
+}
+
+function LeadCard({ lead, onAdvance }: { lead: CrmLead; onAdvance: () => void }) {
+  const canAdvance = lead.stage !== "ganho" && lead.stage !== "perdido";
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="rounded-xl border border-border bg-card p-3 space-y-2 cursor-default"
+    >
+      <div className="flex items-start gap-2">
+        <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold", AVATAR_COLORS[lead.stage])}>
+          {lead.avatar}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-white">{lead.name}</p>
+          <SourceBadge source={lead.source} />
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-xs text-text-muted">
+        <span className="font-medium text-emerald-400">R$ {lead.value}/mês</span>
+        <span>{formatDate(lead.lastContact)}</span>
+      </div>
+      {canAdvance && (
+        <button
+          onClick={onAdvance}
+          className="flex w-full items-center justify-center gap-1 rounded-lg border border-border py-1 text-xs text-text-muted transition-colors hover:border-primary hover:text-primary"
+        >
+          Mover
+          <ArrowRight className="h-3 w-3" />
+        </button>
+      )}
+    </motion.div>
+  );
+}
+
+function NewLeadForm({ onClose, onAdd }: { onClose: () => void; onAdd: (lead: CrmLead) => void }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [source, setSource] = useState<CrmLead["source"]>("instagram");
+  const [value, setValue] = useState("290");
+  const [notes, setNotes] = useState("");
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const initials = name.trim().split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+    const today = new Date().toISOString().slice(0, 10);
+    onAdd({
+      id: `lead-${Date.now()}`,
+      name: name.trim(),
+      email,
+      phone,
+      source,
+      stage: "novo",
+      value: Number(value) || 290,
+      notes,
+      createdAt: today,
+      lastContact: today,
+      avatar: initials || "??",
+    });
+    onClose();
+  }
+
+  const inputCls = "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-white placeholder:text-text-muted focus:border-primary focus:outline-none";
+  const labelCls = "mb-1 block text-xs font-medium text-text-muted";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 32 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 32 }}
+      className="rounded-2xl border border-border bg-card p-5 space-y-4"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-white">Novo lead</h3>
+        <button onClick={onClose} className="text-text-muted hover:text-white transition-colors">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <label className={labelCls}>Nome *</label>
+          <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome completo" className={inputCls} />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>E-mail</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@exemplo.com" className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Telefone</label>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(00) 00000-0000" className={inputCls} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>Origem</label>
+            <select value={source} onChange={(e) => setSource(e.target.value as CrmLead["source"])} className={inputCls}>
+              <option value="instagram">Instagram</option>
+              <option value="indicacao">Indicação</option>
+              <option value="site">Site</option>
+              <option value="evento">Evento</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Valor R$/mês</label>
+            <input type="number" value={value} onChange={(e) => setValue(e.target.value)} min={0} className={inputCls} />
+          </div>
+        </div>
+        <div>
+          <label className={labelCls}>Notas</label>
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Observações sobre o lead…" className={cn(inputCls, "resize-none")} />
+        </div>
+        <div className="flex gap-2 pt-1">
+          <Button type="button" variant="ghost" className="flex-1" onClick={onClose}>Cancelar</Button>
+          <button type="submit" className="gradient-primary flex-1 rounded-xl px-4 py-2 text-sm font-semibold text-white">Adicionar</button>
+        </div>
+      </form>
+    </motion.div>
+  );
+}
+
+export default function CrmPage() {
+  const [leads, setLeads] = useState<CrmLead[]>(crmLeads);
+  const [view, setView] = useState<"kanban" | "lista">("kanban");
+  const [showForm, setShowForm] = useState(false);
+
+  function advanceLead(id: string) {
+    setLeads((prev) => prev.map((l) => l.id === id ? { ...l, stage: nextStage(l.stage) } : l));
+  }
+
+  function addLead(lead: CrmLead) {
+    setLeads((prev) => [lead, ...prev]);
+  }
+
+  const activeLeads = leads.filter((l) => l.stage !== "perdido");
+  const wonLeads = leads.filter((l) => l.stage === "ganho");
+  const conversionRate = leads.length > 0 ? Math.round((wonLeads.length / leads.length) * 100) : 0;
+  const potentialRevenue = activeLeads.reduce((sum, l) => sum + l.value, 0);
+
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const newThisWeek = leads.filter((l) => new Date(l.createdAt) >= oneWeekAgo).length;
+
+  const listLeads = leads.filter((l) => l.stage !== "perdido");
+
+  return (
+    <div className="mx-auto max-w-7xl space-y-6">
+      <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-1">
+          <Badge variant="primary" className="mb-2">
+            <Kanban className="h-3 w-3" />
+            CRM de Leads
+          </Badge>
+          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">CRM de Leads</h1>
+          <p className="text-sm text-text-muted">Gerencie o pipeline de novos alunos da sua assessoria.</p>
+        </div>
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          className="gradient-primary inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
+        >
+          <Plus className="h-4 w-4" />
+          Novo lead
+        </button>
+      </motion.div>
+
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <NewLeadForm onClose={() => setShowForm(false)} onAdd={addLead} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: "Total de leads", value: String(leads.length), color: "text-primary", icon: <Users className="h-4 w-4" /> },
+          { label: "Taxa de conversão", value: `${conversionRate}%`, color: "text-emerald-400", icon: <TrendingUp className="h-4 w-4" /> },
+          { label: "Receita potencial", value: `R$ ${potentialRevenue.toLocaleString("pt-BR")}`, color: "text-amber-400", icon: <TrendingUp className="h-4 w-4" /> },
+          { label: "Leads esta semana", value: String(newThisWeek), color: "text-blue-400", icon: <Calendar className="h-4 w-4" /> },
+        ].map((s) => (
+          <Card key={s.label}>
+            <CardContent className="p-4">
+              <div className={cn("mb-1 flex items-center gap-1.5 text-xs font-medium", s.color)}>
+                {s.icon}
+                {s.label}
+              </div>
+              <p className="text-xl font-bold text-white">{s.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </motion.div>
+
+      <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show" className="flex items-center gap-2">
+        <button
+          onClick={() => setView("kanban")}
+          className={cn("inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors", view === "kanban" ? "border-primary bg-primary/10 text-primary" : "border-border text-text-muted hover:text-white")}
+        >
+          <Kanban className="h-4 w-4" />
+          Kanban
+        </button>
+        <button
+          onClick={() => setView("lista")}
+          className={cn("inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors", view === "lista" ? "border-primary bg-primary/10 text-primary" : "border-border text-text-muted hover:text-white")}
+        >
+          <List className="h-4 w-4" />
+          Lista
+        </button>
+      </motion.div>
+
+      <AnimatePresence mode="wait">
+        {view === "kanban" ? (
+          <motion.div
+            key="kanban"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex gap-4 overflow-x-auto pb-4 sm:grid sm:grid-cols-2 lg:grid-cols-4"
+          >
+            {KANBAN_STAGES.map((stage) => {
+              const stageLeads = leads.filter((l) => l.stage === stage);
+              return (
+                <div key={stage} className="min-w-[260px] flex-shrink-0 space-y-3 rounded-2xl border border-border bg-card/50 p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-white">{STAGE_LABELS[stage]}</span>
+                    <span className={cn("rounded-full px-2 py-0.5 text-xs font-bold", STAGE_COLORS[stage])}>
+                      {stageLeads.length}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <AnimatePresence>
+                      {stageLeads.map((lead) => (
+                        <LeadCard key={lead.id} lead={lead} onAdvance={() => advanceLead(lead.id)} />
+                      ))}
+                    </AnimatePresence>
+                    {stageLeads.length === 0 && (
+                      <p className="py-4 text-center text-xs text-text-muted">Nenhum lead aqui</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="lista"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border">
+                        {["Nome", "Origem", "Estágio", "Valor", "Último contato", "Notas"].map((h) => (
+                          <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <AnimatePresence>
+                        {listLeads.map((lead, i) => (
+                          <motion.tr
+                            key={lead.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ delay: i * 0.03 }}
+                            className="border-b border-border/50 last:border-0 hover:bg-white/5"
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold", AVATAR_COLORS[lead.stage])}>
+                                  {lead.avatar}
+                                </span>
+                                <div>
+                                  <p className="text-sm font-medium text-white">{lead.name}</p>
+                                  <p className="text-xs text-text-muted">{lead.email}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <SourceBadge source={lead.source} />
+                            </td>
+                            <td className="px-4 py-3">
+                              <select
+                                value={lead.stage}
+                                onChange={(e) =>
+                                  setLeads((prev) =>
+                                    prev.map((l) =>
+                                      l.id === lead.id ? { ...l, stage: e.target.value as LeadStage } : l
+                                    )
+                                  )
+                                }
+                                className="rounded-lg border border-border bg-background px-2 py-1 text-xs text-white focus:border-primary focus:outline-none"
+                              >
+                                {STAGE_ORDER.map((s) => (
+                                  <option key={s} value={s}>{STAGE_LABELS[s]}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-4 py-3 text-sm font-medium text-emerald-400">
+                              R$ {lead.value}/mês
+                            </td>
+                            <td className="px-4 py-3 text-sm text-text-muted">{formatDate(lead.lastContact)}</td>
+                            <td className="max-w-[200px] px-4 py-3 text-xs text-text-muted">
+                              <span className="line-clamp-2">{lead.notes}</span>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
