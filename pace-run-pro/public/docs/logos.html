@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PACE RUN PRO — Logos</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: #050816; color: white; min-height: 100vh; padding: 32px 24px; }
+h1 { text-align: center; font-size: 1.6rem; font-weight: 900; margin-bottom: 6px; }
+h1 span { background: linear-gradient(135deg,#8b5cf6,#06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.sub { text-align: center; color: #6b7280; font-size: .9rem; margin-bottom: 40px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 28px; max-width: 1100px; margin: 0 auto 48px; }
+.card { background: #0b1220; border: 1px solid #1a2540; border-radius: 20px; overflow: hidden; }
+.card-preview { padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 280px; }
+.card-preview.light { background: #f5f5f5; }
+.card-preview.dark { background: #050816; }
+.card-preview img, .card-preview object, .card-preview iframe { max-width: 100%; max-height: 240px; }
+.card-info { padding: 18px 20px; border-top: 1px solid #1a2540; }
+.card-tag { display: inline-block; background: rgba(139,92,246,.2); color: #a78bfa; border-radius: 999px; padding: 3px 12px; font-size: .72rem; font-weight: 700; margin-bottom: 8px; }
+.card-title { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+.card-desc { font-size: .8rem; color: #6b7280; line-height: 1.5; margin-bottom: 14px; }
+.uses { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.use-chip { background: #0d1526; border: 1px solid #1a2540; border-radius: 6px; padding: 3px 10px; font-size: .72rem; color: #9ca3af; }
+.btn-row { display: flex; gap: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; border-radius: 10px; padding: 9px 16px; font-size: .82rem; font-weight: 700; cursor: pointer; text-decoration: none; transition: opacity .2s; border: none; }
+.btn:hover { opacity: .85; }
+.btn-primary { background: linear-gradient(135deg,#8b5cf6,#7c3aed); color: white; }
+.btn-outline { background: transparent; border: 1px solid #1a2540; color: #9ca3af; }
+
+/* Inline SVGs */
+.svg-wrap { width: 100%; display: flex; justify-content: center; }
+
+.tip { background: #0b1220; border: 1px solid #1a2540; border-radius: 14px; padding: 20px 24px; max-width: 1100px; margin: 0 auto; }
+.tip h3 { font-size: .95rem; font-weight: 700; margin-bottom: 10px; color: #a78bfa; }
+.tip ul { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+.tip li { font-size: .8rem; color: #9ca3af; padding: 6px 0; border-bottom: 1px solid #1a2540; }
+.tip li::before { content: "✓ "; color: #8b5cf6; font-weight: 700; }
+</style>
+</head>
+<body>
+<h1>⚡ PACE RUN <span>PRO</span></h1>
+<p class="sub">Logomarca vetorial — SVG infinitamente escalável</p>
+
+<div class="grid">
+
+  <!-- APP ICON -->
+  <div class="card">
+    <div class="card-preview dark">
+      <svg width="220" height="220" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="ig1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#a78bfa"/>
+            <stop offset="50%" stop-color="#8b5cf6"/>
+            <stop offset="100%" stop-color="#06b6d4"/>
+          </linearGradient>
+          <linearGradient id="ibg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#0d0a1e"/>
+            <stop offset="100%" stop-color="#050816"/>
+          </linearGradient>
+          <filter id="ig">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="iglow2">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="40" result="b"/>
+          </filter>
+        </defs>
+        <rect width="1024" height="1024" rx="220" fill="url(#ibg)"/>
+        <ellipse cx="512" cy="500" rx="280" ry="300" fill="#8b5cf6" opacity="0.12" filter="url(#iglow2)"/>
+        <circle cx="512" cy="512" r="380" fill="none" stroke="url(#ig1)" stroke-width="6" opacity="0.25"/>
+        <path d="M 605,130 L 388,522 L 498,522 L 270,875 L 638,488 L 528,488 Z" fill="url(#ig1)" filter="url(#ig)"/>
+        <line x1="250" y1="400" x2="340" y2="400" stroke="url(#ig1)" stroke-width="8" stroke-linecap="round" opacity="0.5"/>
+        <line x1="220" y1="440" x2="340" y2="440" stroke="url(#ig1)" stroke-width="6" stroke-linecap="round" opacity="0.35"/>
+        <line x1="250" y1="480" x2="340" y2="480" stroke="url(#ig1)" stroke-width="4" stroke-linecap="round" opacity="0.2"/>
+        <line x1="684" y1="560" x2="774" y2="560" stroke="url(#ig1)" stroke-width="8" stroke-linecap="round" opacity="0.5"/>
+        <line x1="700" y1="600" x2="780" y2="600" stroke="url(#ig1)" stroke-width="6" stroke-linecap="round" opacity="0.35"/>
+        <circle cx="452" cy="526" r="18" fill="white" opacity="0.9" filter="url(#ig)"/>
+      </svg>
+    </div>
+    <div class="card-info">
+      <span class="card-tag">Ícone de App</span>
+      <div class="card-title">Logo Mark — Ícone</div>
+      <div class="card-desc">Quadrado com cantos arredondados. Funciona como ícone do app na tela do iPhone/Android, favicon, avatar.</div>
+      <div class="uses">
+        <span class="use-chip">📱 App iOS</span>
+        <span class="use-chip">🤖 App Android</span>
+        <span class="use-chip">🌐 Favicon</span>
+        <span class="use-chip">💬 WhatsApp</span>
+        <span class="use-chip">📸 Instagram</span>
+      </div>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="logo-app-icon.svg" download="pacerunpro-app-icon.svg">↓ Baixar SVG</a>
+        <button class="btn btn-outline" onclick="copySVG('icon')">Copiar código</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRAND HORIZONTAL -->
+  <div class="card">
+    <div class="card-preview dark" style="padding:16px">
+      <svg width="100%" viewBox="0 0 1600 600" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#a78bfa"/>
+            <stop offset="50%" stop-color="#8b5cf6"/>
+            <stop offset="100%" stop-color="#06b6d4"/>
+          </linearGradient>
+          <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#8b5cf6"/>
+            <stop offset="100%" stop-color="#06b6d4"/>
+          </linearGradient>
+          <linearGradient id="bgDark" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#0d0a1e"/>
+            <stop offset="100%" stop-color="#050816"/>
+          </linearGradient>
+          <filter id="bg">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <rect width="1600" height="600" fill="url(#bgDark)"/>
+        <ellipse cx="260" cy="300" rx="200" ry="200" fill="#8b5cf6" opacity="0.08"/>
+        <circle cx="260" cy="300" r="210" fill="#0f0a28" stroke="url(#bg1)" stroke-width="3" opacity="0.9"/>
+        <circle cx="260" cy="300" r="190" fill="none" stroke="url(#bg1)" stroke-width="1.5" opacity="0.3"/>
+        <path d="M 295,120 L 185,315 L 232,315 L 128,490 L 300,285 L 253,285 Z" fill="url(#bg1)" filter="url(#bg)"/>
+        <circle cx="210" cy="316" r="9" fill="white" opacity="0.85"/>
+        <line x1="95" y1="268" x2="158" y2="268" stroke="url(#bg1)" stroke-width="5" stroke-linecap="round" opacity="0.45"/>
+        <line x1="80" y1="294" x2="158" y2="294" stroke="url(#bg1)" stroke-width="4" stroke-linecap="round" opacity="0.3"/>
+        <line x1="95" y1="320" x2="158" y2="320" stroke="url(#bg1)" stroke-width="3" stroke-linecap="round" opacity="0.2"/>
+        <text x="510" y="240" font-family="'Arial Black',Arial,sans-serif" font-size="148" font-weight="900" letter-spacing="-4" fill="white">PACE RUN</text>
+        <text x="510" y="390" font-family="'Arial Black',Arial,sans-serif" font-size="148" font-weight="900" letter-spacing="8" fill="url(#bg2)">PRO</text>
+        <rect x="510" y="408" width="760" height="5" fill="url(#bg2)" opacity="0.4" rx="3"/>
+        <text x="512" y="480" font-family="Arial,sans-serif" font-size="36" font-weight="400" letter-spacing="6" fill="#6b7280">TECNOLOGIA PARA CORREDORES</text>
+      </svg>
+    </div>
+    <div class="card-info">
+      <span class="card-tag">Marca Horizontal</span>
+      <div class="card-title">Logo Completa — Horizontal</div>
+      <div class="card-desc">Versão com ícone + nome + tagline. Ideal para cabeçalhos, merchandising e publicidade.</div>
+      <div class="uses">
+        <span class="use-chip">👕 Camisas</span>
+        <span class="use-chip">🍶 Garrafas</span>
+        <span class="use-chip">🖥️ Site</span>
+        <span class="use-chip">📢 Publicidade</span>
+        <span class="use-chip">🖨️ Impressão</span>
+        <span class="use-chip">🎽 Uniforme</span>
+      </div>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="logo-brand.svg" download="pacerunpro-logo-brand.svg">↓ Baixar SVG</a>
+        <button class="btn btn-outline" onclick="copySVG('brand')">Copiar código</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VERSÃO FUNDO BRANCO (para bordado/impressão) -->
+  <div class="card">
+    <div class="card-preview light">
+      <svg width="220" height="220" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="wg1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#7c3aed"/>
+            <stop offset="100%" stop-color="#0284c7"/>
+          </linearGradient>
+          <filter id="wg">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <rect width="1024" height="1024" rx="220" fill="#f8f8ff"/>
+        <circle cx="512" cy="512" r="380" fill="none" stroke="url(#wg1)" stroke-width="8" opacity="0.3"/>
+        <path d="M 605,130 L 388,522 L 498,522 L 270,875 L 638,488 L 528,488 Z" fill="url(#wg1)" filter="url(#wg)"/>
+        <line x1="250" y1="400" x2="340" y2="400" stroke="url(#wg1)" stroke-width="8" stroke-linecap="round" opacity="0.5"/>
+        <line x1="220" y1="440" x2="340" y2="440" stroke="url(#wg1)" stroke-width="6" stroke-linecap="round" opacity="0.4"/>
+        <circle cx="452" cy="526" r="18" fill="#7c3aed" opacity="0.9"/>
+      </svg>
+    </div>
+    <div class="card-info">
+      <span class="card-tag" style="background:rgba(124,58,237,.15);color:#7c3aed">Versão Clara</span>
+      <div class="card-title">Ícone — Fundo Branco</div>
+      <div class="card-desc">Para bordado em camisas brancas, impressão em papel, uso em fundos claros.</div>
+      <div class="uses">
+        <span class="use-chip">🪡 Bordado</span>
+        <span class="use-chip">📄 Papel branco</span>
+        <span class="use-chip">🏷️ Etiqueta</span>
+        <span class="use-chip">💳 Cartão</span>
+      </div>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="logo-app-icon.svg" download="pacerunpro-icon-white-bg.svg">↓ Baixar SVG</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TIPS -->
+<div class="tip">
+  <h3>⚡ Como usar cada formato</h3>
+  <ul>
+    <li>SVG → qualquer tamanho sem perder qualidade</li>
+    <li>App iOS/Android → exportar como PNG 1024×1024</li>
+    <li>Instagram perfil → PNG 400×400, fundo escuro</li>
+    <li>Camisa/bordado → converter SVG para vetor no Illustrator ou Corel</li>
+    <li>Garrafa/brinde → enviar SVG direto para a gráfica</li>
+    <li>Fundo branco → versão clara (3º card) para impressão offset</li>
+    <li>Stories/Reels → usar versão horizontal recortada</li>
+    <li>Favicon → exportar ícone como 32×32 e 64×64 PNG</li>
+  </ul>
+</div>
+
+<script>
+function copySVG(type) {
+  const url = type === 'icon' ? 'logo-app-icon.svg' : 'logo-brand.svg';
+  fetch(url).then(r => r.text()).then(t => {
+    navigator.clipboard.writeText(t).then(() => alert('Código SVG copiado!'));
+  });
+}
+</script>
+</body>
+</html>
