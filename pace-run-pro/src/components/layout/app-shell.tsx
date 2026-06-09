@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Menu, Search, Zap } from "lucide-react";
+import { Bell, Menu, Search } from "lucide-react";
+import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -41,14 +42,9 @@ export function AppShell({
     <div className="flex min-h-dvh w-full">
       {/* Sidebar — desktop */}
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-card/60 backdrop-blur-xl lg:flex">
-        <div className="flex items-center gap-2.5 px-6 py-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
-            <Zap className="h-5 w-5 text-white" fill="white" />
-          </div>
-          <div>
-            <p className="font-display text-sm font-bold leading-none tracking-wide">PACE RUN PRO</p>
-            <p className="mt-1 text-[11px] uppercase tracking-wider text-text-muted">{roleLabel}</p>
-          </div>
+        <div className="px-5 py-5">
+          <Logo size={32} />
+          <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-text-muted/70 pl-0.5">{roleLabel}</p>
         </div>
 
         <nav className="flex-1 space-y-1 px-3">
@@ -123,11 +119,8 @@ export function AppShell({
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
               className="fixed inset-y-0 left-0 z-50 w-72 border-r border-border bg-[#070b18] p-4 lg:hidden"
             >
-              <div className="mb-6 flex items-center gap-2.5 px-2 pt-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary">
-                  <Zap className="h-5 w-5 text-white" fill="white" />
-                </div>
-                <p className="font-display text-sm font-bold tracking-wide">PACE RUN PRO</p>
+              <div className="mb-6 px-2 pt-2">
+                <Logo size={30} />
               </div>
               <nav className="space-y-1">
                 {allNav.map((item) => {

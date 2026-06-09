@@ -4,7 +4,8 @@ import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Zap, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 // ── Shared input style ────────────────────────────────────────────────────
 const inputClass =
@@ -58,7 +59,10 @@ function LoginContent() {
       <div className="rounded-2xl border border-border bg-card p-8 shadow-2xl shadow-black/40">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="font-display text-3xl font-extrabold text-white">
+          <div className="mb-5 flex justify-center">
+            <Logo size={40} />
+          </div>
+          <h1 className="font-display text-2xl font-extrabold text-white">
             Entrar na sua conta
           </h1>
           <p className="mt-2 text-sm text-text-muted">
@@ -219,13 +223,8 @@ export default function LoginPage() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
-              <Zap className="h-5 w-5 text-white" fill="white" />
-            </div>
-            <span className="font-display text-lg font-extrabold tracking-wide text-white">
-              PACE RUN <span className="gradient-text">PRO</span>
-            </span>
+          <Link href="/">
+            <Logo size={32} />
           </Link>
         </div>
       </nav>

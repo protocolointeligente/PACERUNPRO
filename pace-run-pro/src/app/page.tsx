@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Zap, ArrowRight, Star } from "lucide-react";
+import { ArrowRight, Star } from "lucide-react";
+import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,13 +18,8 @@ export default function LandingPage() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
-              <Zap className="h-5 w-5 text-white" fill="white" />
-            </div>
-            <span className="font-display text-lg font-extrabold tracking-wide text-white">
-              PACE RUN <span className="gradient-text">PRO</span>
-            </span>
+          <Link href="/">
+            <Logo size={34} />
           </Link>
           <div className="hidden items-center gap-8 md:flex">
             <a href="#funcionalidades" className="text-sm text-text-muted transition-colors hover:text-white">
@@ -214,9 +210,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-4xl px-6">
           <div className="glass rounded-3xl border border-primary/20 p-12 text-center">
             <div className="mb-6 flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl gradient-primary shadow-2xl shadow-primary/40">
-                <Zap className="h-9 w-9 text-white" fill="white" />
-              </div>
+              <Logo variant="mark" size={64} />
             </div>
             <h2 className="font-display text-4xl font-extrabold sm:text-5xl">
               Pronto para levar sua assessoria{" "}
@@ -247,13 +241,8 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
             <div className="md:col-span-1">
-              <Link href="/" className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
-                  <Zap className="h-5 w-5 text-white" fill="white" />
-                </div>
-                <span className="font-display text-base font-extrabold tracking-wide text-white">
-                  PACE RUN <span className="gradient-text">PRO</span>
-                </span>
+              <Link href="/">
+                <Logo size={30} />
               </Link>
               <p className="mt-3 text-sm text-text-muted">
                 Performance · Ciência · Propósito
