@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Activity, AlertTriangle, Calendar, ClipboardList, HeartPulse, Moon, Ruler, Target, TrendingUp, Weight } from "lucide-react";
+import { Activity, AlertTriangle, ArrowLeft, Calendar, ClipboardList, HeartPulse, Moon, Ruler, Target, TrendingUp, Weight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,10 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
+      <Link href="/treinador/alunos" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-white transition-colors">
+        <ArrowLeft className="h-4 w-4" />
+        Voltar
+      </Link>
       {/* Header */}
       <Card>
         <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">

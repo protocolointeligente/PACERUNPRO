@@ -40,6 +40,7 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/alunos", label: "Atletas", icon: Users },
   { href: "/treinador/prescricao/corrida", label: "Prescrição corrida", icon: Activity },
   { href: "/treinador/prescricao/forca", label: "Prescrição força", icon: Dumbbell },
+  { href: "/treinador/prescricao/periodizacao", label: "Periodização", icon: CalendarDays },
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
   { href: "/treinador/gestao", label: "Gestão & vendas", icon: DollarSign },
   { href: "/treinador/admin", label: "Admin", icon: Settings },

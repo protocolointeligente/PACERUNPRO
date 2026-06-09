@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { AlertTriangle, CheckCircle2, Clock, Flame, PlayCircle, Repeat, Target, Timer } from "lucide-react";
+import Link from "next/link";
+import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, Flame, PlayCircle, Repeat, Target, Timer } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,10 @@ export default async function ExerciseDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      <Link href="/aluno/forca" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-white transition-colors">
+        <ArrowLeft className="h-4 w-4" />
+        Voltar
+      </Link>
       <Card className="overflow-hidden">
         <div className="relative h-56 sm:h-72">
           <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${exercise.imageUrl}')` }} />

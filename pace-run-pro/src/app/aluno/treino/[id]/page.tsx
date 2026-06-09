@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  ArrowLeft,
   Clock,
   Flame,
   Gauge,
@@ -35,6 +36,10 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
+      <Link href="/aluno/calendario" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-white transition-colors">
+        <ArrowLeft className="h-4 w-4" />
+        Voltar
+      </Link>
       {/* Hero */}
       <Card className="overflow-hidden">
         <div className="relative h-52 sm:h-64">

@@ -163,11 +163,28 @@ export default function ReportsPage() {
               {generated && (
                 <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
                   <Card className="border-success/30 bg-success/5">
-                    <CardContent className="flex items-center gap-2.5 p-3.5 text-sm text-text-muted">
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
-                      Relatório <span className="font-semibold text-white">{reportTypes.find((t) => t.id === reportType)?.label}</span>{" "}
-                      {needsAthlete && athlete ? <>de <span className="font-semibold text-white">{athlete.name}</span> </> : null}
-                      gerado em <span className="font-semibold text-white">{format}</span> · {period.toLowerCase()}. Pronto para download.
+                    <CardContent className="p-3.5">
+                      <div className="flex items-center gap-2.5 text-sm text-text-muted">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+                        <span>
+                          Relatório <span className="font-semibold text-white">{reportTypes.find((t) => t.id === reportType)?.label}</span>{" "}
+                          {needsAthlete && athlete ? <>de <span className="font-semibold text-white">{athlete.name}</span> </> : null}
+                          gerado em <span className="font-semibold text-white">{format}</span> · {period.toLowerCase()}.
+                        </span>
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        <a
+                          href={`data:text/plain;charset=utf-8,${encodeURIComponent(`Relatório: ${reportTypes.find((t) => t.id === reportType)?.label}\nAtleta: ${athlete?.name ?? "Equipe"}\nPeríodo: ${period}\nFormato: ${format}\nGerado em: ${new Date().toLocaleDateString("pt-BR")}`)}`}
+                          download={`relatorio-${reportType}-${new Date().toISOString().slice(0,10)}.${format === "PDF" ? "pdf" : format === "Excel" ? "xlsx" : "csv"}`}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 border border-primary/30 px-3.5 py-2 text-sm font-semibold text-white hover:bg-primary/25 transition-colors"
+                        >
+                          <Download className="h-4 w-4" />
+                          Baixar {format}
+                        </a>
+                        <button onClick={() => setGenerated(false)} className="px-3 py-2 text-sm text-text-muted hover:text-white transition-colors">
+                          Novo relatório
+                        </button>
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>
