@@ -1,107 +1,406 @@
 "use client";
 
-import { useState } from "react";
-import { Heart, MessageCircle, Share2, Trophy, Users, Medal, ChevronUp, ChevronDown, Minus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart, MessageCircle, Share2, Trophy, Users, Medal, ChevronUp, ChevronDown, Minus, CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { clubs, communityFeed, monthlyChallenge, ranking } from "@/lib/mock-data";
+import { activityFeed, monthlyChallenges, clubs, ranking, type ActivityPost } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+
+async function sharePost(post: ActivityPost) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1920;
+  const ctx = canvas.getContext("2d")!;
+  const grad = ctx.createLinearGradient(0, 0, 1080, 1920);
+  grad.addColorStop(0, "#1a1040");
+  grad.addColorStop(1, "#050816");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1080, 1920);
+  ctx.fillStyle = "rgba(255,255,255,0.05)";
+  ctx.roundRect(80, 600, 920, 600, 32);
+  ctx.fill();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 180px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(`${post.metrics.distance.toFixed(2).replace(".", ",")} km`, 540, 800);
+  ctx.font = "80px sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,0.8)";
+  ctx.fillText(`${post.metrics.pace} /km  ·  ${post.metrics.duration}`, 540, 940);
+  ctx.font = "48px sans-serif";
+  ctx.fillStyle = "rgba(139,92,246,0.9)";
+  ctx.fillText("⚡ PACE RUN PRO", 540, 1200);
+
+  canvas.toBlob(async (blob) => {
+    if (!blob) return;
+    const file = new File([blob], "treino.png", { type: "image/png" });
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: "Meu treino", text: post.caption });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `treino-${post.metrics.distance}km.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  });
+}
+
+function colorBorder(color: string) {
+  if (color === "purple") return "border-l-purple-500";
+  if (color === "emerald") return "border-l-emerald-500";
+  if (color === "amber") return "border-l-amber-500";
+  return "border-l-cyan-500";
+}
+
+function colorProgress(color: string) {
+  if (color === "purple") return "bg-purple-500";
+  if (color === "emerald") return "bg-emerald-500";
+  if (color === "amber") return "bg-amber-500";
+  return "bg-cyan-500";
+}
+
+function colorText(color: string) {
+  if (color === "purple") return "text-purple-400";
+  if (color === "emerald") return "text-emerald-400";
+  if (color === "amber") return "text-amber-400";
+  return "text-cyan-400";
+}
+
+function colorRing(color: string) {
+  if (color === "purple") return "ring-purple-500";
+  if (color === "emerald") return "ring-emerald-500";
+  if (color === "amber") return "ring-amber-500";
+  return "ring-cyan-500";
+}
+
+function SplitsBars({ splits }: { splits: { km: number; pace: string; elev?: number }[] }) {
+  const paceToSec = (p: string) => {
+    const [m, s] = p.split(":").map(Number);
+    return m * 60 + (s || 0);
+  };
+  const paces = splits.map((s) => paceToSec(s.pace));
+  const maxPace = Math.max(...paces);
+  const minPace = Math.min(...paces);
+  const range = maxPace - minPace || 1;
+
+  return (
+    <div className="flex items-end gap-0.5 h-8">
+      {splits.map((s, i) => {
+        const sec = paceToSec(s.pace);
+        const height = Math.round(((maxPace - sec) / range) * 24 + 8);
+        return (
+          <div
+            key={i}
+            style={{ height: `${height}px` }}
+            className="w-4 rounded-sm bg-white/30 flex-shrink-0"
+            title={`km ${s.km}: ${s.pace}/km`}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function ActivityCard({ post }: { post: ActivityPost }) {
+  const [isLiked, setIsLiked] = useState(false);
+
+  return (
+    <Card className="overflow-hidden">
+      <div
+        className="relative w-full"
+        style={{
+          background: post.photoGradient,
+          aspectRatio: "4/5",
+          maxHeight: 480,
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+        <div className="absolute top-3 left-3 flex items-center gap-2">
+          <div
+            className={cn(
+              "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white",
+              post.avatarColor
+            )}
+          >
+            {post.athleteAvatar}
+          </div>
+          <span className="text-xs font-semibold text-white/90">{post.athleteName}</span>
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1">
+          {post.metrics.splits && post.metrics.splits.length > 0 && (
+            <div className="mb-2">
+              <SplitsBars splits={post.metrics.splits} />
+            </div>
+          )}
+          <p className="text-white font-bold text-center"
+            style={{ fontSize: "2.5rem", lineHeight: 1.1 }}>
+            {post.metrics.distance.toFixed(2).replace(".", ",")} <span className="text-2xl font-semibold">km</span>
+          </p>
+          <div className="flex items-center justify-center gap-4 text-white/80 text-sm font-medium">
+            <span>{post.metrics.pace} /km</span>
+            <span>·</span>
+            <span>{post.metrics.duration}</span>
+            {post.metrics.elevation !== undefined && post.metrics.elevation > 0 && (
+              <>
+                <span>·</span>
+                <span>↑ {post.metrics.elevation}m</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="absolute bottom-3 right-3 text-white/40 text-xs font-semibold tracking-wide">
+          ⚡ PACE RUN PRO
+        </div>
+      </div>
+
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div
+            className={cn(
+              "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0",
+              post.avatarColor
+            )}
+          >
+            {post.athleteAvatar}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white leading-none">{post.athleteName}</p>
+            <p className="text-xs text-text-muted">{post.timeAgo}</p>
+          </div>
+        </div>
+
+        <p className="text-sm text-text-muted mb-3 leading-relaxed">{post.caption}</p>
+
+        <div className="flex items-center gap-4 border-t border-border pt-3 text-sm text-text-muted">
+          <button
+            onClick={() => setIsLiked((v) => !v)}
+            className={cn(
+              "flex items-center gap-1.5 transition-colors hover:text-red-400",
+              isLiked && "text-red-400"
+            )}
+          >
+            <Heart className={cn("h-4 w-4 transition-transform", isLiked && "fill-current scale-110")} />
+            {post.likes + (isLiked ? 1 : 0)}
+          </button>
+          <button className="flex items-center gap-1.5 transition-colors hover:text-white">
+            <MessageCircle className="h-4 w-4" />
+            {post.comments.length}
+          </button>
+          <button
+            onClick={() => sharePost(post)}
+            className="flex items-center gap-1.5 transition-colors hover:text-white ml-auto"
+          >
+            <Share2 className="h-4 w-4" />
+            <span className="text-xs">Compartilhar</span>
+          </button>
+        </div>
+
+        {post.comments.length > 0 && (
+          <div className="mt-3 space-y-1.5 border-t border-border pt-3">
+            {post.comments.map((c, i) => (
+              <div key={i} className="text-xs text-text-muted">
+                <span className="font-semibold text-white/80">{c.author}</span>{" "}
+                {c.text}
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ChallengeCard({
+  challenge,
+  expanded,
+  onToggle,
+}: {
+  challenge: (typeof monthlyChallenges)[number];
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const progressPct = Math.round((challenge.currentProgress / challenge.target) * 100);
+
+  return (
+    <Card className={cn("border-l-4", colorBorder(challenge.color))}>
+      <CardContent className="p-4">
+        <div className="flex items-start gap-2 mb-3">
+          <span className="text-2xl">{challenge.emoji}</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-white text-sm leading-tight">{challenge.title}</p>
+            <Badge variant="default" className="mt-1 text-xs">{challenge.theme}</Badge>
+          </div>
+        </div>
+
+        <div className="mb-2">
+          <div className="flex justify-between text-xs text-text-muted mb-1">
+            <span>
+              {challenge.currentProgress} / {challenge.target} {challenge.unit}
+            </span>
+            <span className={cn("font-semibold", colorText(challenge.color))}>
+              {progressPct}%
+            </span>
+          </div>
+          <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+            <div
+              className={cn("h-full rounded-full transition-all", colorProgress(challenge.color))}
+              style={{ width: `${Math.min(progressPct, 100)}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-text-muted mb-2">
+          <span>{challenge.participants.toLocaleString("pt-BR")} participantes</span>
+          <span>{challenge.endsInDays} dias restantes</span>
+        </div>
+
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-1 text-xs text-text-muted hover:text-white transition-colors w-full mb-2"
+        >
+          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          <span>{expanded ? "Ocultar" : "Ver"} ranking do desafio</span>
+        </button>
+
+        {expanded && (
+          <div className="space-y-1.5 mb-3">
+            {challenge.leaderboard.map((entry) => (
+              <div
+                key={entry.rank}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs",
+                  entry.isYou
+                    ? cn("ring-1", colorRing(challenge.color), "bg-white/5")
+                    : "bg-white/3"
+                )}
+              >
+                <span
+                  className={cn(
+                    "font-bold w-5 text-center",
+                    entry.rank <= 3 ? "text-warning" : "text-text-muted"
+                  )}
+                >
+                  #{entry.rank}
+                </span>
+                <div
+                  className={cn(
+                    "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0",
+                    entry.isYou ? colorProgress(challenge.color) : "bg-white/20"
+                  )}
+                >
+                  {entry.avatar}
+                </div>
+                <span className={cn("flex-1 truncate", entry.isYou ? "text-white font-semibold" : "text-white/80")}>
+                  {entry.name} {entry.isYou && "(você)"}
+                </span>
+                <span className={cn(entry.isYou ? colorText(challenge.color) : "text-text-muted")}>
+                  {entry.value} {challenge.unit}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <p className="text-xs text-text-muted italic">
+          Prêmio: <span className="text-white/70 not-italic">{challenge.prize}</span>
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function CommunityPage() {
   const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null);
+  const [posts, setPosts] = useState<ActivityPost[]>(activityFeed);
+
+  useEffect(() => {
+    const pending = localStorage.getItem("newActivityPost");
+    if (pending) {
+      const post = JSON.parse(pending) as ActivityPost;
+      setPosts((prev) => [post, ...prev]);
+      localStorage.removeItem("newActivityPost");
+    }
+  }, []);
 
   return (
     <div className="mx-auto max-w-6xl space-y-7">
       <div>
         <Badge variant="primary" className="mb-2">Comunidade</Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Desafios, ranking e clubes</h1>
-        <p className="mt-1.5 text-sm text-text-muted">Conecte-se com outros corredores, participe de desafios mensais e acompanhe seu ranking.</p>
+        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Desafios, feed e clubes</h1>
+        <p className="mt-1.5 text-sm text-text-muted">
+          Conecte-se com outros corredores, participe de desafios mensais e acompanhe seu ranking.
+        </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-        {/* Feed */}
+      <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         <div className="space-y-4">
           <Tabs defaultValue="feed">
             <TabsList>
               <TabsTrigger value="feed">Feed</TabsTrigger>
-              <TabsTrigger value="desafios">Desafios</TabsTrigger>
+              <TabsTrigger value="ranking">Ranking</TabsTrigger>
               <TabsTrigger value="clubes">Clubes</TabsTrigger>
             </TabsList>
 
             <TabsContent value="feed">
-              <div className="space-y-4">
-                {communityFeed.map((post) => {
-                  const isLiked = !!liked[post.id];
-                  return (
-                    <Card key={post.id}>
-                      <CardContent className="p-5">
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarImage src={post.avatarUrl} alt={post.author} />
-                            <AvatarFallback>{post.author.slice(0, 2).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-sm font-semibold text-white">{post.author}</p>
-                            <p className="text-xs text-text-muted">{post.time}</p>
-                          </div>
-                        </div>
-                        <p className="mt-3 text-sm text-text-muted">{post.content}</p>
-                        {post.workout && (
-                          <Badge variant="info" className="mt-3">
-                            <Trophy className="h-3 w-3" /> {post.workout}
-                          </Badge>
-                        )}
-                        <div className="mt-4 flex items-center gap-5 border-t border-border pt-3 text-sm text-text-muted">
-                          <button
-                            onClick={() => setLiked((s) => ({ ...s, [post.id]: !s[post.id] }))}
-                            className={cn("flex items-center gap-1.5 transition-colors hover:text-danger", isLiked && "text-danger")}
-                          >
-                            <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
-                            {post.likes + (isLiked ? 1 : 0)}
-                          </button>
-                          <button className="flex items-center gap-1.5 transition-colors hover:text-white">
-                            <MessageCircle className="h-4 w-4" />
-                            {post.comments}
-                          </button>
-                          <button className="flex items-center gap-1.5 transition-colors hover:text-white">
-                            <Share2 className="h-4 w-4" />
-                            Compartilhar
-                          </button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+              <div className="space-y-5">
+                {posts.map((post) => (
+                  <ActivityCard key={post.id} post={post} />
+                ))}
               </div>
             </TabsContent>
 
-            <TabsContent value="desafios">
-              <Card className="border-primary/30 bg-gradient-to-br from-primary/12 to-card">
+            <TabsContent value="ranking">
+              <Card>
                 <CardContent className="p-5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                      <Trophy className="h-5 w-5" />
-                    </span>
-                    <div>
-                      <h3 className="font-display text-lg font-bold text-white">{monthlyChallenge.title}</h3>
-                      <p className="text-xs text-text-muted">{monthlyChallenge.participants.toLocaleString("pt-BR")} participantes · faltam {monthlyChallenge.daysLeft} dias</p>
-                    </div>
+                  <h3 className="mb-4 flex items-center gap-2 font-display text-base font-semibold text-white">
+                    <Medal className="h-4 w-4 text-warning" />
+                    Ranking do mês
+                  </h3>
+                  <div className="space-y-2">
+                    {ranking.map((r) => {
+                      const TrendIcon = r.trend === "up" ? ChevronUp : r.trend === "down" ? ChevronDown : Minus;
+                      const trendColor =
+                        r.trend === "up"
+                          ? "text-success"
+                          : r.trend === "down"
+                          ? "text-danger"
+                          : "text-text-muted";
+                      return (
+                        <div
+                          key={r.position}
+                          className={cn(
+                            "flex items-center gap-3 rounded-xl border p-2.5",
+                            r.highlight
+                              ? "border-primary/50 bg-primary/10"
+                              : "border-border bg-card-hover/30"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "font-display text-sm font-bold",
+                              r.position <= 3 ? "text-warning" : "text-text-muted"
+                            )}
+                          >
+                            #{r.position}
+                          </span>
+                          <span className="flex-1 truncate text-sm font-medium text-white">
+                            {r.name}
+                          </span>
+                          <span className="text-xs text-text-muted">{r.value}</span>
+                          <TrendIcon className={cn("h-4 w-4", trendColor)} />
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="mt-4">
-                    <div className="mb-1.5 flex justify-between text-xs text-text-muted">
-                      <span>Seu progresso</span>
-                      <span className="font-semibold text-white">{Math.round(monthlyChallenge.progress * 100)}%</span>
-                    </div>
-                    <Progress value={monthlyChallenge.progress * 100} />
-                  </div>
-                  <p className="mt-3 text-xs text-text-muted">
-                    Recompensa: <span className="text-white">{monthlyChallenge.reward}</span>
-                  </p>
-                  <Button className="mt-4 w-full sm:w-auto">Ver detalhes do desafio</Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -116,9 +415,13 @@ export default function CommunityPage() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-white">{c.name}</p>
-                        <p className="text-xs text-text-muted">{c.members} membros · {c.location}</p>
+                        <p className="text-xs text-text-muted">
+                          {c.members} membros · {c.location}
+                        </p>
                       </div>
-                      <Button size="sm" variant="secondary">Entrar</Button>
+                      <Button size="sm" variant="secondary">
+                        Entrar
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -127,55 +430,48 @@ export default function CommunityPage() {
           </Tabs>
         </div>
 
-        {/* Ranking + medals */}
-        <div className="space-y-5">
-          <Card>
-            <CardContent className="p-5">
-              <h3 className="mb-4 flex items-center gap-2 font-display text-base font-semibold text-white">
-                <Medal className="h-4 w-4 text-warning" />
-                Ranking do mês
-              </h3>
-              <div className="space-y-2">
-                {ranking.map((r) => {
-                  const TrendIcon = r.trend === "up" ? ChevronUp : r.trend === "down" ? ChevronDown : Minus;
-                  const trendColor = r.trend === "up" ? "text-success" : r.trend === "down" ? "text-danger" : "text-text-muted";
-                  return (
-                    <div
-                      key={r.position}
-                      className={cn(
-                        "flex items-center gap-3 rounded-xl border p-2.5",
-                        r.highlight ? "border-primary/50 bg-primary/10" : "border-border bg-card-hover/30"
-                      )}
-                    >
-                      <span className={cn("font-display text-sm font-bold", r.position <= 3 ? "text-warning" : "text-text-muted")}>
-                        #{r.position}
-                      </span>
-                      <span className="flex-1 truncate text-sm font-medium text-white">{r.name}</span>
-                      <span className="text-xs text-text-muted">{r.value}</span>
-                      <TrendIcon className={cn("h-4 w-4", trendColor)} />
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+        <div className="space-y-4">
+          <div className="lg:sticky lg:top-6">
+            <div className="flex items-center gap-2 mb-3">
+              <CalendarDays className="h-4 w-4 text-primary" />
+              <h2 className="font-display text-base font-semibold text-white">Desafios do Mês</h2>
+            </div>
 
-          <Card>
-            <CardContent className="p-5">
-              <h3 className="mb-3 font-display text-base font-semibold text-white">Gamificação</h3>
-              <p className="text-sm text-text-muted">
-                Ganhe pontos completando treinos, mantendo sua sequência de adesão e participando de desafios. Troque
-                pontos por medalhas exclusivas e benefícios no plano.
-              </p>
-              <div className="mt-4 flex items-center gap-2">
-                {["🥇", "🥈", "🥉", "🔥", "⚡"].map((m, i) => (
-                  <span key={i} className="flex h-10 w-10 items-center justify-center rounded-xl bg-card-hover text-lg">
-                    {m}
-                  </span>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+            <div className="space-y-3">
+              {monthlyChallenges.map((challenge) => (
+                <ChallengeCard
+                  key={challenge.id}
+                  challenge={challenge}
+                  expanded={expandedChallenge === challenge.id}
+                  onToggle={() =>
+                    setExpandedChallenge((prev) =>
+                      prev === challenge.id ? null : challenge.id
+                    )
+                  }
+                />
+              ))}
+            </div>
+
+            <Card className="mt-4">
+              <CardContent className="p-5">
+                <h3 className="mb-3 font-display text-base font-semibold text-white">Gamificação</h3>
+                <p className="text-sm text-text-muted">
+                  Ganhe pontos completando treinos, mantendo sua sequência de adesão e participando de
+                  desafios. Troque pontos por medalhas exclusivas e benefícios no plano.
+                </p>
+                <div className="mt-4 flex items-center gap-2">
+                  {["🥇", "🥈", "🥉", "🔥", "⚡"].map((m, i) => (
+                    <span
+                      key={i}
+                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-card-hover text-lg"
+                    >
+                      {m}
+                    </span>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

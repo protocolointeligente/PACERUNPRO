@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { strengthSessionExample } from "@/lib/mock-data";
+import { WorkoutShareModal } from "@/components/workout-share-modal";
 
 type Phase = "working" | "resting" | "between" | "done";
 
@@ -54,32 +55,33 @@ const exercises = strengthSessionExample.exercises;
 export default function StrengthExecutarPage() {
   const router = useRouter();
 
-  // exerciseIdx: which exercise we are on
   const [exerciseIdx, setExerciseIdx] = useState(0);
-  // currentSet: which set we are about to do (1-based)
   const [currentSet, setCurrentSet] = useState(1);
-  // phase:
-  //   "working"  – athlete is doing a set
-  //   "resting"  – countdown timer between sets (same exercise)
-  //   "between"  – all sets done, waiting to move to next exercise
-  //   "done"     – all exercises done
   const [phase, setPhase] = useState<Phase>("working");
   const [restRemaining, setRestRemaining] = useState(0);
   const [restTotal, setRestTotal] = useState(0);
+  const [showShare, setShowShare] = useState(false);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startTimeRef = useRef<number>(Date.now());
 
   const exercise = exercises[exerciseIdx];
   const totalSets = exercise?.sets ?? 1;
   const isLastExercise = exerciseIdx === exercises.length - 1;
   const remainingExercises = exercises.slice(exerciseIdx + 1);
 
-  // Clear interval on unmount
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (phase === "done") {
+      const t = setTimeout(() => setShowShare(true), 800);
+      return () => clearTimeout(t);
+    }
+  }, [phase]);
 
   const startRest = useCallback(
     (onFinish: () => void) => {
@@ -151,36 +153,50 @@ export default function StrengthExecutarPage() {
     router.push("/aluno/checkin");
   }, [router]);
 
-  // ── Done screen ────────────────────────────────────────────────────────────
   if (phase === "done") {
+    const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
+    const totalDuration = `${Math.floor(elapsedSeconds / 60)}min ${elapsedSeconds % 60}s`;
+
     return (
-      <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center px-4 text-center">
-        <motion.div
-          initial={{ scale: 0.7, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-success/15"
-          style={{ color: "var(--color-success, #84cc16)" }}
-        >
-          <CheckCircle2 className="h-12 w-12" style={{ color: "var(--color-success, #84cc16)" }} />
-        </motion.div>
-        <h1 className="font-display text-3xl font-bold text-white">Treino concluído!</h1>
-        <p className="mt-2 text-text-muted">
-          Você completou todas as séries de{" "}
-          <span className="text-white">{strengthSessionExample.label}</span>. Ótimo trabalho!
-        </p>
-        <Button
-          size="lg"
-          className="gradient-primary mt-8 w-full shadow-lg shadow-primary/30"
-          onClick={finish}
-        >
-          <CheckCircle2 className="h-5 w-5" />
-          Fazer check-in pós-treino
-        </Button>
-        <Link href="/aluno/forca" className="mt-4 block text-sm text-text-muted hover:text-white">
-          Voltar para força
-        </Link>
-      </div>
+      <>
+        <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center px-4 text-center">
+          <motion.div
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-success/15"
+            style={{ color: "var(--color-success, #84cc16)" }}
+          >
+            <CheckCircle2 className="h-12 w-12" style={{ color: "var(--color-success, #84cc16)" }} />
+          </motion.div>
+          <h1 className="font-display text-3xl font-bold text-white">Treino concluído!</h1>
+          <p className="mt-2 text-text-muted">
+            Você completou todas as séries de{" "}
+            <span className="text-white">{strengthSessionExample.label}</span>. Ótimo trabalho!
+          </p>
+          <Button
+            size="lg"
+            className="gradient-primary mt-8 w-full shadow-lg shadow-primary/30"
+            onClick={finish}
+          >
+            <CheckCircle2 className="h-5 w-5" />
+            Fazer check-in pós-treino
+          </Button>
+          <Link href="/aluno/forca" className="mt-4 block text-sm text-text-muted hover:text-white">
+            Voltar para força
+          </Link>
+        </div>
+        <WorkoutShareModal
+          isOpen={showShare}
+          onClose={() => setShowShare(false)}
+          metrics={{
+            duration: totalDuration,
+            sessionName: "Treino de Força",
+            exerciseCount: exercises.length,
+          }}
+          activityType="forca"
+        />
+      </>
     );
   }
 

@@ -1791,6 +1791,313 @@ export const crmLeads: CrmLead[] = [
   },
 ];
 
+// ── Activity posts (feed with photos) ────────────────────────────────────
+export interface ActivityMetrics {
+  distance: number;
+  pace: string;
+  duration: string;
+  elevation?: number;
+  calories?: number;
+  avgHr?: number;
+  splits?: { km: number; pace: string; elev?: number }[];
+}
+
+export interface ActivityPost {
+  id: string;
+  athleteName: string;
+  athleteAvatar: string;
+  avatarColor: string;
+  timeAgo: string;
+  caption: string;
+  photoGradient: string;
+  metrics: ActivityMetrics;
+  likes: number;
+  comments: { author: string; text: string; timeAgo: string }[];
+}
+
+// ── Monthly challenges ────────────────────────────────────────────────────
+export type ChallengeType = "distance" | "sessions" | "elevation" | "speed";
+
+export interface MonthlyChallenge {
+  id: string;
+  month: string;
+  emoji: string;
+  title: string;
+  theme: string;
+  description: string;
+  type: ChallengeType;
+  target: number;
+  unit: string;
+  currentProgress: number;
+  participants: number;
+  prize: string;
+  endsInDays: number;
+  leaderboard: { rank: number; name: string; avatar: string; value: number; isYou?: boolean }[];
+  color: string;
+}
+
+export const activityFeed: ActivityPost[] = [
+  {
+    id: "ap-1",
+    athleteName: "Camila Andrade",
+    athleteAvatar: "CA",
+    avatarColor: "bg-purple-700",
+    timeAgo: "há 1 h",
+    caption: "Longão de domingo feito! 18 km progressivos com os últimos 6 no ritmo de meia. Semana 7 do bloco de construção concluída. Quem mais tá no bloco? 🏃‍♀️",
+    photoGradient: "linear-gradient(135deg, #1a1040 0%, #2d1b69 50%, #0f0824 100%)",
+    metrics: {
+      distance: 18,
+      pace: "5:18",
+      duration: "1h 35min",
+      elevation: 112,
+      calories: 820,
+      avgHr: 148,
+      splits: [
+        { km: 1, pace: "5:42", elev: 8 },
+        { km: 2, pace: "5:35", elev: 12 },
+        { km: 3, pace: "5:28", elev: 15 },
+        { km: 4, pace: "5:20", elev: 10 },
+        { km: 5, pace: "5:12", elev: 18 },
+        { km: 6, pace: "4:58", elev: 22 },
+      ],
+    },
+    likes: 42,
+    comments: [
+      { author: "Bruno Lacerda", text: "Que ritmo incrível nos últimos kms! 🔥", timeAgo: "há 45 min" },
+      { author: "Marina Sales", text: "Arrasou! Semana 7 também aqui ✅", timeAgo: "há 30 min" },
+    ],
+  },
+  {
+    id: "ap-2",
+    athleteName: "Bruno Lacerda",
+    athleteAvatar: "BL",
+    avatarColor: "bg-blue-700",
+    timeAgo: "há 3 h",
+    caption: "5k fácil de manhã cedo pra começar a semana do jeito certo. Zona 2 pura, respiração pelo nariz o tempo todo. Paz total 🌅",
+    photoGradient: "linear-gradient(160deg, #0a1628 0%, #1e3a5f 60%, #0d2137 100%)",
+    metrics: {
+      distance: 5,
+      pace: "6:12",
+      duration: "31min 2s",
+      elevation: 18,
+      calories: 295,
+      avgHr: 132,
+    },
+    likes: 18,
+    comments: [
+      { author: "Renata Vidal", text: "Treino regenerativo perfeito! 👏", timeAgo: "há 2 h" },
+    ],
+  },
+  {
+    id: "ap-3",
+    athleteName: "Marina Sales",
+    athleteAvatar: "MS",
+    avatarColor: "bg-emerald-700",
+    timeAgo: "há 5 h",
+    caption: "Tiro de 10 x 400m na pista. Último tiro foi o mais rápido do dia — é isso que o treinador chama de progressão! 💪 Obrigada equipe Pace Run Pro",
+    photoGradient: "linear-gradient(150deg, #0f2027 0%, #203a43 50%, #2c5364 100%)",
+    metrics: {
+      distance: 9.2,
+      pace: "4:38",
+      duration: "42min 40s",
+      elevation: 24,
+      calories: 512,
+      avgHr: 162,
+    },
+    likes: 35,
+    comments: [
+      { author: "Felipe Tannous", text: "Progressão nos tiros é sinal de forma física chegando! 🚀", timeAgo: "há 4 h" },
+      { author: "Camila Andrade", text: "Isso aí! A pista não mente 🏃‍♀️", timeAgo: "há 3 h" },
+    ],
+  },
+  {
+    id: "ap-4",
+    athleteName: "Felipe Tannous",
+    athleteAvatar: "FT",
+    avatarColor: "bg-amber-700",
+    timeAgo: "há 8 h",
+    caption: "Longão de 22 km — semana pico do ciclo. FC baixa, pace no controle. Agora é hidratação e reposição. Sábado foi bom! 💧",
+    photoGradient: "linear-gradient(135deg, #1a0a00 0%, #3d1f00 50%, #1a0a00 100%)",
+    metrics: {
+      distance: 22,
+      pace: "5:08",
+      duration: "1h 52min 56s",
+      elevation: 148,
+      calories: 1240,
+      avgHr: 152,
+      splits: [
+        { km: 1, pace: "5:28", elev: 10 },
+        { km: 2, pace: "5:22", elev: 14 },
+        { km: 3, pace: "5:18", elev: 20 },
+        { km: 4, pace: "5:14", elev: 8 },
+      ],
+    },
+    likes: 58,
+    comments: [
+      { author: "Marina Sales", text: "22 km com essa consistência... respeito demais 🙌", timeAgo: "há 7 h" },
+    ],
+  },
+  {
+    id: "ap-5",
+    athleteName: "Renata Vidal",
+    athleteAvatar: "RV",
+    avatarColor: "bg-rose-700",
+    timeAgo: "há 1 dia",
+    caption: "Primeiro 5k abaixo de 30 minutos da minha vida! Não acreditei quando vi o relógio. Três meses de treino e isso aqui é só o começo 🥹",
+    photoGradient: "linear-gradient(160deg, #1a0020 0%, #3d0060 50%, #150010 100%)",
+    metrics: {
+      distance: 5,
+      pace: "5:52",
+      duration: "29min 22s",
+      elevation: 12,
+      calories: 285,
+      avgHr: 168,
+    },
+    likes: 87,
+    comments: [
+      { author: "Camila Andrade", text: "VAAAI! Que conquista! Orgulho 🎉", timeAgo: "há 23 h" },
+      { author: "Bruno Lacerda", text: "Primeira de muitas barreiras quebradas! 💥", timeAgo: "há 22 h" },
+    ],
+  },
+  {
+    id: "ap-6",
+    athleteName: "Diego Martins",
+    athleteAvatar: "DM",
+    avatarColor: "bg-cyan-700",
+    timeAgo: "há 1 dia",
+    caption: "Voltei! Depois de 2 semanas parado com tendinite, hoje fiz um trote leve de 6 km. Corpo agradeceu. Gratidão pelo processo 🙏",
+    photoGradient: "linear-gradient(140deg, #001a1a 0%, #003333 60%, #001212 100%)",
+    metrics: {
+      distance: 6,
+      pace: "6:48",
+      duration: "40min 48s",
+      elevation: 0,
+      calories: 312,
+      avgHr: 128,
+    },
+    likes: 24,
+    comments: [
+      { author: "Renata Vidal", text: "Bem-vindo de volta! Cuida-se 💙", timeAgo: "há 20 h" },
+    ],
+  },
+  {
+    id: "ap-7",
+    athleteName: "Ana Beatriz Lima",
+    athleteAvatar: "AB",
+    avatarColor: "bg-fuchsia-700",
+    timeAgo: "há 2 dias",
+    caption: "Tempo Run de 8 km no ritmo de prova. Difícil, custou, mas fechei. A meia de agosto tá chegando e o preparo tá no nível certo 🎯",
+    photoGradient: "linear-gradient(135deg, #0a0020 0%, #200050 40%, #100030 100%)",
+    metrics: {
+      distance: 8,
+      pace: "5:02",
+      duration: "40min 16s",
+      elevation: 35,
+      calories: 468,
+      avgHr: 172,
+    },
+    likes: 31,
+    comments: [
+      { author: "Felipe Tannous", text: "Pace de prova no treino longo — preparada! 👊", timeAgo: "há 2 dias" },
+      { author: "Marina Sales", text: "Meia de agosto vai ser incrível! 🏅", timeAgo: "há 2 dias" },
+    ],
+  },
+  {
+    id: "ap-8",
+    athleteName: "Thiago Ferraz",
+    athleteAvatar: "TF",
+    avatarColor: "bg-orange-700",
+    timeAgo: "há 2 dias",
+    caption: "Pós-prova 10 km Night Run BH. 48:32, novo PR pessoal! Noite inesquecível, cidade iluminada e adrenalina total. Que treino me preparou pra isso 🌃",
+    photoGradient: "linear-gradient(150deg, #1a0800 0%, #3d1500 45%, #2a0e00 100%)",
+    metrics: {
+      distance: 10,
+      pace: "4:51",
+      duration: "48min 32s",
+      elevation: 58,
+      calories: 620,
+      avgHr: 178,
+    },
+    likes: 112,
+    comments: [
+      { author: "Camila Andrade", text: "PR na prova noturna!! Surreal demais 🎊", timeAgo: "há 2 dias" },
+      { author: "Diego Martins", text: "Que corrida histórica, cara! Parabéns 🏆", timeAgo: "há 2 dias" },
+    ],
+  },
+];
+
+export const monthlyChallenges: MonthlyChallenge[] = [
+  {
+    id: "ch-1",
+    month: "Junho 2026",
+    emoji: "🏃",
+    title: "Desafio Resistência",
+    theme: "100 km em junho",
+    description: "Complete 100 km de corrida ao longo do mês de junho e mostre sua resistência.",
+    type: "distance",
+    target: 100,
+    unit: "km",
+    currentProgress: 62,
+    participants: 1248,
+    prize: "Medalha digital exclusiva + 1 mês grátis",
+    endsInDays: 21,
+    leaderboard: [
+      { rank: 1, name: "Felipe Tannous", avatar: "FT", value: 98 },
+      { rank: 2, name: "Marina Sales", avatar: "MS", value: 91 },
+      { rank: 3, name: "Ana Beatriz Lima", avatar: "AB", value: 78 },
+      { rank: 4, name: "Camila Andrade", avatar: "CA", value: 62, isYou: true },
+      { rank: 5, name: "Bruno Lacerda", avatar: "BL", value: 55 },
+    ],
+    color: "purple",
+  },
+  {
+    id: "ch-2",
+    month: "Junho 2026",
+    emoji: "🏔",
+    title: "Desafio Altitude",
+    theme: "2000m de ganho em junho",
+    description: "Acumule 2000m de ganho de elevação nos seus treinos de corrida durante junho.",
+    type: "elevation",
+    target: 2000,
+    unit: "m ganho",
+    currentProgress: 1240,
+    participants: 387,
+    prize: "Kit técnico virtual + badge especial",
+    endsInDays: 21,
+    leaderboard: [
+      { rank: 1, name: "Felipe Tannous", avatar: "FT", value: 1920 },
+      { rank: 2, name: "Thiago Ferraz", avatar: "TF", value: 1650 },
+      { rank: 3, name: "Ana Beatriz Lima", avatar: "AB", value: 1410 },
+      { rank: 4, name: "Camila Andrade", avatar: "CA", value: 1240, isYou: true },
+      { rank: 5, name: "Diego Martins", avatar: "DM", value: 980 },
+    ],
+    color: "emerald",
+  },
+  {
+    id: "ch-3",
+    month: "Junho 2026",
+    emoji: "⚡",
+    title: "Desafio Velocidade",
+    theme: "12 tiros em junho",
+    description: "Complete 12 sessões de treino de velocidade (tiros, intervalados ou fartlek) em junho.",
+    type: "sessions",
+    target: 12,
+    unit: "tiros",
+    currentProgress: 7,
+    participants: 612,
+    prize: "Badge de elite + destaque no ranking",
+    endsInDays: 21,
+    leaderboard: [
+      { rank: 1, name: "Marina Sales", avatar: "MS", value: 11 },
+      { rank: 2, name: "Felipe Tannous", avatar: "FT", value: 10 },
+      { rank: 3, name: "Renata Vidal", avatar: "RV", value: 9 },
+      { rank: 4, name: "Camila Andrade", avatar: "CA", value: 7, isYou: true },
+      { rank: 5, name: "Bruno Lacerda", avatar: "BL", value: 6 },
+    ],
+    color: "amber",
+  },
+];
+
 // ── White-label ────────────────────────────────────────────────────────────
 export interface WhiteLabelConfig {
   assessoriaName: string;
