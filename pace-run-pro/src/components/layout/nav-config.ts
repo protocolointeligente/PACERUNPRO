@@ -12,6 +12,10 @@ import {
   DollarSign,
   Settings,
   Building2,
+  Bell,
+  Target,
+  Gauge,
+  Shirt,
   type LucideIcon,
 } from "lucide-react";
 
@@ -32,11 +36,16 @@ export const athleteNav: NavItem[] = [
 export const athleteMoreNav: NavItem[] = [
   { href: "/aluno/testes", label: "Testes de performance", icon: Activity },
   { href: "/aluno/planos", label: "Planos & periodização", icon: ClipboardList },
+  { href: "/aluno/previsao", label: "Previsão de prova", icon: Target },
+  { href: "/aluno/simulador", label: "Simulador de pace", icon: Gauge },
+  { href: "/aluno/tenis", label: "Tênis tracker", icon: Shirt },
+  { href: "/aluno/timeline", label: "Minha jornada", icon: CalendarDays },
   { href: "/aluno/perfil", label: "Perfil", icon: User },
 ];
 
 export const coachNav: NavItem[] = [
   { href: "/treinador/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/treinador/alertas", label: "Alertas", icon: Bell },
   { href: "/treinador/alunos", label: "Atletas", icon: Users },
   { href: "/treinador/prescricao/corrida", label: "Prescrição corrida", icon: Activity },
   { href: "/treinador/prescricao/forca", label: "Prescrição força", icon: Dumbbell },

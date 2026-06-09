@@ -1261,3 +1261,219 @@ export const b2cAthletesList = [
 ];
 
 export const pendingApprovals = assessoriaList.filter((a) => a.status === "pendente");
+
+// ── Smart Alerts ─────────────────────────────────────────────────────────
+
+export type AlertSeverity = "critico" | "atencao" | "info";
+export type AlertCategory = "ausencia" | "overtraining" | "dor" | "fadiga" | "adesao" | "volume" | "fc" | "desempenho";
+
+export interface SmartAlert {
+  id: string;
+  athleteId: string;
+  athleteName: string;
+  severity: AlertSeverity;
+  category: AlertCategory;
+  title: string;
+  description: string;
+  metric?: string;
+  daysAgo: number;
+  read: boolean;
+}
+
+export const smartAlerts: SmartAlert[] = [
+  {
+    id: "al-1",
+    athleteId: "a-2",
+    athleteName: "Carlos Mendonça",
+    severity: "critico",
+    category: "ausencia",
+    title: "Sem treino há 6 dias",
+    description: "Carlos não registrou nenhum treino desde 03/06. Último check-in indicou fadiga 8/10.",
+    metric: "6 dias sem atividade",
+    daysAgo: 1,
+    read: false,
+  },
+  {
+    id: "al-2",
+    athleteId: "a-5",
+    athleteName: "Fernanda Lima",
+    severity: "critico",
+    category: "dor",
+    title: "Dor persistente acima de 7 (3 dias seguidos)",
+    description: "Fernanda reportou dor ≥ 7/10 nos últimos 3 check-ins. Protocolo de redução de volume recomendado.",
+    metric: "Dor média: 7.4/10",
+    daysAgo: 0,
+    read: false,
+  },
+  {
+    id: "al-3",
+    athleteId: "a-3",
+    athleteName: "Rodrigo Farias",
+    severity: "critico",
+    category: "overtraining",
+    title: "Risco de overtraining detectado",
+    description: "Carga acumulada 34% acima da média das últimas 4 semanas. RPE médio 8.2 nos últimos 5 treinos.",
+    metric: "Carga: +34% acima do normal",
+    daysAgo: 1,
+    read: false,
+  },
+  {
+    id: "al-4",
+    athleteId: "a-1",
+    athleteName: "Camila Andrade",
+    severity: "atencao",
+    category: "fc",
+    title: "FC média em Z2 crescendo",
+    description: "A frequência cardíaca média nos treinos de zona 2 aumentou 12% nos últimos 10 dias, sugerindo fadiga acumulada ou necessidade de deload.",
+    metric: "FC Z2: +12% vs. média anterior",
+    daysAgo: 2,
+    read: false,
+  },
+  {
+    id: "al-5",
+    athleteId: "a-6",
+    athleteName: "Beatriz Santos",
+    severity: "atencao",
+    category: "adesao",
+    title: "Queda de adesão — 58% na última semana",
+    description: "Beatriz realizou apenas 3 de 5 treinos programados. Adesão caiu de 86% para 58% em 7 dias.",
+    metric: "Adesão: 58% (-28pp)",
+    daysAgo: 2,
+    read: false,
+  },
+  {
+    id: "al-6",
+    athleteId: "a-4",
+    athleteName: "Paulo Henrique",
+    severity: "atencao",
+    category: "volume",
+    title: "Volume semanal 31% abaixo da meta",
+    description: "Paulo completou 22 km dos 32 km programados para esta semana. Prova em 6 semanas.",
+    metric: "Volume: 22/32 km (-31%)",
+    daysAgo: 1,
+    read: false,
+  },
+  {
+    id: "al-7",
+    athleteId: "a-7",
+    athleteName: "Ana Cristina",
+    severity: "info",
+    category: "desempenho",
+    title: "Melhora de pace — novo PR em treino",
+    description: "Ana registrou seu melhor pace em treino intervalado: 4:12/km no tiro de 1.000m — melhora de 8s vs. última avaliação.",
+    metric: "Pace: 4:12/km (PR)",
+    daysAgo: 0,
+    read: true,
+  },
+  {
+    id: "al-8",
+    athleteId: "a-8",
+    athleteName: "Marcos Vieira",
+    severity: "info",
+    category: "fadiga",
+    title: "Fadiga elevada pós-treino longo",
+    description: "Marcos reportou fadiga 8/10 no dia seguinte ao longão de 22 km. Dentro do esperado — verificar próximos check-ins.",
+    metric: "Fadiga: 8/10 pós-longão",
+    daysAgo: 1,
+    read: true,
+  },
+];
+
+// ── Tênis tracker ─────────────────────────────────────────────────────────────
+export interface Shoe {
+  id: string;
+  name: string;
+  brand: string;
+  model: string;
+  kmAccumulated: number;
+  maxKm: number;
+  dateAdded: string;   // ISO date
+  color: string;       // for the accent dot
+  active: boolean;
+  imageEmoji: string;  // shoe emoji
+}
+
+export const shoesList: Shoe[] = [
+  {
+    id: "sh-1",
+    name: "Corrida principal",
+    brand: "Asics",
+    model: "Gel-Nimbus 26",
+    kmAccumulated: 487,
+    maxKm: 800,
+    dateAdded: "2025-11-20",
+    color: "#38bdf8",
+    active: true,
+    imageEmoji: "👟",
+  },
+  {
+    id: "sh-2",
+    name: "Treinos leves",
+    brand: "Nike",
+    model: "Pegasus 41",
+    kmAccumulated: 312,
+    maxKm: 700,
+    dateAdded: "2026-01-10",
+    color: "#8b5cf6",
+    active: true,
+    imageEmoji: "👟",
+  },
+  {
+    id: "sh-3",
+    name: "Treinos de pista",
+    brand: "Mizuno",
+    model: "Wave Rider 27",
+    kmAccumulated: 156,
+    maxKm: 700,
+    dateAdded: "2026-03-05",
+    color: "#84cc16",
+    active: true,
+    imageEmoji: "👟",
+  },
+  {
+    id: "sh-4",
+    name: "Aposentado",
+    brand: "New Balance",
+    model: "1080 v13",
+    kmAccumulated: 823,
+    maxKm: 800,
+    dateAdded: "2025-04-01",
+    color: "#94a3b8",
+    active: false,
+    imageEmoji: "👟",
+  },
+];
+
+// ── Timeline ───────────────────────────────────────────────────────────────────
+export type TimelineEventType = "treino" | "checkin" | "teste" | "prova" | "conquista" | "avaliacao" | "lesao" | "tenis";
+
+export interface TimelineEvent {
+  id: string;
+  date: string;          // ISO date
+  type: TimelineEventType;
+  title: string;
+  subtitle?: string;
+  detail?: string;
+  badge?: string;
+  highlight?: boolean;   // PR or special event
+}
+
+export const timelineEvents: TimelineEvent[] = [
+  { id: "tl-1", date: "2026-06-07", type: "treino", title: "Intervalado 8×400m", subtitle: "9,2 km · Pace 4:38/km · RPE 7", badge: "Corrida" },
+  { id: "tl-2", date: "2026-06-07", type: "checkin", title: "Check-in pós-treino", subtitle: "RPE 7 · Sono 7 · Fadiga 4 · Humor 8" },
+  { id: "tl-3", date: "2026-06-05", type: "treino", title: "Longão progressivo 18 km", subtitle: "18 km · Pace 5:20/km · RPE 6", badge: "Corrida" },
+  { id: "tl-4", date: "2026-06-03", type: "treino", title: "Treino de força — Inferiores", subtitle: "Agachamento búlgaro · Elevação panturrilha · Prancha", badge: "Força" },
+  { id: "tl-5", date: "2026-06-01", type: "treino", title: "Tempo Run 8 km", subtitle: "8 km · Pace 4:52/km · RPE 7", badge: "Corrida" },
+  { id: "tl-6", date: "2026-05-25", type: "conquista", title: "PR pessoal — Meia maratona!", subtitle: "1:58:42 · Meia Maratona de BH", detail: "Melhorou 4min12s do PR anterior de 2:02:54.", badge: "PR", highlight: true },
+  { id: "tl-7", date: "2026-05-25", type: "prova", title: "Meia Maratona de BH", subtitle: "1:58:42 · Pace médio 5:37/km", badge: "21 km", highlight: true },
+  { id: "tl-8", date: "2026-05-18", type: "teste", title: "Teste de Cooper", subtitle: "2.600 m · VO2máx ≈ 46,8 ml/kg/min", badge: "Teste" },
+  { id: "tl-9", date: "2026-05-18", type: "teste", title: "Teste VAM — 2.000 m", subtitle: "8:00 · VAM ≈ 15,0 km/h · Pace 4:00/km", badge: "Teste" },
+  { id: "tl-10", date: "2026-05-10", type: "tenis", title: "Novo tênis adicionado", subtitle: "Mizuno Wave Rider 27 — Treinos de pista", badge: "Tênis" },
+  { id: "tl-11", date: "2026-04-20", type: "treino", title: "Semana pico — 47 km", subtitle: "Volume máximo do ciclo atingido", badge: "Marco", highlight: true },
+  { id: "tl-12", date: "2026-03-12", type: "teste", title: "Teste de limiar — 25 min", subtitle: "Pace de limiar ≈ 5:00/km", badge: "Teste" },
+  { id: "tl-13", date: "2026-02-02", type: "avaliacao", title: "Avaliação física completa", subtitle: "Peso: 61,4 kg · Gordura: 19,4% · IMC: 22,0", badge: "Avaliação" },
+  { id: "tl-14", date: "2026-01-10", type: "tenis", title: "Novo tênis adicionado", subtitle: "Nike Pegasus 41 — Treinos leves", badge: "Tênis" },
+  { id: "tl-15", date: "2025-12-01", type: "prova", title: "Corrida de São Silvestre", subtitle: "15 km · 1:22:05 · Pace 5:28/km", badge: "15 km" },
+  { id: "tl-16", date: "2025-11-20", type: "tenis", title: "Novo tênis adicionado", subtitle: "Asics Gel-Nimbus 26 — Corrida principal", badge: "Tênis" },
+  { id: "tl-17", date: "2025-10-05", type: "conquista", title: "100 km acumulados no mês!", subtitle: "Melhor volume mensal da carreira", badge: "Marco", highlight: true },
+];
