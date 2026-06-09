@@ -65,10 +65,12 @@ export default function StrengthPage() {
             ))}
           </div>
 
-          <Button size="lg" className="mt-5 w-full sm:w-auto">
-            <ListChecks className="h-4 w-4" />
-            Iniciar sessão de força
-          </Button>
+          <Link href="/aluno/forca/executar">
+            <Button size="lg" className="mt-5 w-full sm:w-auto">
+              <ListChecks className="h-4 w-4" />
+              Iniciar sessão de força
+            </Button>
+          </Link>
         </CardContent>
       </Card>
 
