@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual do Usuário — PACE RUN PRO</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #050816;
+  --sidebar-bg: #0b1220;
+  --content-bg: #0d1526;
+  --card-bg: #111827;
+  --border: #1e2d47;
+  --accent: #8b5cf6;
+  --accent-light: #a78bfa;
+  --accent-dim: rgba(139,92,246,0.15);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.15);
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.15);
+  --yellow: #eab308;
+  --yellow-dim: rgba(234,179,8,0.12);
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.12);
+  --text: #e2e8f0;
+  --text-muted: #8892a4;
+  --text-dim: #4b5563;
+  --sidebar-w: 260px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 100;
+  padding-bottom: 2rem;
+}
+
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sidebar-logo {
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--sidebar-bg);
+  z-index: 10;
+}
+
+.sidebar-logo .logo-text {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent-light);
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sidebar-logo .logo-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.toc-section-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  padding: 1rem 1.25rem 0.35rem;
+}
+
+.toc nav { padding: 0 0.5rem; }
+
+.toc a {
+  display: block;
+  padding: 0.35rem 0.75rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+
+.toc a:hover { background: rgba(139,92,246,0.1); color: var(--accent-light); }
+.toc a.active { background: var(--accent-dim); color: var(--accent-light); font-weight: 600; }
+
+.toc a.top-level { font-weight: 600; color: var(--text); font-size: 0.82rem; }
+.toc a.sub-level { padding-left: 1.5rem; }
+
+.toc-badge {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.toc-badge.purple { background: var(--accent-dim); color: var(--accent-light); }
+.toc-badge.blue   { background: var(--blue-dim);   color: var(--blue); }
+.toc-badge.green  { background: var(--green-dim);  color: var(--green); }
+
+/* ── MAIN ── */
+#main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  background: var(--content-bg);
+}
+
+/* ── HEADER ── */
+.doc-header {
+  background: linear-gradient(135deg, #0d1526 0%, #0f0a1e 50%, #070e1d 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 3.5rem 3rem 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.doc-header::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.doc-header .lightning {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.doc-header h1 {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.doc-header h1 span { color: var(--accent-light); }
+
+.doc-header .subtitle {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  font-weight: 400;
+}
+
+.doc-header .version {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-top: 0.35rem;
+}
+
+.header-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.h-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.h-badge.purple { background: var(--accent-dim); color: var(--accent-light); border: 1px solid rgba(139,92,246,0.3); }
+.h-badge.blue   { background: var(--blue-dim);   color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+.h-badge.green  { background: var(--green-dim);  color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+
+/* ── CONTENT ── */
+.content { padding: 2.5rem 3rem 4rem; max-width: 860px; }
+
+/* ── SECTIONS ── */
+.section { margin-bottom: 4rem; }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-purple { background: var(--accent); box-shadow: 0 0 8px rgba(139,92,246,0.5); }
+.dot-blue   { background: var(--blue);   box-shadow: 0 0 8px rgba(59,130,246,0.5); }
+.dot-green  { background: var(--green);  box-shadow: 0 0 8px rgba(34,197,94,0.5); }
+.dot-gray   { background: var(--text-muted); }
+
+.section-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.section-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.sb-purple { background: var(--accent-dim); color: var(--accent-light); }
+.sb-blue   { background: var(--blue-dim);   color: var(--blue); }
+.sb-green  { background: var(--green-dim);  color: var(--green); }
+.sb-gray   { background: rgba(255,255,255,0.07); color: var(--text-muted); }
+
+/* ── SUB SECTIONS ── */
+.subsection { margin: 2rem 0; }
+
+.subsection-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.subsection-num {
+  background: var(--accent-dim);
+  color: var(--accent-light);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.subsection-header h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+/* ── STEP LIST ── */
+.steps { list-style: none; counter-reset: steps; margin: 1rem 0; }
+
+.steps li {
+  display: flex;
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+  align-items: flex-start;
+}
+
+.step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px; height: 26px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.steps li .step-text { flex: 1; color: var(--text); }
+
+/* ── BULLET LIST ── */
+.bullet-list { list-style: none; margin: 0.75rem 0; padding: 0; }
+.bullet-list li {
+  padding: 0.3rem 0 0.3rem 1.25rem;
+  position: relative;
+  color: var(--text);
+}
+.bullet-list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.75rem;
+  top: 0.4rem;
+}
+
+/* ── CALLOUTS ── */
+.callout {
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
+  border-left: 3px solid;
+}
+
+.callout-dica {
+  background: rgba(234,179,8,0.08);
+  border-color: var(--yellow);
+}
+.callout-dica .callout-title { color: var(--yellow); font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem; }
+
+.callout-atencao {
+  background: rgba(239,68,68,0.08);
+  border-color: var(--red);
+}
+.callout-atencao .callout-title { color: var(--red); font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem; }
+
+.callout p { font-size: 0.9rem; color: var(--text); margin: 0; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.card-title {
+  font-weight: 700;
+  color: #fff;
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
+
+.card-url {
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-family: 'Courier New', monospace;
+  background: var(--accent-dim);
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+/* ── FEATURE TABLE ── */
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.feature-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+
+.feature-item .fi-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-dim);
+  margin-bottom: 0.2rem;
+}
+
+.feature-item .fi-value {
+  font-size: 0.88rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ── HIERARCHY DIAGRAM ── */
+.hierarchy {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+  margin: 1.5rem 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  justify-content: center;
+}
+
+.hier-node {
+  text-align: center;
+  padding: 0.85rem 1.25rem;
+  border-radius: 10px;
+  min-width: 120px;
+}
+
+.hier-node .h-icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
+.hier-node .h-label { font-size: 0.85rem; font-weight: 700; }
+.hier-node .h-sub { font-size: 0.7rem; margin-top: 0.2rem; }
+
+.hier-node.purple { background: var(--accent-dim); border: 1px solid rgba(139,92,246,0.3); }
+.hier-node.purple .h-label { color: var(--accent-light); }
+.hier-node.purple .h-sub { color: rgba(167,139,250,0.7); }
+
+.hier-node.blue { background: var(--blue-dim); border: 1px solid rgba(59,130,246,0.3); }
+.hier-node.blue .h-label { color: #93c5fd; }
+.hier-node.blue .h-sub { color: rgba(147,197,253,0.7); }
+
+.hier-node.green { background: var(--green-dim); border: 1px solid rgba(34,197,94,0.3); }
+.hier-node.green .h-label { color: #86efac; }
+.hier-node.green .h-sub { color: rgba(134,239,172,0.7); }
+
+.hier-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+.hier-arrow .arr-line {
+  width: 40px;
+  height: 2px;
+  background: var(--border);
+  position: relative;
+}
+
+.hier-arrow .arr-line::after {
+  content: '';
+  position: absolute;
+  right: -1px; top: -3px;
+  border-left: 6px solid var(--text-dim);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+
+.hier-arrow .arr-text {
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+/* ── URL CARD ── */
+.url-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+  margin: 0.75rem 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+}
+
+.url-bar .url-scheme { color: var(--text-dim); }
+.url-bar .url-domain { color: var(--text-muted); }
+.url-bar .url-path { color: var(--accent-light); font-weight: 600; }
+
+.url-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  box-shadow: 0 0 4px rgba(34,197,94,0.5);
+}
+
+/* ── FAQ ── */
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 0.75rem 0;
+  overflow: hidden;
+}
+
+.faq-q {
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  color: #fff;
+  font-size: 0.92rem;
+  background: var(--card-bg);
+  cursor: default;
+}
+
+.faq-q::before { content: 'P: '; color: var(--accent-light); }
+
+.faq-a {
+  padding: 0.85rem 1.25rem;
+  font-size: 0.88rem;
+  color: var(--text);
+  background: rgba(13,21,38,0.5);
+  border-top: 1px solid var(--border);
+}
+
+.faq-a::before { content: 'R: '; font-weight: 600; color: var(--green); }
+
+/* ── SUPPORT CARDS ── */
+.support-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+.support-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+}
+
+.support-card .sc-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.support-card .sc-title { font-weight: 700; color: #fff; font-size: 0.95rem; margin-bottom: 0.5rem; }
+.support-card .sc-line { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+.support-card .sc-line strong { color: var(--text); }
+
+/* ── NAV LINKS ── */
+.section-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.section-nav a {
+  color: var(--accent-light);
+  text-decoration: none;
+  font-size: 0.83rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid rgba(139,92,246,0.2);
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.section-nav a:hover { background: var(--accent-dim); border-color: var(--accent); }
+.section-nav .spacer { flex: 1; }
+
+/* ── BADGE NEW ── */
+.badge-new {
+  display: inline-block;
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+/* ── INLINE CODE ── */
+code {
+  background: rgba(139,92,246,0.15);
+  color: var(--accent-light);
+  font-family: 'Courier New', monospace;
+  font-size: 0.82em;
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+/* ── DIVIDER ── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 2rem 0;
+}
+
+/* ── INTRO TEXT ── */
+p.intro {
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+p { margin-bottom: 0.75rem; color: var(--text); font-size: 0.92rem; }
+
+/* ── ALERT BADGES ── */
+.alert-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+.at-red    { background: var(--red-dim);    color: var(--red);    }
+.at-yellow { background: var(--yellow-dim); color: var(--yellow); }
+.at-blue   { background: var(--blue-dim);   color: var(--blue);   }
+.at-green  { background: var(--green-dim);  color: var(--green);  }
+
+/* ── SHOE PROGRESS BAR ── */
+.progress-demo {
+  margin: 0.75rem 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+.progress-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+.progress-bar-wrap { background: rgba(255,255,255,0.06); border-radius: 999px; height: 8px; overflow: hidden; }
+.progress-bar { height: 100%; border-radius: 999px; }
+.pb-green  { background: var(--green); width: 55%; }
+.pb-yellow { background: var(--yellow); width: 85%; }
+.pb-orange { background: #f97316; width: 97%; }
+
+/* ── FOOTER ── */
+footer {
+  text-align: center;
+  padding: 2rem 3rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  letter-spacing: 0.03em;
+}
+
+/* ── PRINT ── */
+@media print {
+  #sidebar { display: none !important; }
+  #main { margin-left: 0 !important; }
+  body { background: #fff !important; color: #111 !important; font-size: 12pt; }
+  .doc-header { background: #fff !important; border-bottom: 2px solid #000; }
+  .doc-header h1 { color: #000 !important; }
+  .doc-header h1 span { color: #5b21b6 !important; }
+  .doc-header .subtitle, .doc-header .version { color: #555 !important; }
+  .content { padding: 1rem 2rem !important; }
+  .card, .feature-item, .faq-item, .callout, .support-card {
+    background: #f9f9f9 !important;
+    border-color: #ccc !important;
+  }
+  .card-title, .subsection-header h3, .section-header h2 { color: #000 !important; }
+  p, .bullet-list li, .steps li { color: #222 !important; }
+  .section-nav { display: none !important; }
+  .url-bar { background: #f0f0f0 !important; border-color: #ccc !important; }
+  .url-scheme, .url-domain, .url-path { color: #333 !important; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  :root { --sidebar-w: 0px; }
+  #sidebar { transform: translateX(-260px); width: 260px; }
+  #sidebar.open { transform: translateX(0); }
+  #main { margin-left: 0; }
+  .content { padding: 1.5rem 1.25rem 3rem; }
+  .doc-header { padding: 2rem 1.25rem 1.75rem; }
+  .doc-header h1 { font-size: 1.7rem; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .hierarchy { gap: 0.5rem; }
+  .hier-arrow { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">⚡ PACE RUN PRO</div>
+    <div class="logo-sub">Manual do Usuário v1.0</div>
+  </div>
+
+  <div class="toc">
+    <div class="toc-section-label">Conteúdo</div>
+    <nav>
+      <a href="#intro" class="top-level">1. Introdução</a>
+      <a href="#primeiros-passos" class="top-level">2. Primeiros Passos</a>
+
+      <a href="#assessoria" class="top-level">
+        <span class="toc-badge purple">A</span>3. Perfil Assessoria
+      </a>
+      <a href="#admin-dashboard" class="sub-level">3.1 Dashboard administrativo</a>
+      <a href="#gerenciar-treinadores" class="sub-level">3.2 Gerenciar treinadores</a>
+      <a href="#white-label" class="sub-level">3.3 Configuração White-label</a>
+      <a href="#financeiro" class="sub-level">3.4 Financeiro e planos</a>
+
+      <a href="#treinador" class="top-level">
+        <span class="toc-badge blue">T</span>4. Perfil Treinador
+      </a>
+      <a href="#treinador-dashboard" class="sub-level">4.1 Dashboard do treinador</a>
+      <a href="#gerenciar-atletas" class="sub-level">4.2 Gerenciar atletas</a>
+      <a href="#alertas" class="sub-level">4.3 Central de Alertas</a>
+      <a href="#analise-semanal-t" class="sub-level">4.4 Análise semanal</a>
+      <a href="#prescricao-corrida" class="sub-level">4.5 Prescrição de corrida</a>
+      <a href="#prescricao-forca" class="sub-level">4.6 Prescrição de força</a>
+      <a href="#periodizacao" class="sub-level">4.7 Periodização</a>
+      <a href="#relatorios" class="sub-level">4.8 Relatórios</a>
+      <a href="#crm" class="sub-level">4.9 CRM de leads</a>
+
+      <a href="#atleta" class="top-level">
+        <span class="toc-badge green">At</span>5. Perfil Atleta
+      </a>
+      <a href="#atleta-dashboard" class="sub-level">5.1 Dashboard pessoal</a>
+      <a href="#calendario" class="sub-level">5.2 Calendário de treinos</a>
+      <a href="#treino-forca" class="sub-level">5.3 Treino de força</a>
+      <a href="#ia-treinadora" class="sub-level">5.4 IA Treinadora</a>
+      <a href="#previsao" class="sub-level">5.5 Previsão de prova</a>
+      <a href="#simulador" class="sub-level">5.6 Simulador de pace</a>
+      <a href="#tenis" class="sub-level">5.7 Tênis tracker</a>
+      <a href="#timeline" class="sub-level">5.8 Minha jornada</a>
+      <a href="#analise-semanal-a" class="sub-level">5.9 Análise semanal</a>
+
+      <a href="#faq" class="top-level">6. Perguntas Frequentes</a>
+      <a href="#suporte" class="top-level">7. Suporte</a>
+    </nav>
+  </div>
+</aside>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main id="main">
+
+  <!-- HEADER -->
+  <header class="doc-header">
+    <div class="lightning">⚡</div>
+    <h1>PACE RUN <span>PRO</span></h1>
+    <div class="subtitle">Manual do Usuário Completo</div>
+    <div class="version">Versão 1.0 — Junho 2026</div>
+    <div class="header-badges">
+      <span class="h-badge purple">🏢 Assessoria</span>
+      <span class="h-badge blue">👨‍💼 Treinador</span>
+      <span class="h-badge green">🏃 Atleta</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ══════════════════ SEÇÃO 1 — INTRODUÇÃO ══════════════════ -->
+    <section class="section" id="intro">
+      <div class="section-header">
+        <div class="section-dot dot-gray"></div>
+        <h2>1. Introdução</h2>
+        <span class="section-badge sb-gray">Geral</span>
+      </div>
+
+      <p class="intro">
+        Bem-vindo ao <strong>PACE RUN PRO</strong> — a plataforma completa para assessorias esportivas de corrida,
+        treinadores e atletas. Este manual foi escrito para ajudá-lo a aproveitar ao máximo todas as funcionalidades
+        do sistema, independente do seu nível de experiência com tecnologia.
+      </p>
+
+      <p>
+        O PACE RUN PRO é uma aplicação web acessada pelo navegador de qualquer dispositivo — computador,
+        tablet ou celular. Não é necessário instalar nada. Todos os seus dados ficam salvos automaticamente
+        na nuvem.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-header">
+          <h3>Três tipos de usuário</h3>
+        </div>
+        <p>O sistema foi construído para três perfis distintos, com funcionalidades específicas para cada um:</p>
+
+        <div class="hierarchy">
+          <div class="hier-node purple">
+            <div class="h-icon">🏢</div>
+            <div class="h-label">Assessoria</div>
+            <div class="h-sub">Gerencia tudo</div>
+          </div>
+          <div class="hier-arrow">
+            <div class="arr-line"></div>
+            <div class="arr-text">gerencia</div>
+          </div>
+          <div class="hier-node blue">
+            <div class="h-icon">👨‍💼</div>
+            <div class="h-label">Treinadores</div>
+            <div class="h-sub">Prescrevem treinos</div>
+          </div>
+          <div class="hier-arrow">
+            <div class="arr-line"></div>
+            <div class="arr-text">treinam</div>
+          </div>
+          <div class="hier-node green">
+            <div class="h-icon">🏃</div>
+            <div class="h-label">Atletas</div>
+            <div class="h-sub">Executam treinos</div>
+          </div>
+        </div>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="fi-label">🏢 Assessoria (Admin)</div>
+            <div class="fi-value">Gerencia treinadores, configurações, financeiro e marca da plataforma</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">👨‍💼 Treinador (Coach)</div>
+            <div class="fi-value">Cria e prescreve treinos, monitora atletas, analisa desempenho</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">🏃 Atleta (Aluno)</div>
+            <div class="fi-value">Visualiza e executa treinos, acessa ferramentas de análise e IA</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Acesso</div>
+            <div class="fi-value">Qualquer navegador web — Chrome, Safari, Firefox, Edge</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-dica">
+        <div class="callout-title">💡 Dica</div>
+        <p>Ao fazer login, o sistema identifica automaticamente qual perfil você possui e exibe o painel correto. Não é necessário selecionar manualmente.</p>
+      </div>
+
+      <div class="section-nav">
+        <span class="spacer"></span>
+        <a href="#primeiros-passos">Próxima seção: Primeiros Passos →</a>
+      </div>
+    </section>
+
+    <!-- ══════════════════ SEÇÃO 2 — PRIMEIROS PASSOS ══════════════════ -->
+    <section class="section" id="primeiros-passos">
+      <div class="section-header">
+        <div class="section-dot dot-gray"></div>
+        <h2>2. Primeiros Passos</h2>
+        <span class="section-badge sb-gray">Todos os perfis</span>
+      </div>
+
+      <div class="subsection" id="como-fazer-login">
+        <div class="subsection-header">
+          <span class="subsection-num">2.1</span>
+          <h3>Como fazer login</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span>
+          <span class="url-domain">www.</span>
+          <span class="url-path">pacerunpro.com.br</span>
+        </div>
+
+        <ol class="steps">
+          <li>
+            <span class="step-num">1</span>
+            <span class="step-text">Acesse <strong>www.pacerunpro.com.br</strong> em qualquer navegador</span>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <span class="step-text">Clique no botão <strong>"Entrar na sua conta"</strong> na página inicial</span>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <span class="step-text">
+              Escolha como entrar:<br>
+              <strong>Opção A — Google:</strong> clique em "Continuar com Google" e selecione sua conta. Mais rápido e seguro.<br>
+              <strong>Opção B — E-mail:</strong> informe seu e-mail e senha cadastrados, depois clique em "Entrar"
+            </span>
+          </li>
+          <li>
+            <span class="step-num">4</span>
+            <span class="step-text">O sistema detecta seu perfil automaticamente e redireciona para o painel correto</span>
+          </li>
+        </ol>
+
+        <div class="callout callout-atencao">
+          <div class="callout-title">⚠️ Atenção</div>
+          <p>Se você tiver uma conta Google e também uma conta com e-mail/senha usando o mesmo endereço de e-mail, use sempre o mesmo método de login. Misturar os dois pode criar contas separadas.</p>
+        </div>
+      </div>
+
+      <div class="subsection" id="navegacao-geral">
+        <div class="subsection-header">
+          <span class="subsection-num">2.2</span>
+          <h3>Navegação geral</h3>
+        </div>
+        <ul class="bullet-list">
+          <li><strong>No computador:</strong> menu lateral esquerdo com todas as seções disponíveis para seu perfil</li>
+          <li><strong>No celular:</strong> ícones na barra de navegação inferior — toque para navegar entre seções</li>
+          <li>Clique no <strong>⚡ logo</strong> (canto superior esquerdo) para voltar ao início a qualquer momento</li>
+          <li>Clique no <strong>ícone de usuário</strong> (canto superior direito) para acessar seu perfil e a opção de sair</li>
+          <li>O menu destaca em roxo a seção onde você está atualmente</li>
+        </ul>
+      </div>
+
+      <div class="subsection" id="adicionar-tela">
+        <div class="subsection-header">
+          <span class="subsection-num">2.3</span>
+          <h3>Como adicionar à tela do celular</h3>
+        </div>
+        <p>O PACE RUN PRO funciona como um aplicativo quando adicionado à tela inicial. Funciona mesmo com conexão instável.</p>
+
+        <div class="card">
+          <div class="card-title">📱 iPhone (Safari)</div>
+          <ol class="steps" style="margin-top:0.5rem">
+            <li><span class="step-num">1</span><span class="step-text">Abra o site no Safari (não funciona no Chrome do iPhone)</span></li>
+            <li><span class="step-num">2</span><span class="step-text">Toque no ícone de <strong>compartilhar</strong> (quadrado com seta para cima) na barra inferior</span></li>
+            <li><span class="step-num">3</span><span class="step-text">Role a lista e toque em <strong>"Adicionar à Tela de Início"</strong></span></li>
+            <li><span class="step-num">4</span><span class="step-text">Confirme o nome e toque em <strong>"Adicionar"</strong></span></li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🤖 Android (Chrome)</div>
+          <ol class="steps" style="margin-top:0.5rem">
+            <li><span class="step-num">1</span><span class="step-text">Abra o site no Chrome</span></li>
+            <li><span class="step-num">2</span><span class="step-text">Toque nos <strong>três pontos</strong> (menu) no canto superior direito</span></li>
+            <li><span class="step-num">3</span><span class="step-text">Toque em <strong>"Adicionar à tela inicial"</strong></span></li>
+            <li><span class="step-num">4</span><span class="step-text">Toque em <strong>"Adicionar"</strong> para confirmar</span></li>
+          </ol>
+        </div>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>Ao "instalar" desta forma, o PACE RUN PRO ganha um ícone na sua tela e abre sem a barra de endereços do navegador, parecendo um app nativo. Seus dados continuam no servidor — se remover o atalho, basta adicionar novamente.</p>
+        </div>
+      </div>
+
+      <div class="section-nav">
+        <a href="#intro">← Introdução</a>
+        <a href="#assessoria">Próxima: Perfil Assessoria →</a>
+      </div>
+    </section>
+
+    <!-- ══════════════════ SEÇÃO 3 — ASSESSORIA ══════════════════ -->
+    <section class="section" id="assessoria">
+      <div class="section-header">
+        <div class="section-dot dot-purple"></div>
+        <h2>3. Perfil Assessoria</h2>
+        <span class="section-badge sb-purple">🏢 Assessoria</span>
+      </div>
+
+      <p>O perfil Assessoria é o nível mais alto do sistema. O administrador tem acesso completo a todas as configurações, gestão de treinadores e controle financeiro.</p>
+
+      <!-- 3.1 -->
+      <div class="subsection" id="admin-dashboard">
+        <div class="subsection-header">
+          <span class="subsection-num">3.1</span>
+          <h3>Dashboard Administrativo</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">admin/dashboard</span>
+        </div>
+
+        <p>Ao entrar como administrador, você vê o painel central com uma visão completa do negócio:</p>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="fi-label">Total de atletas</div>
+            <div class="fi-value">Número de atletas ativos na plataforma</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Treinadores ativos</div>
+            <div class="fi-value">Quantos treinadores estão com acesso habilitado</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">MRR</div>
+            <div class="fi-value">Receita Recorrente Mensal — total de assinaturas ativas</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Crescimento mensal</div>
+            <div class="fi-value">Variação percentual de atletas em relação ao mês anterior</div>
+          </div>
+        </div>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>Os cards com bordas vermelhas no dashboard indicam alertas que precisam de atenção imediata, como pagamentos vencidos ou treinadores sem atletas há mais de 30 dias.</p>
+        </div>
+      </div>
+
+      <!-- 3.2 -->
+      <div class="subsection" id="gerenciar-treinadores">
+        <div class="subsection-header">
+          <span class="subsection-num">3.2</span>
+          <h3>Gerenciar Treinadores</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">admin/assessorias</span>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Como adicionar um treinador</div>
+          <ol class="steps" style="margin-top:0.5rem">
+            <li><span class="step-num">1</span><span class="step-text">Clique no botão <strong>"+ Novo treinador"</strong> no canto superior direito</span></li>
+            <li><span class="step-num">2</span><span class="step-text">Preencha o nome completo e o e-mail profissional do treinador</span></li>
+            <li><span class="step-num">3</span><span class="step-text">Clique em <strong>"Enviar convite"</strong> — o sistema envia um e-mail de boas-vindas automaticamente</span></li>
+            <li><span class="step-num">4</span><span class="step-text">O treinador segue o link no e-mail para definir sua senha e ativar a conta</span></li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Permissões e acesso</div>
+          <ul class="bullet-list" style="margin-top:0.35rem">
+            <li>Cada treinador acessa <strong>apenas os atletas vinculados a ele</strong> — não vê atletas de outros treinadores</li>
+            <li>O administrador pode ver e acessar os atletas de todos os treinadores</li>
+            <li>Para <strong>remover acesso:</strong> clique no nome do treinador → botão <strong>"Desativar"</strong> — o treinador perde o acesso imediatamente, mas os dados são preservados</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 3.3 -->
+      <div class="subsection" id="white-label">
+        <div class="subsection-header">
+          <span class="subsection-num">3.3</span>
+          <h3>Configuração White-label <span class="badge-new">Novo</span></h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">treinador/white-label</span>
+        </div>
+
+        <p>Personalize a plataforma com a identidade visual da sua assessoria. Seus atletas verão a sua marca, não o PACE RUN PRO.</p>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="fi-label">Nome da assessoria</div>
+            <div class="fi-value">Aparece em todos os e-mails, tela de login e cabeçalho</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Logo (emoji)</div>
+            <div class="fi-value">Escolha: ⚡ 🏃 🎯 🏅 💪 🌟 — toque para selecionar</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Cor primária</div>
+            <div class="fi-value">Clique no seletor de cor e escolha a cor da sua marca</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Módulos ativos</div>
+            <div class="fi-value">Ative/desative funcionalidades via toggle para cada módulo</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🌐 Domínio personalizado</div>
+          <p style="font-size:0.88rem;margin-top:0.35rem">Configure um endereço próprio, como <code>app.minhaassessoria.com.br</code>. Requer configuração de DNS no seu provedor de domínio. Solicite o guia de configuração ao suporte técnico.</p>
+        </div>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>Após clicar em <strong>"Salvar"</strong>, as mudanças de nome e cor aparecem em até 1 minuto para todos os usuários. Recarregue a página se não aparecer.</p>
+        </div>
+      </div>
+
+      <!-- 3.4 -->
+      <div class="subsection" id="financeiro">
+        <div class="subsection-header">
+          <span class="subsection-num">3.4</span>
+          <h3>Financeiro e Planos</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">admin/financeiro</span>
+        </div>
+
+        <ul class="bullet-list">
+          <li>Visualize cobranças <span class="alert-tag at-green">Pagas</span>, <span class="alert-tag at-yellow">Pendentes</span> e <span class="alert-tag at-red">Vencidas</span></li>
+          <li>Gere relatório mensal completo — clique em <strong>"Exportar"</strong> para baixar em CSV ou PDF</li>
+          <li>Integração nativa com <strong>Asaas</strong> para cobranças via Pix, boleto e cartão de crédito</li>
+          <li>Histórico de todas as transações com filtro por período e status</li>
+        </ul>
+
+        <div class="callout callout-atencao">
+          <div class="callout-title">⚠️ Atenção</div>
+          <p>Cobranças vencidas há mais de 7 dias suspendem automaticamente o acesso do atleta. O acesso é restaurado assim que o pagamento é confirmado.</p>
+        </div>
+      </div>
+
+      <div class="section-nav">
+        <a href="#primeiros-passos">← Primeiros Passos</a>
+        <a href="#treinador">Próxima: Perfil Treinador →</a>
+      </div>
+    </section>
+
+    <!-- ══════════════════ SEÇÃO 4 — TREINADOR ══════════════════ -->
+    <section class="section" id="treinador">
+      <div class="section-header">
+        <div class="section-dot dot-blue"></div>
+        <h2>4. Perfil Treinador</h2>
+        <span class="section-badge sb-blue">👨‍💼 Treinador</span>
+      </div>
+
+      <p>O treinador é o coração operacional da plataforma. Aqui você gerencia seus atletas, prescreve treinos, monitora desempenho e acompanha o progresso de cada aluno em tempo real.</p>
+
+      <!-- 4.1 -->
+      <div class="subsection" id="treinador-dashboard">
+        <div class="subsection-header">
+          <span class="subsection-num">4.1</span>
+          <h3>Dashboard do Treinador</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">treinador/dashboard</span>
+        </div>
+
+        <p>Ao entrar, você vê um resumo completo da sua equipe de atletas:</p>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="fi-label">Atletas ativos</div>
+            <div class="fi-value">Total de atletas sob sua orientação</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Treinos esta semana</div>
+            <div class="fi-value">Quantos treinos foram prescritos e quantos já foram completados</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Alertas pendentes</div>
+            <div class="fi-value">Situações que precisam da sua atenção hoje</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Taxa de aderência</div>
+            <div class="fi-value">Percentual de treinos completados no período</div>
+          </div>
+        </div>
+
+        <p>Os cards de atletas usam cores para indicar urgência:</p>
+        <ul class="bullet-list">
+          <li><span class="alert-tag at-red">● Vermelho</span> — requer atenção imediata (dor reportada, sem treinar há 7+ dias)</li>
+          <li><span class="alert-tag at-yellow">● Amarelo</span> — observar (aderência baixa, volume abaixo da meta)</li>
+          <li><span class="alert-tag at-green">● Verde</span> — tudo certo, atleta evoluindo normalmente</li>
+        </ul>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>Clique em qualquer card de atleta para abrir o perfil completo com histórico, métricas e todos os treinos prescritos.</p>
+        </div>
+      </div>
+
+      <!-- 4.2 -->
+      <div class="subsection" id="gerenciar-atletas">
+        <div class="subsection-header">
+          <span class="subsection-num">4.2</span>
+          <h3>Gerenciar Atletas</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">treinador/alunos</span>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Ver a lista de atletas</div>
+          <p style="font-size:0.88rem;margin-top:0.35rem">A tabela mostra: foto, nome, plano atual, data da última atividade e status. Use os <strong>filtros</strong> no topo para encontrar atletas por status, plano ou nível.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Ver perfil individual</div>
+          <p style="font-size:0.88rem;margin-top:0.35rem">Clique no nome do atleta para abrir o perfil completo: histórico de treinos, métricas de desempenho, evolução de pace, FC, volume semanal e todos os treinos prescritos.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Adicionar novo atleta</div>
+          <ol class="steps" style="margin-top:0.5rem">
+            <li><span class="step-num">1</span><span class="step-text">Clique em <strong>"+ Novo atleta"</strong> no canto superior direito</span></li>
+            <li><span class="step-num">2</span><span class="step-text">Preencha nome e e-mail, ou compartilhe o link <code>/cadastro</code> para o atleta preencher os próprios dados</span></li>
+            <li><span class="step-num">3</span><span class="step-text">O atleta recebe um e-mail de boas-vindas com instruções para criar a senha</span></li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- 4.3 -->
+      <div class="subsection" id="alertas">
+        <div class="subsection-header">
+          <span class="subsection-num">4.3</span>
+          <h3>Central de Alertas</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">treinador/alertas</span>
+        </div>
+
+        <p>O sistema gera alertas automáticos com base no comportamento dos atletas. Você não precisa verificar cada atleta individualmente — os alertas chegam até você.</p>
+
+        <div class="card">
+          <div class="card-title">Tipos de alerta</div>
+          <ul class="bullet-list" style="margin-top:0.5rem">
+            <li><span class="alert-tag at-red">🔴 Alto</span> — atleta sem treinar há 7+ dias, dor reportada na sessão, frequência cardíaca muito acima do esperado</li>
+            <li><span class="alert-tag at-yellow">🟡 Médio</span> — aderência abaixo de 75% na semana, volume total abaixo da meta do plano</li>
+            <li><span class="alert-tag at-blue">🔵 Info</span> — melhora significativa de performance, treino executado de forma excelente, novo recorde pessoal</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Gerenciar alertas</div>
+          <ul class="bullet-list" style="margin-top:0.35rem">
+            <li><strong>Filtrar por severidade:</strong> clique nos botões <code>Todos</code> / <code>Alto</code> / <code>Médio</code> / <code>Info</code> no topo</li>
+            <li><strong>Marcar como lido:</strong> clique em "Marcar como lido" no card do alerta — ele é arquivado</li>
+            <li><strong>Marcar todos de uma vez:</strong> botão "Marcar todos como lidos" no canto superior direito</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 4.4 -->
+      <div class="subsection" id="analise-semanal-t">
+        <div class="subsection-header">
+          <span class="subsection-num">4.4</span>
+          <h3>Análise Semanal Automática</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">treinador/analise-semanal</span>
+        </div>
+
+        <p>Todo domingo, o sistema gera automaticamente um relatório consolidado de todos os seus atletas com os dados da semana encerrada.</p>
+
+        <ul class="bullet-list">
+          <li><strong>Navegar entre semanas:</strong> use as setas <strong>←</strong> e <strong>→</strong> no topo para ver semanas anteriores</li>
+          <li><strong>Filtros de risco:</strong> botões "Alto risco" e "Médio risco" para focar apenas nos atletas que precisam de atenção</li>
+          <li><strong>Card por atleta:</strong> volume total, aderência (%), pace médio, carga de treino acumulada</li>
+          <li><strong>Variação semanal:</strong> ▲ indica aumento, ▼ indica queda em relação à semana anterior</li>
+          <li><strong>Recomendação automática:</strong> cada card traz uma sugestão do que fazer com aquele atleta na próxima semana</li>
+        </ul>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>Use a análise semanal como ponto de partida para ajustar os treinos da semana seguinte. Clique no nome do atleta direto do card para abrir o perfil e fazer a prescrição.</p>
+        </div>
+      </div>
+
+      <!-- 4.5 -->
+      <div class="subsection" id="prescricao-corrida">
+        <div class="subsection-header">
+          <span class="subsection-num">4.5</span>
+          <h3>Prescrição de Corrida</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">treinador/prescricao/corrida</span>
+        </div>
+
+        <ol class="steps">
+          <li><span class="step-num">1</span><span class="step-text"><strong>Selecione o atleta</strong> no dropdown — comece digitando o nome para filtrar</span></li>
+          <li><span class="step-num">2</span><span class="step-text"><strong>Tipo de treino:</strong> escolha entre Fácil, Moderado, Forte, Longão, Regenerativo ou Específico</span></li>
+          <li><span class="step-num">3</span><span class="step-text"><strong>Distância:</strong> informe a distância em km (ex: 10)</span></li>
+          <li><span class="step-num">4</span><span class="step-text"><strong>Pace alvo:</strong> informe o pace em min/km (ex: 5:30) — use o formato correto com dois pontos</span></li>
+          <li><span class="step-num">5</span><span class="step-text"><strong>Data:</strong> clique no calendário e selecione quando o treino deve ser realizado</span></li>
+          <li><span class="step-num">6</span><span class="step-text"><strong>Observações:</strong> campo livre — escreva instruções específicas, aquecimento, sprints etc.</span></li>
+          <li><span class="step-num">7</span><span class="step-text">Clique em <strong>"Salvar treino"</strong> — o treino aparece instantaneamente no calendário do atleta</span></li>
+        </ol>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>Você pode prescrever treinos com semanas de antecedência. O atleta vê todos os treinos agendados no calendário e recebe notificação no dia anterior ao treino.</p>
+        </div>
+      </div>
+
+      <!-- 4.6 -->
+      <div class="subsection" id="prescricao-forca">
+        <div class="subsection-header">
+          <span class="subsection-num">4.6</span>
+          <h3>Prescrição de Força</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">treinador/prescricao/forca</span>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Criar uma sessão de força</div>
+          <ol class="steps" style="margin-top:0.5rem">
+            <li><span class="step-num">1</span><span class="step-text">Clique em <strong>"+ Nova sessão"</strong></span></li>
+            <li><span class="step-num">2</span><span class="step-text">Dê um nome à sessão (ex: "Força Membros Inferiores A") e defina a data</span></li>
+            <li><span class="step-num">3</span><span class="step-text">Selecione o objetivo: <strong>Funcional</strong>, <strong>Hipertrofia</strong> ou <strong>Potência</strong></span></li>
+            <li><span class="step-num">4</span><span class="step-text">Clique em <strong>"Adicionar exercício"</strong> e busque na biblioteca (mais de 30 exercícios com GIFs)</span></li>
+            <li><span class="step-num">5</span><span class="step-text">Para cada exercício, defina: séries × repetições × tempo de descanso (em segundos)</span></li>
+            <li><span class="step-num">6</span><span class="step-text"><strong>Reordenar:</strong> arraste e solte os exercícios para mudar a ordem da sessão</span></li>
+            <li><span class="step-num">7</span><span class="step-text">Clique em <strong>"Salvar sessão"</strong> — o atleta vê a sessão completa com imagens e timer integrado</span></li>
+          </ol>
+        </div>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>A biblioteca de exercícios tem GIFs demonstrativos. O atleta vê exatamente como executar cada movimento, reduzindo erros técnicos sem precisar de supervisão presencial.</p>
+        </div>
+      </div>
+
+      <!-- 4.7 -->
+      <div class="subsection" id="periodizacao">
+        <div class="subsection-header">
+          <span class="subsection-num">4.7</span>
+          <h3>Periodização <span class="badge-new">Novo</span></h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">treinador/prescricao/periodizacao</span>
+        </div>
+
+        <p>Monte um plano de treinamento estruturado para semanas ou meses, com progressão automática de carga.</p>
+
+        <ol class="steps">
+          <li><span class="step-num">1</span><span class="step-text"><strong>Criar macrociclo:</strong> clique em "+ Novo macrociclo" → dê um nome (ex: "Preparatório São Silvestre") → defina data de início e fim</span></li>
+          <li><span class="step-num">2</span><span class="step-text"><strong>Fases automáticas:</strong> o sistema sugere a divisão Base → Construção → Específico → Polimento → Recuperação com proporções recomendadas</span></li>
+          <li><span class="step-num">3</span><span class="step-text"><strong>Ajuste manual:</strong> arraste as barras das fases no calendário para aumentar ou reduzir a duração de cada uma</span></li>
+          <li><span class="step-num">4</span><span class="step-text"><strong>Volume por fase:</strong> o sistema calcula progressão automática de carga — você pode editar os valores manualmente</span></li>
+          <li><span class="step-num">5</span><span class="step-text"><strong>Vincular:</strong> aplique o plano para um atleta específico ou para um grupo inteiro de atletas de uma só vez</span></li>
+        </ol>
+      </div>
+
+      <!-- 4.8 -->
+      <div class="subsection" id="relatorios">
+        <div class="subsection-header">
+          <span class="subsection-num">4.8</span>
+          <h3>Relatórios</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">treinador/relatorios</span>
+        </div>
+
+        <ol class="steps">
+          <li><span class="step-num">1</span><span class="step-text">Selecione o <strong>atleta</strong> no dropdown</span></li>
+          <li><span class="step-num">2</span><span class="step-text">Escolha o <strong>período</strong> usando o seletor de datas</span></li>
+          <li><span class="step-num">3</span><span class="step-text">Selecione o <strong>tipo de relatório:</strong> Semanal, Mensal ou Por Prova</span></li>
+          <li><span class="step-num">4</span><span class="step-text">Clique em <strong>"Gerar relatório"</strong> — uma janela de pré-visualização se abre</span></li>
+          <li><span class="step-num">5</span><span class="step-text"><strong>Salvar como PDF:</strong> na janela de impressão, selecione "Salvar como PDF" no destino de impressão</span></li>
+          <li><span class="step-num">6</span><span class="step-text"><strong>Exportar CSV:</strong> use o botão separado "Exportar CSV" para obter todos os dados em planilha</span></li>
+        </ol>
+      </div>
+
+      <!-- 4.9 -->
+      <div class="subsection" id="crm">
+        <div class="subsection-header">
+          <span class="subsection-num">4.9</span>
+          <h3>CRM de Leads <span class="badge-new">Novo</span></h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">treinador/crm</span>
+        </div>
+
+        <p>Gerencie potenciais novos alunos com um pipeline visual no estilo Kanban.</p>
+
+        <div class="card">
+          <div class="card-title">Pipeline Kanban</div>
+          <p style="font-size:0.88rem;margin-top:0.35rem">Os leads são organizados em colunas que representam o estágio da negociação:</p>
+          <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap">
+            <span class="alert-tag at-blue">Novo</span>
+            <span style="color:var(--text-dim);font-size:0.8rem;align-self:center">→</span>
+            <span class="alert-tag at-yellow">Contato</span>
+            <span style="color:var(--text-dim);font-size:0.8rem;align-self:center">→</span>
+            <span class="alert-tag at-red">Proposta</span>
+            <span style="color:var(--text-dim);font-size:0.8rem;align-self:center">→</span>
+            <span class="alert-tag at-green">Ganho</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Adicionar um lead</div>
+          <ol class="steps" style="margin-top:0.5rem">
+            <li><span class="step-num">1</span><span class="step-text">Clique em <strong>"+ Novo lead"</strong></span></li>
+            <li><span class="step-num">2</span><span class="step-text">Preencha: nome, e-mail, telefone, origem (como te encontrou) e valor estimado do plano</span></li>
+            <li><span class="step-num">3</span><span class="step-text">Clique em <strong>"Salvar"</strong> — o lead aparece na coluna "Novo"</span></li>
+            <li><span class="step-num">4</span><span class="step-text">Para avançar o estágio: clique em <strong>"Mover →"</strong> no card do lead</span></li>
+          </ol>
+        </div>
+
+        <ul class="bullet-list">
+          <li><strong>Alternar para lista:</strong> botão "Lista" no topo para ver todos os leads em formato de tabela</li>
+          <li><strong>Taxa de conversão:</strong> calculada automaticamente — quantos leads viraram atletas</li>
+          <li><strong>Receita potencial:</strong> soma dos valores estimados de todos os leads nas colunas ativas</li>
+        </ul>
+      </div>
+
+      <div class="section-nav">
+        <a href="#assessoria">← Perfil Assessoria</a>
+        <a href="#atleta">Próxima: Perfil Atleta →</a>
+      </div>
+    </section>
+
+    <!-- ══════════════════ SEÇÃO 5 — ATLETA ══════════════════ -->
+    <section class="section" id="atleta">
+      <div class="section-header">
+        <div class="section-dot dot-green"></div>
+        <h2>5. Perfil Atleta</h2>
+        <span class="section-badge sb-green">🏃 Atleta</span>
+      </div>
+
+      <p>Como atleta, você tem acesso a todas as ferramentas para acompanhar seus treinos, analisar seu desempenho, conversar com a IA treinadora e planejar suas provas.</p>
+
+      <!-- 5.1 -->
+      <div class="subsection" id="atleta-dashboard">
+        <div class="subsection-header">
+          <span class="subsection-num">5.1</span>
+          <h3>Dashboard Pessoal</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">aluno/dashboard</span>
+        </div>
+
+        <p>Sua página inicial mostra tudo o que você precisa saber hoje:</p>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="fi-label">Próximo treino</div>
+            <div class="fi-value">Card com tipo, distância, pace e data do próximo treino agendado</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Resumo da semana</div>
+            <div class="fi-value">Km percorridos, treinos completados e meta da semana</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Streak 🔥</div>
+            <div class="fi-value">Dias consecutivos com treino realizado — mantenha a sequência!</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Mensagem do treinador</div>
+            <div class="fi-value">Notificações e feedbacks enviados pelo seu treinador</div>
+          </div>
+        </div>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>O gráfico de evolução dos últimos 30 dias mostra seu volume semanal de corrida. Subidas consistentes indicam que você está progredindo dentro do plano.</p>
+        </div>
+      </div>
+
+      <!-- 5.2 -->
+      <div class="subsection" id="calendario">
+        <div class="subsection-header">
+          <span class="subsection-num">5.2</span>
+          <h3>Calendário de Treinos</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">aluno/calendario</span>
+        </div>
+
+        <p>Visualização mensal com todos os seus treinos marcados por cor:</p>
+
+        <ul class="bullet-list">
+          <li><span style="color:var(--accent)">🟣 Roxo</span> — treino de corrida</li>
+          <li><span style="color:var(--blue)">🔵 Azul</span> — treino de força</li>
+          <li><span style="color:var(--green)">🟢 Verde</span> — treino recuperativo ou caminhada</li>
+          <li><span style="color:var(--yellow)">🟡 Amarelo</span> — teste (avaliação de pace, ergoespirométrico)</li>
+        </ul>
+
+        <ul class="bullet-list" style="margin-top:0.75rem">
+          <li>Clique em qualquer dia para ver os detalhes completos do treino daquele dia</li>
+          <li>Dias com treino completado aparecem com <strong>✓</strong> em verde</li>
+          <li>Você não pode editar ou excluir treinos — apenas seu treinador faz isso</li>
+          <li>Use as setas <strong>←</strong> <strong>→</strong> para navegar entre meses</li>
+        </ul>
+      </div>
+
+      <!-- 5.3 -->
+      <div class="subsection" id="treino-forca">
+        <div class="subsection-header">
+          <span class="subsection-num">5.3</span>
+          <h3>Treino de Força com Timer</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">aluno/forca</span>
+        </div>
+
+        <p>Execute sua sessão de força diretamente pelo celular, com timer automático e demonstrações em GIF.</p>
+
+        <ol class="steps">
+          <li><span class="step-num">1</span><span class="step-text">Na página de força, selecione a sessão do dia e clique em <strong>"Iniciar treino"</strong></span></li>
+          <li><span class="step-num">2</span><span class="step-text">O primeiro exercício é exibido com <strong>nome, GIF demonstrativo, séries e repetições</strong></span></li>
+          <li><span class="step-num">3</span><span class="step-text">Execute a série — o timer conta o tempo de esforço na tela</span></li>
+          <li><span class="step-num">4</span><span class="step-text">Ao completar a série, clique em <strong>"Concluir série"</strong> — o timer de descanso inicia automaticamente com anel animado em contagem regressiva</span></li>
+          <li><span class="step-num">5</span><span class="step-text">Um <strong>beep sonoro</strong> avisa quando o descanso termina — prepare-se para a próxima série</span></li>
+          <li><span class="step-num">6</span><span class="step-text">Ao concluir todas as séries do exercício, clique em <strong>"Próximo exercício"</strong></span></li>
+          <li><span class="step-num">7</span><span class="step-text">Ao terminar todos os exercícios, aparece a tela de <strong>conclusão com o resumo da sessão</strong></span></li>
+        </ol>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>Mantenha o celular com a tela ativa durante o treino. Você pode reduzir o brilho para economizar bateria, mas não feche o navegador ou o timer será interrompido.</p>
+        </div>
+      </div>
+
+      <!-- 5.4 -->
+      <div class="subsection" id="ia-treinadora">
+        <div class="subsection-header">
+          <span class="subsection-num">5.4</span>
+          <h3>IA Treinadora <span class="badge-new">Novo</span></h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">aluno/ia-treinadora</span>
+        </div>
+
+        <p>Um assistente inteligente especializado em corrida e treinamento, disponível 24 horas por dia para tirar suas dúvidas.</p>
+
+        <div class="card">
+          <div class="card-title">Como usar</div>
+          <ul class="bullet-list" style="margin-top:0.35rem">
+            <li>Clique em uma das <strong>perguntas sugeridas</strong> para começar rapidamente</li>
+            <li>Ou escreva sua própria pergunta na caixa de texto</li>
+            <li>Pressione <strong>Enter</strong> ou clique no botão de envio (ícone de seta) para enviar</li>
+            <li>Para pular linha sem enviar, use <strong>Shift+Enter</strong></li>
+            <li>A IA já conhece seu plano atual, provas agendadas e histórico recente automaticamente</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Exemplos de perguntas</div>
+          <ul class="bullet-list" style="margin-top:0.35rem">
+            <li>"Meu joelho está doendo depois dos treinos longos, o que faço?"</li>
+            <li>"Como devo me alimentar nos 3 dias antes da maratona?"</li>
+            <li>"Estou me sentindo muito cansado — será que estou overtreinando?"</li>
+            <li>"Qual pace devo usar no meu próximo longão de 25km?"</li>
+            <li>"Posso substituir o treino de amanhã por hoje?"</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-atencao">
+          <div class="callout-title">⚠️ Atenção</div>
+          <p>A IA Treinadora é um apoio complementar, não substitui seu treinador humano. Para questões de saúde, lesões ou dores persistentes, sempre consulte um médico ou fisioterapeuta.</p>
+        </div>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>O histórico de conversa fica salvo durante a sessão ativa. Ao fechar e reabrir o aplicativo, uma nova conversa começa do zero.</p>
+        </div>
+      </div>
+
+      <!-- 5.5 -->
+      <div class="subsection" id="previsao">
+        <div class="subsection-header">
+          <span class="subsection-num">5.5</span>
+          <h3>Previsão de Prova</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">aluno/previsao</span>
+        </div>
+
+        <p>Descubra qual é o seu tempo previsto para qualquer distância com base no seu desempenho atual.</p>
+
+        <ol class="steps">
+          <li><span class="step-num">1</span><span class="step-text">Informe uma distância que você correu recentemente (ex: 10 km)</span></li>
+          <li><span class="step-num">2</span><span class="step-text">Informe seu tempo naquela prova ou treino (ex: 52:00)</span></li>
+          <li><span class="step-num">3</span><span class="step-text">O sistema usa a <strong>fórmula científica de Riegel</strong> para calcular previsões para 5k, 10k, 21k, 42k e 100k</span></li>
+        </ol>
+
+        <div class="card">
+          <div class="card-title">O que você recebe</div>
+          <ul class="bullet-list" style="margin-top:0.35rem">
+            <li><strong>Tabela de previsões:</strong> tempo estimado para cada distância padrão</li>
+            <li><strong>Pace médio esperado</strong> para cada prova</li>
+            <li><strong>Tabela de splits:</strong> pace esperado para cada km da prova alvo</li>
+            <li><strong>Estratégia de pace negativo:</strong> recomendação de começar mais devagar e acelerar nos km finais</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>Para previsões mais precisas, use um tempo de uma prova recente (últimos 3 meses) em condições normais. Tempos em dias muito quentes ou em terrenos acidentados podem dar previsões menos precisas.</p>
+        </div>
+      </div>
+
+      <!-- 5.6 -->
+      <div class="subsection" id="simulador">
+        <div class="subsection-header">
+          <span class="subsection-num">5.6</span>
+          <h3>Simulador de Pace <span class="badge-new">Novo</span></h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">aluno/simulador</span>
+        </div>
+
+        <p>Monte um plano completo de corrida para o dia da sua prova.</p>
+
+        <div class="card">
+          <div class="card-title">Configure seu plano</div>
+          <div class="feature-grid">
+            <div class="feature-item">
+              <div class="fi-label">Prova</div>
+              <div class="fi-value">Selecione a distância da prova</div>
+            </div>
+            <div class="feature-item">
+              <div class="fi-label">Meta de tempo</div>
+              <div class="fi-value">Quanto tempo quer fazer? (ex: 4h30)</div>
+            </div>
+            <div class="feature-item">
+              <div class="fi-label">Seu peso</div>
+              <div class="fi-value">Em kg — influencia no gasto calórico</div>
+            </div>
+            <div class="feature-item">
+              <div class="fi-label">Temperatura prevista</div>
+              <div class="fi-value">Temperatura esperada no dia da prova</div>
+            </div>
+            <div class="feature-item">
+              <div class="fi-label">Elevação acumulada</div>
+              <div class="fi-value">Metros de subida total do percurso</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">O que o simulador gera</div>
+          <ul class="bullet-list" style="margin-top:0.35rem">
+            <li>Pace médio recomendado para atingir sua meta</li>
+            <li>Pace de largada (conservador) e pace de chegada (aceleração final)</li>
+            <li>Tabela km a km com zone cardíaca esperada para cada trecho</li>
+            <li>Plano de nutrição: quando tomar gel, água e eletrólito ao longo da prova</li>
+            <li>Checklist pré-prova com itens para preparar na véspera</li>
+          </ul>
+        </div>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>Para salvar seu plano de prova, pressione <strong>Ctrl+P</strong> (ou Cmd+P no Mac) e selecione "Salvar como PDF". Você pode imprimir e levar para a largada.</p>
+        </div>
+      </div>
+
+      <!-- 5.7 -->
+      <div class="subsection" id="tenis">
+        <div class="subsection-header">
+          <span class="subsection-num">5.7</span>
+          <h3>Tênis Tracker</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">aluno/tenis</span>
+        </div>
+
+        <p>Controle a quilometragem dos seus tênis de corrida e saiba na hora certa de trocá-los.</p>
+
+        <div class="card">
+          <div class="card-title">Barra de vida útil</div>
+          <div class="progress-demo">
+            <div class="progress-label">Nike Vomero 17 — 330 km / 600 km</div>
+            <div class="progress-bar-wrap"><div class="progress-bar pb-green"></div></div>
+          </div>
+          <div class="progress-demo">
+            <div class="progress-label">Asics Nimbus 25 — 510 km / 600 km</div>
+            <div class="progress-bar-wrap"><div class="progress-bar pb-yellow"></div></div>
+          </div>
+          <div class="progress-demo">
+            <div class="progress-label">Brooks Ghost 15 — 582 km / 600 km</div>
+            <div class="progress-bar-wrap"><div class="progress-bar pb-orange"></div></div>
+          </div>
+
+          <ul class="bullet-list" style="margin-top:0.75rem">
+            <li><span class="alert-tag at-green">Verde (0–79%)</span> — tênis em bom estado</li>
+            <li><span class="alert-tag at-yellow">Amarelo (80–94%)</span> — planeje a troca em breve</li>
+            <li><span class="alert-tag at-red">Laranja (95%+)</span> — está na hora de trocar</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Adicionar um tênis</div>
+          <ol class="steps" style="margin-top:0.5rem">
+            <li><span class="step-num">1</span><span class="step-text">Clique em <strong>"+ Adicionar tênis"</strong></span></li>
+            <li><span class="step-num">2</span><span class="step-text">Preencha: marca, modelo e km máximos recomendados pelo fabricante (geralmente 500–800 km)</span></li>
+            <li><span class="step-num">3</span><span class="step-text">Se o tênis já tem km rodados, informe a quilometragem inicial</span></li>
+            <li><span class="step-num">4</span><span class="step-text">O sistema passa a contar km automaticamente conforme você registra treinos</span></li>
+          </ol>
+        </div>
+
+        <ul class="bullet-list">
+          <li><strong>Aposentar um tênis:</strong> quando atingir o limite, clique em "Aposentar" para arquivar sem excluir o histórico</li>
+          <li><strong>Alertas automáticos:</strong> você recebe notificação quando seu tênis se aproximar do limite configurado</li>
+        </ul>
+      </div>
+
+      <!-- 5.8 -->
+      <div class="subsection" id="timeline">
+        <div class="subsection-header">
+          <span class="subsection-num">5.8</span>
+          <h3>Minha Jornada (Timeline)</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">aluno/timeline</span>
+        </div>
+
+        <p>Sua história como corredor — todos os treinos marcantes, provas, recordes pessoais e conquistas em ordem cronológica.</p>
+
+        <ul class="bullet-list">
+          <li><strong>O que aparece:</strong> treinos de destaque, provas completadas, recordes pessoais (PRs), conquistas desbloqueadas e avaliações</li>
+          <li><strong>Filtros:</strong> botões no topo para ver apenas Treino / Prova / Teste / Conquista / Avaliação</li>
+          <li><strong>Recordes pessoais:</strong> cards com <span style="color:#fbbf24">borda dourada</span> indicam que aquele evento foi um novo PR</li>
+          <li><strong>Navegação:</strong> role para baixo para ver eventos mais antigos — agrupados automaticamente por mês</li>
+          <li>Os eventos mais recentes aparecem no topo — o mais antigo no final da lista</li>
+        </ul>
+
+        <div class="callout callout-dica">
+          <div class="callout-title">💡 Dica</div>
+          <p>A timeline é ótima para ver sua evolução ao longo do tempo. Nos momentos de desmotivação, veja o quanto você já progrediu desde que começou!</p>
+        </div>
+      </div>
+
+      <!-- 5.9 -->
+      <div class="subsection" id="analise-semanal-a">
+        <div class="subsection-header">
+          <span class="subsection-num">5.9</span>
+          <h3>Análise Semanal</h3>
+        </div>
+
+        <div class="url-bar">
+          <div class="url-dot"></div>
+          <span class="url-scheme">https://</span><span class="url-domain">app /</span>
+          <span class="url-path">aluno/analise-semanal</span>
+        </div>
+
+        <p>Relatório automático gerado todo domingo com um resumo completo da semana encerrada.</p>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="fi-label">Volume total</div>
+            <div class="fi-value">Total de km percorridos na semana</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Número de treinos</div>
+            <div class="fi-value">Treinos realizados vs. treinos prescritos</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Pace médio</div>
+            <div class="fi-value">Velocidade média de todos os treinos</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">FC média</div>
+            <div class="fi-value">Frequência cardíaca média (se você usa monitor)</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Carga de treino</div>
+            <div class="fi-value">Índice de esforço acumulado da semana</div>
+          </div>
+          <div class="feature-item">
+            <div class="fi-label">Comparação</div>
+            <div class="fi-value">▲ melhor ou ▼ pior que a semana anterior</div>
+          </div>
+        </div>
+
+        <ul class="bullet-list" style="margin-top:0.75rem">
+          <li><strong>Gráfico diário:</strong> barras mostrando o volume de corrida para cada dia da semana</li>
+          <li><strong>3 destaques automáticos:</strong> insights sobre o que foi notável na semana</li>
+          <li><strong>Recomendação do treinador:</strong> orientação personalizada para a próxima semana</li>
+          <li><strong>Navegar semanas:</strong> use as setas ← → para ver semanas anteriores</li>
+        </ul>
+      </div>
+
+      <div class="section-nav">
+        <a href="#treinador">← Perfil Treinador</a>
+        <a href="#faq">Próxima: Perguntas Frequentes →</a>
+      </div>
+    </section>
+
+    <!-- ══════════════════ SEÇÃO 6 — FAQ ══════════════════ -->
+    <section class="section" id="faq">
+      <div class="section-header">
+        <div class="section-dot dot-gray"></div>
+        <h2>6. Perguntas Frequentes</h2>
+        <span class="section-badge sb-gray">Todos os perfis</span>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Esqueci minha senha, como recupero?</div>
+        <div class="faq-a">Na tela de login, clique em <strong>"Recuperar senha"</strong> → informe seu e-mail → você receberá um link de redefinição em até 5 minutos. Verifique a caixa de spam se não encontrar. O link expira em 30 minutos.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Posso usar no celular?</div>
+        <div class="faq-a">Sim! O sistema funciona em qualquer navegador mobile. Para melhor experiência, adicione à tela inicial seguindo as instruções da seção 2.3 — ele funciona como um aplicativo nativo.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Meu treinador não vê meus treinos. O que aconteceu?</div>
+        <div class="faq-a">Confirme que você está vinculado ao treinador correto. Peça para seu treinador verificar na seção <strong>Gerenciar Atletas</strong> se seu nome aparece na lista. Se não, solicite que ele te adicione novamente.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Como cancelar minha assinatura?</div>
+        <div class="faq-a">Acesse <strong>Perfil → Assinatura → Cancelar assinatura</strong>. O cancelamento não é imediato — você continua com acesso completo até o fim do período já pago. Não há reembolso proporcional.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Os dados ficam salvos se eu remover o atalho do celular?</div>
+        <div class="faq-a">Sim! Todos os dados ficam armazenados no servidor, não no seu celular. Remover o atalho da tela inicial é como fechar um site — seus dados continuam lá. É só adicionar o atalho novamente.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Posso ter mais de um treinador?</div>
+        <div class="faq-a">Por padrão, cada atleta é vinculado a um treinador. Para casos especiais com múltiplos treinadores, entre em contato com o administrador da sua assessoria para verificar a configuração do plano contratado.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">A IA Treinadora guarda o histórico das conversas?</div>
+        <div class="faq-a">O histórico fica disponível durante a sessão ativa. Ao fechar o navegador ou sair do app e abri-lo novamente, uma nova conversa começa do zero. Isso protege sua privacidade.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Como exportar meus dados de treinamento?</div>
+        <div class="faq-a">Treinadores podem exportar dados em CSV ou PDF via a seção <strong>Relatórios</strong>. Atletas podem solicitar a exportação dos próprios dados ao treinador ou enviar e-mail para o suporte com o pedido formal.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">O sistema funciona sem internet?</div>
+        <div class="faq-a">O PACE RUN PRO é uma aplicação web e requer conexão para carregar dados. Porém, uma vez carregada a página do treino de força, o timer funciona mesmo com instabilidade de rede. Para melhores resultados, tenha conexão ativa.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Como alterar meu e-mail ou foto de perfil?</div>
+        <div class="faq-a">Clique no ícone de usuário no canto superior direito → <strong>Meu perfil</strong> → <strong>Editar</strong>. Para e-mail, uma confirmação será enviada para o novo endereço antes da alteração ser concluída.</div>
+      </div>
+
+      <div class="section-nav">
+        <a href="#atleta">← Perfil Atleta</a>
+        <a href="#suporte">Próxima: Suporte →</a>
+      </div>
+    </section>
+
+    <!-- ══════════════════ SEÇÃO 7 — SUPORTE ══════════════════ -->
+    <section class="section" id="suporte">
+      <div class="section-header">
+        <div class="section-dot dot-gray"></div>
+        <h2>7. Suporte</h2>
+        <span class="section-badge sb-gray">Todos os perfis</span>
+      </div>
+
+      <p>Precisa de ajuda? Temos diferentes canais de suporte dependendo do tipo de dúvida.</p>
+
+      <div class="support-grid">
+        <div class="support-card">
+          <div class="sc-icon">🛠️</div>
+          <div class="sc-title">Suporte Técnico</div>
+          <div class="sc-line"><strong>E-mail:</strong> suporte@pacerunpro.com.br</div>
+          <div class="sc-line"><strong>Horário:</strong> Seg–Sex, 9h–18h</div>
+          <div class="sc-line"><strong>Resposta:</strong> até 24h úteis</div>
+          <div class="sc-line" style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-dim)">Para bugs, erros e problemas técnicos com a plataforma</div>
+        </div>
+
+        <div class="support-card">
+          <div class="sc-icon">📸</div>
+          <div class="sc-title">Instagram</div>
+          <div class="sc-line"><strong>@pacerunpro</strong></div>
+          <div class="sc-line">DM para dúvidas rápidas</div>
+          <div class="sc-line">Stories com dicas e novidades</div>
+          <div class="sc-line" style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-dim)">Ideal para dúvidas simples e acompanhar novidades</div>
+        </div>
+
+        <div class="support-card">
+          <div class="sc-icon">🎓</div>
+          <div class="sc-title">Para Treinadores e Assessorias</div>
+          <div class="sc-line">Onboarding ao vivo por videochamada</div>
+          <div class="sc-line">Treinamento para equipe incluso nos planos <strong>Growth</strong> e <strong>Business</strong></div>
+          <div class="sc-line" style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-dim)">Agende pelo e-mail: onboarding@pacerunpro.com.br</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="card">
+        <div class="card-title">Como reportar um bug</div>
+        <p style="font-size:0.88rem;margin-top:0.35rem">Para nos ajudar a resolver problemas técnicos mais rápido, ao enviar e-mail de suporte inclua:</p>
+        <ul class="bullet-list" style="margin-top:0.5rem">
+          <li>Descrição do problema e em qual tela aconteceu</li>
+          <li>Passos para reproduzir o erro (o que você fez antes do problema aparecer)</li>
+          <li>Print de tela ou vídeo, se possível</li>
+          <li>Seu sistema operacional e navegador (ex: iPhone 14, Safari 17)</li>
+        </ul>
+      </div>
+
+      <div class="callout callout-dica">
+        <div class="callout-title">💡 Dica</div>
+        <p>Para tirar print no celular: no iPhone pressione Botão Lateral + Volume Cima ao mesmo tempo. No Android pressione Botão de Ligar + Volume Baixo. O arquivo vai direto para a galeria.</p>
+      </div>
+
+      <div class="section-nav">
+        <a href="#faq">← Perguntas Frequentes</a>
+        <span class="spacer"></span>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+
+  <footer>
+    ⚡ PACE RUN PRO v1.0 — Manual do Usuário — Junho 2026<br>
+    <span style="color:var(--text-dim);font-size:0.7rem">© 2026 PACE RUN PRO. Todos os direitos reservados.</span>
+  </footer>
+
+</main>
+
+<script>
+// Active sidebar link on scroll
+const sections = document.querySelectorAll('section[id], div[id]');
+const links = document.querySelectorAll('#sidebar .toc a');
+
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      links.forEach(l => {
+        l.classList.remove('active');
+        if (l.getAttribute('href') === '#' + id) l.classList.add('active');
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+
+sections.forEach(s => obs.observe(s));
+
+// Smooth scroll for sidebar links
+links.forEach(link => {
+  link.addEventListener('click', (e) => {
+    const href = link.getAttribute('href');
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const target = document.querySelector(href);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  });
+});
+</script>
+
+</body>
+</html>
