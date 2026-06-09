@@ -1614,3 +1614,206 @@ export const weeklyAnalyses: WeeklyAthleteAnalysis[] = [
     recommendation: "Verificar comprometimento do atleta. Se saudável, ajustar plano para compensar volume perdido.",
   },
 ];
+
+// ── CRM ────────────────────────────────────────────────────────────────────
+export type LeadStage = "novo" | "contato" | "proposta" | "negociacao" | "ganho" | "perdido";
+
+export interface CrmLead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  source: "instagram" | "indicacao" | "site" | "evento" | "whatsapp";
+  stage: LeadStage;
+  value: number;
+  notes: string;
+  createdAt: string;
+  lastContact: string;
+  avatar: string;
+}
+
+export const crmLeads: CrmLead[] = [
+  {
+    id: "lead-1",
+    name: "Gabriela Moura",
+    email: "gabriela.moura@email.com",
+    phone: "(31) 99812-3456",
+    source: "instagram",
+    stage: "novo",
+    value: 290,
+    notes: "Seguiu o perfil após o post do longão de domingo. Curtiu 3 posts.",
+    createdAt: "2026-06-07",
+    lastContact: "2026-06-07",
+    avatar: "GM",
+  },
+  {
+    id: "lead-2",
+    name: "Henrique Azevedo",
+    email: "henrique.azevedo@gmail.com",
+    phone: "(11) 98724-8812",
+    source: "indicacao",
+    stage: "novo",
+    value: 290,
+    notes: "Indicado pela Camila Andrade. Quer começar em julho.",
+    createdAt: "2026-06-06",
+    lastContact: "2026-06-06",
+    avatar: "HA",
+  },
+  {
+    id: "lead-3",
+    name: "Larissa Drummond",
+    email: "larissa.d@empresa.com",
+    phone: "(31) 99501-7723",
+    source: "whatsapp",
+    stage: "contato",
+    value: 350,
+    notes: "Mandou mensagem perguntando sobre pacote elite. Respondida ontem.",
+    createdAt: "2026-06-02",
+    lastContact: "2026-06-08",
+    avatar: "LD",
+  },
+  {
+    id: "lead-4",
+    name: "Roberto Cavalcante",
+    email: "roberto.c@outlook.com",
+    phone: "(21) 98333-0041",
+    source: "site",
+    stage: "contato",
+    value: 290,
+    notes: "Preencheu o formulário do site. Ligação agendada para sexta.",
+    createdAt: "2026-06-03",
+    lastContact: "2026-06-07",
+    avatar: "RC",
+  },
+  {
+    id: "lead-5",
+    name: "Tatiane Borges",
+    email: "tati.borges@yahoo.com",
+    phone: "(41) 99200-6654",
+    source: "instagram",
+    stage: "contato",
+    value: 200,
+    notes: "Mandou DM depois do Reels sobre periodização. Iniciante, orçamento limitado.",
+    createdAt: "2026-05-28",
+    lastContact: "2026-06-05",
+    avatar: "TB",
+  },
+  {
+    id: "lead-6",
+    name: "Eduardo Pinheiro",
+    email: "eduardo.pinheiro@uol.com.br",
+    phone: "(85) 99710-2288",
+    source: "evento",
+    stage: "proposta",
+    value: 350,
+    notes: "Conhecido na Night Run BH. Quer plano para maratona de outubro.",
+    createdAt: "2026-05-25",
+    lastContact: "2026-06-06",
+    avatar: "EP",
+  },
+  {
+    id: "lead-7",
+    name: "Aline Figueiredo",
+    email: "aline.figueiredo@gmail.com",
+    phone: "(31) 98821-4490",
+    source: "indicacao",
+    stage: "proposta",
+    value: 290,
+    notes: "Indicada pelo Felipe Tannous. Recebeu proposta por e-mail, aguardando retorno.",
+    createdAt: "2026-05-20",
+    lastContact: "2026-06-04",
+    avatar: "AF",
+  },
+  {
+    id: "lead-8",
+    name: "Vinicius Leal",
+    email: "vinicius.leal@hotmail.com",
+    phone: "(11) 97766-3312",
+    source: "whatsapp",
+    stage: "negociacao",
+    value: 150,
+    notes: "Quer desconto no plano trimestral. Em negociação sobre valor.",
+    createdAt: "2026-05-15",
+    lastContact: "2026-06-08",
+    avatar: "VL",
+  },
+  {
+    id: "lead-9",
+    name: "Camile Rezende",
+    email: "camile.r@icloud.com",
+    phone: "(31) 99034-5671",
+    source: "site",
+    stage: "ganho",
+    value: 290,
+    notes: "Fechou plano semestral! Onboarding marcado para segunda-feira.",
+    createdAt: "2026-05-10",
+    lastContact: "2026-06-07",
+    avatar: "CR",
+  },
+  {
+    id: "lead-10",
+    name: "Marcos Quintão",
+    email: "marcos.quintao@gmail.com",
+    phone: "(51) 98882-1103",
+    source: "evento",
+    stage: "ganho",
+    value: 350,
+    notes: "Fechou plano elite após a palestra do evento. Primeiro atleta de Porto Alegre.",
+    createdAt: "2026-05-05",
+    lastContact: "2026-06-01",
+    avatar: "MQ",
+  },
+  {
+    id: "lead-11",
+    name: "Priscila Machado",
+    email: "pri.machado@empresa.com",
+    phone: "(31) 99988-7712",
+    source: "instagram",
+    stage: "ganho",
+    value: 290,
+    notes: "Convertida após 2 semanas de nutrição de conteúdo. Começou em junho.",
+    createdAt: "2026-04-28",
+    lastContact: "2026-06-02",
+    avatar: "PM",
+  },
+  {
+    id: "lead-12",
+    name: "Jonas Carvalho",
+    email: "jonas.carvalho@gmail.com",
+    phone: "(48) 97734-8821",
+    source: "indicacao",
+    stage: "perdido",
+    value: 290,
+    notes: "Optou por treinador local mais barato. Manter contato para futuro.",
+    createdAt: "2026-04-20",
+    lastContact: "2026-05-28",
+    avatar: "JC",
+  },
+];
+
+// ── White-label ────────────────────────────────────────────────────────────
+export interface WhiteLabelConfig {
+  assessoriaName: string;
+  logoEmoji: string;
+  primaryColor: string;
+  accentColor: string;
+  customDomain: string;
+  planName: string;
+  welcomeMessage: string;
+  featuresEnabled: string[];
+  athleteCount: number;
+  coachCount: number;
+}
+
+export const whiteLabelConfig: WhiteLabelConfig = {
+  assessoriaName: "Assessoria Pace Run",
+  logoEmoji: "⚡",
+  primaryColor: "#8b5cf6",
+  accentColor: "#06b6d4",
+  customDomain: "app.pacerunpro.com.br",
+  planName: "Business",
+  welcomeMessage: "Bem-vindo à Assessoria Pace Run! Aqui você encontra tudo para evoluir na corrida.",
+  featuresEnabled: ["Treinos", "Análise semanal", "IA Treinadora", "Tênis tracker", "Timeline"],
+  athleteCount: 47,
+  coachCount: 3,
+};

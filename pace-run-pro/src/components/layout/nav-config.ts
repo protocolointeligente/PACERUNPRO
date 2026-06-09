@@ -16,6 +16,9 @@ import {
   Target,
   Gauge,
   Shirt,
+  BarChart2,
+  Kanban,
+  Palette,
   type LucideIcon,
 } from "lucide-react";
 
@@ -40,18 +43,22 @@ export const athleteMoreNav: NavItem[] = [
   { href: "/aluno/simulador", label: "Simulador de pace", icon: Gauge },
   { href: "/aluno/tenis", label: "Tênis tracker", icon: Shirt },
   { href: "/aluno/timeline", label: "Minha jornada", icon: CalendarDays },
+  { href: "/aluno/analise-semanal", label: "Minha semana", icon: BarChart2 },
   { href: "/aluno/perfil", label: "Perfil", icon: User },
 ];
 
 export const coachNav: NavItem[] = [
   { href: "/treinador/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/treinador/alertas", label: "Alertas", icon: Bell },
+  { href: "/treinador/analise-semanal", label: "Análise semanal", icon: BarChart2 },
   { href: "/treinador/alunos", label: "Atletas", icon: Users },
   { href: "/treinador/prescricao/corrida", label: "Prescrição corrida", icon: Activity },
   { href: "/treinador/prescricao/forca", label: "Prescrição força", icon: Dumbbell },
   { href: "/treinador/prescricao/periodizacao", label: "Periodização", icon: CalendarDays },
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
   { href: "/treinador/gestao", label: "Gestão & vendas", icon: DollarSign },
+  { href: "/treinador/crm", label: "CRM de leads", icon: Kanban },
+  { href: "/treinador/white-label", label: "White-label", icon: Palette },
   { href: "/treinador/admin", label: "Admin", icon: Settings },
 ];
 
