@@ -1,5 +1,8 @@
-import { auth } from "@/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/auth.config";
 import { NextResponse } from "next/server";
+
+const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const { nextUrl } = req;
@@ -17,11 +20,13 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isLoggedIn && isAdminRoute && session.user.role !== "ADMIN") {
+  const role = (session?.user as { role?: string } | undefined)?.role;
+
+  if (isLoggedIn && isAdminRoute && role !== "ADMIN") {
     return NextResponse.redirect(new URL("/aluno/dashboard", nextUrl));
   }
 
-  if (isLoggedIn && isCoachRoute && !["COACH", "ADMIN"].includes(session.user.role)) {
+  if (isLoggedIn && isCoachRoute && !["COACH", "ADMIN"].includes(role ?? "")) {
     return NextResponse.redirect(new URL("/aluno/dashboard", nextUrl));
   }
 
