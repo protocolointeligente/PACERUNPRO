@@ -1477,3 +1477,140 @@ export const timelineEvents: TimelineEvent[] = [
   { id: "tl-16", date: "2025-11-20", type: "tenis", title: "Novo tênis adicionado", subtitle: "Asics Gel-Nimbus 26 — Corrida principal", badge: "Tênis" },
   { id: "tl-17", date: "2025-10-05", type: "conquista", title: "100 km acumulados no mês!", subtitle: "Melhor volume mensal da carreira", badge: "Marco", highlight: true },
 ];
+
+// ── Análise Semanal ────────────────────────────────────────────────────────
+export interface WeeklyMetric {
+  label: string;
+  value: number;
+  prev: number;
+  unit: string;
+  delta: number;
+}
+
+export interface WeeklyAthleteAnalysis {
+  athleteId: string;
+  athleteName: string;
+  weekLabel: string;
+  metrics: WeeklyMetric[];
+  highlights: string[];
+  riskLevel: "low" | "medium" | "high";
+  adherence: number;
+  recommendation: string;
+}
+
+export const weeklyAnalyses: WeeklyAthleteAnalysis[] = [
+  {
+    athleteId: "a-1",
+    athleteName: "Camila Andrade",
+    weekLabel: "02–08 Jun 2025",
+    metrics: [
+      { label: "Volume", value: 52, prev: 47, unit: "km", delta: 10.6 },
+      { label: "Sessões", value: 5, prev: 5, unit: "", delta: 0 },
+      { label: "Pace médio", value: 305, prev: 312, unit: "s/km", delta: -2.2 },
+      { label: "FC média", value: 148, prev: 151, unit: "bpm", delta: -2.0 },
+      { label: "Carga", value: 820, prev: 732, unit: "UA", delta: 12.0 },
+    ],
+    highlights: [
+      "Carga 12% acima da semana anterior — monitorar sinais de fadiga",
+      "Pace médio melhorou 7 s/km em relação às últimas 3 semanas",
+    ],
+    riskLevel: "low",
+    adherence: 100,
+    recommendation: "Manter volume. Inserir um dia de trote leve se FC de repouso subir.",
+  },
+  {
+    athleteId: "a-2",
+    athleteName: "Bruno Silva",
+    weekLabel: "02–08 Jun 2025",
+    metrics: [
+      { label: "Volume", value: 38, prev: 44, unit: "km", delta: -13.6 },
+      { label: "Sessões", value: 4, prev: 5, unit: "", delta: -20.0 },
+      { label: "Pace médio", value: 348, prev: 340, unit: "s/km", delta: 2.4 },
+      { label: "FC média", value: 163, prev: 158, unit: "bpm", delta: 3.2 },
+      { label: "Carga", value: 612, prev: 710, unit: "UA", delta: -13.8 },
+    ],
+    highlights: [
+      "Aderência abaixo de 75% — faltou 1 sessão de corrida programada",
+      "FC média crescente pode indicar fadiga acumulada",
+    ],
+    riskLevel: "medium",
+    adherence: 72,
+    recommendation: "Entrar em contato para entender causa das faltas. Revisar carga se FC continuar elevada.",
+  },
+  {
+    athleteId: "a-3",
+    athleteName: "Marina Costa",
+    weekLabel: "02–08 Jun 2025",
+    metrics: [
+      { label: "Volume", value: 64, prev: 58, unit: "km", delta: 10.3 },
+      { label: "Sessões", value: 6, prev: 6, unit: "", delta: 0 },
+      { label: "Pace médio", value: 298, prev: 304, unit: "s/km", delta: -2.0 },
+      { label: "FC média", value: 145, prev: 147, unit: "bpm", delta: -1.4 },
+      { label: "Carga", value: 918, prev: 862, unit: "UA", delta: 6.5 },
+    ],
+    highlights: [
+      "Semana de volume recorde — 64 km completados com consistência",
+      "FC média estável apesar do aumento de volume",
+    ],
+    riskLevel: "low",
+    adherence: 95,
+    recommendation: "Excelente semana. Programar semana de deload na próxima para evitar overtraining.",
+  },
+  {
+    athleteId: "a-4",
+    athleteName: "Pedro Alves",
+    weekLabel: "02–08 Jun 2025",
+    metrics: [
+      { label: "Volume", value: 35, prev: 42, unit: "km", delta: -16.7 },
+      { label: "Sessões", value: 3, prev: 5, unit: "", delta: -40.0 },
+      { label: "Pace médio", value: 372, prev: 358, unit: "s/km", delta: 3.9 },
+      { label: "FC média", value: 168, prev: 160, unit: "bpm", delta: 5.0 },
+      { label: "Carga", value: 580, prev: 750, unit: "UA", delta: -22.7 },
+    ],
+    highlights: [
+      "Apenas 3 de 5 sessões realizadas — queda brusca de aderência",
+      "FC média 5% acima do normal — possível sinal de fadiga ou doença",
+    ],
+    riskLevel: "high",
+    adherence: 60,
+    recommendation: "Contatar atleta imediatamente. Suspender sessões intensas até avaliação do estado de saúde.",
+  },
+  {
+    athleteId: "a-5",
+    athleteName: "Fernanda Lima",
+    weekLabel: "02–08 Jun 2025",
+    metrics: [
+      { label: "Volume", value: 48, prev: 45, unit: "km", delta: 6.7 },
+      { label: "Sessões", value: 5, prev: 5, unit: "", delta: 0 },
+      { label: "Pace médio", value: 315, prev: 321, unit: "s/km", delta: -1.9 },
+      { label: "FC média", value: 152, prev: 154, unit: "bpm", delta: -1.3 },
+      { label: "Carga", value: 745, prev: 698, unit: "UA", delta: 6.7 },
+    ],
+    highlights: [
+      "Progressão saudável de volume — +6,7% dentro da faixa recomendada",
+      "Melhora consistente de pace nas últimas 3 semanas",
+    ],
+    riskLevel: "low",
+    adherence: 88,
+    recommendation: "Continuar com a progressão atual. Longão do sábado pode ser aumentado para 22 km.",
+  },
+  {
+    athleteId: "a-6",
+    athleteName: "Rafael Souza",
+    weekLabel: "02–08 Jun 2025",
+    metrics: [
+      { label: "Volume", value: 41, prev: 50, unit: "km", delta: -18.0 },
+      { label: "Sessões", value: 4, prev: 6, unit: "", delta: -33.3 },
+      { label: "Pace médio", value: 332, prev: 325, unit: "s/km", delta: 2.2 },
+      { label: "FC média", value: 160, prev: 155, unit: "bpm", delta: 3.2 },
+      { label: "Carga", value: 640, prev: 830, unit: "UA", delta: -22.9 },
+    ],
+    highlights: [
+      "Volume 18% abaixo do planejado — prova a 4 semanas, risco de subpreparação",
+      "Queda de 2 sessões em relação à semana anterior sem justificativa registrada",
+    ],
+    riskLevel: "high",
+    adherence: 65,
+    recommendation: "Verificar comprometimento do atleta. Se saudável, ajustar plano para compensar volume perdido.",
+  },
+];
