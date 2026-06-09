@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plano de Trabalho — PACE RUN PRO</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    /* ─── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #050816;
+      --card:        #0b1220;
+      --card-border: #1a2540;
+      --purple:      #8b5cf6;
+      --purple-light:#a78bfa;
+      --purple-dim:  #1e1040;
+      --text:        #f1f5f9;
+      --muted:       #94a3b8;
+      --phase0:      #06b6d4;
+      --phase1:      #10b981;
+      --phase2:      #f59e0b;
+      --phase3:      #8b5cf6;
+      --phase4:      #ec4899;
+      --phase5:      #f97316;
+      --phase6:      #14b8a6;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    /* ─── Typography ────────────────────────────────────── */
+    h1, h2, h3, h4 { font-weight: 700; line-height: 1.25; }
+    h2 { font-size: 1.6rem; }
+    h3 { font-size: 1.15rem; }
+    h4 { font-size: 0.95rem; font-weight: 600; }
+    p  { color: var(--muted); line-height: 1.75; }
+
+    a { color: var(--purple-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code {
+      font-family: 'Courier New', monospace;
+      background: rgba(139,92,246,0.15);
+      border: 1px solid rgba(139,92,246,0.3);
+      color: var(--purple-light);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+
+    /* ─── Layout ────────────────────────────────────────── */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section { margin-bottom: 60px; }
+
+    /* ─── Header ────────────────────────────────────────── */
+    .site-header {
+      background: linear-gradient(135deg, #050816 0%, #0f0a2e 50%, #050816 100%);
+      border-bottom: 1px solid var(--card-border);
+      padding: 56px 0 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .site-header::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .header-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--purple), var(--purple-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      margin-bottom: 20px;
+    }
+
+    .header-logo .bolt { -webkit-text-fill-color: initial; font-size: 1.5rem; }
+
+    .site-header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .site-header .subtitle {
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin-bottom: 20px;
+    }
+
+    .header-date {
+      display: inline-block;
+      background: rgba(139,92,246,0.15);
+      border: 1px solid rgba(139,92,246,0.3);
+      color: var(--purple-light);
+      padding: 5px 14px;
+      border-radius: 99px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* ─── Stat Cards Row ────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin: 40px 0;
+    }
+
+    @media (max-width: 700px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 22px 18px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(139,92,246,0.4);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--purple), var(--purple-light));
+    }
+
+    .stat-icon { font-size: 1.6rem; margin-bottom: 8px; }
+    .stat-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+
+    /* ─── Table of Contents ──────────────────────────────── */
+    .toc {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 48px;
+    }
+
+    .toc-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--purple-light);
+      margin-bottom: 16px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .toc-list { grid-template-columns: 1fr; }
+    }
+
+    .toc-list li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: background 0.15s;
+    }
+
+    .toc-list li a:hover {
+      background: rgba(139,92,246,0.1);
+      text-decoration: none;
+    }
+
+    .toc-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    /* ─── Phase Cards ────────────────────────────────────── */
+    .phase-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 32px;
+      transition: border-color 0.2s;
+    }
+
+    .phase-card:hover { border-color: rgba(139,92,246,0.3); }
+
+    .phase-header {
+      padding: 28px 32px 24px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      position: relative;
+    }
+
+    .phase-header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+
+    .phase-number-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      font-size: 1.1rem;
+      font-weight: 900;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .phase-header-content { flex: 1; }
+
+    .phase-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .phase-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .phase-subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .phase-body { padding: 28px 32px; }
+
+    /* ─── Step List ──────────────────────────────────────── */
+    .step-list { list-style: none; display: flex; flex-direction: column; gap: 20px; }
+
+    .step-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+      border: 2px solid;
+    }
+
+    .step-content { flex: 1; }
+
+    .step-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .time-badge {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 99px;
+      background: rgba(139,92,246,0.15);
+      color: var(--purple-light);
+      border: 1px solid rgba(139,92,246,0.2);
+      white-space: nowrap;
+    }
+
+    .step-detail {
+      color: var(--muted);
+      font-size: 0.875rem;
+      line-height: 1.7;
+    }
+
+    .step-detail ul {
+      list-style: none;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .step-detail ul li {
+      padding-left: 18px;
+      position: relative;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .step-detail ul li::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      color: var(--purple-light);
+      font-weight: 700;
+    }
+
+    /* ─── Result Callout ─────────────────────────────────── */
+    .result-callout {
+      background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(139,92,246,0.06));
+      border: 1px solid rgba(139,92,246,0.3);
+      border-left: 4px solid var(--purple);
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      margin-top: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .result-callout .checkmark {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .result-callout strong {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--purple-light);
+      margin-bottom: 3px;
+    }
+
+    .result-callout p {
+      color: var(--text);
+      font-size: 0.875rem;
+      margin: 0;
+    }
+
+    /* ─── Resources Table ────────────────────────────────── */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+    }
+
+    thead tr {
+      background: rgba(139,92,246,0.12);
+    }
+
+    thead th {
+      padding: 14px 20px;
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--purple-light);
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.15s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+
+    tbody tr:hover { background: rgba(139,92,246,0.05); }
+
+    tbody td {
+      padding: 14px 20px;
+      font-size: 0.875rem;
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    tbody td:nth-child(3) { color: var(--muted); }
+
+    .free-badge {
+      display: inline-block;
+      background: rgba(16,185,129,0.15);
+      color: #34d399;
+      border: 1px solid rgba(16,185,129,0.25);
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .paid-badge {
+      display: inline-block;
+      background: rgba(245,158,11,0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245,158,11,0.25);
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    /* ─── Contacts ───────────────────────────────────────── */
+    .contacts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .contacts-grid { grid-template-columns: 1fr; }
+    }
+
+    .contact-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .contact-icon {
+      font-size: 1.8rem;
+      flex-shrink: 0;
+    }
+
+    .contact-card h4 { color: var(--text); margin-bottom: 6px; font-size: 0.95rem; }
+    .contact-card p  { font-size: 0.85rem; margin: 0; }
+
+    /* ─── Section Titles ─────────────────────────────────── */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .section-title h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, var(--card-border) 0%, transparent 100%);
+      margin-bottom: 32px;
+    }
+
+    /* ─── Phase Color Themes ─────────────────────────────── */
+    /* Phase 0 - Cyan */
+    .phase-0 .phase-header::before { background: linear-gradient(90deg, var(--phase0), transparent); }
+    .phase-0 .phase-number-badge   { background: rgba(6,182,212,0.15); color: var(--phase0); }
+    .phase-0 .phase-tag            { color: var(--phase0); }
+    .phase-0 .step-number          { border-color: rgba(6,182,212,0.4); color: var(--phase0); background: rgba(6,182,212,0.08); }
+    .phase-0 .toc-badge            { background: rgba(6,182,212,0.15); color: var(--phase0); }
+
+    /* Phase 1 - Green */
+    .phase-1 .phase-header::before { background: linear-gradient(90deg, var(--phase1), transparent); }
+    .phase-1 .phase-number-badge   { background: rgba(16,185,129,0.15); color: var(--phase1); }
+    .phase-1 .phase-tag            { color: var(--phase1); }
+    .phase-1 .step-number          { border-color: rgba(16,185,129,0.4); color: var(--phase1); background: rgba(16,185,129,0.08); }
+    .phase-1 .toc-badge            { background: rgba(16,185,129,0.15); color: var(--phase1); }
+
+    /* Phase 2 - Amber */
+    .phase-2 .phase-header::before { background: linear-gradient(90deg, var(--phase2), transparent); }
+    .phase-2 .phase-number-badge   { background: rgba(245,158,11,0.15); color: var(--phase2); }
+    .phase-2 .phase-tag            { color: var(--phase2); }
+    .phase-2 .step-number          { border-color: rgba(245,158,11,0.4); color: var(--phase2); background: rgba(245,158,11,0.08); }
+    .phase-2 .toc-badge            { background: rgba(245,158,11,0.15); color: var(--phase2); }
+
+    /* Phase 3 - Purple */
+    .phase-3 .phase-header::before { background: linear-gradient(90deg, var(--phase3), transparent); }
+    .phase-3 .phase-number-badge   { background: rgba(139,92,246,0.15); color: var(--phase3); }
+    .phase-3 .phase-tag            { color: var(--phase3); }
+    .phase-3 .step-number          { border-color: rgba(139,92,246,0.4); color: var(--phase3); background: rgba(139,92,246,0.08); }
+    .phase-3 .toc-badge            { background: rgba(139,92,246,0.15); color: var(--phase3); }
+
+    /* Phase 4 - Pink */
+    .phase-4 .phase-header::before { background: linear-gradient(90deg, var(--phase4), transparent); }
+    .phase-4 .phase-number-badge   { background: rgba(236,72,153,0.15); color: var(--phase4); }
+    .phase-4 .phase-tag            { color: var(--phase4); }
+    .phase-4 .step-number          { border-color: rgba(236,72,153,0.4); color: var(--phase4); background: rgba(236,72,153,0.08); }
+    .phase-4 .toc-badge            { background: rgba(236,72,153,0.15); color: var(--phase4); }
+
+    /* Phase 5 - Orange */
+    .phase-5 .phase-header::before { background: linear-gradient(90deg, var(--phase5), transparent); }
+    .phase-5 .phase-number-badge   { background: rgba(249,115,22,0.15); color: var(--phase5); }
+    .phase-5 .phase-tag            { color: var(--phase5); }
+    .phase-5 .step-number          { border-color: rgba(249,115,22,0.4); color: var(--phase5); background: rgba(249,115,22,0.08); }
+    .phase-5 .toc-badge            { background: rgba(249,115,22,0.15); color: var(--phase5); }
+
+    /* Phase 6 - Teal */
+    .phase-6 .phase-header::before { background: linear-gradient(90deg, var(--phase6), transparent); }
+    .phase-6 .phase-number-badge   { background: rgba(20,184,166,0.15); color: var(--phase6); }
+    .phase-6 .phase-tag            { color: var(--phase6); }
+    .phase-6 .step-number          { border-color: rgba(20,184,166,0.4); color: var(--phase6); background: rgba(20,184,166,0.08); }
+
+    /* ─── Consolidation Bullet List ──────────────────────── */
+    .consolidation-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .consolidation-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: rgba(20,184,166,0.06);
+      border: 1px solid rgba(20,184,166,0.15);
+      border-radius: 12px;
+      padding: 16px 18px;
+      color: var(--muted);
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+
+    .consolidation-list li .bullet-icon {
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ─── Footer ─────────────────────────────────────────── */
+    .site-footer {
+      border-top: 1px solid var(--card-border);
+      padding: 36px 0;
+      margin-top: 80px;
+      text-align: center;
+    }
+
+    .site-footer .footer-logo {
+      font-size: 1rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--purple), var(--purple-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .site-footer p {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    /* ─── Print Styles ───────────────────────────────────── */
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+      body {
+        background-color: #050816 !important;
+        color: #f1f5f9 !important;
+        font-size: 11pt;
+      }
+
+      .site-header { background: #0f0a2e !important; }
+
+      .phase-card,
+      .stat-card,
+      .toc,
+      .contact-card,
+      .table-wrapper { break-inside: avoid; }
+
+      .phase-card { page-break-inside: avoid; margin-bottom: 20px; }
+
+      section { page-break-before: auto; }
+      #fases   { page-break-before: always; }
+      #recursos { page-break-before: always; }
+
+      .site-footer { page-break-before: avoid; }
+
+      a { color: #a78bfa !important; }
+
+      .container { max-width: 100%; padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     HEADER
+════════════════════════════════════════ -->
+<header class="site-header">
+  <div class="container">
+    <div class="header-logo">
+      <span class="bolt">⚡</span> PACE RUN PRO
+    </div>
+    <h1>Plano de Trabalho —<br/>Do Desenvolvimento à Comercialização</h1>
+    <p class="subtitle">Guia completo para Ricardo Pace — sem precisar ser programador</p>
+    <span class="header-date">Junho 2026</span>
+
+    <!-- Stat Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">⏱</div>
+        <div class="stat-label">Prazo total</div>
+        <div class="stat-value">90 dias</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-label">Objetivo</div>
+        <div class="stat-value">Primeiros clientes pagantes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-label">Meta MRR</div>
+        <div class="stat-value">R$ 15.000/mês</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📋</div>
+        <div class="stat-label">Fases</div>
+        <div class="stat-value">6 etapas</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════ -->
+<main>
+  <div class="container" style="padding-top: 48px;">
+
+    <!-- ── Table of Contents ── -->
+    <nav class="toc" id="toc">
+      <div class="toc-title">Índice — Navegação rápida</div>
+      <ul class="toc-list">
+        <li>
+          <a href="#fase-0">
+            <span class="toc-badge phase-0" style="background:rgba(6,182,212,0.15);color:#06b6d4;">0</span>
+            Ligar os Motores — Semanas 1–2
+          </a>
+        </li>
+        <li>
+          <a href="#fase-1">
+            <span class="toc-badge phase-1" style="background:rgba(16,185,129,0.15);color:#10b981;">1</span>
+            Começar a Cobrar — Semanas 2–3
+          </a>
+        </li>
+        <li>
+          <a href="#fase-2">
+            <span class="toc-badge phase-2" style="background:rgba(245,158,11,0.15);color:#f59e0b;">2</span>
+            Comunicação Automática — Semana 3
+          </a>
+        </li>
+        <li>
+          <a href="#fase-3">
+            <span class="toc-badge phase-3" style="background:rgba(139,92,246,0.15);color:#8b5cf6;">3</span>
+            Validação com Beta-testers — Mês 1
+          </a>
+        </li>
+        <li>
+          <a href="#fase-4">
+            <span class="toc-badge phase-4" style="background:rgba(236,72,153,0.15);color:#ec4899;">4</span>
+            Lançamento Comercial — Mês 2
+          </a>
+        </li>
+        <li>
+          <a href="#fase-5">
+            <span class="toc-badge phase-5" style="background:rgba(249,115,22,0.15);color:#f97316;">5</span>
+            Crescimento — Meses 3–6
+          </a>
+        </li>
+        <li>
+          <a href="#fase-6">
+            <span class="toc-badge" style="background:rgba(20,184,166,0.15);color:#14b8a6;">6</span>
+            Consolidação — Mês 6+
+          </a>
+        </li>
+        <li>
+          <a href="#recursos">
+            <span class="toc-badge" style="background:rgba(139,92,246,0.15);color:#a78bfa;">🔧</span>
+            Ferramentas &amp; Recursos
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- ════════════════════════
+         FASES
+    ════════════════════════ -->
+    <section id="fases">
+      <div class="section-title">
+        <h2>Roteiro por Fases</h2>
+      </div>
+      <div class="section-divider"></div>
+
+      <!-- ── FASE 0 ── -->
+      <article class="phase-card phase-0" id="fase-0">
+        <div class="phase-header">
+          <div class="phase-number-badge">0</div>
+          <div class="phase-header-content">
+            <div class="phase-tag">Semanas 1–2</div>
+            <div class="phase-title">Ligar os Motores</div>
+            <div class="phase-subtitle">Configurações técnicas — faça uma vez, não precisa mais mexer</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <ul class="step-list">
+
+            <li class="step-item">
+              <span class="step-number">1</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Criar conta no Neon (banco de dados gratuito)
+                  <span class="time-badge">⏱ 10 min</span>
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Acesse <a href="https://neon.tech" target="_blank">neon.tech</a> → Create account (pode usar Google)</li>
+                    <li>Clique "New Project" → nome: <code>pacerunpro</code> → região: <code>AWS us-east-1</code></li>
+                    <li>Copie a connection string (começa com <code>postgresql://...</code>)</li>
+                    <li>Guarde essa string em local seguro — você vai usar no próximo passo</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">2</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Configurar o banco no Vercel
+                  <span class="time-badge">⏱ 15 min</span>
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Acesse <a href="https://vercel.com" target="_blank">vercel.com</a> → seu projeto → Settings → Environment Variables</li>
+                    <li>Adicione: <code>DATABASE_URL</code> = <em>[a connection string do Neon]</em></li>
+                    <li>Adicione: <code>NEXTAUTH_SECRET</code> = <em>[qualquer texto longo, ex: uma frase com espaços]</em></li>
+                    <li>Adicione: <code>NEXTAUTH_URL</code> = <code>https://www.pacerunpro.com.br</code></li>
+                    <li>Clique Save e depois Redeploy para aplicar</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">3</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Criar as tabelas no banco (migration)
+                  <span class="time-badge">⏱ 5 min (com suporte técnico)</span>
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Abra o terminal no Claude Code (ou peça ao desenvolvedor)</li>
+                    <li>Execute: <code>npx prisma migrate deploy</code></li>
+                    <li>Depois: <code>npx prisma db seed</code></li>
+                    <li>Isso cria o usuário administrador inicial automaticamente</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">4</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Configurar login com Google
+                  <span class="time-badge">⏱ 30 min</span>
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Acesse <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a></li>
+                    <li>Crie um projeto → APIs &amp; Services → Credentials → OAuth 2.0 → Web application</li>
+                    <li>Em "Authorized redirect URIs" adicione: <code>https://www.pacerunpro.com.br/api/auth/callback/google</code></li>
+                    <li>Copie o Client ID e Client Secret para as env vars do Vercel</li>
+                    <li>Dica: siga um tutorial em vídeo no YouTube pesquisando "NextAuth Google OAuth"</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">5</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Apontar o domínio para o Vercel
+                  <span class="time-badge">⏱ 10 min + até 24h propagação</span>
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>No registrador do domínio (onde registrou pacerunpro.com.br): adicione registro <code>CNAME</code> apontando para <code>cname.vercel-dns.com</code></li>
+                    <li>No Vercel: Settings → Domains → adicione <code>www.pacerunpro.com.br</code></li>
+                    <li>Aguarde a propagação: pode levar até 24h, normalmente bem menos</li>
+                    <li>Valide em: <a href="https://dnschecker.org" target="_blank">dnschecker.org</a></li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+          </ul>
+
+          <div class="result-callout">
+            <span class="checkmark">✅</span>
+            <div>
+              <strong>Resultado desta fase</strong>
+              <p>Sistema no ar com login funcionando, dados salvos de verdade no banco. Você tem uma URL real que qualquer pessoa pode acessar.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── FASE 1 ── -->
+      <article class="phase-card phase-1" id="fase-1">
+        <div class="phase-header">
+          <div class="phase-number-badge">1</div>
+          <div class="phase-header-content">
+            <div class="phase-tag">Semanas 2–3</div>
+            <div class="phase-title">Começar a Cobrar</div>
+            <div class="phase-subtitle">Integração de pagamentos — Pix, boleto e cartão</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <ul class="step-list">
+
+            <li class="step-item">
+              <span class="step-number">1</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Criar conta no Asaas (plataforma de pagamentos BR)
+                  <span class="time-badge">⏱ 24–48h aprovação</span>
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Acesse <a href="https://asaas.com" target="_blank">asaas.com</a> → Abrir conta grátis</li>
+                    <li>Envie os documentos (CPF ou CNPJ) — aprovação em 24–48 horas</li>
+                    <li>Crie os planos de assinatura: Starter R$149 / Growth R$349 / Business R$699</li>
+                    <li>Navegue até Configurações → Integração e copie sua API Key</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">2</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Configurar os planos no sistema
+                  <span class="time-badge">⏱ 4–8h com desenvolvedor</span>
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Adicione <code>ASAAS_API_KEY</code> nas environment variables do Vercel</li>
+                    <li>A página <code>/checkout</code> já existe no sistema — precisa ser conectada à API do Asaas</li>
+                    <li>Instrução ao desenvolvedor: <em>"Conectar o checkout com Asaas e liberar acesso automaticamente após pagamento confirmado"</em></li>
+                    <li>Configure também o webhook do Asaas para notificar pagamentos</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">3</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Testar o fluxo completo
+                  <span class="time-badge">⏱ 30 min</span>
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Crie uma conta de teste com e-mail diferente do seu</li>
+                    <li>Faça um pagamento real de R$1,00 (para validar todo o fluxo)</li>
+                    <li>Confirme que o acesso foi liberado automaticamente ao plano</li>
+                    <li>Confirme que chegou e-mail de confirmação de pagamento</li>
+                    <li>Teste também com Pix — é o método mais usado no Brasil</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+          </ul>
+
+          <div class="result-callout">
+            <span class="checkmark">✅</span>
+            <div>
+              <strong>Resultado desta fase</strong>
+              <p>Primeiros pagamentos reais sendo processados automaticamente. Você recebe o dinheiro, o cliente acessa a plataforma — sem intervenção manual.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── FASE 2 ── -->
+      <article class="phase-card phase-2" id="fase-2">
+        <div class="phase-header">
+          <div class="phase-number-badge">2</div>
+          <div class="phase-header-content">
+            <div class="phase-tag">Semana 3</div>
+            <div class="phase-title">Comunicação Automática</div>
+            <div class="phase-subtitle">E-mails que trabalham por você enquanto você dorme</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <ul class="step-list">
+
+            <li class="step-item">
+              <span class="step-number">1</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Criar conta no Resend (e-mail transacional)
+                  <span class="time-badge">⏱ 20 min</span>
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Acesse <a href="https://resend.com" target="_blank">resend.com</a> → criar conta grátis (até 3.000 e-mails/mês sem custo)</li>
+                    <li>Verificar o domínio <code>pacerunpro.com.br</code>: adicionar registro DNS TXT fornecido pelo Resend</li>
+                    <li>Aguarde a verificação (geralmente menos de 1 hora)</li>
+                    <li>Copie a API Key para usar no próximo passo</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">2</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Configurar os e-mails automáticos
+                  <span class="time-badge">⏱ 4–6h com desenvolvedor</span>
+                </div>
+                <div class="step-detail">
+                  E-mails essenciais a implementar:
+                  <ul>
+                    <li><strong>Boas-vindas</strong> — disparado automaticamente após o cadastro</li>
+                    <li><strong>Confirmação de pagamento</strong> — após cada pagamento aprovado</li>
+                    <li><strong>Lembrete de renovação</strong> — 3 dias antes do vencimento</li>
+                    <li><strong>Senha esquecida</strong> — link de redefinição seguro</li>
+                  </ul>
+                  <br/>Instrução ao desenvolvedor: <em>"Integrar Resend nos eventos de cadastro e pagamento usando os templates aprovados"</em>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">3</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Testar cada e-mail
+                  <span class="time-badge">⏱ 15 min</span>
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Faça um cadastro de teste e confirme que chegou o e-mail de boas-vindas</li>
+                    <li>Simule um pagamento e confirme que chegou a confirmação</li>
+                    <li>Verifique se os e-mails não estão caindo na pasta de spam</li>
+                    <li>Teste em Gmail, Outlook e e-mail corporativo se possível</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+          </ul>
+
+          <div class="result-callout">
+            <span class="checkmark">✅</span>
+            <div>
+              <strong>Resultado desta fase</strong>
+              <p>Toda comunicação com clientes é automática, profissional e com a identidade visual do PACE RUN PRO. Você foca em vender, o sistema cuida do relacionamento.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── FASE 3 ── -->
+      <article class="phase-card phase-3" id="fase-3">
+        <div class="phase-header">
+          <div class="phase-number-badge">3</div>
+          <div class="phase-header-content">
+            <div class="phase-tag">Mês 1</div>
+            <div class="phase-title">Validação com Beta-testers</div>
+            <div class="phase-subtitle">5 treinadores de confiança que vão te dar feedback real</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <ul class="step-list">
+
+            <li class="step-item">
+              <span class="step-number">1</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Selecionar 5 treinadores parceiros
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li><strong>Critérios:</strong> já te conhecem, têm pelo menos 10 atletas ativos, são organizados</li>
+                    <li><strong>Oferta:</strong> 3 meses gratuitos em troca de feedback honesto e depoimento</li>
+                    <li>Crie um grupo de WhatsApp exclusivo chamado "PACE PRO Beta 🚀"</li>
+                    <li>Documente quem são, quantos atletas têm e qual o maior problema deles hoje</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">2</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Onboarding personalizado
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Marque uma videochamada de 30 minutos com cada treinador individualmente</li>
+                    <li>Mostre as principais funcionalidades (use este manual como guia)</li>
+                    <li>Cadastre manualmente os primeiros 5–10 atletas de cada um para facilitar o início</li>
+                    <li>Deixe claro o que você espera deles em troca (feedback + depoimento)</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">3</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Coletar feedback estruturado
+                </div>
+                <div class="step-detail">
+                  Faça check-ins regulares com perguntas específicas:
+                  <ul>
+                    <li><strong>Semana 2:</strong> "O que está faltando para você usar todos os dias?"</li>
+                    <li><strong>Semana 4:</strong> "O que você mais usa? O que nunca usou?"</li>
+                    <li><strong>Semana 6:</strong> "Você pagaria por isso? Quanto acha justo?"</li>
+                    <li>Priorize melhorias que apareçam na fala de 3 ou mais pessoas</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">4</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Gerar prova social
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Peça um depoimento em vídeo de 1 minuto (pelo WhatsApp mesmo, qualidade não importa)</li>
+                    <li>Peça também uma avaliação escrita de 2–3 linhas para publicar no site</li>
+                    <li>Documente resultados concretos: "X atletas gerenciados", "Y% de aderência melhorada"</li>
+                    <li>Guarde esses materiais — serão a base de toda sua comunicação de vendas</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+          </ul>
+
+          <div class="result-callout">
+            <span class="checkmark">✅</span>
+            <div>
+              <strong>Resultado desta fase</strong>
+              <p>Validação real do produto com usuários reais, primeiros casos de sucesso documentados e prova social concreta para usar nas vendas.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── FASE 4 ── -->
+      <article class="phase-card phase-4" id="fase-4">
+        <div class="phase-header">
+          <div class="phase-number-badge">4</div>
+          <div class="phase-header-content">
+            <div class="phase-tag">Mês 2</div>
+            <div class="phase-title">Lançamento Comercial</div>
+            <div class="phase-subtitle">Hora de vender de verdade</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <ul class="step-list">
+
+            <li class="step-item">
+              <span class="step-number">1</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Definir e publicar os preços
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Atualize a landing page com os preços definitivos (validados com os beta-testers)</li>
+                    <li>Crie a página <code>/precos</code> com comparativo visual entre os planos</li>
+                    <li>Adicione botão de trial de 14 dias — converte significativamente melhor que venda direta</li>
+                    <li>Inclua depoimentos dos beta-testers logo abaixo da tabela de preços</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">2</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Criar presença digital
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Instagram <strong>@pacerunpro</strong>: configurar perfil profissional com foto, bio e link</li>
+                    <li>Prepare 9 posts antes de lançar (feed visualmente coeso desde o primeiro dia)</li>
+                    <li>Mix de conteúdo: bastidores do sistema, funcionalidade em vídeo (Reels), dica de corrida</li>
+                    <li>Bio sugerida: <em>"A plataforma #1 para assessorias de corrida 🚀 | Gerencie atletas, prescreva treinos, cresça 👇"</em></li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">3</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Campanha de lançamento
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Publique Stories com countdown nos 7 dias antes do lançamento</li>
+                    <li>Faça uma Live no Instagram apresentando o sistema ao vivo</li>
+                    <li><strong>Oferta de lançamento:</strong> 50% off no primeiro mês para as 20 primeiras assessorias</li>
+                    <li>Crie urgência real: quando os 20 slots acabarem, a oferta desaparece</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">4</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Abordagem direta — funciona melhor que anúncios no início
+                  <span class="time-badge">Meta: 10 demos → 3–5 vendas</span>
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Liste 50 assessorias do seu estado no Instagram (busque por hashtags de corrida)</li>
+                    <li>Envie DM personalizada: <em>"Oi [nome], sou o Ricardo. Criei uma plataforma específica para assessorias de corrida. Posso te mostrar em 15 minutos esta semana?"</em></li>
+                    <li>Não faça copy-paste genérico — mencione algo do perfil deles para personalizar</li>
+                    <li>Acompanhe respostas numa planilha simples (nome, status, data de contato)</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+          </ul>
+
+          <div class="result-callout">
+            <span class="checkmark">✅</span>
+            <div>
+              <strong>Resultado desta fase</strong>
+              <p>Primeiros 5–10 clientes pagantes. Você tem receita real, casos de sucesso documentados e um processo de venda que funciona.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── FASE 5 ── -->
+      <article class="phase-card phase-5" id="fase-5">
+        <div class="phase-header">
+          <div class="phase-number-badge">5</div>
+          <div class="phase-header-content">
+            <div class="phase-tag">Meses 3–6</div>
+            <div class="phase-title">Crescimento</div>
+            <div class="phase-subtitle">Escalar o que está funcionando</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <ul class="step-list">
+
+            <li class="step-item">
+              <span class="step-number">1</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Tráfego pago no Meta Ads
+                  <span class="time-badge">R$ 500–1.000/mês</span>
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li><strong>Público:</strong> interesse em "Corrida de rua" + "Personal trainer" + Brasil</li>
+                    <li><strong>Criativo:</strong> vídeo de tela do sistema com narração de 30 segundos</li>
+                    <li><strong>Destino:</strong> página de cadastro com trial grátis de 14 dias</li>
+                    <li>Só comece ads quando tiver pelo menos 5 depoimentos — eles aumentam muito a conversão</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">2</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Programa de indicação
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li>Mecanismo simples: "Indique um treinador e ganhe 1 mês grátis"</li>
+                    <li>Cada cliente satisfeito tem potencial de trazer 2–3 novos clientes da rede dele</li>
+                    <li>Solicite ao desenvolvedor: uma página simples de indicação com link único por cliente</li>
+                    <li>Comunique o programa por e-mail para toda a base de clientes ativos</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">3</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Parcerias estratégicas
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li><strong>Fabricantes de tênis</strong> (New Balance, Asics, Brooks) — patrocínio de funcionalidade ou co-marketing</li>
+                    <li><strong>Nutricionistas esportivos</strong> — indicação mútua (você indica nutricionistas, eles indicam o sistema)</li>
+                    <li><strong>Grupos e clubes de corrida</strong> — desconto corporativo para assessorias que atendem o grupo</li>
+                    <li>Para cada parceria: formalize por e-mail, com regras claras e benefício mútuo</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">4</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Marketing de conteúdo (retenção + aquisição)
+                </div>
+                <div class="step-detail">
+                  <ul>
+                    <li><strong>Instagram:</strong> 1 post/dia (mistura de sistema + dicas de corrida)</li>
+                    <li><strong>Reels:</strong> 1 por semana mostrando uma funcionalidade em 30–60 segundos</li>
+                    <li><strong>Newsletter mensal:</strong> para clientes ativos — novidades, dicas, cases de sucesso</li>
+                    <li>Objetivo duplo: atrair novos clientes E manter os atuais engajados (reduz churn)</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="step-item">
+              <span class="step-number">5</span>
+              <div class="step-content">
+                <div class="step-title">
+                  Expansão de funcionalidades
+                </div>
+                <div class="step-detail">
+                  Prioridades baseadas em demanda dos beta-testers:
+                  <ul>
+                    <li>Sync com Garmin/Strava (integração com relógios — muito pedida)</li>
+                    <li>App nativo iOS/Android (para atletas acompanharem treinos no celular)</li>
+                    <li>Relatório automático por e-mail semanal para atletas</li>
+                    <li>Construa em ordem de demanda — só desenvolva o que clientes pedem repetidamente</li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+          </ul>
+
+          <div class="result-callout">
+            <span class="checkmark">✅</span>
+            <div>
+              <strong>Resultado desta fase</strong>
+              <p>Base crescendo de forma sustentável, múltiplos canais de aquisição ativos e produto evoluindo com base em feedback real do mercado.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── FASE 6 ── -->
+      <article class="phase-card phase-6" id="fase-6">
+        <div class="phase-header">
+          <div class="phase-number-badge">6</div>
+          <div class="phase-header-content">
+            <div class="phase-tag">Mês 6+</div>
+            <div class="phase-title">Consolidação</div>
+            <div class="phase-subtitle">De produto a empresa</div>
+          </div>
+        </div>
+        <div class="phase-body">
+          <ul class="consolidation-list">
+            <li>
+              <span class="bullet-icon">👤</span>
+              <div>
+                <strong style="color: var(--text); display: block; margin-bottom: 4px;">Contratar assistente de suporte (20h/semana)</strong>
+                Quando chegar em R$8.000 MRR. Você não pode crescer fazendo suporte técnico sozinho — delegue para focar em vendas e estratégia.
+              </div>
+            </li>
+            <li>
+              <span class="bullet-icon">💻</span>
+              <div>
+                <strong style="color: var(--text); display: block; margin-bottom: 4px;">Contratar desenvolvedor part-time para novas features</strong>
+                Quando chegar em R$15.000 MRR. Ter um dev dedicado acelera muito o ritmo de entrega de funcionalidades e reduz sua dependência de terceiros.
+              </div>
+            </li>
+            <li>
+              <span class="bullet-icon">🚀</span>
+              <div>
+                <strong style="color: var(--text); display: block; margin-bottom: 4px;">Considerar investimento ou participar de uma aceleração</strong>
+                Quando atingir 100 assessorias clientes. Nesse ponto o produto está validado — capital externo pode acelerar a expansão nacional.
+              </div>
+            </li>
+            <li>
+              <span class="bullet-icon">🏢</span>
+              <div>
+                <strong style="color: var(--text); display: block; margin-bottom: 4px;">White-label para redes e assessorias maiores</strong>
+                Para assessorias com 200+ atletas que querem a plataforma com a marca delas. Ticket alto, menor volume de clientes — uma linha de receita complementar.
+              </div>
+            </li>
+          </ul>
+
+          <div class="result-callout" style="border-left-color: var(--phase6); background: linear-gradient(135deg, rgba(20,184,166,0.1), rgba(20,184,166,0.04));">
+            <span class="checkmark">🏆</span>
+            <div>
+              <strong style="color: #5eead4;">Marco de consolidação</strong>
+              <p>Empresa estruturada, time formado, produto reconhecido no mercado de corrida como referência nacional. Ricardo Pace passou de treinador para fundador de tech startup.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ════════════════════════
+         RECURSOS & FERRAMENTAS
+    ════════════════════════ -->
+    <section id="recursos">
+      <div class="section-title">
+        <h2>🔧 Ferramentas &amp; Recursos</h2>
+      </div>
+      <div class="section-divider"></div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Ferramenta</th>
+              <th>Para que serve</th>
+              <th>Custo</th>
+              <th>Acesso</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Neon</strong></td>
+              <td>Banco de dados PostgreSQL na nuvem</td>
+              <td><span class="free-badge">Grátis até 0.5 GB</span></td>
+              <td><a href="https://neon.tech" target="_blank">neon.tech</a></td>
+            </tr>
+            <tr>
+              <td><strong>Vercel</strong></td>
+              <td>Hospedagem e deploy automático</td>
+              <td><span class="free-badge">Grátis até 100 GB</span></td>
+              <td><a href="https://vercel.com" target="_blank">vercel.com</a></td>
+            </tr>
+            <tr>
+              <td><strong>Asaas</strong></td>
+              <td>Pagamentos brasileiros: Pix, boleto e cartão</td>
+              <td><span class="paid-badge">2,99% por transação</span></td>
+              <td><a href="https://asaas.com" target="_blank">asaas.com</a></td>
+            </tr>
+            <tr>
+              <td><strong>Resend</strong></td>
+              <td>E-mails automáticos transacionais</td>
+              <td><span class="free-badge">Grátis até 3.000/mês</span></td>
+              <td><a href="https://resend.com" target="_blank">resend.com</a></td>
+            </tr>
+            <tr>
+              <td><strong>Google Console</strong></td>
+              <td>Login com conta Google (OAuth)</td>
+              <td><span class="free-badge">Grátis</span></td>
+              <td><a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a></td>
+            </tr>
+            <tr>
+              <td><strong>Sentry</strong></td>
+              <td>Monitorar erros em tempo real</td>
+              <td><span class="free-badge">Grátis até 5.000 erros/mês</span></td>
+              <td><a href="https://sentry.io" target="_blank">sentry.io</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ════════════════════════
+         CONTATOS & SUPORTE
+    ════════════════════════ -->
+    <section id="suporte">
+      <div class="section-title">
+        <h2>💬 Suporte &amp; Contatos</h2>
+      </div>
+      <div class="section-divider"></div>
+
+      <div class="contacts-grid">
+        <div class="contact-card">
+          <div class="contact-icon">🛠️</div>
+          <div>
+            <h4>Suporte Técnico</h4>
+            <p>Para problemas no sistema, erros, ou precisar de ajuda com código: abra uma sessão no <strong>Claude Code</strong> e descreva o problema com o máximo de detalhes. Quanto mais específico, mais rápido o problema é resolvido.</p>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">🎯</div>
+          <div>
+            <h4>Estratégia Comercial</h4>
+            <p>Para dúvidas sobre como construir seu pitch de vendas, argumentos para prospects ou scripts de abordagem: use a IA Treinadora como modelo — ela foi construída para esse contexto específico de assessorias de corrida.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /container -->
+</main>
+
+<!-- ════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-logo">⚡ PACE RUN PRO</div>
+    <p>Plano de Trabalho — Junho 2026 &nbsp;·&nbsp; Documento interno para uso de Ricardo Pace</p>
+    <p style="margin-top: 6px; font-size: 0.72rem;">A plataforma número 1 para gestão de assessorias de corrida no Brasil</p>
+  </div>
+</footer>
+
+</body>
+</html>
