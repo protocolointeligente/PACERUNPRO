@@ -48,6 +48,144 @@ export default function ReportsPage() {
     setGenerated(true);
   }
 
+  function downloadReport() {
+    const reportLabel = reportTypes.find((t) => t.id === reportType)?.label ?? reportType;
+    const athleteName = needsAthlete && athlete ? athlete.name : "Equipe";
+    const today = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+
+    if (format === "CSV") {
+      const csv = [
+        "Data,Atleta,RPE,Dor,Sono,Fadiga,Humor",
+        "01/06/2026," + athleteName + ",7,2,7,4,8",
+        "03/06/2026," + athleteName + ",6,1,8,3,9",
+        "05/06/2026," + athleteName + ",8,3,6,6,7",
+        "07/06/2026," + athleteName + ",5,1,9,2,8",
+      ].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `relatorio-${reportType}-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    if (format === "Excel") {
+      const tsv = "Data\tAtleta\tRPE\tDor\tSono\tFadiga\tHumor\n01/06/2026\t" + athleteName + "\t7\t2\t7\t4\t8\n03/06/2026\t" + athleteName + "\t6\t1\t8\t3\t9\n";
+      const blob = new Blob([tsv], { type: "application/vnd.ms-excel;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `relatorio-${reportType}-${new Date().toISOString().slice(0, 10)}.xls`;
+      a.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    // PDF — open formatted HTML in new window and trigger print
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>Relatório Pace Run Pro</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 40px; }
+  @media print { body { padding: 20px; } .no-print { display: none; } }
+  .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #8b5cf6; padding-bottom: 20px; margin-bottom: 28px; }
+  .logo { font-size: 22px; font-weight: 900; letter-spacing: 1px; color: #8b5cf6; }
+  .logo span { color: #1a1a2e; }
+  .meta { text-align: right; font-size: 12px; color: #666; }
+  h1 { font-size: 20px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+  .badge { display: inline-block; background: #8b5cf6; color: #fff; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: 16px; }
+  .section { margin-top: 24px; }
+  .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #8b5cf6; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .stat-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 4px; }
+  .stat-value { font-size: 20px; font-weight: 800; color: #1a1a2e; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f5f3ff; color: #8b5cf6; font-weight: 700; text-align: left; padding: 9px 12px; }
+  td { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; }
+  tr:last-child td { border-bottom: none; }
+  .bar-bg { background: #f0ebff; border-radius: 4px; height: 8px; }
+  .bar-fill { background: #8b5cf6; border-radius: 4px; height: 8px; }
+  .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #999; display: flex; justify-content: space-between; }
+  .print-btn { position: fixed; top: 20px; right: 20px; background: #8b5cf6; color: #fff; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
+</style>
+</head>
+<body>
+<button class="print-btn no-print" onclick="window.print()">⬇ Salvar PDF</button>
+<div class="header">
+  <div class="logo">PACE RUN <span>PRO</span></div>
+  <div class="meta">
+    <strong>Treinador Ricardo Pace</strong> — CREF 014626-G/MG<br/>
+    Gerado em ${today}
+  </div>
+</div>
+
+<span class="badge">${reportLabel}</span>
+<h1>${athleteName} — ${period}</h1>
+
+<div class="section">
+  <div class="section-title">Resumo do período</div>
+  <div class="grid">
+    <div class="stat-card"><div class="stat-label">Volume total</div><div class="stat-value">127 km</div></div>
+    <div class="stat-card"><div class="stat-label">Sessões</div><div class="stat-value">18</div></div>
+    <div class="stat-card"><div class="stat-label">Adesão</div><div class="stat-value">86%</div></div>
+    <div class="stat-card"><div class="stat-label">RPE médio</div><div class="stat-value">6.4</div></div>
+    <div class="stat-card"><div class="stat-label">Carga total (UA)</div><div class="stat-value">1.872</div></div>
+    <div class="stat-card"><div class="stat-label">Pace médio</div><div class="stat-value">5:12/km</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Histórico de treinos</div>
+  <table>
+    <tr><th>Data</th><th>Treino</th><th>Dist.</th><th>Pace</th><th>RPE</th><th>Carga UA</th></tr>
+    <tr><td>07/06</td><td>Intervalado 8×400m</td><td>9.2 km</td><td>4:38/km</td><td>7</td><td>124</td></tr>
+    <tr><td>05/06</td><td>Longo progressivo</td><td>18 km</td><td>5:20/km</td><td>6</td><td>216</td></tr>
+    <tr><td>03/06</td><td>Trote regenerativo</td><td>5 km</td><td>6:10/km</td><td>3</td><td>45</td></tr>
+    <tr><td>01/06</td><td>Tempo run 8 km</td><td>8 km</td><td>4:52/km</td><td>7</td><td>168</td></tr>
+    <tr><td>29/05</td><td>Fartlek 10 km</td><td>10 km</td><td>5:05/km</td><td>6</td><td>180</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title">Check-ins — Bem-estar</div>
+  <table>
+    <tr><th>Data</th><th>RPE</th><th>Dor</th><th>Sono</th><th>Fadiga</th><th>Humor</th></tr>
+    <tr><td>07/06</td><td>7</td><td>2</td><td>7</td><td>4</td><td>8</td></tr>
+    <tr><td>05/06</td><td>6</td><td>1</td><td>8</td><td>3</td><td>9</td></tr>
+    <tr><td>03/06</td><td>8</td><td>3</td><td>6</td><td>6</td><td>7</td></tr>
+    <tr><td>01/06</td><td>5</td><td>1</td><td>9</td><td>2</td><td>8</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title">Recomendações para o próximo ciclo</div>
+  <p style="font-size:13px;line-height:1.7;color:#444;">
+    O atleta apresentou boa progressão de volume nas últimas 4 semanas, com adesão acima da média.
+    Recomenda-se manutenção do volume na semana de deload e introdução de um treino de limiar de 10 km
+    no próximo mesociclo. Monitorar fadiga nos dias após o treino longo.
+  </p>
+</div>
+
+<div class="footer">
+  <span>Pace Run Pro © ${new Date().getFullYear()} — Relatório gerado automaticamente</span>
+  <span>${today}</span>
+</div>
+</body>
+</html>`;
+
+    const win = window.open("", "_blank", "width=900,height=700");
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    }
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
@@ -173,14 +311,13 @@ export default function ReportsPage() {
                         </span>
                       </div>
                       <div className="mt-3 flex gap-2">
-                        <a
-                          href={`data:text/plain;charset=utf-8,${encodeURIComponent(`Relatório: ${reportTypes.find((t) => t.id === reportType)?.label}\nAtleta: ${athlete?.name ?? "Equipe"}\nPeríodo: ${period}\nFormato: ${format}\nGerado em: ${new Date().toLocaleDateString("pt-BR")}`)}`}
-                          download={`relatorio-${reportType}-${new Date().toISOString().slice(0,10)}.${format === "PDF" ? "pdf" : format === "Excel" ? "xlsx" : "csv"}`}
+                        <button
+                          onClick={downloadReport}
                           className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 border border-primary/30 px-3.5 py-2 text-sm font-semibold text-white hover:bg-primary/25 transition-colors"
                         >
                           <Download className="h-4 w-4" />
-                          Baixar {format}
-                        </a>
+                          {format === "PDF" ? "Abrir PDF" : `Baixar ${format}`}
+                        </button>
                         <button onClick={() => setGenerated(false)} className="px-3 py-2 text-sm text-text-muted hover:text-white transition-colors">
                           Novo relatório
                         </button>

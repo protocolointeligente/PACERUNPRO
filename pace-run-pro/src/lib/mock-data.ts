@@ -447,8 +447,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Agachamento búlgaro",
     category: "Glúteos",
     muscles: ["Glúteo máximo", "Quadríceps", "Isquiotibiais"],
-    imageUrl:
-      "https://images.unsplash.com/photo-1517344884509-a0c97ec11bcc?w=800&h=600&fit=crop",
+    imageUrl: "/exercises/agachamento.gif",
     description:
       "Exercício unilateral que fortalece glúteos e quadríceps, melhora estabilidade e corrige assimetrias entre as pernas — essencial para corredores.",
     execution:
@@ -465,8 +464,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Elevação de panturrilha unilateral",
     category: "Panturrilhas",
     muscles: ["Gastrocnêmio", "Sóleo"],
-    imageUrl:
-      "https://images.unsplash.com/photo-1434608519344-49d77a699e1d?w=800&h=600&fit=crop",
+    imageUrl: "/exercises/panturrilha.gif",
     description:
       "Fortalece a musculatura da panturrilha, fundamental para a fase de propulsão da passada e prevenção de lesões no tendão de Aquiles.",
     execution:
@@ -483,8 +481,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Prancha com elevação de perna",
     category: "Core",
     muscles: ["Reto abdominal", "Transverso", "Glúteo médio"],
-    imageUrl:
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=600&fit=crop",
+    imageUrl: "/exercises/prancha.gif",
     description:
       "Melhora a estabilidade lombo-pélvica e a transferência de força entre tronco e membros inferiores durante a corrida.",
     execution:
@@ -501,8 +498,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Skipping com elástico (pliometria)",
     category: "Pliometria",
     muscles: ["Flexores de quadril", "Quadríceps", "Panturrilhas"],
-    imageUrl:
-      "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=800&h=600&fit=crop",
+    imageUrl: "/exercises/elastico.gif",
     description:
       "Desenvolve potência e ritmo de passada, melhorando a economia de corrida em ritmos de prova.",
     execution:
@@ -519,8 +515,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Ponte de glúteo unilateral",
     category: "Prevenção",
     muscles: ["Glúteo máximo", "Isquiotibiais", "Core"],
-    imageUrl:
-      "https://images.unsplash.com/photo-1571388208497-71bedc66e932?w=800&h=600&fit=crop",
+    imageUrl: "/exercises/ponte.gif",
     description:
       "Ativa e fortalece a cadeia posterior, prevenindo dores lombares e desequilíbrios musculares comuns em corredores.",
     execution:
@@ -537,8 +532,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Mobilidade de tornozelo em parede",
     category: "Tornozelo",
     muscles: ["Tríceps sural", "Tibial anterior"],
-    imageUrl:
-      "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=800&h=600&fit=crop",
+    imageUrl: "/exercises/mobilidade.gif",
     description:
       "Melhora a amplitude de dorsiflexão do tornozelo, importante para a aterrissagem e propulsão eficiente da passada.",
     execution:
