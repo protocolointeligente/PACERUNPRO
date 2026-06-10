@@ -36,7 +36,37 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const allNav = [...nav, ...moreNav];
+
+  function renderNavLink(item: NavItem, onClick?: () => void) {
+    const active = pathname?.startsWith(item.href);
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={onClick}
+        className={cn(
+          "group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-text-muted transition-colors",
+          active
+            ? "bg-primary/15 text-white"
+            : "hover:bg-card-hover hover:text-white"
+        )}
+      >
+        <item.icon
+          className={cn(
+            "h-[18px] w-[18px] transition-colors",
+            active ? "text-primary" : "text-text-muted group-hover:text-white"
+          )}
+        />
+        {item.label}
+        {active && (
+          <motion.span
+            layoutId="active-pill"
+            className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
+          />
+        )}
+      </Link>
+    );
+  }
 
   return (
     <div className="flex min-h-dvh w-full">
@@ -48,35 +78,15 @@ export function AppShell({
         </div>
 
         <nav className="flex-1 space-y-1 px-3">
-          {allNav.map((item) => {
-            const active = pathname?.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-text-muted transition-colors",
-                  active
-                    ? "bg-primary/15 text-white"
-                    : "hover:bg-card-hover hover:text-white"
-                )}
-              >
-                <item.icon
-                  className={cn(
-                    "h-[18px] w-[18px] transition-colors",
-                    active ? "text-primary" : "text-text-muted group-hover:text-white"
-                  )}
-                />
-                {item.label}
-                {active && (
-                  <motion.span
-                    layoutId="active-pill"
-                    className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
-                  />
-                )}
-              </Link>
-            );
-          })}
+          {nav.map((item) => renderNavLink(item))}
+          {moreNav.length > 0 && (
+            <>
+              <p className="px-3.5 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted/50">
+                Mais
+              </p>
+              {moreNav.map((item) => renderNavLink(item))}
+            </>
+          )}
         </nav>
 
         <div className="border-t border-border p-4">
@@ -123,23 +133,15 @@ export function AppShell({
                 <Logo size={30} />
               </div>
               <nav className="space-y-1">
-                {allNav.map((item) => {
-                  const active = pathname?.startsWith(item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium transition-colors",
-                        active ? "bg-primary/15 text-white" : "text-text-muted hover:bg-card-hover hover:text-white"
-                      )}
-                    >
-                      <item.icon className={cn("h-[18px] w-[18px]", active ? "text-primary" : "")} />
-                      {item.label}
-                    </Link>
-                  );
-                })}
+                {nav.map((item) => renderNavLink(item, () => setMobileOpen(false)))}
+                {moreNav.length > 0 && (
+                  <>
+                    <p className="px-3.5 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted/50">
+                      Mais
+                    </p>
+                    {moreNav.map((item) => renderNavLink(item, () => setMobileOpen(false)))}
+                  </>
+                )}
                 {switchHref && (
                   <Link
                     href={switchHref}

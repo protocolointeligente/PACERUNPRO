@@ -68,7 +68,7 @@ export function Logo({ variant = "horizontal", size = 36, className = "" }: Logo
         </span>
         {size >= 36 && (
           <span className={`${subSize} uppercase tracking-[0.18em] text-[#6b7280] font-medium`}>
-            Tecnologia para corredores
+            Para quem vive a corrida
           </span>
         )}
       </span>

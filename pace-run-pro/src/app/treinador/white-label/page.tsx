@@ -33,8 +33,7 @@ const ALL_MODULES = [
   "IA Treinadora",
   "Tênis tracker",
   "Timeline do atleta",
-  "Previsão de prova",
-  "Simulador de pace",
+  "Previsão & estratégia",
   "Comunidade",
 ];
 

@@ -14,7 +14,6 @@ import {
   Building2,
   Bell,
   Target,
-  Gauge,
   Shirt,
   BarChart2,
   Kanban,
@@ -40,12 +39,9 @@ export const athleteNav: NavItem[] = [
 export const athleteMoreNav: NavItem[] = [
   { href: "/aluno/testes", label: "Testes de performance", icon: Activity },
   { href: "/aluno/planos", label: "Planos & periodização", icon: ClipboardList },
-  { href: "/aluno/previsao", label: "Previsão de prova", icon: Target },
-  { href: "/aluno/simulador", label: "Simulador de pace", icon: Gauge },
+  { href: "/aluno/previsao", label: "Previsão & estratégia", icon: Target },
   { href: "/aluno/ia-treinadora", label: "IA Treinadora", icon: Bot },
   { href: "/aluno/tenis", label: "Tênis tracker", icon: Shirt },
-  { href: "/aluno/timeline", label: "Minha jornada", icon: CalendarDays },
-  { href: "/aluno/analise-semanal", label: "Minha semana", icon: BarChart2 },
   { href: "/aluno/perfil", label: "Perfil", icon: User },
 ];
 
