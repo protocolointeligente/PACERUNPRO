@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { weekWorkouts, TYPE_LABELS } from "@/lib/mock-data";
+import { weekWorkouts, TYPE_LABELS, getSubtypeColor } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const dayLabels = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
@@ -110,7 +110,14 @@ export function WeeklyReleaseDialog({ athleteName }: { athleteName: string }) {
                     <p className="truncate text-xs font-semibold text-white">{w.title}</p>
                     <p className="text-[11px] text-text-muted">{dayLabels[i] ?? ""} · {TYPE_LABELS[w.type]}</p>
                   </div>
-                  <Badge variant="outline" className="shrink-0">{w.subtype ?? TYPE_LABELS[w.type]}</Badge>
+                  {(() => {
+                    const color = getSubtypeColor(w.type, w.subtype);
+                    return (
+                      <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="shrink-0 border">
+                        {w.subtype ?? TYPE_LABELS[w.type]}
+                      </Badge>
+                    );
+                  })()}
                 </label>
               );
             })}

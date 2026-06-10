@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Clock, MapPin, Lock, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TYPE_LABELS } from "@/lib/mock-data";
+import { TYPE_LABELS, getSubtypeColor } from "@/lib/mock-data";
 import { formatPace } from "@/lib/utils";
 import type { WorkoutSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -35,7 +35,18 @@ export function WorkoutCard({ workout, href }: { workout: WorkoutSummary; href?:
           <Badge style={{ borderColor: `${workout.color}55`, color: workout.color, backgroundColor: `${workout.color}1a` }} className="border">
             {TYPE_LABELS[workout.type]}
           </Badge>
-          {workout.subtype && <span className="text-xs text-text-muted">{workout.subtype}</span>}
+          {workout.subtype && (
+            <span
+              className="inline-flex items-center gap-1.5 text-xs font-medium"
+              style={{ color: getSubtypeColor(workout.type, workout.subtype) }}
+            >
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: getSubtypeColor(workout.type, workout.subtype) }}
+              />
+              {workout.subtype}
+            </span>
+          )}
         </div>
         <p className="mt-1 truncate text-sm font-semibold text-white">{workout.title}</p>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-text-muted">

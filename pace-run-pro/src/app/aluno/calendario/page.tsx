@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorkoutCard } from "@/components/dashboard/workout-card";
 import { calendarLegend, getMonthEvents, weekWorkouts, type CalendarEvent } from "@/lib/mock-data";
-import { TYPE_COLORS, TYPE_LABELS } from "@/lib/mock-data";
+import { TYPE_LABELS, getSubtypeColor } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -100,15 +100,18 @@ export default function CalendarPage() {
                             {day.getDate()}
                           </span>
                           <div className="flex flex-1 flex-col gap-1 overflow-hidden">
-                            {dayEvents.slice(0, 2).map((e, idx) => (
-                              <span
-                                key={idx}
-                                className="truncate rounded-md px-1.5 py-0.5 text-[10px] font-medium leading-tight"
-                                style={{ backgroundColor: `${TYPE_COLORS[e.type]}22`, color: TYPE_COLORS[e.type] }}
-                              >
-                                {e.title}
-                              </span>
-                            ))}
+                            {dayEvents.slice(0, 2).map((e, idx) => {
+                              const color = getSubtypeColor(e.type, e.subtype);
+                              return (
+                                <span
+                                  key={idx}
+                                  className="truncate rounded-md px-1.5 py-0.5 text-[10px] font-medium leading-tight"
+                                  style={{ backgroundColor: `${color}22`, color }}
+                                >
+                                  {e.title}
+                                </span>
+                              );
+                            })}
                             {dayEvents.length > 2 && (
                               <span className="text-[10px] text-text-muted">+{dayEvents.length - 2} mais</span>
                             )}
@@ -143,26 +146,29 @@ export default function CalendarPage() {
                     {new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
                   </p>
                   <div className="space-y-2">
-                    {items.map((e, idx) => (
-                      <Card key={idx}>
-                        <CardContent className="flex items-center gap-3 p-3.5">
-                          <span className="h-9 w-9 shrink-0 rounded-lg" style={{ backgroundColor: `${TYPE_COLORS[e.type]}22` }}>
-                            <span className="flex h-full w-full items-center justify-center">
-                              <MapPin className="h-4 w-4" style={{ color: TYPE_COLORS[e.type] }} />
+                    {items.map((e, idx) => {
+                      const color = getSubtypeColor(e.type, e.subtype);
+                      return (
+                        <Card key={idx}>
+                          <CardContent className="flex items-center gap-3 p-3.5">
+                            <span className="h-9 w-9 shrink-0 rounded-lg" style={{ backgroundColor: `${color}22` }}>
+                              <span className="flex h-full w-full items-center justify-center">
+                                <MapPin className="h-4 w-4" style={{ color }} />
+                              </span>
                             </span>
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-white">{e.title}</p>
-                            <span className="flex items-center gap-1 text-xs text-text-muted">
-                              <Clock className="h-3 w-3" /> {TYPE_LABELS[e.type]}
-                            </span>
-                          </div>
-                          <Badge style={{ borderColor: `${TYPE_COLORS[e.type]}55`, color: TYPE_COLORS[e.type], backgroundColor: `${TYPE_COLORS[e.type]}1a` }} className="border">
-                            {TYPE_LABELS[e.type]}
-                          </Badge>
-                        </CardContent>
-                      </Card>
-                    ))}
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-white">{e.title}</p>
+                              <span className="flex items-center gap-1 text-xs text-text-muted">
+                                <Clock className="h-3 w-3" /> {TYPE_LABELS[e.type]}
+                              </span>
+                            </div>
+                            <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="border">
+                              {e.subtype ?? TYPE_LABELS[e.type]}
+                            </Badge>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 </div>
               ))}

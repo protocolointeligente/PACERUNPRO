@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { athleteList } from "@/lib/mock-data";
+import { athleteList, getSubtypeColor } from "@/lib/mock-data";
 import { formatPace } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -185,22 +185,28 @@ export default function RunPrescriptionPage() {
             <CardContent className="p-5">
               <h3 className="mb-3 font-display text-sm font-semibold text-white">Tipo de treino</h3>
               <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
-                {runTypes.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => {
-                      setSent(false);
-                      setTypeId(t.id);
-                    }}
-                    className={cn(
-                      "rounded-xl border px-3.5 py-3 text-left transition-colors",
-                      typeId === t.id ? "border-primary/60 bg-primary/15" : "border-border bg-card-hover/30 hover:border-primary/30"
-                    )}
-                  >
-                    <p className="text-sm font-semibold text-white">{t.label}</p>
-                    <p className="mt-0.5 text-[11px] text-text-muted">{t.description}</p>
-                  </button>
-                ))}
+                {runTypes.map((t) => {
+                  const color = getSubtypeColor("corrida", t.label);
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        setSent(false);
+                        setTypeId(t.id);
+                      }}
+                      className={cn(
+                        "rounded-xl border px-3.5 py-3 text-left transition-colors",
+                        typeId === t.id ? "border-primary/60 bg-primary/15" : "border-border bg-card-hover/30 hover:border-primary/30"
+                      )}
+                    >
+                      <p className="flex items-center gap-2 text-sm font-semibold text-white">
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+                        {t.label}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-text-muted">{t.description}</p>
+                    </button>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -348,7 +354,14 @@ export default function RunPrescriptionPage() {
               <h3 className="mb-3 font-display text-sm font-semibold text-white">Pré-visualização</h3>
               <div className="rounded-xl border border-border bg-card-hover/30 p-4">
                 <div className="flex items-center justify-between">
-                  <Badge variant="info">{selectedType.label}</Badge>
+                  {(() => {
+                    const color = getSubtypeColor("corrida", selectedType.label);
+                    return (
+                      <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="border">
+                        {selectedType.label}
+                      </Badge>
+                    );
+                  })()}
                   {form.rpe && <span className="text-xs text-text-muted">RPE {form.rpe}</span>}
                 </div>
                 <p className="mt-2 truncate text-sm font-semibold text-white">{form.title || `${selectedType.label} — ${athlete.name.split(" ")[0]}`}</p>

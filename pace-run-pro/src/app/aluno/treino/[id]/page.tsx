@@ -16,7 +16,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TYPE_LABELS, getWorkoutDetail } from "@/lib/mock-data";
+import { TYPE_LABELS, getWorkoutDetail, getSubtypeColor } from "@/lib/mock-data";
 import { formatPace } from "@/lib/utils";
 
 export default async function WorkoutDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -53,7 +53,14 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
                 <Badge style={{ borderColor: `${workout.color}66`, color: workout.color, backgroundColor: `${workout.color}22` }} className="border">
                   {TYPE_LABELS[workout.type]}
                 </Badge>
-                {workout.subtype && <Badge variant="outline">{workout.subtype}</Badge>}
+                {workout.subtype && (() => {
+                  const subtypeColor = getSubtypeColor(workout.type, workout.subtype);
+                  return (
+                    <Badge style={{ borderColor: `${subtypeColor}66`, color: subtypeColor, backgroundColor: `${subtypeColor}22` }} className="border">
+                      {workout.subtype}
+                    </Badge>
+                  );
+                })()}
               </div>
               <h1 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">{workout.title}</h1>
               <p className="mt-0.5 text-sm capitalize text-text-muted">{dateLabel}</p>

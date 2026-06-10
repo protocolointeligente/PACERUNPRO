@@ -24,6 +24,26 @@ export const TYPE_LABELS: Record<string, string> = {
   prova: "Prova",
 };
 
+// Paleta por tipo de treino de corrida (estilo Runna), do mais leve ao mais intenso
+export const RUN_SUBTYPE_COLORS: Record<string, string> = {
+  "Regenerativo": "#94a3b8",
+  "Rodagem leve": "#84cc16",
+  "Longão": "#22c55e",
+  "Técnica": "#06b6d4",
+  "Progressivo": "#38bdf8",
+  "Fartlek": "#a78bfa",
+  "Tempo Run": "#eab308",
+  "Subida": "#fb923c",
+  "Intervalado longo": "#f97316",
+  "Intervalado curto": "#ef4444",
+  "Prova": "#ec4899",
+};
+
+export function getSubtypeColor(type: string, subtype?: string): string {
+  if (subtype && RUN_SUBTYPE_COLORS[subtype]) return RUN_SUBTYPE_COLORS[subtype];
+  return TYPE_COLORS[type] ?? TYPE_COLORS.corrida;
+}
+
 export const currentAthlete = {
   name: "Camila Andrade",
   firstName: "Camila",
@@ -378,39 +398,40 @@ export const achievements = [
 export interface CalendarEvent {
   date: string; // ISO yyyy-mm-dd
   type: keyof typeof TYPE_COLORS;
+  subtype?: string;
   title: string;
 }
 
-const monthPattern: { offset: number; type: keyof typeof TYPE_COLORS; title: string }[] = [
-  { offset: -10, type: "corrida", title: "Rodagem leve 6 km" },
+const monthPattern: { offset: number; type: keyof typeof TYPE_COLORS; subtype?: string; title: string }[] = [
+  { offset: -10, type: "corrida", subtype: "Rodagem leve", title: "Rodagem leve 6 km" },
   { offset: -9, type: "forca", title: "Força — Treino B" },
-  { offset: -8, type: "corrida", title: "Tempo Run 7 km" },
-  { offset: -7, type: "recuperacao", title: "Trote regenerativo" },
-  { offset: -6, type: "corrida", title: "Longão 16 km" },
+  { offset: -8, type: "corrida", subtype: "Tempo Run", title: "Tempo Run 7 km" },
+  { offset: -7, type: "recuperacao", subtype: "Regenerativo", title: "Trote regenerativo" },
+  { offset: -6, type: "corrida", subtype: "Longão", title: "Longão 16 km" },
   { offset: -5, type: "mobilidade", title: "Mobilidade ativa" },
-  { offset: -3, type: "corrida", title: "Rodagem leve 5 km" },
+  { offset: -3, type: "corrida", subtype: "Rodagem leve", title: "Rodagem leve 5 km" },
   { offset: -2, type: "forca", title: "Força — Treino A" },
-  { offset: -1, type: "corrida", title: "Fartlek 8 km" },
+  { offset: -1, type: "corrida", subtype: "Fartlek", title: "Fartlek 8 km" },
   { offset: 1, type: "funcional", title: "Funcional — core" },
-  { offset: 2, type: "corrida", title: "Longão 18 km" },
+  { offset: 2, type: "corrida", subtype: "Longão", title: "Longão 18 km" },
   { offset: 3, type: "mobilidade", title: "Mobilidade e liberação" },
-  { offset: 4, type: "corrida", title: "Rodagem leve 7 km" },
+  { offset: 4, type: "corrida", subtype: "Rodagem leve", title: "Rodagem leve 7 km" },
   { offset: 5, type: "forca", title: "Força — Treino A" },
-  { offset: 6, type: "corrida", title: "Intervalado 10 x 400m" },
-  { offset: 7, type: "recuperacao", title: "Trote regenerativo" },
-  { offset: 8, type: "corrida", title: "Tempo Run 8 km" },
+  { offset: 6, type: "corrida", subtype: "Intervalado curto", title: "Intervalado 10 x 400m" },
+  { offset: 7, type: "recuperacao", subtype: "Regenerativo", title: "Trote regenerativo" },
+  { offset: 8, type: "corrida", subtype: "Tempo Run", title: "Tempo Run 8 km" },
   { offset: 9, type: "funcional", title: "Funcional — mobilidade" },
-  { offset: 10, type: "corrida", title: "Longão 20 km" },
-  { offset: 14, type: "prova", title: "10 km Night Run BH" },
+  { offset: 10, type: "corrida", subtype: "Longão", title: "Longão 20 km" },
+  { offset: 14, type: "prova", subtype: "Prova", title: "10 km Night Run BH" },
   { offset: 17, type: "forca", title: "Força — Treino B" },
-  { offset: 20, type: "corrida", title: "Progressivo 12 km" },
+  { offset: 20, type: "corrida", subtype: "Progressivo", title: "Progressivo 12 km" },
 ];
 
 export function getMonthEvents(reference = new Date()): CalendarEvent[] {
   return monthPattern.map((p) => {
     const d = new Date(reference);
     d.setDate(d.getDate() + p.offset);
-    return { date: d.toISOString().slice(0, 10), type: p.type, title: p.title };
+    return { date: d.toISOString().slice(0, 10), type: p.type, subtype: p.subtype, title: p.title };
   });
 }
 
