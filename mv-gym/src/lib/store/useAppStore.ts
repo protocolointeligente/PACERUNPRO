@@ -24,7 +24,7 @@ import {
   gerarDeload,
   responderCoach,
 } from "@/lib/ai/coach";
-import { calcIMC, todayIso } from "@/lib/utils";
+import { calcIMC } from "@/lib/utils";
 import {
   avaliarConquistas,
   buildContextoConquistas,
@@ -101,10 +101,6 @@ const initialState = {
   planoAssinatura: "free" as PlanoAssinaturaId,
   mensagensCoach: [] as MensagemCoach[],
 };
-
-function getRegistroNutricaoDia(registros: RegistroNutricaoDia[], data: string): RegistroNutricaoDia {
-  return registros.find((r) => r.data === data) ?? { data, aguaMl: 0, refeicoesConcluidas: [] };
-}
 
 export const useAppStore = create<AppState>()(
   persist(

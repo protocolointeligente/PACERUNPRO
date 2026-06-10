@@ -1,3 +1,5 @@
+"use client";
+
 import { AuthGuard } from "@/components/layout/auth-guard";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { ALUNO_NAV } from "@/components/layout/nav-items";

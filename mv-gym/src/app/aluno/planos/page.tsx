@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { TopBar } from "@/components/layout/top-bar";
 import { useAppStore } from "@/lib/store/useAppStore";
-import { PLANOS_ASSINATURA, METODOS_PAGAMENTO } from "@/lib/data/plans";
-import type { MetodoPagamento, PlanoAssinaturaId } from "@/lib/types";
+import { PLANOS_ASSINATURA, METODOS_PAGAMENTO, type MetodoPagamento } from "@/lib/data/plans";
+import type { PlanoAssinaturaId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function PlanosPage() {

@@ -189,8 +189,8 @@ export default function ExecutarTreinoPage({ params }: { params: Promise<{ id: s
     );
 
     addRegistroTreino({
-      treinoId: treino.id,
-      treinoNome: treino.nome,
+      treinoId: treino!.id,
+      treinoNome: treino!.nome,
       data: new Date().toISOString(),
       duracaoSeg: elapsedSec,
       series: seriesRegistradas,
