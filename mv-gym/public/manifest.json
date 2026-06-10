@@ -1,0 +1,18 @@
+{
+  "name": "MV GYM — Sua jornada de performance",
+  "short_name": "MV GYM",
+  "description": "Plataforma premium de musculação, emagrecimento e hipertrofia com IA.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e14",
+  "theme_color": "#0a0e14",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

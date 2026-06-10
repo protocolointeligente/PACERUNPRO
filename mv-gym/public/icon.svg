@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="mvgymGrad" x1="10" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C6FF00"/>
+      <stop offset="1" stop-color="#3DDC4A"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="22" fill="#0A0E14"/>
+  <path d="M18 28 L33 74 L50 38 L67 74 L82 28" stroke="url(#mvgymGrad)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

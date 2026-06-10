@@ -1,0 +1,265 @@
+import type { AlunoResumo, Objetivo } from "@/lib/types";
+
+export interface AlunoDetalhe extends AlunoResumo {
+  email: string;
+  idade: number;
+  alturaCm: number;
+  pesoKg: number;
+  pesoMetaKg: number;
+  planoAtual: string;
+  split: string;
+  proximaAvaliacao: string;
+  historicoTreinos: { data: string; nome: string; concluido: boolean }[];
+  evolucaoPeso: { data: string; pesoKg: number }[];
+}
+
+const OBJETIVOS_DEMO: Objetivo[] = ["hipertrofia", "emagrecimento", "forca", "condicionamento", "saude", "performance"];
+
+export const ALUNOS_PERSONAL: AlunoDetalhe[] = [
+  {
+    id: "aluno-1",
+    nome: "Camila Ferreira",
+    email: "camila.ferreira@email.com",
+    avatarUrl: undefined,
+    objetivo: "hipertrofia",
+    idade: 27,
+    alturaCm: 165,
+    pesoKg: 64,
+    pesoMetaKg: 60,
+    adesao: 0.92,
+    ultimoTreino: "hoje",
+    status: "em_dia",
+    sequenciaDias: 14,
+    planoAtual: "Plano Hipertrofia — IA",
+    split: "ABCDE",
+    proximaAvaliacao: "em 5 dias",
+    historicoTreinos: [
+      { data: "Hoje", nome: "Treino A — Peito", concluido: true },
+      { data: "Ontem", nome: "Treino E — Braços", concluido: true },
+      { data: "Há 2 dias", nome: "Treino D — Ombros e Abdômen", concluido: true },
+    ],
+    evolucaoPeso: [
+      { data: "Jan", pesoKg: 67 },
+      { data: "Fev", pesoKg: 66 },
+      { data: "Mar", pesoKg: 65 },
+      { data: "Abr", pesoKg: 64 },
+    ],
+  },
+  {
+    id: "aluno-2",
+    nome: "Rafael Souza",
+    email: "rafael.souza@email.com",
+    avatarUrl: undefined,
+    objetivo: "hipertrofia",
+    idade: 30,
+    alturaCm: 178,
+    pesoKg: 82,
+    pesoMetaKg: 78,
+    adesao: 0.85,
+    ultimoTreino: "ontem",
+    status: "em_dia",
+    sequenciaDias: 6,
+    planoAtual: "Plano Hipertrofia — IA",
+    split: "Upper / Lower (ABCD)",
+    proximaAvaliacao: "em 12 dias",
+    historicoTreinos: [
+      { data: "Ontem", nome: "Treino C — Upper (Pull)", concluido: true },
+      { data: "Há 2 dias", nome: "Treino B — Lower (Quadríceps)", concluido: true },
+      { data: "Há 4 dias", nome: "Treino A — Upper (Push)", concluido: true },
+    ],
+    evolucaoPeso: [
+      { data: "Jan", pesoKg: 87 },
+      { data: "Fev", pesoKg: 84.5 },
+      { data: "Mar", pesoKg: 83 },
+      { data: "Abr", pesoKg: 82 },
+    ],
+  },
+  {
+    id: "aluno-3",
+    nome: "Beatriz Lima",
+    email: "beatriz.lima@email.com",
+    avatarUrl: undefined,
+    objetivo: "emagrecimento",
+    idade: 34,
+    alturaCm: 160,
+    pesoKg: 71,
+    pesoMetaKg: 64,
+    adesao: 0.6,
+    ultimoTreino: "há 4 dias",
+    status: "atencao",
+    sequenciaDias: 0,
+    planoAtual: "Plano Emagrecimento — IA",
+    split: "ABC",
+    proximaAvaliacao: "em 2 dias",
+    historicoTreinos: [
+      { data: "Há 4 dias", nome: "Treino C — Pernas e Abdômen", concluido: true },
+      { data: "Há 6 dias", nome: "Treino B — Costas, Bíceps e Antebraço", concluido: false },
+      { data: "Há 8 dias", nome: "Treino A — Peito, Ombro e Tríceps", concluido: true },
+    ],
+    evolucaoPeso: [
+      { data: "Jan", pesoKg: 75 },
+      { data: "Fev", pesoKg: 73.5 },
+      { data: "Mar", pesoKg: 72 },
+      { data: "Abr", pesoKg: 71 },
+    ],
+  },
+  {
+    id: "aluno-4",
+    nome: "Lucas Martins",
+    email: "lucas.martins@email.com",
+    avatarUrl: undefined,
+    objetivo: "forca",
+    idade: 24,
+    alturaCm: 182,
+    pesoKg: 88,
+    pesoMetaKg: 92,
+    adesao: 0.78,
+    ultimoTreino: "hoje",
+    status: "em_dia",
+    sequenciaDias: 9,
+    planoAtual: "Plano Força — IA",
+    split: "Push / Pull / Legs",
+    proximaAvaliacao: "em 20 dias",
+    historicoTreinos: [
+      { data: "Hoje", nome: "Treino A — Push 1", concluido: true },
+      { data: "Ontem", nome: "Treino F — Legs 2", concluido: true },
+      { data: "Há 2 dias", nome: "Treino E — Pull 2", concluido: true },
+    ],
+    evolucaoPeso: [
+      { data: "Jan", pesoKg: 84 },
+      { data: "Fev", pesoKg: 85.5 },
+      { data: "Mar", pesoKg: 87 },
+      { data: "Abr", pesoKg: 88 },
+    ],
+  },
+  {
+    id: "aluno-5",
+    nome: "Juliana Castro",
+    email: "juliana.castro@email.com",
+    avatarUrl: undefined,
+    objetivo: "condicionamento",
+    idade: 29,
+    alturaCm: 168,
+    pesoKg: 62,
+    pesoMetaKg: 60,
+    adesao: 0.4,
+    ultimoTreino: "há 9 dias",
+    status: "inativo",
+    sequenciaDias: 0,
+    planoAtual: "Plano Condicionamento — IA",
+    split: "Full Body A/B",
+    proximaAvaliacao: "atrasada",
+    historicoTreinos: [
+      { data: "Há 9 dias", nome: "Treino B — Posterior + Pull", concluido: true },
+      { data: "Há 13 dias", nome: "Treino A — Inferior + Push", concluido: false },
+    ],
+    evolucaoPeso: [
+      { data: "Jan", pesoKg: 61 },
+      { data: "Fev", pesoKg: 61.5 },
+      { data: "Mar", pesoKg: 62 },
+      { data: "Abr", pesoKg: 62 },
+    ],
+  },
+  {
+    id: "aluno-6",
+    nome: "Pedro Henrique",
+    email: "pedro.henrique@email.com",
+    avatarUrl: undefined,
+    objetivo: "saude",
+    idade: 45,
+    alturaCm: 175,
+    pesoKg: 79,
+    pesoMetaKg: 75,
+    adesao: 0.7,
+    ultimoTreino: "há 2 dias",
+    status: "em_dia",
+    sequenciaDias: 3,
+    planoAtual: "Plano Saúde — IA",
+    split: "ABC",
+    proximaAvaliacao: "em 8 dias",
+    historicoTreinos: [
+      { data: "Há 2 dias", nome: "Treino C — Pernas e Abdômen", concluido: true },
+      { data: "Há 4 dias", nome: "Treino B — Costas, Bíceps e Antebraço", concluido: true },
+    ],
+    evolucaoPeso: [
+      { data: "Jan", pesoKg: 81 },
+      { data: "Fev", pesoKg: 80 },
+      { data: "Mar", pesoKg: 79.5 },
+      { data: "Abr", pesoKg: 79 },
+    ],
+  },
+  {
+    id: "aluno-7",
+    nome: "Amanda Rocha",
+    email: "amanda.rocha@email.com",
+    avatarUrl: undefined,
+    objetivo: "performance",
+    idade: 22,
+    alturaCm: 170,
+    pesoKg: 60,
+    pesoMetaKg: 62,
+    adesao: 0.95,
+    ultimoTreino: "hoje",
+    status: "em_dia",
+    sequenciaDias: 21,
+    planoAtual: "Plano Performance — IA",
+    split: "Push / Pull / Legs",
+    proximaAvaliacao: "em 15 dias",
+    historicoTreinos: [
+      { data: "Hoje", nome: "Treino D — Push 2", concluido: true },
+      { data: "Ontem", nome: "Treino C — Legs 1", concluido: true },
+      { data: "Há 2 dias", nome: "Treino B — Pull 1", concluido: true },
+    ],
+    evolucaoPeso: [
+      { data: "Jan", pesoKg: 58 },
+      { data: "Fev", pesoKg: 58.8 },
+      { data: "Mar", pesoKg: 59.5 },
+      { data: "Abr", pesoKg: 60 },
+    ],
+  },
+  {
+    id: "aluno-8",
+    nome: "Thiago Almeida",
+    email: "thiago.almeida@email.com",
+    avatarUrl: undefined,
+    objetivo: "hipertrofia",
+    idade: 38,
+    alturaCm: 180,
+    pesoKg: 90,
+    pesoMetaKg: 86,
+    adesao: 0.55,
+    ultimoTreino: "há 5 dias",
+    status: "atencao",
+    sequenciaDias: 0,
+    planoAtual: "Plano Hipertrofia — IA",
+    split: "ABC",
+    proximaAvaliacao: "em 1 dia",
+    historicoTreinos: [
+      { data: "Há 5 dias", nome: "Treino A — Peito, Ombro e Tríceps", concluido: true },
+      { data: "Há 9 dias", nome: "Treino C — Pernas e Abdômen", concluido: true },
+    ],
+    evolucaoPeso: [
+      { data: "Jan", pesoKg: 93 },
+      { data: "Fev", pesoKg: 92 },
+      { data: "Mar", pesoKg: 91 },
+      { data: "Abr", pesoKg: 90 },
+    ],
+  },
+];
+
+export function getAlunoById(id: string): AlunoDetalhe | undefined {
+  return ALUNOS_PERSONAL.find((a) => a.id === id);
+}
+
+export const RESUMO_PERSONAL = {
+  totalAlunos: ALUNOS_PERSONAL.length,
+  emDia: ALUNOS_PERSONAL.filter((a) => a.status === "em_dia").length,
+  atencao: ALUNOS_PERSONAL.filter((a) => a.status === "atencao").length,
+  inativos: ALUNOS_PERSONAL.filter((a) => a.status === "inativo").length,
+  adesaoMedia:
+    ALUNOS_PERSONAL.reduce((acc, a) => acc + a.adesao, 0) / ALUNOS_PERSONAL.length,
+  objetivosDistribuicao: OBJETIVOS_DEMO.map((obj) => ({
+    objetivo: obj,
+    quantidade: ALUNOS_PERSONAL.filter((a) => a.objetivo === obj).length,
+  })),
+};
