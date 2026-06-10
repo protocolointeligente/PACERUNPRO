@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, ImageIcon, Send, Sparkles, Video, Wand2 } from "lucide-react";
+import { Activity, CheckCircle2, ImageIcon, Send, Sparkles, Video, Wand2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { athleteList, getSubtypeColor } from "@/lib/mock-data";
 import { formatPace } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import {
+  calculateVDOT,
+  getTrainingPaces,
+  parseRaceTime,
+  RACE_DISTANCES,
+  TRAINING_ZONES,
+  type TrainingZoneId,
+} from "@/lib/vdot";
 
 const runTypes = [
   { id: "rodagem-leve", label: "Rodagem leve", description: "Volume em ritmo confortável — Zona 1-2" },
@@ -55,6 +63,42 @@ const typeAdjustments: Record<RunTypeId, { paceDeltaSec: number; rpe: number; hr
   prova: { paceDeltaSec: -25, rpe: 9, hrZone: hrZones[3], distanceFactor: 0.25 },
 };
 
+// Mapeia cada tipo de treino para a zona de Daniels (E/M/T/I/R) e a posição
+// dentro da faixa de pace daquela zona — usado quando o VDOT do atleta está disponível.
+const typeToZone: Record<RunTypeId, { zone: TrainingZoneId; position: "fast" | "mid" | "slow"; hrZone: string }> = {
+  regenerativo: { zone: "E", position: "slow", hrZone: hrZones[0] },
+  tecnica: { zone: "E", position: "slow", hrZone: hrZones[1] },
+  "rodagem-leve": { zone: "E", position: "mid", hrZone: hrZones[1] },
+  longao: { zone: "E", position: "fast", hrZone: hrZones[1] },
+  subida: { zone: "M", position: "slow", hrZone: hrZones[2] },
+  progressivo: { zone: "M", position: "mid", hrZone: hrZones[2] },
+  "tempo-run": { zone: "T", position: "mid", hrZone: hrZones[3] },
+  fartlek: { zone: "T", position: "fast", hrZone: hrZones[3] },
+  "intervalado-longo": { zone: "I", position: "slow", hrZone: hrZones[4] },
+  prova: { zone: "I", position: "mid", hrZone: hrZones[4] },
+  "intervalado-curto": { zone: "R", position: "mid", hrZone: hrZones[4] },
+};
+
+// Resultado de prova recente (mock) usado para estimar o VDOT de cada atleta.
+const recentRaceByAthlete: Record<string, { distanceM: number; timeSec: number }> = {
+  "ath-1": { distanceM: 10000, timeSec: 47 * 60 + 52 }, // Camila Andrade
+  "ath-2": { distanceM: 5000, timeSec: 28 * 60 + 30 }, // Bruno Lacerda
+  "ath-3": { distanceM: 10000, timeSec: 40 * 60 + 15 }, // Marina Sales
+  "ath-4": { distanceM: 10000, timeSec: 33 * 60 + 30 }, // Felipe Tannous
+  "ath-5": { distanceM: 5000, timeSec: 32 * 60 }, // Renata Vidal
+  "ath-6": { distanceM: 5000, timeSec: 35 * 60 }, // Diego Martins
+  "ath-7": { distanceM: 10000, timeSec: 50 * 60 + 30 }, // Ana Beatriz Lima
+  "ath-8": { distanceM: 5000, timeSec: 34 * 60 }, // Thiago Ferraz
+};
+
+function formatRaceTime(sec: number): string {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = Math.round(sec % 60);
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
 const textareaClass = cn(inputClass, "resize-none");
@@ -94,13 +138,29 @@ const emptyForm: FormState = {
   imageUrl: "",
 };
 
-function buildSuggestion(athlete: (typeof athleteList)[number], typeId: RunTypeId) {
+function buildSuggestion(athlete: (typeof athleteList)[number], typeId: RunTypeId, vdot: number) {
   const adj = typeAdjustments[typeId];
-  const basePace = basePaceByLevel[athlete.level] ?? 318;
-  const paceSecPerKm = Math.max(150, basePace + adj.paceDeltaSec);
+  let paceSecPerKm: number;
+  let hrZone = adj.hrZone;
+
+  if (vdot > 0) {
+    const zoneMap = typeToZone[typeId];
+    const range = getTrainingPaces(vdot)[zoneMap.zone];
+    paceSecPerKm =
+      zoneMap.position === "fast"
+        ? range.fastSecPerKm
+        : zoneMap.position === "slow"
+          ? range.slowSecPerKm
+          : Math.round((range.fastSecPerKm + range.slowSecPerKm) / 2);
+    hrZone = zoneMap.hrZone;
+  } else {
+    const basePace = basePaceByLevel[athlete.level] ?? 318;
+    paceSecPerKm = Math.max(150, basePace + adj.paceDeltaSec);
+  }
+
   const distanceKm = Math.max(3, Math.round(adj.distanceFactor * (athlete.weeklyLoad / 10)));
   const durationMin = Math.round((distanceKm * paceSecPerKm) / 60);
-  return { paceSecPerKm, distanceKm, durationMin, rpe: adj.rpe, hrZone: adj.hrZone };
+  return { paceSecPerKm, distanceKm, durationMin, rpe: adj.rpe, hrZone };
 }
 
 export default function RunPrescriptionPage() {
@@ -108,10 +168,26 @@ export default function RunPrescriptionPage() {
   const [typeId, setTypeId] = useState<RunTypeId>("intervalado-curto");
   const [form, setForm] = useState<FormState>(emptyForm);
   const [sent, setSent] = useState(false);
+  const [raceDistanceM, setRaceDistanceM] = useState<number>(RACE_DISTANCES[3].meters);
+  const [raceTimeStr, setRaceTimeStr] = useState("");
 
   const athlete = useMemo(() => athleteList.find((a) => a.id === athleteId) ?? athleteList[0], [athleteId]);
   const selectedType = useMemo(() => runTypes.find((t) => t.id === typeId)!, [typeId]);
-  const suggestion = useMemo(() => buildSuggestion(athlete, typeId), [athlete, typeId]);
+
+  // Pré-preenche o resultado de prova recente ao trocar de atleta
+  useEffect(() => {
+    const recent = recentRaceByAthlete[athleteId];
+    if (recent) {
+      setRaceDistanceM(recent.distanceM);
+      setRaceTimeStr(formatRaceTime(recent.timeSec));
+    } else {
+      setRaceTimeStr("");
+    }
+  }, [athleteId]);
+
+  const vdot = useMemo(() => calculateVDOT(raceDistanceM, parseRaceTime(raceTimeStr)), [raceDistanceM, raceTimeStr]);
+  const trainingPaces = useMemo(() => (vdot > 0 ? getTrainingPaces(vdot) : null), [vdot]);
+  const suggestion = useMemo(() => buildSuggestion(athlete, typeId, vdot), [athlete, typeId, vdot]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setSent(false);
@@ -178,6 +254,82 @@ export default function RunPrescriptionPage() {
                   </button>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-5">
+              <h3 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold text-white">
+                <Activity className="h-4 w-4 text-primary" /> Nível de fitness — VDOT (Daniels)
+              </h3>
+              <p className="mb-3 text-xs text-text-muted">
+                Informe o resultado de uma prova recente de {athlete.name.split(" ")[0]} para calcular o VDOT e gerar as
+                faixas de pace de treino (E, M, T, I, R) da metodologia de Jack Daniels.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className={labelClass}>Distância da prova</span>
+                  <select
+                    value={raceDistanceM}
+                    onChange={(e) => setRaceDistanceM(Number(e.target.value))}
+                    className={inputClass}
+                  >
+                    {RACE_DISTANCES.map((d) => (
+                      <option key={d.id} value={d.meters} className="bg-card text-white">
+                        {d.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className={labelClass}>Tempo (MM:SS ou H:MM:SS)</span>
+                  <input
+                    value={raceTimeStr}
+                    onChange={(e) => setRaceTimeStr(e.target.value)}
+                    placeholder="Ex.: 47:52"
+                    className={inputClass}
+                  />
+                </label>
+              </div>
+
+              {trainingPaces && (
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3.5 py-2.5">
+                    <span className="text-xs text-text-muted">VDOT estimado</span>
+                    <span className="font-display text-lg font-bold text-white">{vdot.toFixed(1)}</span>
+                  </div>
+                  <div className="overflow-hidden rounded-xl border border-border">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-card-hover/40 text-left text-[11px] uppercase tracking-wider text-text-muted">
+                          <th className="px-3 py-2 font-medium">Zona</th>
+                          <th className="px-3 py-2 font-medium">Pace alvo</th>
+                          <th className="hidden px-3 py-2 font-medium sm:table-cell">Uso</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {TRAINING_ZONES.map((z) => {
+                          const range = trainingPaces[z.id];
+                          return (
+                            <tr key={z.id}>
+                              <td className="px-3 py-2">
+                                <span className="inline-flex items-center gap-2 font-semibold" style={{ color: z.color }}>
+                                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: z.color }} />
+                                  {z.label}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 text-white">
+                                {formatPace(range.fastSecPerKm).replace("/km", "")}–{formatPace(range.slowSecPerKm)}
+                              </td>
+                              <td className="hidden px-3 py-2 text-text-muted sm:table-cell">{z.description}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -313,8 +465,19 @@ export default function RunPrescriptionPage() {
                 <Sparkles className="h-4 w-4 text-primary" /> Motor de prescrição inteligente
               </h3>
               <p className="text-xs text-text-muted">
-                Sugestão calculada a partir do nível, pace de referência, carga semanal e objetivo de {athlete.name.split(" ")[0]}{" "}
-                para um treino de <span className="text-white">{selectedType.label.toLowerCase()}</span>.
+                {vdot > 0 ? (
+                  <>
+                    Pace calculado pelas zonas de Daniels (VDOT {vdot.toFixed(1)}), carga semanal e objetivo de{" "}
+                    {athlete.name.split(" ")[0]} para um treino de{" "}
+                    <span className="text-white">{selectedType.label.toLowerCase()}</span>.
+                  </>
+                ) : (
+                  <>
+                    Sugestão calculada a partir do nível, pace de referência, carga semanal e objetivo de{" "}
+                    {athlete.name.split(" ")[0]} para um treino de{" "}
+                    <span className="text-white">{selectedType.label.toLowerCase()}</span>.
+                  </>
+                )}
               </p>
 
               <div className="mt-4 space-y-2 rounded-xl border border-border bg-background/40 p-3.5 text-xs">
