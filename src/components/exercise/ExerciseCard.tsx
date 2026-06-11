@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { TacticalDiagram } from "@/components/diagrams/TacticalDiagram";
 import { FOCI } from "@/lib/data/foci";
 import { POSITIONS } from "@/lib/data/positions";
@@ -29,7 +30,12 @@ export function ExerciseCard({ exercise: ex, minutes, diagramOverride }: Exercis
             <span className="chip">{ex.pattern}</span>
           </div>
         </div>
-        {minutes != null && <span className="chip chip-accent whitespace-nowrap">{minutes} min</span>}
+        <div className="flex flex-none flex-col items-end gap-1.5">
+          {minutes != null && <span className="chip chip-accent whitespace-nowrap">{minutes} min</span>}
+          <Link href={`/exercicio/${ex.id}`} className="chip whitespace-nowrap" style={{ color: "var(--accent2)" }}>
+            Detalhes →
+          </Link>
+        </div>
       </div>
       <div className="grid gap-3.5 p-3.5 md:grid-cols-[360px_1fr]">
         <TacticalDiagram

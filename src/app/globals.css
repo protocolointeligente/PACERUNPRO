@@ -150,6 +150,24 @@ option {
     color: #fff;
   }
 
+  .chip-toggle {
+    @apply cursor-pointer rounded-full border px-3 py-1.5 text-xs font-bold transition-colors;
+    border-color: var(--line);
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--text);
+  }
+  :root[data-theme="light"] .chip-toggle {
+    background: rgba(15, 23, 42, 0.025);
+  }
+  .chip-toggle:hover:not(.active) {
+    border-color: var(--accent);
+  }
+  .chip-toggle.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
   .field-input {
     @apply w-full rounded-2xl border px-3.5 py-3 text-sm outline-none transition-shadow;
     border-color: var(--line);

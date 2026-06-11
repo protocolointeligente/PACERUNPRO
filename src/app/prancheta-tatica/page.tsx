@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { TacticalDiagram } from "@/components/diagrams/TacticalDiagram";
 import { FOCI } from "@/lib/data/foci";
 import { POSITIONS } from "@/lib/data/positions";
@@ -68,6 +69,15 @@ function draftFrom(ex: Exercise, override: ExerciseOverride | undefined): Exerci
 }
 
 export default function PranchetaTaticaPage() {
+  return (
+    <Suspense fallback={null}>
+      <PranchetaTaticaContent />
+    </Suspense>
+  );
+}
+
+function PranchetaTaticaContent() {
+  const searchParams = useSearchParams();
   const bankExercises = useMemo(() => getExercises(), []);
   const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
   const [overrides, setOverrides] = useState<ExerciseOverrides>({});
@@ -86,6 +96,14 @@ export default function PranchetaTaticaPage() {
   }, []);
 
   const allExercises = useMemo(() => [...bankExercises, ...customExercises], [bankExercises, customExercises]);
+
+  useEffect(() => {
+    if (selectedId !== null) return;
+    const idParam = searchParams.get("id");
+    if (!idParam) return;
+    const ex = allExercises.find((e) => e.id === Number(idParam));
+    if (ex) applyDraft(ex, overrides[ex.id]);
+  }, [searchParams, allExercises, overrides, selectedId]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CATEGORIES, CATEGORY_KEYS, type CategoryKey } from "@/lib/data/categories";
 import { FOCI, FOCUS_KEYS, type FocusKey } from "@/lib/data/foci";
@@ -194,12 +195,15 @@ export default function BibliotecaPage() {
               <p className="m-0 text-[13px] leading-relaxed" style={{ color: "var(--muted)" }}>
                 {ex.objective}
               </p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <span className="chip chip-accent">{POSITIONS[ex.position].label}</span>
                 <span className="chip">{FOCI[ex.focus]}</span>
                 <span className="chip">{ex.structure}</span>
                 <span className="chip">{ex.categories.slice(0, 4).join(", ")}</span>
                 <span className="chip">{ex.pattern}</span>
+                <Link href={`/exercicio/${ex.id}`} className="chip ml-auto" style={{ color: "var(--accent2)" }}>
+                  Detalhes →
+                </Link>
               </div>
             </div>
           ))}

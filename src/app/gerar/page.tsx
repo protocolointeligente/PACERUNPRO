@@ -2,38 +2,68 @@
 
 import { useState } from "react";
 import { PlanResult } from "@/components/planner/PlanResult";
-import { PlannerForm } from "@/components/planner/PlannerForm";
+import { PlannerWizard } from "@/components/planner/PlannerWizard";
 import type { LessonPlan } from "@/lib/planner/generate";
+import { planToText } from "@/lib/planner/text";
 
 export default function GerarPage() {
   const [plan, setPlan] = useState<LessonPlan | null>(null);
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
+
+  function handleCopiar() {
+    if (!plan) return;
+    navigator.clipboard?.writeText(planToText(plan));
+    setCopyStatus("Plano copiado para a área de transferência.");
+  }
+
+  if (plan) {
+    return (
+      <div>
+        <div className="mb-4.5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="m-0 text-2xl font-black tracking-tight">Treino gerado</h1>
+            <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+              Sessão completa com exercícios do banco, pranchas táticas e sugestão de mesociclo.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn-secondary" onClick={() => setPlan(null)}>
+              Nova aula
+            </button>
+            <button type="button" className="btn-secondary" onClick={handleCopiar}>
+              Copiar
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => window.print()}>
+              Salvar PDF
+            </button>
+          </div>
+        </div>
+
+        {copyStatus && (
+          <div className="mb-3.5 rounded-xl border px-2.5 py-1.5 text-xs" style={{ borderColor: "rgba(34,197,94,.22)", background: "rgba(48,209,88,.10)", color: "var(--ok)" }}>
+            {copyStatus}
+          </div>
+        )}
+
+        <section className="card p-5">
+          <PlanResult plan={plan} />
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="mb-4.5">
         <h1 className="m-0 text-2xl font-black tracking-tight">Gerar aula</h1>
         <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
-          Configure os campos e gere uma sessão completa com exercícios do banco, pranchas táticas, tempos e
-          sugestão de mesociclo.
+          Configure os campos em duas etapas e gere uma sessão completa com exercícios do banco, pranchas táticas,
+          tempos e sugestão de mesociclo.
         </p>
       </div>
 
-      <div className="grid items-start gap-4.5 lg:grid-cols-[420px_1fr]">
-        <PlannerForm onPlanChange={setPlan} />
-        <section className="card min-h-[660px] p-5">
-          {plan ? (
-            <PlanResult plan={plan} />
-          ) : (
-            <div className="rounded-[22px] border border-dashed p-9 text-center" style={{ borderColor: "var(--line)", background: "rgba(255,255,255,.025)", color: "var(--muted)" }}>
-              <h3 className="m-0 text-lg font-bold" style={{ color: "var(--text)" }}>
-                Configure os campos e clique em &ldquo;Gerar aula&rdquo;.
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed">
-                O treino será montado com exercícios, duração, pranchas táticas e sugestão de mesociclo.
-              </p>
-            </div>
-          )}
-        </section>
+      <div className="mx-auto max-w-[640px]">
+        <PlannerWizard onPlanGenerated={setPlan} />
       </div>
     </div>
   );
