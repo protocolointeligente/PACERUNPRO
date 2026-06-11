@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Star } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
@@ -210,7 +211,13 @@ export default function LandingPage() {
         <div className="mx-auto max-w-4xl px-6">
           <div className="glass rounded-3xl border border-primary/20 p-12 text-center">
             <div className="mb-6 flex justify-center">
-              <Logo variant="mark" size={64} />
+              <Image
+                src="/brand/pace-run-pro-logo.jpg"
+                alt="Pace Run Pro"
+                width={1179}
+                height={622}
+                className="h-auto w-full max-w-sm rounded-2xl"
+              />
             </div>
             <h2 className="font-display text-4xl font-extrabold sm:text-5xl">
               Pronto para levar sua assessoria{" "}
