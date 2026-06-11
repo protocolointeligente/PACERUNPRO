@@ -37,6 +37,24 @@ const SECTIONS = [
     title: "Avaliação",
     subtitle: "Critérios por princípios de jogo",
   },
+  {
+    href: "/atletas",
+    icon: "♟",
+    title: "Atletas",
+    subtitle: "Cadastro, notas e radar de evolução",
+  },
+  {
+    href: "/treinos",
+    icon: "▤",
+    title: "Treinos salvos",
+    subtitle: "Histórico de aulas geradas",
+  },
+  {
+    href: "/perfil",
+    icon: "▣",
+    title: "Perfil do treinador",
+    subtitle: "Dados e assinatura para o PDF",
+  },
 ];
 
 export default function Home() {

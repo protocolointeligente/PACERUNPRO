@@ -1,6 +1,9 @@
+import type { EvaluationScores } from "./avaliacao/dimensions";
 import type { CategoryKey } from "./data/categories";
+import type { PositionKey } from "./data/positions";
 import type { DiagramElement } from "./diagrams/types";
 import type { Exercise } from "./exercises/types";
+import type { LessonPlan } from "./planner/generate";
 
 const KEYS = {
   priorities: "futebolcoach:prioridades",
@@ -8,6 +11,9 @@ const KEYS = {
   customExercises: "futebolcoach:custom-exercises",
   theme: "futebolcoach:theme",
   accent: "futebolcoach:accent",
+  athletes: "futebolcoach:atletas",
+  savedPlans: "futebolcoach:treinos-salvos",
+  coachProfile: "futebolcoach:perfil-treinador",
 } as const;
 
 export interface ExerciseOverride {
@@ -84,4 +90,74 @@ export function loadAccent(): AccentMode {
 
 export function saveAccent(value: AccentMode): void {
   writeJSON(KEYS.accent, value);
+}
+
+export function genId(): string {
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export interface AthleteEvaluation {
+  id: string;
+  date: string;
+  scores: EvaluationScores;
+  notes?: string;
+}
+
+export interface Athlete {
+  id: string;
+  name: string;
+  birthdate?: string;
+  position: PositionKey;
+  category?: CategoryKey;
+  notes?: string;
+  evaluations: AthleteEvaluation[];
+}
+
+export function loadAthletes(): Athlete[] {
+  return readJSON(KEYS.athletes, []);
+}
+
+export function saveAthletes(value: Athlete[]): void {
+  writeJSON(KEYS.athletes, value);
+}
+
+export interface SavedPlan {
+  id: string;
+  title: string;
+  createdAt: string;
+  plan: LessonPlan;
+}
+
+export function loadSavedPlans(): SavedPlan[] {
+  return readJSON(KEYS.savedPlans, []);
+}
+
+export function saveSavedPlans(value: SavedPlan[]): void {
+  writeJSON(KEYS.savedPlans, value);
+}
+
+export interface CoachProfile {
+  name: string;
+  role: string;
+  credential: string;
+  club?: string;
+  email?: string;
+  phone?: string;
+  signature?: string;
+}
+
+export function loadCoachProfile(): CoachProfile {
+  return readJSON(KEYS.coachProfile, {
+    name: "",
+    role: "Profissional de Educação Física",
+    credential: "Treinador Licença B ATFA CONMEBOL",
+    club: "",
+    email: "",
+    phone: "",
+    signature: "",
+  });
+}
+
+export function saveCoachProfile(value: CoachProfile): void {
+  writeJSON(KEYS.coachProfile, value);
 }

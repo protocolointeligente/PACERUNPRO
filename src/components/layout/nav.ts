@@ -12,7 +12,10 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/matriz", label: "Matriz por idade", icon: "◫" },
   { href: "/posicoes", label: "Posições", icon: "◉" },
   { href: "/avaliacao", label: "Avaliação", icon: "✓" },
+  { href: "/atletas", label: "Atletas", icon: "♟" },
+  { href: "/treinos", label: "Treinos salvos", icon: "▤" },
   { href: "/identidade", label: "Identidade", icon: "◆" },
+  { href: "/perfil", label: "Perfil do treinador", icon: "▣" },
 ];
 
 export const BOTTOM_NAV_ITEMS: NavItem[] = [
