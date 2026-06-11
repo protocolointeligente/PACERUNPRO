@@ -1,0 +1,236 @@
+{
+  "goleiro": [
+    [
+      "Defesa baixa com rebote",
+      "defesa baixa",
+      "goleiro_defesa_baixa"
+    ],
+    [
+      "Reposição curta sob pressão",
+      "reposição",
+      "goleiro_reposicao"
+    ],
+    [
+      "Saída no 1x1",
+      "saída do gol",
+      "goleiro_1x1"
+    ],
+    [
+      "Jogo com os pés na saída",
+      "jogo com os pés",
+      "goleiro_pes"
+    ],
+    [
+      "Bola aérea e encaixe",
+      "defesa alta",
+      "goleiro_aereo"
+    ],
+    [
+      "Cobertura às costas da defesa",
+      "profundidade",
+      "goleiro_cobertura"
+    ]
+  ],
+  "zagueiro": [
+    [
+      "Saída 2+1 contra pressão",
+      "saída de bola",
+      "zagueiro_saida"
+    ],
+    [
+      "Cobertura do lateral",
+      "cobertura",
+      "zagueiro_cobertura"
+    ],
+    [
+      "Duelo defensivo frontal",
+      "duelo defensivo",
+      "zagueiro_duelo"
+    ],
+    [
+      "Passe vertical para o meia",
+      "passe vertical",
+      "zagueiro_passe"
+    ],
+    [
+      "Controle de profundidade",
+      "linha defensiva",
+      "zagueiro_profundidade"
+    ],
+    [
+      "Jogo aéreo defensivo",
+      "jogo aéreo",
+      "zagueiro_aereo"
+    ]
+  ],
+  "lateral": [
+    [
+      "Ultrapassagem e cruzamento",
+      "ultrapassagem",
+      "lateral_ultrapassagem"
+    ],
+    [
+      "1x1 defensivo no corredor",
+      "1x1 defensivo",
+      "lateral_defensivo"
+    ],
+    [
+      "Amplitude para inversão",
+      "amplitude",
+      "lateral_amplitude"
+    ],
+    [
+      "Diagonal do lateral para dentro",
+      "diagonal",
+      "lateral_diagonal"
+    ],
+    [
+      "Pressão lateral coordenada",
+      "pressão lateral",
+      "lateral_pressao"
+    ],
+    [
+      "Cruzamento após tabela",
+      "cruzamento",
+      "lateral_cruzamento"
+    ]
+  ],
+  "volante": [
+    [
+      "Giro sob pressão central",
+      "giro sob pressão",
+      "volante_giro"
+    ],
+    [
+      "Cobertura à frente dos zagueiros",
+      "cobertura",
+      "volante_cobertura"
+    ],
+    [
+      "Virada de jogo rápida",
+      "virada de jogo",
+      "volante_virada"
+    ],
+    [
+      "Recuperação de segunda bola",
+      "segunda bola",
+      "volante_segunda"
+    ],
+    [
+      "Apoio de segurança na saída",
+      "apoio central",
+      "volante_apoio"
+    ],
+    [
+      "Interceptação entrelinhas",
+      "interceptação",
+      "volante_interceptacao"
+    ]
+  ],
+  "meia": [
+    [
+      "Recepção entrelinhas",
+      "entrelinhas",
+      "meia_entrelinhas"
+    ],
+    [
+      "Último passe em zona 14",
+      "passe final",
+      "meia_passe_final"
+    ],
+    [
+      "Tabela curta para romper linha",
+      "tabela",
+      "meia_tabela"
+    ],
+    [
+      "Finalização de média distância",
+      "finalização média",
+      "meia_finalizacao"
+    ],
+    [
+      "Mudança de corredor ofensivo",
+      "criatividade",
+      "meia_mudanca"
+    ],
+    [
+      "Apoio ao atacante de costas",
+      "apoio frontal",
+      "meia_apoio"
+    ]
+  ],
+  "extremo": [
+    [
+      "1x1 para cruzamento",
+      "1x1 ofensivo",
+      "extremo_1x1"
+    ],
+    [
+      "Diagonal para finalizar",
+      "diagonal",
+      "extremo_diagonal"
+    ],
+    [
+      "Ataque ao segundo pau",
+      "ataque ao segundo pau",
+      "extremo_segundo_pau"
+    ],
+    [
+      "Pressão pós-perda no lateral",
+      "pressão pós-perda",
+      "extremo_pressao"
+    ],
+    [
+      "Amplitude máxima e inversão",
+      "amplitude",
+      "extremo_amplitude"
+    ],
+    [
+      "Condução para dentro e passe",
+      "condução",
+      "extremo_conducao"
+    ]
+  ],
+  "atacante": [
+    [
+      "Finalização de primeira",
+      "finalização",
+      "atacante_finalizacao"
+    ],
+    [
+      "Ruptura nas costas da defesa",
+      "ruptura",
+      "atacante_ruptura"
+    ],
+    [
+      "Pivô e parede com meia",
+      "pivô",
+      "atacante_pivo"
+    ],
+    [
+      "Ataque ao primeiro pau",
+      "ataque ao primeiro pau",
+      "atacante_primeiro_pau"
+    ],
+    [
+      "Pressão no zagueiro com gatilho",
+      "pressão no zagueiro",
+      "atacante_pressao"
+    ],
+    [
+      "Apoio frontal e giro",
+      "apoio frontal",
+      "atacante_apoio"
+    ],
+    [
+      "Finalização após cruzamento",
+      "finalização",
+      "atacante_cruzamento"
+    ],
+    [
+      "Desmarque de ruptura curta",
+      "ruptura",
+      "atacante_desmarque"
+    ]
+  ]
+}

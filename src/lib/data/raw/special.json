@@ -1,0 +1,98 @@
+[
+  [
+    "Jogo de 4 zonas com progressão",
+    "tatico",
+    "geral",
+    "jogo setorizado",
+    [
+      "progressão",
+      "apoio",
+      "tomada de decisão"
+    ],
+    "progressao"
+  ],
+  [
+    "Rondo com transição para mini-gol",
+    "misto",
+    "geral",
+    "rondo",
+    [
+      "posse",
+      "pressão pós-perda",
+      "finalização"
+    ],
+    "posse"
+  ],
+  [
+    "Ataque rápido 3x2 após recuperação",
+    "tatico",
+    "geral",
+    "3x2",
+    [
+      "transição ofensiva",
+      "superioridade",
+      "finalização"
+    ],
+    "transicao_of"
+  ],
+  [
+    "Defesa de cruzamento com saída rápida",
+    "tatico",
+    "zagueiro",
+    "defesa em bloco",
+    [
+      "cruzamento",
+      "jogo aéreo",
+      "transição ofensiva"
+    ],
+    "zagueiro_aereo"
+  ],
+  [
+    "Bola parada curta no escanteio",
+    "tatico",
+    "geral",
+    "bola parada",
+    [
+      "escanteio",
+      "apoio",
+      "cruzamento"
+    ],
+    "bola_parada"
+  ],
+  [
+    "Finalização em ondas",
+    "tecnico",
+    "atacante",
+    "finalização",
+    [
+      "finalização",
+      "rebote",
+      "ataque à área"
+    ],
+    "atacante_finalizacao"
+  ],
+  [
+    "Pressão alta com gatilho",
+    "tatico",
+    "geral",
+    "modelo de jogo",
+    [
+      "pressing",
+      "gatilho",
+      "compactação"
+    ],
+    "defesa"
+  ],
+  [
+    "Circuito coordenativo com decisão",
+    "fisico",
+    "geral",
+    "circuito coordenativo",
+    [
+      "coordenação",
+      "reação",
+      "bola"
+    ],
+    "coordenacao"
+  ]
+]

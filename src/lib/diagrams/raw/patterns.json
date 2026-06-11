@@ -1,0 +1,3253 @@
+{
+  "goleiro_defesa_baixa": [
+    {
+      "type": "player",
+      "x": 16,
+      "y": 53,
+      "color": "#65c7ff",
+      "label": "G"
+    },
+    {
+      "type": "ball",
+      "x": 52,
+      "y": 42
+    },
+    {
+      "type": "ball",
+      "x": 52,
+      "y": 64
+    },
+    {
+      "type": "player",
+      "x": 56,
+      "y": 42,
+      "color": "#ff5a52",
+      "label": "F"
+    },
+    {
+      "type": "player",
+      "x": 56,
+      "y": 64,
+      "color": "#ff5a52",
+      "label": "F"
+    },
+    {
+      "type": "arrow",
+      "x1": 56,
+      "y1": 42,
+      "x2": 20,
+      "y2": 50,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "chute"
+    },
+    {
+      "type": "arrow",
+      "x1": 56,
+      "y1": 64,
+      "x2": 20,
+      "y2": 57,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "rebote"
+    },
+    {
+      "type": "cone",
+      "x": 31,
+      "y": 36
+    },
+    {
+      "type": "cone",
+      "x": 31,
+      "y": 70
+    },
+    {
+      "type": "zone",
+      "x": 4,
+      "y": 39,
+      "w": 22,
+      "h": 27,
+      "label": "área do GK",
+      "color": "rgba(101,199,255,.18)"
+    }
+  ],
+  "goleiro_reposicao": [
+    {
+      "type": "player",
+      "x": 15,
+      "y": 53,
+      "color": "#65c7ff",
+      "label": "G"
+    },
+    {
+      "type": "player",
+      "x": 39,
+      "y": 39,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 39,
+      "y": 66,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 62,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 50,
+      "y": 52,
+      "color": "#ff5a52",
+      "label": "P"
+    },
+    {
+      "type": "ball",
+      "x": 16,
+      "y": 53
+    },
+    {
+      "type": "arrow",
+      "x1": 16,
+      "y1": 53,
+      "x2": 39,
+      "y2": 39,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "1"
+    },
+    {
+      "type": "arrow",
+      "x1": 39,
+      "y1": 39,
+      "x2": 62,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "2"
+    },
+    {
+      "type": "arrow",
+      "x1": 62,
+      "y1": 52,
+      "x2": 98,
+      "y2": 35,
+      "color": "#8ef5b6",
+      "dash": true,
+      "label": "3"
+    }
+  ],
+  "goleiro_1x1": [
+    {
+      "type": "player",
+      "x": 18,
+      "y": 53,
+      "color": "#65c7ff",
+      "label": "G"
+    },
+    {
+      "type": "player",
+      "x": 78,
+      "y": 53,
+      "color": "#ff5a52",
+      "label": "A"
+    },
+    {
+      "type": "ball",
+      "x": 75,
+      "y": 53
+    },
+    {
+      "type": "zone",
+      "x": 7,
+      "y": 40,
+      "w": 26,
+      "h": 25,
+      "label": "fechar ângulo",
+      "color": "rgba(101,199,255,.20)"
+    },
+    {
+      "type": "arrow",
+      "x1": 78,
+      "y1": 53,
+      "x2": 30,
+      "y2": 53,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "conduz"
+    },
+    {
+      "type": "arrow",
+      "x1": 18,
+      "y1": 53,
+      "x2": 32,
+      "y2": 53,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "encurta"
+    },
+    {
+      "type": "cone",
+      "x": 48,
+      "y": 42
+    },
+    {
+      "type": "cone",
+      "x": 48,
+      "y": 64
+    }
+  ],
+  "goleiro_pes": [
+    {
+      "type": "player",
+      "x": 15,
+      "y": 53,
+      "color": "#65c7ff",
+      "label": "G"
+    },
+    {
+      "type": "player",
+      "x": 42,
+      "y": 36,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 42,
+      "y": 70,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 66,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 57,
+      "y": 50,
+      "color": "#ff5a52",
+      "label": "9"
+    },
+    {
+      "type": "ball",
+      "x": 15,
+      "y": 53
+    },
+    {
+      "type": "arrow",
+      "x1": 42,
+      "y1": 36,
+      "x2": 15,
+      "y2": 53,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "recuo"
+    },
+    {
+      "type": "arrow",
+      "x1": 15,
+      "y1": 53,
+      "x2": 66,
+      "y2": 53,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "saída"
+    },
+    {
+      "type": "arrow",
+      "x1": 66,
+      "y1": 53,
+      "x2": 106,
+      "y2": 25,
+      "color": "#8ef5b6",
+      "dash": true,
+      "label": "inversão"
+    }
+  ],
+  "goleiro_aereo": [
+    {
+      "type": "player",
+      "x": 16,
+      "y": 53,
+      "color": "#65c7ff",
+      "label": "G"
+    },
+    {
+      "type": "player",
+      "x": 92,
+      "y": 17,
+      "color": "#ffffff",
+      "label": "C"
+    },
+    {
+      "type": "player",
+      "x": 36,
+      "y": 46,
+      "color": "#ff5a52",
+      "label": "A"
+    },
+    {
+      "type": "player",
+      "x": 31,
+      "y": 59,
+      "color": "#ff5a52",
+      "label": "A"
+    },
+    {
+      "type": "ball",
+      "x": 92,
+      "y": 17
+    },
+    {
+      "type": "arrow",
+      "x1": 92,
+      "y1": 17,
+      "x2": 20,
+      "y2": 48,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "cruzamento"
+    },
+    {
+      "type": "arrow",
+      "x1": 16,
+      "y1": 53,
+      "x2": 22,
+      "y2": 45,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "ataque"
+    },
+    {
+      "type": "zone",
+      "x": 4,
+      "y": 28,
+      "w": 28,
+      "h": 49,
+      "label": "bola aérea",
+      "color": "rgba(101,199,255,.18)"
+    }
+  ],
+  "goleiro_cobertura": [
+    {
+      "type": "player",
+      "x": 16,
+      "y": 53,
+      "color": "#65c7ff",
+      "label": "G"
+    },
+    {
+      "type": "player",
+      "x": 45,
+      "y": 42,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 45,
+      "y": 64,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 86,
+      "y": 52,
+      "color": "#ff5a52",
+      "label": "A"
+    },
+    {
+      "type": "ball",
+      "x": 83,
+      "y": 52
+    },
+    {
+      "type": "arrow",
+      "x1": 86,
+      "y1": 52,
+      "x2": 55,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "bola longa"
+    },
+    {
+      "type": "arrow",
+      "x1": 16,
+      "y1": 53,
+      "x2": 43,
+      "y2": 53,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "cobertura"
+    }
+  ],
+  "zagueiro_saida": [
+    {
+      "type": "player",
+      "x": 34,
+      "y": 39,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 34,
+      "y": 66,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 56,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 57,
+      "y": 41,
+      "color": "#ff5a52",
+      "label": "P"
+    },
+    {
+      "type": "player",
+      "x": 57,
+      "y": 64,
+      "color": "#ff5a52",
+      "label": "P"
+    },
+    {
+      "type": "ball",
+      "x": 34,
+      "y": 39
+    },
+    {
+      "type": "arrow",
+      "x1": 34,
+      "y1": 39,
+      "x2": 56,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "1"
+    },
+    {
+      "type": "arrow",
+      "x1": 56,
+      "y1": 52,
+      "x2": 91,
+      "y2": 35,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "2"
+    },
+    {
+      "type": "arrow",
+      "x1": 34,
+      "y1": 66,
+      "x2": 60,
+      "y2": 75,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "apoio"
+    }
+  ],
+  "zagueiro_cobertura": [
+    {
+      "type": "player",
+      "x": 48,
+      "y": 22,
+      "color": "#ffffff",
+      "label": "L"
+    },
+    {
+      "type": "player",
+      "x": 42,
+      "y": 44,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 65,
+      "y": 32,
+      "color": "#ff5a52",
+      "label": "E"
+    },
+    {
+      "type": "ball",
+      "x": 64,
+      "y": 32
+    },
+    {
+      "type": "arrow",
+      "x1": 48,
+      "y1": 22,
+      "x2": 66,
+      "y2": 32,
+      "color": "#ff5a52",
+      "dash": false,
+      "label": "1x1"
+    },
+    {
+      "type": "arrow",
+      "x1": 42,
+      "y1": 44,
+      "x2": 57,
+      "y2": 35,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "cobertura"
+    },
+    {
+      "type": "zone",
+      "x": 30,
+      "y": 15,
+      "w": 40,
+      "h": 35,
+      "label": "corredor",
+      "color": "rgba(255,120,31,.15)"
+    }
+  ],
+  "zagueiro_duelo": [
+    {
+      "type": "player",
+      "x": 46,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 80,
+      "y": 53,
+      "color": "#ff5a52",
+      "label": "A"
+    },
+    {
+      "type": "ball",
+      "x": 77,
+      "y": 53
+    },
+    {
+      "type": "arrow",
+      "x1": 80,
+      "y1": 53,
+      "x2": 50,
+      "y2": 53,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "duelo"
+    },
+    {
+      "type": "arrow",
+      "x1": 46,
+      "y1": 53,
+      "x2": 64,
+      "y2": 44,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "orienta"
+    },
+    {
+      "type": "miniGoal",
+      "x": 5,
+      "y": 45
+    }
+  ],
+  "zagueiro_passe": [
+    {
+      "type": "player",
+      "x": 34,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 62,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 98,
+      "y": 42,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 70,
+      "y": 44,
+      "color": "#ff5a52",
+      "label": "P"
+    },
+    {
+      "type": "ball",
+      "x": 34,
+      "y": 53
+    },
+    {
+      "type": "arrow",
+      "x1": 34,
+      "y1": 53,
+      "x2": 62,
+      "y2": 53,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "apoio"
+    },
+    {
+      "type": "arrow",
+      "x1": 62,
+      "y1": 53,
+      "x2": 98,
+      "y2": 42,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "vertical"
+    },
+    {
+      "type": "zone",
+      "x": 90,
+      "y": 30,
+      "w": 28,
+      "h": 25,
+      "label": "entrelinhas",
+      "color": "rgba(24,139,255,.18)"
+    }
+  ],
+  "zagueiro_profundidade": [
+    {
+      "type": "player",
+      "x": 45,
+      "y": 40,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 45,
+      "y": 65,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 94,
+      "y": 52,
+      "color": "#ff5a52",
+      "label": "A"
+    },
+    {
+      "type": "ball",
+      "x": 85,
+      "y": 52
+    },
+    {
+      "type": "arrow",
+      "x1": 85,
+      "y1": 52,
+      "x2": 63,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "passe"
+    },
+    {
+      "type": "arrow",
+      "x1": 45,
+      "y1": 40,
+      "x2": 54,
+      "y2": 46,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "sobe"
+    },
+    {
+      "type": "arrow",
+      "x1": 45,
+      "y1": 65,
+      "x2": 54,
+      "y2": 59,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "sobe"
+    },
+    {
+      "type": "zone",
+      "x": 40,
+      "y": 30,
+      "w": 28,
+      "h": 45,
+      "label": "linha",
+      "color": "rgba(101,199,255,.16)"
+    }
+  ],
+  "zagueiro_aereo": [
+    {
+      "type": "player",
+      "x": 34,
+      "y": 48,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 39,
+      "y": 61,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 104,
+      "y": 18,
+      "color": "#ff5a52",
+      "label": "C"
+    },
+    {
+      "type": "player",
+      "x": 38,
+      "y": 53,
+      "color": "#ff5a52",
+      "label": "A"
+    },
+    {
+      "type": "ball",
+      "x": 104,
+      "y": 18
+    },
+    {
+      "type": "arrow",
+      "x1": 104,
+      "y1": 18,
+      "x2": 36,
+      "y2": 53,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "cruzamento"
+    },
+    {
+      "type": "arrow",
+      "x1": 34,
+      "y1": 48,
+      "x2": 39,
+      "y2": 43,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "ataque"
+    },
+    {
+      "type": "zone",
+      "x": 20,
+      "y": 30,
+      "w": 28,
+      "h": 45,
+      "label": "zona aérea",
+      "color": "rgba(255,120,31,.14)"
+    }
+  ],
+  "lateral_ultrapassagem": [
+    {
+      "type": "player",
+      "x": 75,
+      "y": 20,
+      "color": "#ffffff",
+      "label": "L"
+    },
+    {
+      "type": "player",
+      "x": 96,
+      "y": 33,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "player",
+      "x": 100,
+      "y": 22,
+      "color": "#ff5a52",
+      "label": "D"
+    },
+    {
+      "type": "ball",
+      "x": 96,
+      "y": 33
+    },
+    {
+      "type": "arrow",
+      "x1": 96,
+      "y1": 33,
+      "x2": 75,
+      "y2": 20,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "apoio"
+    },
+    {
+      "type": "arrow",
+      "x1": 75,
+      "y1": 20,
+      "x2": 130,
+      "y2": 20,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "ultrapassa"
+    },
+    {
+      "type": "arrow",
+      "x1": 130,
+      "y1": 20,
+      "x2": 146,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "cruza"
+    }
+  ],
+  "lateral_defensivo": [
+    {
+      "type": "player",
+      "x": 103,
+      "y": 23,
+      "color": "#ffffff",
+      "label": "L"
+    },
+    {
+      "type": "player",
+      "x": 119,
+      "y": 23,
+      "color": "#ff5a52",
+      "label": "E"
+    },
+    {
+      "type": "ball",
+      "x": 119,
+      "y": 23
+    },
+    {
+      "type": "arrow",
+      "x1": 119,
+      "y1": 23,
+      "x2": 106,
+      "y2": 23,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "conduz"
+    },
+    {
+      "type": "arrow",
+      "x1": 103,
+      "y1": 23,
+      "x2": 112,
+      "y2": 38,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "orienta fora"
+    },
+    {
+      "type": "zone",
+      "x": 100,
+      "y": 8,
+      "w": 30,
+      "h": 34,
+      "label": "corredor lateral",
+      "color": "rgba(255,120,31,.14)"
+    }
+  ],
+  "lateral_amplitude": [
+    {
+      "type": "player",
+      "x": 45,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 75,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 124,
+      "y": 18,
+      "color": "#ffffff",
+      "label": "L"
+    },
+    {
+      "type": "ball",
+      "x": 45,
+      "y": 53
+    },
+    {
+      "type": "arrow",
+      "x1": 45,
+      "y1": 53,
+      "x2": 75,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "1"
+    },
+    {
+      "type": "arrow",
+      "x1": 75,
+      "y1": 52,
+      "x2": 124,
+      "y2": 18,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "inversão"
+    },
+    {
+      "type": "zone",
+      "x": 116,
+      "y": 7,
+      "w": 35,
+      "h": 26,
+      "label": "amplitude",
+      "color": "rgba(24,139,255,.18)"
+    }
+  ],
+  "lateral_diagonal": [
+    {
+      "type": "player",
+      "x": 126,
+      "y": 20,
+      "color": "#ffffff",
+      "label": "L"
+    },
+    {
+      "type": "player",
+      "x": 100,
+      "y": 38,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 116,
+      "y": 27,
+      "color": "#ff5a52",
+      "label": "D"
+    },
+    {
+      "type": "ball",
+      "x": 126,
+      "y": 20
+    },
+    {
+      "type": "arrow",
+      "x1": 126,
+      "y1": 20,
+      "x2": 103,
+      "y2": 42,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "diagonal"
+    },
+    {
+      "type": "arrow",
+      "x1": 103,
+      "y1": 42,
+      "x2": 133,
+      "y2": 56,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "passe"
+    }
+  ],
+  "lateral_pressao": [
+    {
+      "type": "player",
+      "x": 113,
+      "y": 22,
+      "color": "#ffffff",
+      "label": "L"
+    },
+    {
+      "type": "player",
+      "x": 96,
+      "y": 35,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 122,
+      "y": 23,
+      "color": "#ff5a52",
+      "label": "E"
+    },
+    {
+      "type": "player",
+      "x": 113,
+      "y": 43,
+      "color": "#ff5a52",
+      "label": "A"
+    },
+    {
+      "type": "ball",
+      "x": 122,
+      "y": 23
+    },
+    {
+      "type": "arrow",
+      "x1": 113,
+      "y1": 22,
+      "x2": 121,
+      "y2": 23,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "pressiona"
+    },
+    {
+      "type": "arrow",
+      "x1": 96,
+      "y1": 35,
+      "x2": 113,
+      "y2": 43,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "fecha"
+    },
+    {
+      "type": "zone",
+      "x": 105,
+      "y": 10,
+      "w": 35,
+      "h": 35,
+      "label": "armadilha",
+      "color": "rgba(255,120,31,.18)"
+    }
+  ],
+  "lateral_cruzamento": [
+    {
+      "type": "player",
+      "x": 124,
+      "y": 20,
+      "color": "#ffffff",
+      "label": "L"
+    },
+    {
+      "type": "player",
+      "x": 102,
+      "y": 32,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "player",
+      "x": 130,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "ball",
+      "x": 102,
+      "y": 32
+    },
+    {
+      "type": "arrow",
+      "x1": 102,
+      "y1": 32,
+      "x2": 124,
+      "y2": 20,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "tabela"
+    },
+    {
+      "type": "arrow",
+      "x1": 124,
+      "y1": 20,
+      "x2": 145,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "cruzamento"
+    },
+    {
+      "type": "arrow",
+      "x1": 130,
+      "y1": 53,
+      "x2": 142,
+      "y2": 49,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "ataque"
+    }
+  ],
+  "volante_giro": [
+    {
+      "type": "player",
+      "x": 72,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 58,
+      "y": 44,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 83,
+      "y": 44,
+      "color": "#ff5a52",
+      "label": "P"
+    },
+    {
+      "type": "player",
+      "x": 72,
+      "y": 65,
+      "color": "#ff5a52",
+      "label": "P"
+    },
+    {
+      "type": "ball",
+      "x": 72,
+      "y": 52
+    },
+    {
+      "type": "arrow",
+      "x1": 58,
+      "y1": 44,
+      "x2": 72,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "recebe"
+    },
+    {
+      "type": "arrow",
+      "x1": 72,
+      "y1": 52,
+      "x2": 94,
+      "y2": 35,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "gira"
+    },
+    {
+      "type": "zone",
+      "x": 60,
+      "y": 40,
+      "w": 30,
+      "h": 28,
+      "label": "pressão",
+      "color": "rgba(255,120,31,.14)"
+    }
+  ],
+  "volante_cobertura": [
+    {
+      "type": "player",
+      "x": 56,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 40,
+      "y": 43,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 40,
+      "y": 66,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 77,
+      "y": 53,
+      "color": "#ff5a52",
+      "label": "A"
+    },
+    {
+      "type": "ball",
+      "x": 77,
+      "y": 53
+    },
+    {
+      "type": "arrow",
+      "x1": 56,
+      "y1": 53,
+      "x2": 70,
+      "y2": 53,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "cobertura"
+    },
+    {
+      "type": "zone",
+      "x": 45,
+      "y": 35,
+      "w": 40,
+      "h": 35,
+      "label": "zona central",
+      "color": "rgba(101,199,255,.18)"
+    }
+  ],
+  "volante_virada": [
+    {
+      "type": "player",
+      "x": 65,
+      "y": 54,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 38,
+      "y": 36,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 124,
+      "y": 22,
+      "color": "#ffffff",
+      "label": "L"
+    },
+    {
+      "type": "ball",
+      "x": 65,
+      "y": 54
+    },
+    {
+      "type": "arrow",
+      "x1": 38,
+      "y1": 36,
+      "x2": 65,
+      "y2": 54,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "apoio"
+    },
+    {
+      "type": "arrow",
+      "x1": 65,
+      "y1": 54,
+      "x2": 124,
+      "y2": 22,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "virada"
+    }
+  ],
+  "volante_segunda": [
+    {
+      "type": "player",
+      "x": 70,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 76,
+      "y": 43,
+      "color": "#ff5a52",
+      "label": "A"
+    },
+    {
+      "type": "player",
+      "x": 58,
+      "y": 45,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "ball",
+      "x": 76,
+      "y": 43
+    },
+    {
+      "type": "arrow",
+      "x1": 76,
+      "y1": 43,
+      "x2": 70,
+      "y2": 53,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "2ª bola"
+    },
+    {
+      "type": "arrow",
+      "x1": 70,
+      "y1": 53,
+      "x2": 104,
+      "y2": 38,
+      "color": "#8ef5b6",
+      "dash": true,
+      "label": "saída"
+    },
+    {
+      "type": "zone",
+      "x": 60,
+      "y": 42,
+      "w": 28,
+      "h": 24,
+      "label": "rebote",
+      "color": "rgba(255,120,31,.16)"
+    }
+  ],
+  "volante_apoio": [
+    {
+      "type": "player",
+      "x": 40,
+      "y": 44,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 40,
+      "y": 65,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 65,
+      "y": 54,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "ball",
+      "x": 40,
+      "y": 44
+    },
+    {
+      "type": "arrow",
+      "x1": 40,
+      "y1": 44,
+      "x2": 65,
+      "y2": 54,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "apoio"
+    },
+    {
+      "type": "arrow",
+      "x1": 65,
+      "y1": 54,
+      "x2": 40,
+      "y2": 65,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "segurança"
+    },
+    {
+      "type": "arrow",
+      "x1": 65,
+      "y1": 54,
+      "x2": 98,
+      "y2": 35,
+      "color": "#8ef5b6",
+      "dash": true,
+      "label": "progride"
+    }
+  ],
+  "volante_interceptacao": [
+    {
+      "type": "player",
+      "x": 72,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 104,
+      "y": 42,
+      "color": "#ff5a52",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 96,
+      "y": 65,
+      "color": "#ff5a52",
+      "label": "A"
+    },
+    {
+      "type": "ball",
+      "x": 104,
+      "y": 42
+    },
+    {
+      "type": "arrow",
+      "x1": 104,
+      "y1": 42,
+      "x2": 96,
+      "y2": 65,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "passe"
+    },
+    {
+      "type": "arrow",
+      "x1": 72,
+      "y1": 52,
+      "x2": 89,
+      "y2": 56,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "intercepta"
+    },
+    {
+      "type": "zone",
+      "x": 78,
+      "y": 38,
+      "w": 30,
+      "h": 35,
+      "label": "entrelinhas",
+      "color": "rgba(101,199,255,.18)"
+    }
+  ],
+  "meia_entrelinhas": [
+    {
+      "type": "player",
+      "x": 86,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 60,
+      "y": 48,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 112,
+      "y": 38,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "player",
+      "x": 80,
+      "y": 42,
+      "color": "#ff5a52",
+      "label": "D"
+    },
+    {
+      "type": "player",
+      "x": 95,
+      "y": 60,
+      "color": "#ff5a52",
+      "label": "D"
+    },
+    {
+      "type": "ball",
+      "x": 60,
+      "y": 48
+    },
+    {
+      "type": "arrow",
+      "x1": 60,
+      "y1": 48,
+      "x2": 86,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "entrelinhas"
+    },
+    {
+      "type": "arrow",
+      "x1": 86,
+      "y1": 52,
+      "x2": 112,
+      "y2": 38,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "último passe"
+    },
+    {
+      "type": "zone",
+      "x": 76,
+      "y": 39,
+      "w": 30,
+      "h": 27,
+      "label": "entrelinhas",
+      "color": "rgba(24,139,255,.18)"
+    }
+  ],
+  "meia_passe_final": [
+    {
+      "type": "player",
+      "x": 90,
+      "y": 55,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 125,
+      "y": 45,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "player",
+      "x": 112,
+      "y": 62,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "ball",
+      "x": 90,
+      "y": 55
+    },
+    {
+      "type": "arrow",
+      "x1": 90,
+      "y1": 55,
+      "x2": 125,
+      "y2": 45,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "passe final"
+    },
+    {
+      "type": "arrow",
+      "x1": 112,
+      "y1": 62,
+      "x2": 132,
+      "y2": 55,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "ataca espaço"
+    }
+  ],
+  "meia_tabela": [
+    {
+      "type": "player",
+      "x": 84,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 110,
+      "y": 48,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "player",
+      "x": 94,
+      "y": 50,
+      "color": "#ff5a52",
+      "label": "D"
+    },
+    {
+      "type": "ball",
+      "x": 84,
+      "y": 52
+    },
+    {
+      "type": "arrow",
+      "x1": 84,
+      "y1": 52,
+      "x2": 110,
+      "y2": 48,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "1"
+    },
+    {
+      "type": "arrow",
+      "x1": 110,
+      "y1": 48,
+      "x2": 92,
+      "y2": 40,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "2"
+    },
+    {
+      "type": "arrow",
+      "x1": 84,
+      "y1": 52,
+      "x2": 96,
+      "y2": 39,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "rompe"
+    }
+  ],
+  "meia_finalizacao": [
+    {
+      "type": "player",
+      "x": 93,
+      "y": 56,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 70,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 118,
+      "y": 42,
+      "color": "#ff5a52",
+      "label": "Z"
+    },
+    {
+      "type": "ball",
+      "x": 70,
+      "y": 52
+    },
+    {
+      "type": "arrow",
+      "x1": 70,
+      "y1": 52,
+      "x2": 93,
+      "y2": 56,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "passe"
+    },
+    {
+      "type": "arrow",
+      "x1": 93,
+      "y1": 56,
+      "x2": 148,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "chute"
+    },
+    {
+      "type": "zone",
+      "x": 88,
+      "y": 42,
+      "w": 24,
+      "h": 25,
+      "label": "zona 14",
+      "color": "rgba(255,120,31,.16)"
+    }
+  ],
+  "meia_mudanca": [
+    {
+      "type": "player",
+      "x": 83,
+      "y": 54,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 45,
+      "y": 25,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "player",
+      "x": 124,
+      "y": 24,
+      "color": "#ffffff",
+      "label": "L"
+    },
+    {
+      "type": "ball",
+      "x": 83,
+      "y": 54
+    },
+    {
+      "type": "arrow",
+      "x1": 45,
+      "y1": 25,
+      "x2": 83,
+      "y2": 54,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "apoio"
+    },
+    {
+      "type": "arrow",
+      "x1": 83,
+      "y1": 54,
+      "x2": 124,
+      "y2": 24,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "troca corredor"
+    }
+  ],
+  "meia_apoio": [
+    {
+      "type": "player",
+      "x": 104,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "player",
+      "x": 86,
+      "y": 58,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 112,
+      "y": 52,
+      "color": "#ff5a52",
+      "label": "Z"
+    },
+    {
+      "type": "ball",
+      "x": 104,
+      "y": 52
+    },
+    {
+      "type": "arrow",
+      "x1": 86,
+      "y1": 58,
+      "x2": 104,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "apoio"
+    },
+    {
+      "type": "arrow",
+      "x1": 104,
+      "y1": 52,
+      "x2": 86,
+      "y2": 45,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "parede"
+    },
+    {
+      "type": "arrow",
+      "x1": 86,
+      "y1": 58,
+      "x2": 114,
+      "y2": 68,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "continua"
+    }
+  ],
+  "extremo_1x1": [
+    {
+      "type": "player",
+      "x": 118,
+      "y": 19,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "player",
+      "x": 128,
+      "y": 22,
+      "color": "#ff5a52",
+      "label": "L"
+    },
+    {
+      "type": "ball",
+      "x": 118,
+      "y": 19
+    },
+    {
+      "type": "arrow",
+      "x1": 118,
+      "y1": 19,
+      "x2": 135,
+      "y2": 18,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "drible"
+    },
+    {
+      "type": "arrow",
+      "x1": 135,
+      "y1": 18,
+      "x2": 146,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "cruza"
+    },
+    {
+      "type": "zone",
+      "x": 108,
+      "y": 8,
+      "w": 34,
+      "h": 28,
+      "label": "1x1 lado",
+      "color": "rgba(255,120,31,.14)"
+    }
+  ],
+  "extremo_diagonal": [
+    {
+      "type": "player",
+      "x": 125,
+      "y": 20,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "player",
+      "x": 97,
+      "y": 40,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 121,
+      "y": 30,
+      "color": "#ff5a52",
+      "label": "L"
+    },
+    {
+      "type": "ball",
+      "x": 97,
+      "y": 40
+    },
+    {
+      "type": "arrow",
+      "x1": 97,
+      "y1": 40,
+      "x2": 125,
+      "y2": 20,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "passe"
+    },
+    {
+      "type": "arrow",
+      "x1": 125,
+      "y1": 20,
+      "x2": 133,
+      "y2": 50,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "diagonal"
+    },
+    {
+      "type": "arrow",
+      "x1": 133,
+      "y1": 50,
+      "x2": 148,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "finaliza"
+    }
+  ],
+  "extremo_segundo_pau": [
+    {
+      "type": "player",
+      "x": 126,
+      "y": 75,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "player",
+      "x": 128,
+      "y": 28,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "ball",
+      "x": 128,
+      "y": 28
+    },
+    {
+      "type": "arrow",
+      "x1": 128,
+      "y1": 28,
+      "x2": 140,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "cruzamento"
+    },
+    {
+      "type": "arrow",
+      "x1": 126,
+      "y1": 75,
+      "x2": 140,
+      "y2": 58,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "2º pau"
+    }
+  ],
+  "extremo_pressao": [
+    {
+      "type": "player",
+      "x": 118,
+      "y": 20,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "player",
+      "x": 132,
+      "y": 20,
+      "color": "#ff5a52",
+      "label": "L"
+    },
+    {
+      "type": "player",
+      "x": 111,
+      "y": 35,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "ball",
+      "x": 132,
+      "y": 20
+    },
+    {
+      "type": "arrow",
+      "x1": 118,
+      "y1": 20,
+      "x2": 132,
+      "y2": 20,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "pressão"
+    },
+    {
+      "type": "arrow",
+      "x1": 111,
+      "y1": 35,
+      "x2": 124,
+      "y2": 30,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "fecha dentro"
+    },
+    {
+      "type": "zone",
+      "x": 112,
+      "y": 10,
+      "w": 30,
+      "h": 30,
+      "label": "gatilho",
+      "color": "rgba(255,120,31,.16)"
+    }
+  ],
+  "extremo_amplitude": [
+    {
+      "type": "player",
+      "x": 126,
+      "y": 18,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "player",
+      "x": 62,
+      "y": 55,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "ball",
+      "x": 62,
+      "y": 55
+    },
+    {
+      "type": "arrow",
+      "x1": 62,
+      "y1": 55,
+      "x2": 126,
+      "y2": 18,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "inversão"
+    },
+    {
+      "type": "zone",
+      "x": 118,
+      "y": 7,
+      "w": 34,
+      "h": 25,
+      "label": "amplitude",
+      "color": "rgba(24,139,255,.18)"
+    }
+  ],
+  "extremo_conducao": [
+    {
+      "type": "player",
+      "x": 126,
+      "y": 22,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "player",
+      "x": 100,
+      "y": 38,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 118,
+      "y": 30,
+      "color": "#ff5a52",
+      "label": "D"
+    },
+    {
+      "type": "ball",
+      "x": 126,
+      "y": 22
+    },
+    {
+      "type": "arrow",
+      "x1": 126,
+      "y1": 22,
+      "x2": 110,
+      "y2": 40,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "por dentro"
+    },
+    {
+      "type": "arrow",
+      "x1": 110,
+      "y1": 40,
+      "x2": 96,
+      "y2": 58,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "passe"
+    }
+  ],
+  "atacante_finalizacao": [
+    {
+      "type": "player",
+      "x": 126,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "player",
+      "x": 98,
+      "y": 57,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 123,
+      "y": 40,
+      "color": "#ff5a52",
+      "label": "Z"
+    },
+    {
+      "type": "ball",
+      "x": 98,
+      "y": 57
+    },
+    {
+      "type": "arrow",
+      "x1": 98,
+      "y1": 57,
+      "x2": 126,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "assist"
+    },
+    {
+      "type": "arrow",
+      "x1": 126,
+      "y1": 52,
+      "x2": 151,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "chute"
+    }
+  ],
+  "atacante_ruptura": [
+    {
+      "type": "player",
+      "x": 112,
+      "y": 58,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "player",
+      "x": 86,
+      "y": 55,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 118,
+      "y": 47,
+      "color": "#ff5a52",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 128,
+      "y": 66,
+      "color": "#ff5a52",
+      "label": "Z"
+    },
+    {
+      "type": "ball",
+      "x": 86,
+      "y": 55
+    },
+    {
+      "type": "arrow",
+      "x1": 86,
+      "y1": 55,
+      "x2": 132,
+      "y2": 48,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "passe espaço"
+    },
+    {
+      "type": "arrow",
+      "x1": 112,
+      "y1": 58,
+      "x2": 132,
+      "y2": 48,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "ruptura"
+    }
+  ],
+  "atacante_pivo": [
+    {
+      "type": "player",
+      "x": 116,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "player",
+      "x": 88,
+      "y": 58,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 125,
+      "y": 50,
+      "color": "#ff5a52",
+      "label": "Z"
+    },
+    {
+      "type": "ball",
+      "x": 88,
+      "y": 58
+    },
+    {
+      "type": "arrow",
+      "x1": 88,
+      "y1": 58,
+      "x2": 116,
+      "y2": 53,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "pivô"
+    },
+    {
+      "type": "arrow",
+      "x1": 116,
+      "y1": 53,
+      "x2": 91,
+      "y2": 43,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "parede"
+    },
+    {
+      "type": "arrow",
+      "x1": 91,
+      "y1": 43,
+      "x2": 130,
+      "y2": 60,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "infiltra"
+    }
+  ],
+  "atacante_primeiro_pau": [
+    {
+      "type": "player",
+      "x": 128,
+      "y": 42,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "player",
+      "x": 132,
+      "y": 24,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "player",
+      "x": 125,
+      "y": 55,
+      "color": "#ff5a52",
+      "label": "Z"
+    },
+    {
+      "type": "ball",
+      "x": 132,
+      "y": 24
+    },
+    {
+      "type": "arrow",
+      "x1": 132,
+      "y1": 24,
+      "x2": 148,
+      "y2": 48,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "cruzamento"
+    },
+    {
+      "type": "arrow",
+      "x1": 128,
+      "y1": 42,
+      "x2": 144,
+      "y2": 47,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "1º pau"
+    }
+  ],
+  "atacante_pressao": [
+    {
+      "type": "player",
+      "x": 118,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "player",
+      "x": 91,
+      "y": 45,
+      "color": "#ff5a52",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 91,
+      "y": 63,
+      "color": "#ff5a52",
+      "label": "Z"
+    },
+    {
+      "type": "ball",
+      "x": 91,
+      "y": 45
+    },
+    {
+      "type": "arrow",
+      "x1": 118,
+      "y1": 53,
+      "x2": 95,
+      "y2": 47,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "pressiona"
+    },
+    {
+      "type": "arrow",
+      "x1": 118,
+      "y1": 53,
+      "x2": 95,
+      "y2": 61,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "corta retorno"
+    },
+    {
+      "type": "zone",
+      "x": 82,
+      "y": 38,
+      "w": 32,
+      "h": 32,
+      "label": "pressão alta",
+      "color": "rgba(255,120,31,.14)"
+    }
+  ],
+  "atacante_apoio": [
+    {
+      "type": "player",
+      "x": 122,
+      "y": 54,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "player",
+      "x": 96,
+      "y": 58,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 129,
+      "y": 52,
+      "color": "#ff5a52",
+      "label": "Z"
+    },
+    {
+      "type": "ball",
+      "x": 122,
+      "y": 54
+    },
+    {
+      "type": "arrow",
+      "x1": 122,
+      "y1": 54,
+      "x2": 96,
+      "y2": 58,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "apoio"
+    },
+    {
+      "type": "arrow",
+      "x1": 96,
+      "y1": 58,
+      "x2": 120,
+      "y2": 40,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "giro"
+    }
+  ],
+  "atacante_cruzamento": [
+    {
+      "type": "player",
+      "x": 130,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "player",
+      "x": 130,
+      "y": 24,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "player",
+      "x": 123,
+      "y": 41,
+      "color": "#ff5a52",
+      "label": "Z"
+    },
+    {
+      "type": "ball",
+      "x": 130,
+      "y": 24
+    },
+    {
+      "type": "arrow",
+      "x1": 130,
+      "y1": 24,
+      "x2": 148,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "cruza"
+    },
+    {
+      "type": "arrow",
+      "x1": 130,
+      "y1": 52,
+      "x2": 145,
+      "y2": 52,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "ataque"
+    }
+  ],
+  "atacante_desmarque": [
+    {
+      "type": "player",
+      "x": 118,
+      "y": 57,
+      "color": "#ffffff",
+      "label": "9"
+    },
+    {
+      "type": "player",
+      "x": 92,
+      "y": 55,
+      "color": "#ffffff",
+      "label": "M"
+    },
+    {
+      "type": "player",
+      "x": 122,
+      "y": 50,
+      "color": "#ff5a52",
+      "label": "Z"
+    },
+    {
+      "type": "ball",
+      "x": 92,
+      "y": 55
+    },
+    {
+      "type": "arrow",
+      "x1": 92,
+      "y1": 55,
+      "x2": 130,
+      "y2": 45,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "tempo"
+    },
+    {
+      "type": "arrow",
+      "x1": 118,
+      "y1": 57,
+      "x2": 130,
+      "y2": 45,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "desmarque"
+    }
+  ],
+  "posse": [
+    {
+      "type": "player",
+      "x": 55,
+      "y": 30,
+      "color": "#ffffff",
+      "label": "1"
+    },
+    {
+      "type": "player",
+      "x": 80,
+      "y": 25,
+      "color": "#ffffff",
+      "label": "2"
+    },
+    {
+      "type": "player",
+      "x": 105,
+      "y": 40,
+      "color": "#ffffff",
+      "label": "3"
+    },
+    {
+      "type": "player",
+      "x": 96,
+      "y": 70,
+      "color": "#ffffff",
+      "label": "4"
+    },
+    {
+      "type": "player",
+      "x": 61,
+      "y": 72,
+      "color": "#ffffff",
+      "label": "5"
+    },
+    {
+      "type": "player",
+      "x": 80,
+      "y": 52,
+      "color": "#ff5a52",
+      "label": "D"
+    },
+    {
+      "type": "ball",
+      "x": 55,
+      "y": 30
+    },
+    {
+      "type": "arrow",
+      "x1": 55,
+      "y1": 30,
+      "x2": 80,
+      "y2": 25,
+      "color": "#ffd166",
+      "dash": false
+    },
+    {
+      "type": "arrow",
+      "x1": 80,
+      "y1": 25,
+      "x2": 105,
+      "y2": 40,
+      "color": "#ffd166",
+      "dash": false
+    },
+    {
+      "type": "arrow",
+      "x1": 105,
+      "y1": 40,
+      "x2": 96,
+      "y2": 70,
+      "color": "#ffd166",
+      "dash": false
+    },
+    {
+      "type": "arrow",
+      "x1": 96,
+      "y1": 70,
+      "x2": 61,
+      "y2": 72,
+      "color": "#ffd166",
+      "dash": false
+    },
+    {
+      "type": "zone",
+      "x": 50,
+      "y": 20,
+      "w": 60,
+      "h": 60,
+      "label": "rondo/posse",
+      "color": "rgba(24,139,255,.12)"
+    }
+  ],
+  "duelo": [
+    {
+      "type": "player",
+      "x": 52,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "A"
+    },
+    {
+      "type": "player",
+      "x": 82,
+      "y": 52,
+      "color": "#ff5a52",
+      "label": "D"
+    },
+    {
+      "type": "ball",
+      "x": 52,
+      "y": 52
+    },
+    {
+      "type": "arrow",
+      "x1": 52,
+      "y1": 52,
+      "x2": 76,
+      "y2": 40,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "finta"
+    },
+    {
+      "type": "arrow",
+      "x1": 76,
+      "y1": 40,
+      "x2": 135,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "alvo"
+    },
+    {
+      "type": "cone",
+      "x": 65,
+      "y": 34
+    },
+    {
+      "type": "cone",
+      "x": 65,
+      "y": 70
+    }
+  ],
+  "finalizacao": [
+    {
+      "type": "player",
+      "x": 62,
+      "y": 56,
+      "color": "#ffffff",
+      "label": "P"
+    },
+    {
+      "type": "player",
+      "x": 100,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "F"
+    },
+    {
+      "type": "player",
+      "x": 125,
+      "y": 40,
+      "color": "#ffffff",
+      "label": "A"
+    },
+    {
+      "type": "ball",
+      "x": 62,
+      "y": 56
+    },
+    {
+      "type": "arrow",
+      "x1": 62,
+      "y1": 56,
+      "x2": 100,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "passe"
+    },
+    {
+      "type": "arrow",
+      "x1": 100,
+      "y1": 52,
+      "x2": 149,
+      "y2": 52,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "chute"
+    },
+    {
+      "type": "arrow",
+      "x1": 125,
+      "y1": 40,
+      "x2": 139,
+      "y2": 49,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "rebote"
+    }
+  ],
+  "progressao": [
+    {
+      "type": "zone",
+      "x": 8,
+      "y": 8,
+      "w": 46,
+      "h": 89,
+      "label": "zona 1",
+      "color": "rgba(24,139,255,.11)"
+    },
+    {
+      "type": "zone",
+      "x": 57,
+      "y": 8,
+      "w": 46,
+      "h": 89,
+      "label": "zona 2",
+      "color": "rgba(255,255,255,.08)"
+    },
+    {
+      "type": "zone",
+      "x": 106,
+      "y": 8,
+      "w": 46,
+      "h": 89,
+      "label": "zona 3",
+      "color": "rgba(255,120,31,.12)"
+    },
+    {
+      "type": "player",
+      "x": 30,
+      "y": 54,
+      "color": "#ffffff",
+      "label": "1"
+    },
+    {
+      "type": "player",
+      "x": 70,
+      "y": 44,
+      "color": "#ffffff",
+      "label": "2"
+    },
+    {
+      "type": "player",
+      "x": 112,
+      "y": 57,
+      "color": "#ffffff",
+      "label": "3"
+    },
+    {
+      "type": "player",
+      "x": 88,
+      "y": 52,
+      "color": "#ff5a52",
+      "label": "D"
+    },
+    {
+      "type": "ball",
+      "x": 30,
+      "y": 54
+    },
+    {
+      "type": "arrow",
+      "x1": 30,
+      "y1": 54,
+      "x2": 70,
+      "y2": 44,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "progride"
+    },
+    {
+      "type": "arrow",
+      "x1": 70,
+      "y1": 44,
+      "x2": 112,
+      "y2": 57,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "rompe"
+    }
+  ],
+  "transicao_of": [
+    {
+      "type": "player",
+      "x": 55,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "R"
+    },
+    {
+      "type": "player",
+      "x": 86,
+      "y": 36,
+      "color": "#ffffff",
+      "label": "A"
+    },
+    {
+      "type": "player",
+      "x": 108,
+      "y": 68,
+      "color": "#ffffff",
+      "label": "A"
+    },
+    {
+      "type": "player",
+      "x": 70,
+      "y": 49,
+      "color": "#ff5a52",
+      "label": "D"
+    },
+    {
+      "type": "ball",
+      "x": 55,
+      "y": 53
+    },
+    {
+      "type": "arrow",
+      "x1": 55,
+      "y1": 53,
+      "x2": 86,
+      "y2": 36,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "1º passe"
+    },
+    {
+      "type": "arrow",
+      "x1": 86,
+      "y1": 36,
+      "x2": 143,
+      "y2": 44,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "finaliza"
+    },
+    {
+      "type": "arrow",
+      "x1": 108,
+      "y1": 68,
+      "x2": 133,
+      "y2": 58,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "apoio"
+    }
+  ],
+  "transicao_def": [
+    {
+      "type": "player",
+      "x": 76,
+      "y": 38,
+      "color": "#ffffff",
+      "label": "1"
+    },
+    {
+      "type": "player",
+      "x": 76,
+      "y": 65,
+      "color": "#ffffff",
+      "label": "2"
+    },
+    {
+      "type": "player",
+      "x": 55,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "3"
+    },
+    {
+      "type": "player",
+      "x": 115,
+      "y": 52,
+      "color": "#ff5a52",
+      "label": "B"
+    },
+    {
+      "type": "ball",
+      "x": 115,
+      "y": 52
+    },
+    {
+      "type": "arrow",
+      "x1": 76,
+      "y1": 38,
+      "x2": 101,
+      "y2": 47,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "fecha"
+    },
+    {
+      "type": "arrow",
+      "x1": 76,
+      "y1": 65,
+      "x2": 101,
+      "y2": 57,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "fecha"
+    },
+    {
+      "type": "arrow",
+      "x1": 96,
+      "y1": 52,
+      "x2": 113,
+      "y2": 52,
+      "color": "#ff5a52",
+      "dash": false,
+      "label": "pressão"
+    },
+    {
+      "type": "zone",
+      "x": 84,
+      "y": 37,
+      "w": 40,
+      "h": 31,
+      "label": "5 segundos",
+      "color": "rgba(255,120,31,.14)"
+    }
+  ],
+  "defesa": [
+    {
+      "type": "player",
+      "x": 58,
+      "y": 35,
+      "color": "#ffffff",
+      "label": "1"
+    },
+    {
+      "type": "player",
+      "x": 58,
+      "y": 54,
+      "color": "#ffffff",
+      "label": "2"
+    },
+    {
+      "type": "player",
+      "x": 58,
+      "y": 73,
+      "color": "#ffffff",
+      "label": "3"
+    },
+    {
+      "type": "player",
+      "x": 91,
+      "y": 35,
+      "color": "#ffffff",
+      "label": "4"
+    },
+    {
+      "type": "player",
+      "x": 91,
+      "y": 54,
+      "color": "#ffffff",
+      "label": "5"
+    },
+    {
+      "type": "player",
+      "x": 112,
+      "y": 54,
+      "color": "#ff5a52",
+      "label": "B"
+    },
+    {
+      "type": "ball",
+      "x": 112,
+      "y": 54
+    },
+    {
+      "type": "arrow",
+      "x1": 91,
+      "y1": 54,
+      "x2": 112,
+      "y2": 54,
+      "color": "#ff5a52",
+      "dash": false,
+      "label": "press"
+    },
+    {
+      "type": "arrow",
+      "x1": 58,
+      "y1": 35,
+      "x2": 76,
+      "y2": 40,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "bascula"
+    },
+    {
+      "type": "arrow",
+      "x1": 58,
+      "y1": 73,
+      "x2": 76,
+      "y2": 67,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "bascula"
+    },
+    {
+      "type": "zone",
+      "x": 50,
+      "y": 29,
+      "w": 55,
+      "h": 51,
+      "label": "bloco compacto",
+      "color": "rgba(101,199,255,.12)"
+    }
+  ],
+  "amplitude": [
+    {
+      "type": "player",
+      "x": 42,
+      "y": 54,
+      "color": "#ffffff",
+      "label": "Z"
+    },
+    {
+      "type": "player",
+      "x": 80,
+      "y": 54,
+      "color": "#ffffff",
+      "label": "V"
+    },
+    {
+      "type": "player",
+      "x": 126,
+      "y": 18,
+      "color": "#ffffff",
+      "label": "L"
+    },
+    {
+      "type": "player",
+      "x": 126,
+      "y": 86,
+      "color": "#ffffff",
+      "label": "E"
+    },
+    {
+      "type": "ball",
+      "x": 42,
+      "y": 54
+    },
+    {
+      "type": "arrow",
+      "x1": 42,
+      "y1": 54,
+      "x2": 80,
+      "y2": 54,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "apoio"
+    },
+    {
+      "type": "arrow",
+      "x1": 80,
+      "y1": 54,
+      "x2": 126,
+      "y2": 18,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "lado fraco"
+    },
+    {
+      "type": "zone",
+      "x": 116,
+      "y": 7,
+      "w": 35,
+      "h": 27,
+      "label": "amplitude",
+      "color": "rgba(24,139,255,.14)"
+    },
+    {
+      "type": "zone",
+      "x": 116,
+      "y": 72,
+      "w": 35,
+      "h": 25,
+      "label": "amplitude",
+      "color": "rgba(24,139,255,.14)"
+    }
+  ],
+  "decisao": [
+    {
+      "type": "player",
+      "x": 70,
+      "y": 52,
+      "color": "#ffffff",
+      "label": "P"
+    },
+    {
+      "type": "player",
+      "x": 100,
+      "y": 35,
+      "color": "#ffffff",
+      "label": "A"
+    },
+    {
+      "type": "player",
+      "x": 104,
+      "y": 70,
+      "color": "#ffffff",
+      "label": "B"
+    },
+    {
+      "type": "player",
+      "x": 88,
+      "y": 52,
+      "color": "#ff5a52",
+      "label": "D"
+    },
+    {
+      "type": "ball",
+      "x": 70,
+      "y": 52
+    },
+    {
+      "type": "arrow",
+      "x1": 70,
+      "y1": 52,
+      "x2": 100,
+      "y2": 35,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "opção 1"
+    },
+    {
+      "type": "arrow",
+      "x1": 70,
+      "y1": 52,
+      "x2": 104,
+      "y2": 70,
+      "color": "#ffd166",
+      "dash": true,
+      "label": "opção 2"
+    },
+    {
+      "type": "zone",
+      "x": 62,
+      "y": 36,
+      "w": 55,
+      "h": 36,
+      "label": "decidir",
+      "color": "rgba(255,120,31,.14)"
+    }
+  ],
+  "coordenacao": [
+    {
+      "type": "player",
+      "x": 28,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "1"
+    },
+    {
+      "type": "ball",
+      "x": 28,
+      "y": 53
+    },
+    {
+      "type": "cone",
+      "x": 45,
+      "y": 40
+    },
+    {
+      "type": "cone",
+      "x": 55,
+      "y": 64
+    },
+    {
+      "type": "cone",
+      "x": 70,
+      "y": 42
+    },
+    {
+      "type": "cone",
+      "x": 82,
+      "y": 66
+    },
+    {
+      "type": "arrow",
+      "x1": 28,
+      "y1": 53,
+      "x2": 94,
+      "y2": 53,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "coordenação"
+    },
+    {
+      "type": "player",
+      "x": 112,
+      "y": 53,
+      "color": "#ffffff",
+      "label": "A"
+    },
+    {
+      "type": "miniGoal",
+      "x": 145,
+      "y": 45
+    }
+  ],
+  "bola_parada": [
+    {
+      "type": "player",
+      "x": 140,
+      "y": 18,
+      "color": "#ffffff",
+      "label": "C"
+    },
+    {
+      "type": "player",
+      "x": 126,
+      "y": 45,
+      "color": "#ffffff",
+      "label": "A"
+    },
+    {
+      "type": "player",
+      "x": 117,
+      "y": 58,
+      "color": "#ffffff",
+      "label": "B"
+    },
+    {
+      "type": "player",
+      "x": 140,
+      "y": 55,
+      "color": "#ff5a52",
+      "label": "D"
+    },
+    {
+      "type": "ball",
+      "x": 145,
+      "y": 18
+    },
+    {
+      "type": "arrow",
+      "x1": 145,
+      "y1": 18,
+      "x2": 126,
+      "y2": 45,
+      "color": "#ffd166",
+      "dash": false,
+      "label": "escanteio"
+    },
+    {
+      "type": "arrow",
+      "x1": 117,
+      "y1": 58,
+      "x2": 136,
+      "y2": 50,
+      "color": "#65c7ff",
+      "dash": true,
+      "label": "bloqueio"
+    },
+    {
+      "type": "zone",
+      "x": 120,
+      "y": 35,
+      "w": 30,
+      "h": 32,
+      "label": "área",
+      "color": "rgba(255,120,31,.14)"
+    }
+  ]
+}

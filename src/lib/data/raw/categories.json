@@ -1,0 +1,277 @@
+{
+  "sub-5": {
+    "label": "Sub-5",
+    "idade": "4 a 5 anos",
+    "stage": "Vivência lúdica",
+    "prioridades": [
+      "Coordenação global",
+      "Brincadeiras com bola",
+      "Correr, saltar, rolar e equilibrar",
+      "Noção de espaço e regras simples",
+      "Prazer pela prática"
+    ],
+    "objetivos": [
+      "Explorar movimentos básicos com bola",
+      "Estimular socialização e segurança",
+      "Reconhecer alvo, colega e espaço livre"
+    ],
+    "fundamentos": [
+      "coordenação",
+      "condução livre",
+      "equilíbrio",
+      "percepção espacial",
+      "brincadeiras"
+    ]
+  },
+  "sub-7": {
+    "label": "Sub-7",
+    "idade": "6 a 7 anos",
+    "stage": "Iniciação lúdica",
+    "prioridades": [
+      "Controle corporal com bola",
+      "Condução e drible em brincadeiras",
+      "Jogos 1x1 e 2x2",
+      "Regras simples de ataque e defesa",
+      "Ambidestria inicial"
+    ],
+    "objetivos": [
+      "Desenvolver condução e domínio simples",
+      "Estimular coragem para conduzir e driblar",
+      "Aprender a cooperar e respeitar regras"
+    ],
+    "fundamentos": [
+      "condução",
+      "drible",
+      "passe curto",
+      "finalização simples",
+      "1x1",
+      "brincadeiras"
+    ]
+  },
+  "sub-9": {
+    "label": "Sub-9",
+    "idade": "8 a 9 anos",
+    "stage": "Iniciação esportiva",
+    "prioridades": [
+      "Fundamentos com oposição leve",
+      "Jogos reduzidos 2x2 e 3x3",
+      "Passe, domínio e condução",
+      "Finalização em alvo grande",
+      "Tomada de decisão simples"
+    ],
+    "objetivos": [
+      "Melhorar passe, domínio e condução",
+      "Reconhecer companheiro, adversário e espaço",
+      "Resolver situações simples de superioridade"
+    ],
+    "fundamentos": [
+      "passe",
+      "domínio",
+      "condução",
+      "drible",
+      "finalização",
+      "2x1",
+      "3x3"
+    ]
+  },
+  "sub-10": {
+    "label": "Sub-10",
+    "idade": "10 anos",
+    "stage": "Iniciação esportiva",
+    "prioridades": [
+      "Passe e recepção orientada",
+      "Apoio ao portador",
+      "Jogos com curinga",
+      "1x1 ofensivo e defensivo",
+      "Introdução à transição"
+    ],
+    "objetivos": [
+      "Criar linhas de passe",
+      "Executar fundamento sob oposição",
+      "Perceber momento de passar, conduzir ou finalizar"
+    ],
+    "fundamentos": [
+      "passe",
+      "recepção orientada",
+      "apoio",
+      "1x1",
+      "jogo com curinga",
+      "transição"
+    ]
+  },
+  "sub-11": {
+    "label": "Sub-11",
+    "idade": "11 anos",
+    "stage": "Transição para aperfeiçoamento",
+    "prioridades": [
+      "Apoio, largura e profundidade",
+      "Jogos 3x3 e 4x4",
+      "Pressão ao portador",
+      "Manutenção da posse",
+      "Finalização com decisão"
+    ],
+    "objetivos": [
+      "Integrar técnica e tática em jogos reduzidos",
+      "Melhorar comunicação e mobilidade",
+      "Introduzir princípios de ataque e defesa"
+    ],
+    "fundamentos": [
+      "apoio",
+      "amplitude",
+      "profundidade",
+      "pressão",
+      "posse",
+      "finalização"
+    ]
+  },
+  "sub-12": {
+    "label": "Sub-12",
+    "idade": "12 anos",
+    "stage": "Aperfeiçoamento inicial",
+    "prioridades": [
+      "Superioridade numérica",
+      "Transição defesa-ataque",
+      "Cobertura defensiva",
+      "Recepção orientada sob pressão",
+      "Jogos setorizados"
+    ],
+    "objetivos": [
+      "Aplicar fundamentos em problemas reais do jogo",
+      "Melhorar tomada de decisão sob pressão",
+      "Trabalhar recuperação e progressão"
+    ],
+    "fundamentos": [
+      "2x1",
+      "3x2",
+      "cobertura",
+      "recepção orientada",
+      "transição ofensiva",
+      "progressão"
+    ]
+  },
+  "sub-13": {
+    "label": "Sub-13",
+    "idade": "13 anos",
+    "stage": "Aperfeiçoamento",
+    "prioridades": [
+      "Princípios coletivos básicos",
+      "Compactação e equilíbrio",
+      "Amplitude e profundidade",
+      "Pressão pós-perda",
+      "Funções por setor sem especializar rigidamente"
+    ],
+    "objetivos": [
+      "Consolidar princípios ofensivos e defensivos",
+      "Relacionar função setorial ao jogo",
+      "Melhorar reação após perda"
+    ],
+    "fundamentos": [
+      "compactação",
+      "equilíbrio",
+      "amplitude",
+      "profundidade",
+      "pressão pós-perda",
+      "jogo posicional"
+    ]
+  },
+  "sub-14": {
+    "label": "Sub-14",
+    "idade": "14 anos",
+    "stage": "Especialização progressiva",
+    "prioridades": [
+      "Relações setoriais",
+      "Transições organizadas",
+      "Saída de bola",
+      "Defesa em bloco",
+      "Ataque por corredores"
+    ],
+    "objetivos": [
+      "Organizar comportamentos por fase do jogo",
+      "Aprimorar relações entre setores",
+      "Trabalhar princípios do modelo de jogo"
+    ],
+    "fundamentos": [
+      "saída de bola",
+      "bloco defensivo",
+      "transição defensiva",
+      "ataque posicional",
+      "corredores",
+      "pressão setorial"
+    ]
+  },
+  "sub-15": {
+    "label": "Sub-15",
+    "idade": "15 anos",
+    "stage": "Especialização inicial",
+    "prioridades": [
+      "Modelo de jogo",
+      "Coordenação intersetorial",
+      "Bola parada inicial",
+      "Pressão coordenada",
+      "Critérios objetivos de avaliação"
+    ],
+    "objetivos": [
+      "Aproximar treino do jogo competitivo",
+      "Avaliar comportamentos tático-técnicos",
+      "Desenvolver jogo coletivo com funções"
+    ],
+    "fundamentos": [
+      "modelo de jogo",
+      "pressão coordenada",
+      "bola parada",
+      "organização ofensiva",
+      "organização defensiva",
+      "transições"
+    ]
+  },
+  "sub-17": {
+    "label": "Sub-17",
+    "idade": "16 a 17 anos",
+    "stage": "Especialização competitiva",
+    "prioridades": [
+      "Modelo de jogo consolidado",
+      "Estratégia semanal",
+      "Bola parada ofensiva e defensiva",
+      "Análise por posição",
+      "Intensidade representativa"
+    ],
+    "objetivos": [
+      "Aprimorar desempenho competitivo",
+      "Relacionar treino ao adversário e ao modelo",
+      "Consolidar funções específicas por posição"
+    ],
+    "fundamentos": [
+      "estratégia",
+      "modelo de jogo",
+      "bola parada",
+      "pressing",
+      "transições rápidas",
+      "função posicional"
+    ]
+  },
+  "sub-20": {
+    "label": "Sub-20",
+    "idade": "18 a 20 anos",
+    "stage": "Rendimento em formação",
+    "prioridades": [
+      "Performance tático-técnica",
+      "Tomada de decisão em alta velocidade",
+      "Especificidade por posição",
+      "Microciclo competitivo",
+      "Transferência direta para jogo"
+    ],
+    "objetivos": [
+      "Preparar demandas de jogo competitivo",
+      "Ajustar função individual ao modelo coletivo",
+      "Elevar qualidade decisional sob pressão"
+    ],
+    "fundamentos": [
+      "alta intensidade",
+      "modelo de jogo",
+      "posição específica",
+      "pressão temporal",
+      "jogo formal",
+      "estratégia competitiva"
+    ]
+  }
+}

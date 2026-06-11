@@ -1,0 +1,244 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #070a0f;
+  --bg2: #0b111b;
+  --panel: #111827;
+  --panel2: #182233;
+  --surface: #0e1624;
+  --text: #f8fafc;
+  --muted: #9aa7ba;
+  --line: rgba(255, 255, 255, 0.12);
+  --accent: #188bff;
+  --accent2: #68bdff;
+  --accent-soft: rgba(24, 139, 255, 0.16);
+  --gold: #ffc94a;
+  --ok: #22c55e;
+  --danger: #ff6448;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+}
+
+:root[data-theme="light"] {
+  --bg: #edf2f8;
+  --bg2: #f8fafc;
+  --panel: #ffffff;
+  --panel2: #f6f8fb;
+  --surface: #ffffff;
+  --text: #111827;
+  --muted: #637083;
+  --line: rgba(15, 23, 42, 0.13);
+  --shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
+}
+
+:root[data-accent="orange"] {
+  --accent: #ff781f;
+  --accent2: #ffb46b;
+  --accent-soft: rgba(255, 120, 31, 0.16);
+  --gold: #ffd166;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg2: var(--bg2);
+  --color-panel: var(--panel);
+  --color-panel2: var(--panel2);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent2: var(--accent2);
+  --color-accent-soft: var(--accent-soft);
+  --color-gold: var(--gold);
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: radial-gradient(circle at 18% -8%, var(--accent-soft), transparent 34%),
+    linear-gradient(135deg, var(--bg), var(--bg2));
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+option {
+  background: #111827;
+  color: #f8fafc;
+}
+:root[data-theme="light"] option {
+  background: #fff;
+  color: #111827;
+}
+
+@layer components {
+  .card {
+    border-radius: 1.5rem;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014)), var(--panel);
+  }
+
+  .surface {
+    border-radius: 1.25rem;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.035);
+  }
+  :root[data-theme="light"] .surface {
+    background: rgba(15, 23, 42, 0.025);
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-extrabold transition-transform active:scale-[0.98];
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 14px 30px var(--accent-soft);
+  }
+  .btn:hover {
+    filter: brightness(1.06);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-extrabold transition-colors active:scale-[0.98];
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--text);
+  }
+  .btn-secondary:hover {
+    background: var(--accent-soft);
+  }
+
+  .pill {
+    @apply rounded-full border px-3 py-2 text-sm font-extrabold transition-colors;
+    border-color: var(--line);
+    background: var(--panel);
+    color: var(--text);
+  }
+  .pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .chip {
+    @apply rounded-full border px-2.5 py-1 text-[11px] font-bold;
+    border-color: var(--line);
+    background: rgba(255, 255, 255, 0.055);
+    color: var(--muted);
+  }
+  :root[data-theme="light"] .chip {
+    background: rgba(15, 23, 42, 0.04);
+  }
+  .chip-accent {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .field-input {
+    @apply w-full rounded-2xl border px-3.5 py-3 text-sm outline-none transition-shadow;
+    border-color: var(--line);
+    background: rgba(255, 255, 255, 0.055);
+    color: var(--text);
+  }
+  :root[data-theme="light"] .field-input {
+    background: #fff;
+  }
+  .field-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-[11px] font-extrabold uppercase tracking-wider;
+    color: var(--text);
+  }
+
+  .checklist {
+    @apply grid max-h-56 gap-1.5 overflow-auto rounded-2xl border p-2;
+    border-color: var(--line);
+    background: rgba(255, 255, 255, 0.035);
+  }
+  :root[data-theme="light"] .checklist {
+    background: rgba(15, 23, 42, 0.025);
+  }
+
+  .check-item {
+    @apply flex cursor-pointer items-start gap-2 rounded-xl p-2 text-[13px] font-semibold leading-tight;
+    color: var(--text);
+  }
+  .check-item:hover {
+    background: var(--accent-soft);
+  }
+  .check-item input {
+    accent-color: var(--accent);
+    margin-top: 2px;
+  }
+
+  .metric {
+    @apply rounded-2xl border p-3;
+    background: var(--accent-soft);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .callout {
+    @apply rounded-2xl border p-3.5 text-sm leading-relaxed;
+    background: linear-gradient(135deg, var(--accent-soft), rgba(255, 255, 255, 0.025));
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text);
+  }
+
+  .nav-link {
+    @apply flex w-full items-center gap-3 rounded-2xl border border-transparent p-3 text-left text-sm font-extrabold transition-colors;
+    color: var(--muted);
+  }
+  .nav-link:hover,
+  .nav-link.active {
+    background: var(--accent-soft);
+    border-color: rgba(255, 255, 255, 0.09);
+    color: var(--text);
+  }
+  .nav-link .ico {
+    @apply grid h-7 w-7 flex-none place-items-center rounded-[10px] text-[15px];
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--accent);
+  }
+
+  .diagram {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: #065f36;
+  }
+
+  .hero-panel {
+    border-radius: 1.875rem;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+      radial-gradient(circle at 88% 14%, var(--accent-soft), transparent 36%), #060911;
+  }
+  :root[data-theme="light"] .hero-panel {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.2)),
+      radial-gradient(circle at 88% 14%, var(--accent-soft), transparent 36%), var(--panel2);
+  }
+}

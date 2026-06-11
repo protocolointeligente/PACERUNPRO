@@ -1,0 +1,129 @@
+{
+  "geral": {
+    "label": "Geral / equipe",
+    "objetivos": [
+      "Desenvolver princípios coletivos",
+      "Integrar técnica e tática",
+      "Aumentar compreensão do jogo"
+    ],
+    "fundamentos": [
+      "apoio",
+      "posse",
+      "progressão",
+      "pressão",
+      "transição"
+    ]
+  },
+  "goleiro": {
+    "label": "Goleiro",
+    "objetivos": [
+      "Defender a baliza",
+      "Iniciar construção com pés e mãos",
+      "Controlar profundidade e 1x1"
+    ],
+    "fundamentos": [
+      "posição básica",
+      "defesa baixa",
+      "defesa alta",
+      "saída do gol",
+      "reposição",
+      "jogo com os pés"
+    ]
+  },
+  "zagueiro": {
+    "label": "Zagueiro",
+    "objetivos": [
+      "Proteger corredor central",
+      "Construir saída de bola",
+      "Controlar profundidade"
+    ],
+    "fundamentos": [
+      "cobertura",
+      "duelo defensivo",
+      "passe vertical",
+      "jogo aéreo",
+      "linha defensiva",
+      "interceptação"
+    ]
+  },
+  "lateral": {
+    "label": "Lateral",
+    "objetivos": [
+      "Dar amplitude",
+      "Defender corredor lateral",
+      "Criar ultrapassagem e cruzamento"
+    ],
+    "fundamentos": [
+      "amplitude",
+      "cruzamento",
+      "ultrapassagem",
+      "1x1 defensivo",
+      "diagonal",
+      "pressão lateral"
+    ]
+  },
+  "volante": {
+    "label": "Volante",
+    "objetivos": [
+      "Organizar equilíbrio",
+      "Dar apoio atrás da bola",
+      "Proteger zona central"
+    ],
+    "fundamentos": [
+      "apoio central",
+      "giro sob pressão",
+      "cobertura",
+      "virada de jogo",
+      "segunda bola",
+      "interceptação"
+    ]
+  },
+  "meia": {
+    "label": "Meia",
+    "objetivos": [
+      "Jogar entrelinhas",
+      "Criar último passe",
+      "Conectar meio e ataque"
+    ],
+    "fundamentos": [
+      "entrelinhas",
+      "passe final",
+      "tabela",
+      "recepção orientada",
+      "finalização média",
+      "criatividade"
+    ]
+  },
+  "extremo": {
+    "label": "Extremo",
+    "objetivos": [
+      "Gerar amplitude e profundidade",
+      "Vencer 1x1",
+      "Atacar área pelo lado oposto"
+    ],
+    "fundamentos": [
+      "1x1 ofensivo",
+      "diagonal",
+      "cruzamento",
+      "amplitude",
+      "pressão pós-perda",
+      "ataque ao segundo pau"
+    ]
+  },
+  "atacante": {
+    "label": "Atacante",
+    "objetivos": [
+      "Finalizar",
+      "Atacar profundidade",
+      "Pressionar saída adversária"
+    ],
+    "fundamentos": [
+      "finalização",
+      "ruptura",
+      "pivô",
+      "apoio frontal",
+      "ataque ao primeiro pau",
+      "pressão no zagueiro"
+    ]
+  }
+}

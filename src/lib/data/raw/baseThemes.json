@@ -1,0 +1,195 @@
+[
+  [
+    "Passe e recepção",
+    "tecnico",
+    [
+      "passe",
+      "recepção orientada",
+      "apoio"
+    ],
+    [
+      "rondo",
+      "3x3",
+      "4x4",
+      "jogo com curinga"
+    ],
+    "posse",
+    "Conservar a bola com passe seguro, corpo aberto e apoio diagonal."
+  ],
+  [
+    "Condução e drible",
+    "tecnico",
+    [
+      "condução",
+      "drible",
+      "1x1"
+    ],
+    [
+      "1x1",
+      "2x2",
+      "jogo com alvo"
+    ],
+    "duelo",
+    "Atacar o defensor, mudar ritmo e decidir entre driblar, passar ou proteger."
+  ],
+  [
+    "Finalização contextualizada",
+    "tecnico",
+    [
+      "finalização",
+      "passe final",
+      "rebote"
+    ],
+    [
+      "finalização",
+      "3x2",
+      "4x4"
+    ],
+    "finalizacao",
+    "Finalizar depois de passe, condução ou rebote com oposição progressiva."
+  ],
+  [
+    "Manutenção da posse",
+    "tatico",
+    [
+      "apoio",
+      "mobilidade",
+      "posse"
+    ],
+    [
+      "rondo",
+      "4x4",
+      "5x5",
+      "jogo com curinga"
+    ],
+    "posse",
+    "Criar linhas de passe, circulação rápida e superioridade ao redor da bola."
+  ],
+  [
+    "Progressão por zonas",
+    "tatico",
+    [
+      "progressão",
+      "passe vertical",
+      "terceiro homem"
+    ],
+    [
+      "jogo setorizado",
+      "3x2",
+      "6x6"
+    ],
+    "progressao",
+    "Progredir de uma zona a outra com passe vertical, condução ou apoio."
+  ],
+  [
+    "Pressão pós-perda",
+    "tatico",
+    [
+      "pressão",
+      "transição defensiva",
+      "cobertura"
+    ],
+    [
+      "transição",
+      "5x5",
+      "jogo reduzido condicionado"
+    ],
+    "transicao_def",
+    "Reagir após perder, fechar o centro e recuperar ou temporizar."
+  ],
+  [
+    "Transição defesa-ataque",
+    "tatico",
+    [
+      "recuperação",
+      "passe vertical",
+      "profundidade"
+    ],
+    [
+      "transição",
+      "3x2",
+      "6x6"
+    ],
+    "transicao_of",
+    "Recuperar e acelerar a primeira ação para atacar antes da recomposição."
+  ],
+  [
+    "Compactação defensiva",
+    "tatico",
+    [
+      "compactação",
+      "bloco defensivo",
+      "cobertura"
+    ],
+    [
+      "defesa em bloco",
+      "6x6",
+      "8x8"
+    ],
+    "defesa",
+    "Reduzir espaços entre linhas e orientar o adversário para zonas menos perigosas."
+  ],
+  [
+    "Amplitude e profundidade",
+    "tatico",
+    [
+      "amplitude",
+      "profundidade",
+      "inversão"
+    ],
+    [
+      "jogo setorizado",
+      "7x7",
+      "modelo de jogo"
+    ],
+    "amplitude",
+    "Abrir largura, atacar lado fraco e ameaçar espaço às costas da defesa."
+  ],
+  [
+    "Criatividade e decisão",
+    "cognitivo",
+    [
+      "tomada de decisão",
+      "percepção",
+      "criatividade"
+    ],
+    [
+      "3x3",
+      "4x4",
+      "jogo com alvo"
+    ],
+    "decisao",
+    "Ler pistas do jogo e escolher solução sob restrição de tempo e espaço."
+  ],
+  [
+    "Coordenação com bola",
+    "fisico",
+    [
+      "coordenação",
+      "ritmo",
+      "mudança de direção"
+    ],
+    [
+      "circuito coordenativo",
+      "1x1",
+      "2x2"
+    ],
+    "coordenacao",
+    "Integrar coordenação, controle de bola e estímulos perceptivos."
+  ],
+  [
+    "Bola parada",
+    "tatico",
+    [
+      "escanteio",
+      "falta lateral",
+      "organização"
+    ],
+    [
+      "bola parada",
+      "11x11"
+    ],
+    "bola_parada",
+    "Organizar posicionamento, bloqueios, ataque à bola e segunda bola."
+  ]
+]
