@@ -53,9 +53,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
-        token.role = (user as { role?: UserRole }).role ?? "ATHLETE";
+        let role = (user as { role?: UserRole }).role ?? "ATHLETE";
+
+        // Bootstrap: e-mails listados em ADMIN_EMAILS sempre recebem acesso de ADMIN,
+        // mesmo que a conta tenha sido criada com o papel padrão (ATHLETE).
+        const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+          .split(",")
+          .map((e) => e.trim().toLowerCase())
+          .filter(Boolean);
+
+        if (user.email && adminEmails.includes(user.email.toLowerCase()) && role !== "ADMIN") {
+          role = "ADMIN" as UserRole;
+          await prisma.user.update({ where: { id: user.id }, data: { role: "ADMIN" } });
+        }
+
+        token.role = role;
         token.id = user.id;
       }
       return token;

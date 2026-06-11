@@ -17,32 +17,33 @@ export function Logo({ variant = "horizontal", size = 36, className = "" }: Logo
     >
       <defs>
         <linearGradient id="logo-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#a78bfa" />
-          <stop offset="50%" stopColor="#8b5cf6" />
-          <stop offset="100%" stopColor="#06b6d4" />
+          <stop offset="0%" stopColor="#fb923c" />
+          <stop offset="45%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#8b5cf6" />
         </linearGradient>
         <linearGradient id="logo-bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#0d0a1e" />
-          <stop offset="100%" stopColor="#050816" />
+          <stop offset="0%" stopColor="#140b28" />
+          <stop offset="100%" stopColor="#06030f" />
         </linearGradient>
-        <filter id="logo-glow" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
       </defs>
       <rect width="1024" height="1024" rx="220" fill="url(#logo-bg)" />
-      <circle cx="512" cy="512" r="380" fill="none" stroke="url(#logo-grad)" strokeWidth="6" opacity="0.25" />
-      <path
-        d="M 605,130 L 388,522 L 498,522 L 270,875 L 638,488 L 528,488 Z"
-        fill="url(#logo-grad)"
-        filter="url(#logo-glow)"
-      />
-      <line x1="250" y1="400" x2="340" y2="400" stroke="url(#logo-grad)" strokeWidth="8" strokeLinecap="round" opacity="0.5" />
-      <line x1="220" y1="440" x2="340" y2="440" stroke="url(#logo-grad)" strokeWidth="6" strokeLinecap="round" opacity="0.35" />
-      <circle cx="452" cy="526" r="18" fill="white" opacity="0.9" filter="url(#logo-glow)" />
+      <g fill="none" stroke="url(#logo-grad)" strokeLinecap="round">
+        <path d="M 565,135 A 280,280 0 0 1 845,415" strokeWidth="10" opacity="0.55" />
+        <path d="M 565,75  A 340,340 0 0 1 905,415" strokeWidth="8" opacity="0.35" />
+        <path d="M 565,15  A 400,400 0 0 1 965,415" strokeWidth="6" opacity="0.2" />
+      </g>
+      <rect x="300" y="185" width="160" height="665" rx="50" fill="url(#logo-grad)" />
+      <circle cx="565" cy="380" r="235" fill="url(#logo-grad)" />
+      <circle cx="602" cy="380" r="128" fill="url(#logo-bg)" />
+      <g transform="translate(485,255) scale(1.2)" fill="#f8fafc">
+        <circle cx="128" cy="20" r="17" />
+        <rect x="-16" y="-37" width="32" height="74" rx="16" transform="translate(108,62) rotate(-18)" />
+        <rect x="-9" y="-29" width="18" height="58" rx="9" transform="translate(86,58) rotate(35)" />
+        <rect x="-9" y="-28" width="18" height="56" rx="9" transform="translate(132,90) rotate(-55)" />
+        <rect x="-13" y="-34" width="26" height="68" rx="13" transform="translate(140,118) rotate(-70)" />
+        <rect x="-10" y="-28" width="20" height="56" rx="10" transform="translate(172,148) rotate(20)" />
+        <rect x="-13" y="-43" width="26" height="86" rx="13" transform="translate(76,128) rotate(48)" />
+      </g>
     </svg>
   );
 
@@ -55,16 +56,18 @@ export function Logo({ variant = "horizontal", size = 36, className = "" }: Logo
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       {Icon}
       <span className="flex flex-col leading-none">
-        <span
-          className={`font-display ${textSize} font-extrabold tracking-wide`}
-          style={{
-            background: "linear-gradient(90deg,#ffffff 0%,#ffffff 65%,#8b5cf6 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}
-        >
-          PACE RUN <span style={{ background: "linear-gradient(90deg,#8b5cf6,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>PRO</span>
+        <span className={`font-display ${textSize} font-extrabold tracking-wide text-white`}>
+          PACE RUN{" "}
+          <span
+            style={{
+              background: "linear-gradient(90deg,#a78bfa,#c4b5fd)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            PRO
+          </span>
         </span>
         {size >= 36 && (
           <span className={`${subSize} uppercase tracking-[0.18em] text-[#6b7280] font-medium`}>

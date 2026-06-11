@@ -5,8 +5,8 @@
   --color-card: #0b1220;
   --color-card-hover: #121c2d;
   --color-border: #1e2a40;
-  --color-primary: #8b5cf6;
-  --color-secondary: #a855f7;
+  --color-primary: #f97316;
+  --color-secondary: #8b5cf6;
   --color-success: #84cc16;
   --color-warning: #facc15;
   --color-danger: #ef4444;
@@ -45,8 +45,8 @@ html {
 
 body {
   background:
-    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(139, 92, 246, 0.16), transparent 60%),
-    radial-gradient(ellipse 900px 500px at 100% 20%, rgba(56, 189, 248, 0.08), transparent 55%),
+    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(249, 115, 22, 0.14), transparent 60%),
+    radial-gradient(ellipse 900px 500px at 100% 20%, rgba(139, 92, 246, 0.10), transparent 55%),
     var(--color-background);
   color: var(--color-text);
   font-family: var(--font-sans);
@@ -77,14 +77,14 @@ body {
 }
 
 .gradient-text {
-  background: linear-gradient(120deg, #8b5cf6 0%, #a855f7 50%, #38bdf8 100%);
+  background: linear-gradient(120deg, #fb923c 0%, #ef4444 50%, #8b5cf6 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .gradient-primary {
-  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ef4444 50%, #8b5cf6 100%);
 }
 
 .no-scrollbar::-webkit-scrollbar {
