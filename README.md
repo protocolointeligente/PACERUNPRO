@@ -8,7 +8,7 @@ Desenvolvido por **Ricardo Pace** — Profissional de Educação Física, Treina
 
 - **Gerar aula** (`/`) — monta uma sessão de treino completa por categoria, foco, posição, estrutura funcional, tempo e nível, selecionando exercícios do banco e exibindo organização da sessão, exercícios com pranchas táticas e mesociclo sugerido de 4 semanas.
 - **Biblioteca 500** (`/biblioteca`) — banco com 500 exercícios filtráveis por categoria, foco, posição, estrutura e busca livre, com paginação.
-- **TaticalPad** (`/taticalpad`) — motor de geração automática de pranchas táticas e descrições de exercícios, com edição dos elementos do diagrama (jogadores, bola, cones, setas, zonas, mini-gols) e dos textos (objetivo, descrição, organização, execução, pontos de correção). As edições ficam salvas no navegador e novos exercícios personalizados podem ser criados, expandindo o banco.
+- **Prancheta Tática** (`/prancheta-tatica`) — motor de geração automática de pranchas táticas e descrições de exercícios, com edição dos elementos do diagrama (jogadores, bola, cones, setas, zonas, mini-gols) e dos textos (objetivo, descrição, organização, execução, pontos de correção). As edições ficam salvas no navegador e novos exercícios personalizados podem ser criados, expandindo o banco.
 - **Matriz por idade** (`/matriz`) — referência de prioridades por categoria etária, com possibilidade de adicionar/remover prioridades conforme o contexto da equipe.
 - **Posições** (`/posicoes`) — módulo por posição com objetivos, fundamentos e contagem de exercícios disponíveis.
 - **Avaliação** (`/avaliacao`) — tabela de avaliação por princípios de jogo (ataque, defesa e transições).

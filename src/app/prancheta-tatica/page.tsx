@@ -67,7 +67,7 @@ function draftFrom(ex: Exercise, override: ExerciseOverride | undefined): Exerci
   };
 }
 
-export default function TaticalPadPage() {
+export default function PranchetaTaticaPage() {
   const bankExercises = useMemo(() => getExercises(), []);
   const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
   const [overrides, setOverrides] = useState<ExerciseOverrides>({});
@@ -180,7 +180,7 @@ export default function TaticalPadPage() {
           <span className="grid h-[31px] w-[31px] place-items-center rounded-xl text-sm font-black text-white" style={{ background: "var(--accent)" }}>
             ✎
           </span>
-          TaticalPad
+          Prancheta Tática
         </h2>
         <p className="mb-3 text-[13px] leading-relaxed" style={{ color: "var(--muted)" }}>
           Selecione um exercício para visualizar e editar a prancha tática e a descrição. Edições ficam salvas neste
