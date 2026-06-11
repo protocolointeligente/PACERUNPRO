@@ -7,18 +7,16 @@ import { NAV_ITEMS } from "./nav";
 
 interface SidebarProps {
   collapsed: boolean;
-  mobileOpen: boolean;
-  onNavigate: () => void;
 }
 
-export function Sidebar({ collapsed, mobileOpen, onNavigate }: SidebarProps) {
+export function Sidebar({ collapsed }: SidebarProps) {
   const pathname = usePathname();
 
   return (
     <aside
-      className={`fixed left-0 top-0 z-20 flex h-screen flex-col gap-3.5 overflow-y-auto border-r p-3.5 transition-transform duration-200 ${
+      className={`fixed left-0 top-0 z-20 hidden h-screen flex-col gap-3.5 overflow-y-auto border-r p-3.5 transition-[width] duration-200 md:flex ${
         collapsed ? "w-[78px]" : "w-[292px]"
-      } ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+      }`}
       style={{
         borderColor: "var(--line)",
         background: "linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.012)), #05070b",
@@ -47,7 +45,7 @@ export function Sidebar({ collapsed, mobileOpen, onNavigate }: SidebarProps) {
         {NAV_ITEMS.map((item) => {
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           return (
-            <Link key={item.href} href={item.href} onClick={onNavigate} className={`nav-link ${active ? "active" : ""}`}>
+            <Link key={item.href} href={item.href} className={`nav-link ${active ? "active" : ""}`}>
               <span className="ico">{item.icon}</span>
               {!collapsed && <span>{item.label}</span>}
             </Link>

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #070a0f;
-  --bg2: #0b111b;
+  --bg: #05070b;
+  --bg2: #0a0e16;
   --panel: #111827;
   --panel2: #182233;
   --surface: #0e1624;
@@ -226,6 +226,50 @@ option {
     border-radius: 1.1rem;
     border: 1px solid rgba(255, 255, 255, 0.24);
     background: #065f36;
+  }
+
+  .bottom-nav {
+    @apply fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 gap-1 border-t px-1 pt-2;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    border-color: var(--line);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012)), #05070b;
+  }
+  :root[data-theme="light"] .bottom-nav {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.2)), var(--panel2);
+  }
+
+  .bottom-nav-item {
+    @apply flex flex-col items-center gap-1 rounded-2xl py-1 text-[10px] font-extrabold;
+    color: var(--muted);
+  }
+  .bottom-nav-item .ico {
+    @apply grid h-7 w-7 place-items-center rounded-[10px] text-base;
+  }
+  .bottom-nav-item.active {
+    color: var(--accent);
+  }
+  .bottom-nav-item.active .ico {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .menu-card {
+    @apply flex items-center gap-3.5 rounded-[1.5rem] border p-4 transition-colors;
+    border-color: var(--line);
+    box-shadow: var(--shadow);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014)), var(--panel);
+    color: var(--text);
+  }
+  .menu-card:hover {
+    border-color: var(--accent);
+  }
+  .menu-card-ico {
+    @apply grid h-11 w-11 flex-none place-items-center rounded-2xl text-lg font-black text-white;
+    background: var(--accent);
+  }
+  .menu-card-arrow {
+    @apply flex-none text-xl;
+    color: var(--muted);
   }
 
   .hero-panel {

@@ -18,7 +18,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
         <button
           onClick={onMenuClick}
           aria-label="Menu"
-          className="grid h-11 w-11 flex-none place-items-center rounded-[15px] border"
+          className="hidden h-11 w-11 flex-none place-items-center rounded-[15px] border md:grid"
           style={{ borderColor: "var(--line)", background: "var(--panel)" }}
         >
           <span className="flex flex-col gap-[3px]">
@@ -34,7 +34,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           </small>
         </div>
       </div>
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className="hidden flex-wrap justify-end gap-2 md:flex">
         <button className={`pill ${theme === "dark" ? "active" : ""}`} onClick={() => setTheme("dark")}>
           Escuro
         </button>
