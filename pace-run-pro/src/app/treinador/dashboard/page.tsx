@@ -120,7 +120,7 @@ export default function CoachDashboard() {
             <CardContent className="p-5">
               <h3 className="font-display text-base font-semibold text-white">Liberação semanal</h3>
               <p className="mt-1.5 text-sm text-text-muted">
-                9 atletas aguardam liberação da próxima semana de treinos. Revise e libere blocos específicos do plano.
+                Camila Andrade aguarda liberação da próxima semana de treinos. Revise e libere blocos específicos do plano.
               </p>
               <Link href="/treinador/alunos">
                 <Button className="mt-3 w-full">Revisar liberações</Button>

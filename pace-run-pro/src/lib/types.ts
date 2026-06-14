@@ -68,6 +68,17 @@ export interface AthleteListItem {
   raceDate?: string;
 }
 
+export interface AthleteRosterItem {
+  id: string;
+  name: string;
+  plan: string;
+  status: "ativo" | "risco" | "inativo";
+  billingStatus: "em dia" | "inadimplente";
+  nextBilling: string;
+  monthlyFee: number;
+  joinedAt: string;
+}
+
 export interface ExerciseLibraryItem {
   id: string;
   name: string;

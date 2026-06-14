@@ -82,13 +82,6 @@ const typeToZone: Record<RunTypeId, { zone: TrainingZoneId; position: "fast" | "
 // Resultado de prova recente (mock) usado para estimar o VDOT de cada atleta.
 const recentRaceByAthlete: Record<string, { distanceM: number; timeSec: number }> = {
   "ath-1": { distanceM: 10000, timeSec: 47 * 60 + 52 }, // Camila Andrade
-  "ath-2": { distanceM: 5000, timeSec: 28 * 60 + 30 }, // Bruno Lacerda
-  "ath-3": { distanceM: 10000, timeSec: 40 * 60 + 15 }, // Marina Sales
-  "ath-4": { distanceM: 10000, timeSec: 33 * 60 + 30 }, // Felipe Tannous
-  "ath-5": { distanceM: 5000, timeSec: 32 * 60 }, // Renata Vidal
-  "ath-6": { distanceM: 5000, timeSec: 35 * 60 }, // Diego Martins
-  "ath-7": { distanceM: 10000, timeSec: 50 * 60 + 30 }, // Ana Beatriz Lima
-  "ath-8": { distanceM: 5000, timeSec: 34 * 60 }, // Thiago Ferraz
 };
 
 function formatRaceTime(sec: number): string {

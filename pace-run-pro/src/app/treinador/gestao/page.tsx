@@ -317,13 +317,13 @@ export default function GestaoPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <Card>
                 <CardContent className="p-4 text-center">
-                  <p className="font-display text-2xl font-bold text-white">28</p>
-                  <p className="text-xs text-text-muted">atletas cadastraram-se via link</p>
+                  <p className="font-display text-2xl font-bold text-white">1</p>
+                  <p className="text-xs text-text-muted">atleta cadastrou-se via link</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
-                  <p className="font-display text-2xl font-bold text-success">73%</p>
+                  <p className="font-display text-2xl font-bold text-success">100%</p>
                   <p className="text-xs text-text-muted">taxa de conversão</p>
                 </CardContent>
               </Card>

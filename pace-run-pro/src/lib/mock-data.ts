@@ -1,5 +1,6 @@
 import type {
   AthleteListItem,
+  AthleteRosterItem,
   CheckInEntry,
   ExerciseLibraryItem,
   WorkoutDetail,
@@ -729,27 +730,18 @@ export const clubs = [
 export const coachOverview = {
   name: "Ricardo Pace Júnior",
   credential: "CREF 014626-G/MG",
-  athletesCount: 38,
-  prescribedThisWeek: 142,
-  pendingCheckIns: 9,
-  athletesAtRisk: 3,
+  athletesCount: 1,
+  prescribedThisWeek: 6,
+  pendingCheckIns: 0,
+  athletesAtRisk: 0,
   teamLoad: 0.78,
   alerts: [
-    { id: "al-1", severity: "danger" as const, text: "Bruno Lacerda relatou dor 8/10 — treino intenso bloqueado automaticamente." },
-    { id: "al-2", severity: "warning" as const, text: "Marina Sales com fadiga alta por 3 dias — volume da semana reduzido em 20%." },
-    { id: "al-3", severity: "info" as const, text: "5 atletas com check-in pendente há mais de 24h." },
+    { id: "al-1", severity: "warning" as const, text: "Camila Andrade com FC média em Z2 subindo 12% nos últimos 10 dias — possível fadiga acumulada." },
   ],
 };
 
 export const athleteList: AthleteListItem[] = [
   { id: "ath-1", name: "Camila Andrade", goal: "21 km", level: "Intermediário", status: "ativo", adherence: 0.92, lastCheckIn: "Hoje, 07:40", weeklyLoad: 312, raceDate: "16 ago 2026" },
-  { id: "ath-2", name: "Bruno Lacerda", goal: "10 km", level: "Iniciante", status: "risco", adherence: 0.61, lastCheckIn: "Hoje, 06:15", weeklyLoad: 198, raceDate: "20 set 2026" },
-  { id: "ath-3", name: "Marina Sales", goal: "42 km", level: "Avançado", status: "risco", adherence: 0.74, lastCheckIn: "Ontem, 21:02", weeklyLoad: 410, raceDate: "07 dez 2026" },
-  { id: "ath-4", name: "Felipe Tannous", goal: "Performance", level: "Pro", status: "ativo", adherence: 0.97, lastCheckIn: "Hoje, 05:50", weeklyLoad: 460, raceDate: "—" },
-  { id: "ath-5", name: "Renata Vidal", goal: "5 km", level: "Iniciante", status: "ativo", adherence: 0.88, lastCheckIn: "Hoje, 08:12", weeklyLoad: 142, raceDate: "30 ago 2026" },
-  { id: "ath-6", name: "Diego Martins", goal: "Retorno às corridas", level: "Iniciante", status: "inativo", adherence: 0.32, lastCheckIn: "há 6 dias", weeklyLoad: 64, raceDate: "—" },
-  { id: "ath-7", name: "Ana Beatriz Lima", goal: "21 km", level: "Intermediário", status: "ativo", adherence: 0.81, lastCheckIn: "Hoje, 06:50", weeklyLoad: 268, raceDate: "16 ago 2026" },
-  { id: "ath-8", name: "Thiago Ferraz", goal: "Emagrecimento", level: "Iniciante", status: "ativo", adherence: 0.69, lastCheckIn: "Ontem, 19:30", weeklyLoad: 120, raceDate: "—" },
 ];
 
 export const reportsList = [
@@ -959,24 +951,17 @@ export const adminRecentSubscriptions = [
 
 export const coachRosterStats = {
   totalSlots: 50,
-  usedSlots: 38,
+  usedSlots: 1,
   planName: "Pro",
-  mrr: 14_260,
-  mrrGrowth: 0.11,
-  churn30d: 1,
-  newAthletes30d: 4,
-  pendingInvoices: 2,
+  mrr: 290,
+  mrrGrowth: 0,
+  churn30d: 0,
+  newAthletes30d: 0,
+  pendingInvoices: 0,
 };
 
-export const athleteRosterList = [
-  { id: "ath-1", name: "Camila Andrade", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "10 jul 2026", monthlyFee: 290, joinedAt: "Jan 2025" },
-  { id: "ath-2", name: "Bruno Lacerda", plan: "Pace Run Pro — Atleta", status: "risco" as const, billingStatus: "em dia" as const, nextBilling: "14 jul 2026", monthlyFee: 290, joinedAt: "Mar 2025" },
-  { id: "ath-3", name: "Marina Sales", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "01 jul 2026", monthlyFee: 350, joinedAt: "Nov 2024" },
-  { id: "ath-4", name: "Felipe Tannous", plan: "Pace Run Pro — Elite", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "20 jul 2026", monthlyFee: 490, joinedAt: "Set 2024" },
-  { id: "ath-5", name: "Renata Vidal", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "05 jul 2026", monthlyFee: 290, joinedAt: "Abr 2025" },
-  { id: "ath-6", name: "Diego Martins", plan: "Pace Run Pro — Atleta", status: "inativo" as const, billingStatus: "inadimplente" as const, nextBilling: "—", monthlyFee: 290, joinedAt: "Jun 2025" },
-  { id: "ath-7", name: "Ana Beatriz Lima", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "08 jul 2026", monthlyFee: 290, joinedAt: "Fev 2025" },
-  { id: "ath-8", name: "Thiago Ferraz", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "22 jul 2026", monthlyFee: 290, joinedAt: "Mai 2025" },
+export const athleteRosterList: AthleteRosterItem[] = [
+  { id: "ath-1", name: "Camila Andrade", plan: "Pace Run Pro — Atleta", status: "ativo", billingStatus: "em dia", nextBilling: "10 jul 2026", monthlyFee: 290, joinedAt: "Jan 2025" },
 ];
 
 export const paymentHistory = [
@@ -1304,43 +1289,7 @@ export interface SmartAlert {
 export const smartAlerts: SmartAlert[] = [
   {
     id: "al-1",
-    athleteId: "a-2",
-    athleteName: "Carlos Mendonça",
-    severity: "critico",
-    category: "ausencia",
-    title: "Sem treino há 6 dias",
-    description: "Carlos não registrou nenhum treino desde 03/06. Último check-in indicou fadiga 8/10.",
-    metric: "6 dias sem atividade",
-    daysAgo: 1,
-    read: false,
-  },
-  {
-    id: "al-2",
-    athleteId: "a-5",
-    athleteName: "Fernanda Lima",
-    severity: "critico",
-    category: "dor",
-    title: "Dor persistente acima de 7 (3 dias seguidos)",
-    description: "Fernanda reportou dor ≥ 7/10 nos últimos 3 check-ins. Protocolo de redução de volume recomendado.",
-    metric: "Dor média: 7.4/10",
-    daysAgo: 0,
-    read: false,
-  },
-  {
-    id: "al-3",
-    athleteId: "a-3",
-    athleteName: "Rodrigo Farias",
-    severity: "critico",
-    category: "overtraining",
-    title: "Risco de overtraining detectado",
-    description: "Carga acumulada 34% acima da média das últimas 4 semanas. RPE médio 8.2 nos últimos 5 treinos.",
-    metric: "Carga: +34% acima do normal",
-    daysAgo: 1,
-    read: false,
-  },
-  {
-    id: "al-4",
-    athleteId: "a-1",
+    athleteId: "ath-1",
     athleteName: "Camila Andrade",
     severity: "atencao",
     category: "fc",
@@ -1349,54 +1298,6 @@ export const smartAlerts: SmartAlert[] = [
     metric: "FC Z2: +12% vs. média anterior",
     daysAgo: 2,
     read: false,
-  },
-  {
-    id: "al-5",
-    athleteId: "a-6",
-    athleteName: "Beatriz Santos",
-    severity: "atencao",
-    category: "adesao",
-    title: "Queda de adesão — 58% na última semana",
-    description: "Beatriz realizou apenas 3 de 5 treinos programados. Adesão caiu de 86% para 58% em 7 dias.",
-    metric: "Adesão: 58% (-28pp)",
-    daysAgo: 2,
-    read: false,
-  },
-  {
-    id: "al-6",
-    athleteId: "a-4",
-    athleteName: "Paulo Henrique",
-    severity: "atencao",
-    category: "volume",
-    title: "Volume semanal 31% abaixo da meta",
-    description: "Paulo completou 22 km dos 32 km programados para esta semana. Prova em 6 semanas.",
-    metric: "Volume: 22/32 km (-31%)",
-    daysAgo: 1,
-    read: false,
-  },
-  {
-    id: "al-7",
-    athleteId: "a-7",
-    athleteName: "Ana Cristina",
-    severity: "info",
-    category: "desempenho",
-    title: "Melhora de pace — novo PR em treino",
-    description: "Ana registrou seu melhor pace em treino intervalado: 4:12/km no tiro de 1.000m — melhora de 8s vs. última avaliação.",
-    metric: "Pace: 4:12/km (PR)",
-    daysAgo: 0,
-    read: true,
-  },
-  {
-    id: "al-8",
-    athleteId: "a-8",
-    athleteName: "Marcos Vieira",
-    severity: "info",
-    category: "fadiga",
-    title: "Fadiga elevada pós-treino longo",
-    description: "Marcos reportou fadiga 8/10 no dia seguinte ao longão de 22 km. Dentro do esperado — verificar próximos check-ins.",
-    metric: "Fadiga: 8/10 pós-longão",
-    daysAgo: 1,
-    read: true,
   },
 ];
 
@@ -1521,7 +1422,7 @@ export interface WeeklyAthleteAnalysis {
 
 export const weeklyAnalyses: WeeklyAthleteAnalysis[] = [
   {
-    athleteId: "a-1",
+    athleteId: "ath-1",
     athleteName: "Camila Andrade",
     weekLabel: "02–08 Jun 2025",
     metrics: [
@@ -1538,101 +1439,6 @@ export const weeklyAnalyses: WeeklyAthleteAnalysis[] = [
     riskLevel: "low",
     adherence: 100,
     recommendation: "Manter volume. Inserir um dia de trote leve se FC de repouso subir.",
-  },
-  {
-    athleteId: "a-2",
-    athleteName: "Bruno Silva",
-    weekLabel: "02–08 Jun 2025",
-    metrics: [
-      { label: "Volume", value: 38, prev: 44, unit: "km", delta: -13.6 },
-      { label: "Sessões", value: 4, prev: 5, unit: "", delta: -20.0 },
-      { label: "Pace médio", value: 348, prev: 340, unit: "s/km", delta: 2.4 },
-      { label: "FC média", value: 163, prev: 158, unit: "bpm", delta: 3.2 },
-      { label: "Carga", value: 612, prev: 710, unit: "UA", delta: -13.8 },
-    ],
-    highlights: [
-      "Aderência abaixo de 75% — faltou 1 sessão de corrida programada",
-      "FC média crescente pode indicar fadiga acumulada",
-    ],
-    riskLevel: "medium",
-    adherence: 72,
-    recommendation: "Entrar em contato para entender causa das faltas. Revisar carga se FC continuar elevada.",
-  },
-  {
-    athleteId: "a-3",
-    athleteName: "Marina Costa",
-    weekLabel: "02–08 Jun 2025",
-    metrics: [
-      { label: "Volume", value: 64, prev: 58, unit: "km", delta: 10.3 },
-      { label: "Sessões", value: 6, prev: 6, unit: "", delta: 0 },
-      { label: "Pace médio", value: 298, prev: 304, unit: "s/km", delta: -2.0 },
-      { label: "FC média", value: 145, prev: 147, unit: "bpm", delta: -1.4 },
-      { label: "Carga", value: 918, prev: 862, unit: "UA", delta: 6.5 },
-    ],
-    highlights: [
-      "Semana de volume recorde — 64 km completados com consistência",
-      "FC média estável apesar do aumento de volume",
-    ],
-    riskLevel: "low",
-    adherence: 95,
-    recommendation: "Excelente semana. Programar semana de deload na próxima para evitar overtraining.",
-  },
-  {
-    athleteId: "a-4",
-    athleteName: "Pedro Alves",
-    weekLabel: "02–08 Jun 2025",
-    metrics: [
-      { label: "Volume", value: 35, prev: 42, unit: "km", delta: -16.7 },
-      { label: "Sessões", value: 3, prev: 5, unit: "", delta: -40.0 },
-      { label: "Pace médio", value: 372, prev: 358, unit: "s/km", delta: 3.9 },
-      { label: "FC média", value: 168, prev: 160, unit: "bpm", delta: 5.0 },
-      { label: "Carga", value: 580, prev: 750, unit: "UA", delta: -22.7 },
-    ],
-    highlights: [
-      "Apenas 3 de 5 sessões realizadas — queda brusca de aderência",
-      "FC média 5% acima do normal — possível sinal de fadiga ou doença",
-    ],
-    riskLevel: "high",
-    adherence: 60,
-    recommendation: "Contatar atleta imediatamente. Suspender sessões intensas até avaliação do estado de saúde.",
-  },
-  {
-    athleteId: "a-5",
-    athleteName: "Fernanda Lima",
-    weekLabel: "02–08 Jun 2025",
-    metrics: [
-      { label: "Volume", value: 48, prev: 45, unit: "km", delta: 6.7 },
-      { label: "Sessões", value: 5, prev: 5, unit: "", delta: 0 },
-      { label: "Pace médio", value: 315, prev: 321, unit: "s/km", delta: -1.9 },
-      { label: "FC média", value: 152, prev: 154, unit: "bpm", delta: -1.3 },
-      { label: "Carga", value: 745, prev: 698, unit: "UA", delta: 6.7 },
-    ],
-    highlights: [
-      "Progressão saudável de volume — +6,7% dentro da faixa recomendada",
-      "Melhora consistente de pace nas últimas 3 semanas",
-    ],
-    riskLevel: "low",
-    adherence: 88,
-    recommendation: "Continuar com a progressão atual. Longão do sábado pode ser aumentado para 22 km.",
-  },
-  {
-    athleteId: "a-6",
-    athleteName: "Rafael Souza",
-    weekLabel: "02–08 Jun 2025",
-    metrics: [
-      { label: "Volume", value: 41, prev: 50, unit: "km", delta: -18.0 },
-      { label: "Sessões", value: 4, prev: 6, unit: "", delta: -33.3 },
-      { label: "Pace médio", value: 332, prev: 325, unit: "s/km", delta: 2.2 },
-      { label: "FC média", value: 160, prev: 155, unit: "bpm", delta: 3.2 },
-      { label: "Carga", value: 640, prev: 830, unit: "UA", delta: -22.9 },
-    ],
-    highlights: [
-      "Volume 18% abaixo do planejado — prova a 4 semanas, risco de subpreparação",
-      "Queda de 2 sessões em relação à semana anterior sem justificativa registrada",
-    ],
-    riskLevel: "high",
-    adherence: 65,
-    recommendation: "Verificar comprometimento do atleta. Se saudável, ajustar plano para compensar volume perdido.",
   },
 ];
 

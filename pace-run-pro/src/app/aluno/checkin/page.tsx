@@ -8,8 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScaleInput } from "@/components/checkin/scale-input";
-import { checkInHistory } from "@/lib/mock-data";
+import { checkInHistory, shoesList } from "@/lib/mock-data";
 import { evaluateCheckInRules, type CheckInRecord } from "@/lib/calculations";
+import { cn } from "@/lib/utils";
 
 const fields = [
   { key: "rpe", label: "RPE — esforço percebido", emojis: ["😴", "🙂", "😊", "😅", "🥵"], low: "Muito leve", high: "Esforço máximo", accent: "#8b5cf6" },
@@ -25,7 +26,11 @@ export default function CheckInPage() {
   const router = useRouter();
   const [values, setValues] = useState<Record<Key, number>>({ rpe: 5, pain: 1, sleep: 7, fatigue: 4, mood: 7 });
   const [notes, setNotes] = useState("");
+  const [selectedShoeId, setSelectedShoeId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+
+  const activeShoes = shoesList.filter((s) => s.active);
+  const selectedShoe = activeShoes.find((s) => s.id === selectedShoeId);
 
   function update(key: Key, v: number) {
     setValues((s) => ({ ...s, [key]: v }));
@@ -76,6 +81,41 @@ export default function CheckInPage() {
 
         <Card>
           <CardContent className="p-4 sm:p-5">
+            <span className="mb-3 block text-sm font-semibold text-white">Qual tênis você usou neste treino?</span>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {activeShoes.map((shoe) => (
+                <button
+                  key={shoe.id}
+                  type="button"
+                  onClick={() => setSelectedShoeId((id) => (id === shoe.id ? null : shoe.id))}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-xl border p-3 text-left transition-all",
+                    selectedShoeId === shoe.id
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-background hover:border-primary/40"
+                  )}
+                >
+                  <span
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xl"
+                    style={{ backgroundColor: `${shoe.color}20`, border: `1.5px solid ${shoe.color}40` }}
+                  >
+                    {shoe.imageEmoji}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-white">
+                      {shoe.brand} {shoe.model}
+                    </p>
+                    <p className="text-xs text-text-muted">{shoe.kmAccumulated.toLocaleString("pt-BR")} km</p>
+                  </div>
+                  {selectedShoeId === shoe.id && <CheckCircle2 className="ml-auto h-4 w-4 shrink-0 text-primary" />}
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 sm:p-5">
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-white">Observações (opcional)</span>
               <textarea
@@ -98,6 +138,11 @@ export default function CheckInPage() {
               <CheckCircle2 className="h-4 w-4" />
               Check-in salvo no seu histórico
             </div>
+            {selectedShoe && (
+              <p className="text-sm text-text-muted">
+                Tênis registrado: <span className="font-semibold text-white">{selectedShoe.brand} {selectedShoe.model}</span>
+              </p>
+            )}
             {ruleResults.map((r, i) => {
               const cfg = severityStyles[r.severity];
               return (
