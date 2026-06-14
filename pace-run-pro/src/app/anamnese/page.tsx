@@ -344,7 +344,7 @@ export default function AnamnesePage() {
             <div className="mt-8 space-y-2">
               <label className="block">
                 <span className="mb-1.5 block text-sm font-semibold text-white">
-                  Quantos anos você corre?
+                  Há quantos anos você corre?
                 </span>
                 <select
                   value={yearsRunning}

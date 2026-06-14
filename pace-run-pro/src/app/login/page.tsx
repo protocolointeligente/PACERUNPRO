@@ -177,12 +177,12 @@ function LoginContent() {
         {/* Forgot password */}
         <p className="mt-4 text-center text-sm text-text-muted">
           Esqueceu a senha?{" "}
-          <a
-            href="#"
+          <Link
+            href="/recuperar-senha"
             className="font-semibold text-primary hover:text-primary/80 transition-colors"
           >
             Recuperar
-          </a>
+          </Link>
         </p>
 
         {/* Divider */}

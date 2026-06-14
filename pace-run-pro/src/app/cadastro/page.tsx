@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,14 +15,45 @@ export default function CadastroPage() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    router.push("/checkout");
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: nome, email, password: senha }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "Não foi possível criar sua conta. Tente novamente.");
+        setLoading(false);
+        return;
+      }
+
+      const result = await signIn("credentials", { email, password: senha, redirect: false });
+      if (result?.error) {
+        setError("Conta criada! Faça login para continuar.");
+        setLoading(false);
+        router.push("/login");
+        return;
+      }
+
+      router.push("/checkout");
+    } catch {
+      setError("Não foi possível criar sua conta. Tente novamente.");
+      setLoading(false);
+    }
   }
 
   function handleGoogle() {
-    router.push("/checkout");
+    signIn("google", { callbackUrl: "/checkout" });
   }
 
   return (
@@ -127,17 +159,30 @@ export default function CadastroPage() {
                   onChange={(e) => setSenha(e.target.value)}
                   placeholder="Mínimo 8 caracteres"
                   required
+                  minLength={8}
                   className={inputClass}
                 />
               </label>
+
+              {/* Error message */}
+              {error && (
+                <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-sm text-red-400">
+                  {error}
+                </p>
+              )}
 
               <Button
                 type="submit"
                 variant="primary"
                 size="lg"
+                disabled={loading}
                 className="mt-2 w-full"
               >
-                Criar conta
+                {loading ? (
+                  <span className="animate-spin border-2 border-white/30 border-t-white rounded-full h-4 w-4" />
+                ) : (
+                  "Criar conta"
+                )}
               </Button>
             </form>
 
@@ -145,7 +190,7 @@ export default function CadastroPage() {
             <p className="mt-6 text-center text-sm text-text-muted">
               Já tem conta?{" "}
               <Link
-                href="/aluno/dashboard"
+                href="/login"
                 className="font-semibold text-primary hover:text-primary/80 transition-colors"
               >
                 Fazer login
