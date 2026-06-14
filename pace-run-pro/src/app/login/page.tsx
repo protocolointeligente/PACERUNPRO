@@ -51,7 +51,7 @@ function LoginContent() {
   }
 
   function handleGoogle() {
-    signIn("google", { callbackUrl: callbackUrl || "/aluno/dashboard" });
+    signIn("google", { callbackUrl: callbackUrl || "/painel" });
   }
 
   return (

@@ -33,7 +33,7 @@ export default function LandingPage() {
               Integrações
             </a>
           </div>
-          <Link href="/aluno/dashboard">
+          <Link href="/login">
             <Button variant="primary" size="sm">
               Entrar
             </Button>
