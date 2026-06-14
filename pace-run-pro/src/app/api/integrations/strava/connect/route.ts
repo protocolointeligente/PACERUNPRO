@@ -1,0 +1,21 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { getStravaAuthorizeUrl } from "@/lib/integrations/strava";
+
+export async function GET(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", "/aluno/perfil?tab=dispositivos");
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (!process.env.STRAVA_CLIENT_ID || !process.env.STRAVA_CLIENT_SECRET) {
+    return NextResponse.redirect(
+      new URL("/aluno/perfil?tab=dispositivos&error=strava_not_configured", request.url)
+    );
+  }
+
+  const redirectUri = new URL("/api/auth/strava/callback", request.url).toString();
+  return NextResponse.redirect(getStravaAuthorizeUrl(redirectUri));
+}

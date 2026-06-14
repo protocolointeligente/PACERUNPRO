@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Award,
   Bell,
+  CheckCircle2,
   CreditCard,
   Globe,
+  Loader2,
   LogOut,
   Pencil,
   RefreshCw,
@@ -13,6 +15,7 @@ import {
   Smartphone,
   Target,
   User,
+  XCircle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +35,86 @@ import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
   const [notifs, setNotifs] = useState({ workouts: true, community: false, coach: true });
+  const [activeTab, setActiveTab] = useState("dados");
+  const [stravaConnected, setStravaConnected] = useState(false);
+  const [stravaLastSync, setStravaLastSync] = useState<string | null>(null);
+  const [stravaLoading, setStravaLoading] = useState<"sync" | "disconnect" | null>(null);
+  const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [comingSoonId, setComingSoonId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get("connected");
+    const error = params.get("error");
+
+    if (params.get("tab") === "dispositivos" || connected || error) {
+      setActiveTab("dispositivos");
+    }
+
+    if (connected === "strava") {
+      setBanner({ type: "success", text: "Strava conectado com sucesso! Suas atividades serão sincronizadas." });
+    } else if (error) {
+      const messages: Record<string, string> = {
+        strava_denied: "Conexão com o Strava cancelada.",
+        strava_token: "Não foi possível concluir a conexão com o Strava. Tente novamente.",
+        strava_not_configured: "A integração com o Strava ainda não foi configurada pelo administrador.",
+      };
+      setBanner({ type: "error", text: messages[error] ?? "Ocorreu um erro na integração." });
+    }
+
+    if (connected || error || params.get("tab")) {
+      window.history.replaceState({}, "", "/aluno/perfil");
+    }
+
+    fetch("/api/integrations/status")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { devices?: { provider: string; lastSyncAt: string | null }[] } | null) => {
+        const strava = data?.devices?.find((device) => device.provider === "STRAVA");
+        if (strava) {
+          setStravaConnected(true);
+          setStravaLastSync(strava.lastSyncAt);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  async function handleStravaSync() {
+    setStravaLoading("sync");
+    try {
+      const res = await fetch("/api/integrations/strava/sync", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setStravaLastSync(data.lastSyncAt);
+        setBanner({
+          type: "success",
+          text:
+            data.count > 0
+              ? `Sincronizado! ${data.count} atividade(s) recente(s) encontradas.`
+              : "Sincronizado! Nenhuma atividade nova encontrada.",
+        });
+      } else {
+        setBanner({ type: "error", text: "Não foi possível sincronizar com o Strava agora." });
+      }
+    } catch {
+      setBanner({ type: "error", text: "Não foi possível sincronizar com o Strava agora." });
+    } finally {
+      setStravaLoading(null);
+    }
+  }
+
+  async function handleStravaDisconnect() {
+    setStravaLoading("disconnect");
+    try {
+      await fetch("/api/integrations/strava/disconnect", { method: "POST" });
+      setStravaConnected(false);
+      setStravaLastSync(null);
+      setBanner({ type: "success", text: "Strava desconectado." });
+    } catch {
+      setBanner({ type: "error", text: "Não foi possível desconectar o Strava agora." });
+    } finally {
+      setStravaLoading(null);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -60,7 +143,7 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="dados">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="dados">Dados pessoais</TabsTrigger>
           <TabsTrigger value="objetivos">Objetivos &amp; histórico</TabsTrigger>
@@ -122,55 +205,133 @@ export default function ProfilePage() {
         {/* Devices */}
         <TabsContent value="dispositivos">
           <div className="space-y-6">
+            {/* Status banner */}
+            {banner && (
+              <div
+                className={cn(
+                  "flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm",
+                  banner.type === "success"
+                    ? "border-success/30 bg-success/10 text-success"
+                    : "border-danger/30 bg-danger/10 text-danger",
+                )}
+              >
+                {banner.type === "success" ? (
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                ) : (
+                  <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                )}
+                <p className="flex-1">{banner.text}</p>
+                <button
+                  type="button"
+                  onClick={() => setBanner(null)}
+                  className="text-text-muted transition-colors hover:text-white"
+                  aria-label="Fechar"
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
             {/* Integration cards */}
             <div className="grid gap-3 sm:grid-cols-2">
-              {integrationsList.map((d) => (
-                <Card key={d.id}>
-                  <CardContent className="flex items-center gap-3 p-4">
-                    <span
-                      className={cn(
-                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                        d.connected ? "bg-success/15 text-success" : "bg-card-hover text-text-muted",
-                      )}
-                    >
-                      <Smartphone className="h-5 w-5" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-white">{d.name}</p>
-                      <p className="truncate text-xs text-text-muted">{d.description}</p>
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end gap-1.5">
-                      <Badge variant={d.connected ? "success" : "outline"}>
-                        {d.connected ? "Conectado" : "Desconectado"}
-                      </Badge>
-                      {d.connected ? (
-                        <div className="flex gap-1">
+              {integrationsList.map((d) => {
+                const isStrava = d.id === "strava";
+                const connected = isStrava ? stravaConnected : d.connected;
+
+                return (
+                  <Card key={d.id}>
+                    <CardContent className="flex items-center gap-3 p-4">
+                      <span
+                        className={cn(
+                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                          connected ? "bg-success/15 text-success" : "bg-card-hover text-text-muted",
+                        )}
+                      >
+                        <Smartphone className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-white">{d.name}</p>
+                        <p className="truncate text-xs text-text-muted">{d.description}</p>
+                        {isStrava && connected && stravaLastSync && (
+                          <p className="mt-0.5 truncate text-[11px] text-text-muted">
+                            Última sincronização: {new Date(stravaLastSync).toLocaleString("pt-BR")}
+                          </p>
+                        )}
+                        {!isStrava && comingSoonId === d.id && (
+                          <p className="mt-0.5 truncate text-[11px] text-warning">
+                            Em breve — integração em desenvolvimento.
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1.5">
+                        <Badge variant={connected ? "success" : "outline"}>
+                          {connected ? "Conectado" : "Desconectado"}
+                        </Badge>
+                        {isStrava ? (
+                          connected ? (
+                            <div className="flex gap-1">
+                              <button
+                                type="button"
+                                onClick={handleStravaSync}
+                                disabled={stravaLoading !== null}
+                                className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] text-info transition-colors hover:bg-info/10 disabled:opacity-50"
+                              >
+                                {stravaLoading === "sync" ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="h-3 w-3" />
+                                )}
+                                Sincronizar agora
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleStravaDisconnect}
+                                disabled={stravaLoading !== null}
+                                className="rounded-md px-2 py-0.5 text-[11px] text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
+                              >
+                                {stravaLoading === "disconnect" ? "Desconectando..." : "Desconectar"}
+                              </button>
+                            </div>
+                          ) : (
+                            <a
+                              href="/api/integrations/strava/connect"
+                              className="rounded-md px-2 py-0.5 text-[11px] text-primary transition-colors hover:bg-primary/10"
+                            >
+                              Conectar
+                            </a>
+                          )
+                        ) : connected ? (
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setComingSoonId(d.id)}
+                              className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] text-info transition-colors hover:bg-info/10"
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                              Sincronizar agora
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setComingSoonId(d.id)}
+                              className="rounded-md px-2 py-0.5 text-[11px] text-danger transition-colors hover:bg-danger/10"
+                            >
+                              Desconectar
+                            </button>
+                          </div>
+                        ) : (
                           <button
                             type="button"
-                            className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] text-info hover:bg-info/10 transition-colors"
+                            onClick={() => setComingSoonId(d.id)}
+                            className="rounded-md px-2 py-0.5 text-[11px] text-primary transition-colors hover:bg-primary/10"
                           >
-                            <RefreshCw className="h-3 w-3" />
-                            Sincronizar agora
+                            Conectar
                           </button>
-                          <button
-                            type="button"
-                            className="rounded-md px-2 py-0.5 text-[11px] text-danger hover:bg-danger/10 transition-colors"
-                          >
-                            Desconectar
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className="rounded-md px-2 py-0.5 text-[11px] text-primary hover:bg-primary/10 transition-colors"
-                        >
-                          Conectar
-                        </button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
 
             {/* Synced activities */}
