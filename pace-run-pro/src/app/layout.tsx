@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Sora, Montserrat } from "next/font/google";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { CookieConsent } from "@/components/cookie-consent";
 import "./globals.css";
 
 const inter = Inter({
@@ -53,6 +54,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans antialiased">
         <ThemeToggle />
         {children}
+        <CookieConsent />
       </body>
     </html>
   );

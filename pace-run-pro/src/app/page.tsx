@@ -299,8 +299,8 @@ export default function LandingPage() {
               <ul className="space-y-2 text-sm">
                 <li><a href="#" className="text-text-muted hover:text-text transition-colors">Central de ajuda</a></li>
                 <li><a href="#" className="text-text-muted hover:text-text transition-colors">Contato</a></li>
-                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Termos de uso</a></li>
-                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Privacidade</a></li>
+                <li><Link href="/termos" className="text-text-muted hover:text-text transition-colors">Termos de uso</Link></li>
+                <li><Link href="/privacidade" className="text-text-muted hover:text-text transition-colors">Privacidade</Link></li>
               </ul>
             </div>
           </div>

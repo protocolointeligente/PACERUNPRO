@@ -202,13 +202,13 @@ function LoginContent() {
         {/* Legal small print */}
         <p className="mt-6 text-center text-xs text-text-muted/60">
           Ao entrar, você concorda com nossos{" "}
-          <a href="#" className="underline hover:text-text-muted transition-colors">
+          <Link href="/termos" className="underline hover:text-text-muted transition-colors">
             Termos de Uso
-          </a>{" "}
+          </Link>{" "}
           e{" "}
-          <a href="#" className="underline hover:text-text-muted transition-colors">
+          <Link href="/privacidade" className="underline hover:text-text-muted transition-colors">
             Política de Privacidade
-          </a>
+          </Link>
           .
         </p>
       </div>
