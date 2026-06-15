@@ -218,336 +218,330 @@ export default function RunPrescriptionPage() {
         </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_22rem]">
-        {/* Main form */}
-        <div className="space-y-5">
-          <Card>
-            <CardContent className="p-5">
-              <h3 className="mb-3 font-display text-sm font-semibold text-text">Atleta</h3>
-              <div className="flex flex-wrap gap-2">
-                {athleteList.map((a) => (
-                  <button
-                    key={a.id}
-                    onClick={() => {
-                      setSent(false);
-                      setAthleteId(a.id);
-                    }}
-                    className={cn(
-                      "flex items-center gap-2.5 rounded-xl border px-3 py-2 text-left transition-colors",
-                      athleteId === a.id ? "border-primary/60 bg-primary/15" : "border-border bg-card-hover/30 hover:border-primary/30"
-                    )}
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="text-xs">{a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold text-text">{a.name}</p>
-                      <p className="truncate text-[11px] text-text-muted">{a.goal} · {a.level}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-5">
-              <h3 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold text-text">
-                <Activity className="h-4 w-4 text-primary" /> Nível de fitness — VDOT (Daniels)
-              </h3>
-              <p className="mb-3 text-xs text-text-muted">
-                Informe o resultado de uma prova recente de {athlete.name.split(" ")[0]} para calcular o VDOT e gerar as
-                faixas de pace de treino (E, M, T, I, R) da metodologia de Jack Daniels.
-              </p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block">
-                  <span className={labelClass}>Distância da prova</span>
-                  <select
-                    value={raceDistanceM}
-                    onChange={(e) => setRaceDistanceM(Number(e.target.value))}
-                    className={inputClass}
-                  >
-                    {RACE_DISTANCES.map((d) => (
-                      <option key={d.id} value={d.meters} className="bg-card text-text">
-                        {d.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block">
-                  <span className={labelClass}>Tempo (MM:SS ou H:MM:SS)</span>
-                  <input
-                    value={raceTimeStr}
-                    onChange={(e) => setRaceTimeStr(e.target.value)}
-                    placeholder="Ex.: 47:52"
-                    className={inputClass}
-                  />
-                </label>
-              </div>
-
-              {trainingPaces && (
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3.5 py-2.5">
-                    <span className="text-xs text-text-muted">VDOT estimado</span>
-                    <span className="font-display text-lg font-bold text-text">{vdot.toFixed(1)}</span>
+      <div className="grid gap-5 lg:grid-cols-[1fr_22rem] lg:items-start">
+        <Card className="order-1 lg:order-none lg:col-start-1 lg:row-start-1">
+          <CardContent className="p-5">
+            <h3 className="mb-3 font-display text-sm font-semibold text-text">Atleta</h3>
+            <div className="flex flex-wrap gap-2">
+              {athleteList.map((a) => (
+                <button
+                  key={a.id}
+                  onClick={() => {
+                    setSent(false);
+                    setAthleteId(a.id);
+                  }}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-xl border px-3 py-2 text-left transition-colors",
+                    athleteId === a.id ? "border-primary/60 bg-primary/15" : "border-border bg-card-hover/30 hover:border-primary/30"
+                  )}
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="text-xs">{a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-semibold text-text">{a.name}</p>
+                    <p className="truncate text-[11px] text-text-muted">{a.goal} · {a.level}</p>
                   </div>
-                  <div className="overflow-hidden rounded-xl border border-border">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-card-hover/40 text-left text-[11px] uppercase tracking-wider text-text-muted">
-                          <th className="px-3 py-2 font-medium">Zona</th>
-                          <th className="px-3 py-2 font-medium">Pace alvo</th>
-                          <th className="hidden px-3 py-2 font-medium sm:table-cell">Uso</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {TRAINING_ZONES.map((z) => {
-                          const range = trainingPaces[z.id];
-                          return (
-                            <tr key={z.id}>
-                              <td className="px-3 py-2">
-                                <span className="inline-flex items-center gap-2 font-semibold" style={{ color: z.color }}>
-                                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: z.color }} />
-                                  {z.label}
-                                </span>
-                              </td>
-                              <td className="px-3 py-2 text-text">
-                                {formatPace(range.fastSecPerKm).replace("/km", "")}–{formatPace(range.slowSecPerKm)}
-                              </td>
-                              <td className="hidden px-3 py-2 text-text-muted sm:table-cell">{z.description}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardContent className="p-5">
-              <h3 className="mb-3 font-display text-sm font-semibold text-text">Tipo de treino</h3>
-              <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
-                {runTypes.map((t) => {
-                  const color = getSubtypeColor("corrida", t.label);
-                  return (
-                    <button
-                      key={t.id}
-                      onClick={() => {
-                        setSent(false);
-                        setTypeId(t.id);
-                      }}
-                      className={cn(
-                        "rounded-xl border px-3.5 py-3 text-left transition-colors",
-                        typeId === t.id ? "border-primary/60 bg-primary/15" : "border-border bg-card-hover/30 hover:border-primary/30"
-                      )}
-                    >
-                      <p className="flex items-center gap-2 text-sm font-semibold text-text">
-                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
-                        {t.label}
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-text-muted">{t.description}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="space-y-4 p-5">
-              <h3 className="font-display text-sm font-semibold text-text">Detalhes da sessão</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block">
-                  <span className={labelClass}>Título do treino</span>
-                  <input
-                    value={form.title}
-                    onChange={(e) => update("title", e.target.value)}
-                    placeholder={`Ex.: ${selectedType.label} — ${athlete.name.split(" ")[0]}`}
-                    className={inputClass}
-                  />
-                </label>
-                <label className="block">
-                  <span className={labelClass}>Data</span>
-                  <input type="date" value={form.date} onChange={(e) => update("date", e.target.value)} className={inputClass} />
-                </label>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <label className="block">
-                  <span className={labelClass}>Distância (km)</span>
-                  <input value={form.distanceKm} onChange={(e) => update("distanceKm", e.target.value)} placeholder="Ex.: 9" inputMode="decimal" className={inputClass} />
-                </label>
-                <label className="block">
-                  <span className={labelClass}>Duração (min)</span>
-                  <input value={form.durationMin} onChange={(e) => update("durationMin", e.target.value)} placeholder="Ex.: 55" inputMode="numeric" className={inputClass} />
-                </label>
-                <label className="block">
-                  <span className={labelClass}>Pace alvo (/km)</span>
-                  <input value={form.pace} onChange={(e) => update("pace", e.target.value)} placeholder="Ex.: 4:42" className={inputClass} />
-                </label>
-                <label className="block">
-                  <span className={labelClass}>RPE alvo</span>
-                  <input value={form.rpe} onChange={(e) => update("rpe", e.target.value)} placeholder="1-10" inputMode="numeric" className={inputClass} />
-                </label>
-              </div>
-
+        <Card className="order-2 lg:order-none lg:col-start-1 lg:row-start-2">
+          <CardContent className="p-5">
+            <h3 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold text-text">
+              <Activity className="h-4 w-4 text-primary" /> Nível de fitness — VDOT (Daniels)
+            </h3>
+            <p className="mb-3 text-xs text-text-muted">
+              Informe o resultado de uma prova recente de {athlete.name.split(" ")[0]} para calcular o VDOT e gerar as
+              faixas de pace de treino (E, M, T, I, R) da metodologia de Jack Daniels.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className={labelClass}>Zona de FC alvo</span>
-                <select value={form.hrZone} onChange={(e) => update("hrZone", e.target.value)} className={inputClass}>
-                  {hrZones.map((z) => (
-                    <option key={z} value={z} className="bg-card text-text">
-                      {z}
+                <span className={labelClass}>Distância da prova</span>
+                <select
+                  value={raceDistanceM}
+                  onChange={(e) => setRaceDistanceM(Number(e.target.value))}
+                  className={inputClass}
+                >
+                  {RACE_DISTANCES.map((d) => (
+                    <option key={d.id} value={d.meters} className="bg-card text-text">
+                      {d.label}
                     </option>
                   ))}
                 </select>
               </label>
-            </CardContent>
-          </Card>
+              <label className="block">
+                <span className={labelClass}>Tempo (MM:SS ou H:MM:SS)</span>
+                <input
+                  value={raceTimeStr}
+                  onChange={(e) => setRaceTimeStr(e.target.value)}
+                  placeholder="Ex.: 47:52"
+                  className={inputClass}
+                />
+              </label>
+            </div>
 
-          <Card>
-            <CardContent className="space-y-4 p-5">
-              <h3 className="font-display text-sm font-semibold text-text">Estrutura do treino</h3>
-              <label className="block">
-                <span className={labelClass}>Objetivo</span>
-                <textarea rows={2} value={form.objective} onChange={(e) => update("objective", e.target.value)} placeholder="O que esse treino desenvolve no contexto do plano…" className={textareaClass} />
-              </label>
-              <label className="block">
-                <span className={labelClass}>Aquecimento</span>
-                <textarea rows={2} value={form.warmup} onChange={(e) => update("warmup", e.target.value)} placeholder="Ex.: 15 min de corrida leve em Zona 1-2 + mobilidade dinâmica…" className={textareaClass} />
-              </label>
-              <label className="block">
-                <span className={labelClass}>Parte principal</span>
-                <textarea rows={3} value={form.mainSet} onChange={(e) => update("mainSet", e.target.value)} placeholder="Ex.: 8 x 400 m a 4:20-4:30/km, com 90s de trote leve entre os tiros…" className={textareaClass} />
-              </label>
-              <label className="block">
-                <span className={labelClass}>Volta à calma</span>
-                <textarea rows={2} value={form.cooldown} onChange={(e) => update("cooldown", e.target.value)} placeholder="Ex.: 10 min de trote regenerativo + alongamento…" className={textareaClass} />
-              </label>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="space-y-4 p-5">
-              <h3 className="font-display text-sm font-semibold text-text">Mídia &amp; observações</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block">
-                  <span className={labelClass}><Video className="mr-1 inline h-3 w-3" /> Vídeo de apoio (URL)</span>
-                  <input value={form.videoUrl} onChange={(e) => update("videoUrl", e.target.value)} placeholder="https://…" className={inputClass} />
-                </label>
-                <label className="block">
-                  <span className={labelClass}><ImageIcon className="mr-1 inline h-3 w-3" /> Imagem de referência (URL)</span>
-                  <input value={form.imageUrl} onChange={(e) => update("imageUrl", e.target.value)} placeholder="https://…" className={inputClass} />
-                </label>
-              </div>
-              <label className="block">
-                <span className={labelClass}>Observações para o atleta</span>
-                <textarea rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Ex.: Se sentir desconforto na canela, reduza a intensidade dos tiros e me avise no check-in…" className={textareaClass} />
-              </label>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-5">
-          <Card className="border-primary/30 bg-gradient-to-br from-primary/12 to-card">
-            <CardContent className="p-5">
-              <h3 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold text-text">
-                <Sparkles className="h-4 w-4 text-primary" /> Motor de prescrição inteligente
-              </h3>
-              <p className="text-xs text-text-muted">
-                {vdot > 0 ? (
-                  <>
-                    Pace calculado pelas zonas de Daniels (VDOT {vdot.toFixed(1)}), carga semanal e objetivo de{" "}
-                    {athlete.name.split(" ")[0]} para um treino de{" "}
-                    <span className="text-text">{selectedType.label.toLowerCase()}</span>.
-                  </>
-                ) : (
-                  <>
-                    Sugestão calculada a partir do nível, pace de referência, carga semanal e objetivo de{" "}
-                    {athlete.name.split(" ")[0]} para um treino de{" "}
-                    <span className="text-text">{selectedType.label.toLowerCase()}</span>.
-                  </>
-                )}
-              </p>
-
-              <div className="mt-4 space-y-2 rounded-xl border border-border bg-background/40 p-3.5 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-text-muted">Distância sugerida</span>
-                  <span className="font-semibold text-text">{suggestion.distanceKm} km</span>
+            {trainingPaces && (
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3.5 py-2.5">
+                  <span className="text-xs text-text-muted">VDOT estimado</span>
+                  <span className="font-display text-lg font-bold text-text">{vdot.toFixed(1)}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text-muted">Duração estimada</span>
-                  <span className="font-semibold text-text">{suggestion.durationMin} min</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text-muted">Pace alvo</span>
-                  <span className="font-semibold text-text">{formatPace(suggestion.paceSecPerKm)} /km</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text-muted">RPE alvo</span>
-                  <span className="font-semibold text-text">{suggestion.rpe}/10</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text-muted">Zona de FC</span>
-                  <span className="font-semibold text-text">{suggestion.hrZone.split(" — ")[0]}</span>
+                <div className="overflow-hidden rounded-xl border border-border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-card-hover/40 text-left text-[11px] uppercase tracking-wider text-text-muted">
+                        <th className="px-3 py-2 font-medium">Zona</th>
+                        <th className="px-3 py-2 font-medium">Pace alvo</th>
+                        <th className="hidden px-3 py-2 font-medium sm:table-cell">Uso</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {TRAINING_ZONES.map((z) => {
+                        const range = trainingPaces[z.id];
+                        return (
+                          <tr key={z.id}>
+                            <td className="px-3 py-2">
+                              <span className="inline-flex items-center gap-2 font-semibold" style={{ color: z.color }}>
+                                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: z.color }} />
+                                {z.label}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-text">
+                              {formatPace(range.fastSecPerKm).replace("/km", "")}–{formatPace(range.slowSecPerKm)}
+                            </td>
+                            <td className="hidden px-3 py-2 text-text-muted sm:table-cell">{z.description}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-
-              <Button onClick={applySuggestion} className="mt-4 w-full">
-                <Wand2 className="h-4 w-4" /> Aplicar sugestão ao formulário
-              </Button>
-              <p className="mt-2 text-[11px] text-text-muted">
-                A sugestão é apenas um ponto de partida — você pode editar livremente qualquer campo antes de prescrever.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-5">
-              <h3 className="mb-3 font-display text-sm font-semibold text-text">Pré-visualização</h3>
-              <div className="rounded-xl border border-border bg-card-hover/30 p-4">
-                <div className="flex items-center justify-between">
-                  {(() => {
-                    const color = getSubtypeColor("corrida", selectedType.label);
-                    return (
-                      <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="border">
-                        {selectedType.label}
-                      </Badge>
-                    );
-                  })()}
-                  {form.rpe && <span className="text-xs text-text-muted">RPE {form.rpe}</span>}
-                </div>
-                <p className="mt-2 truncate text-sm font-semibold text-text">{form.title || `${selectedType.label} — ${athlete.name.split(" ")[0]}`}</p>
-                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
-                  {form.distanceKm && <span>{form.distanceKm} km</span>}
-                  {form.durationMin && <span>{form.durationMin} min</span>}
-                  {form.pace && <span>{form.pace} /km</span>}
-                  {form.hrZone && <span>{form.hrZone.split(" — ")[0]}</span>}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <motion.div initial={false} animate={{ opacity: 1 }}>
-            <Button onClick={submit} size="lg" className="w-full">
-              <Send className="h-4 w-4" /> Enviar prescrição para {athlete.name.split(" ")[0]}
-            </Button>
-            {sent && (
-              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="mt-3">
-                <Card className="border-success/30 bg-success/5">
-                  <CardContent className="flex items-center gap-2.5 p-3.5 text-sm text-text-muted">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
-                    Treino prescrito para <span className="font-semibold text-text">{athlete.name}</span>. Ele aparecerá no
-                    plano assim que a semana for liberada.
-                  </CardContent>
-                </Card>
-              </motion.div>
             )}
-          </motion.div>
-        </div>
+          </CardContent>
+        </Card>
+
+        <Card className="order-3 lg:order-none lg:col-start-1 lg:row-start-3">
+          <CardContent className="p-5">
+            <h3 className="mb-3 font-display text-sm font-semibold text-text">Tipo de treino</h3>
+            <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+              {runTypes.map((t) => {
+                const color = getSubtypeColor("corrida", t.label);
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setSent(false);
+                      setTypeId(t.id);
+                    }}
+                    className={cn(
+                      "rounded-xl border px-3.5 py-3 text-left transition-colors",
+                      typeId === t.id ? "border-primary/60 bg-primary/15" : "border-border bg-card-hover/30 hover:border-primary/30"
+                    )}
+                  >
+                    <p className="flex items-center gap-2 text-sm font-semibold text-text">
+                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+                      {t.label}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-text-muted">{t.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="order-5 lg:order-none lg:col-start-1 lg:row-start-4">
+          <CardContent className="space-y-4 p-5">
+            <h3 className="font-display text-sm font-semibold text-text">Detalhes da sessão</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className={labelClass}>Título do treino</span>
+                <input
+                  value={form.title}
+                  onChange={(e) => update("title", e.target.value)}
+                  placeholder={`Ex.: ${selectedType.label} — ${athlete.name.split(" ")[0]}`}
+                  className={inputClass}
+                />
+              </label>
+              <label className="block">
+                <span className={labelClass}>Data</span>
+                <input type="date" value={form.date} onChange={(e) => update("date", e.target.value)} className={inputClass} />
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <label className="block">
+                <span className={labelClass}>Distância (km)</span>
+                <input value={form.distanceKm} onChange={(e) => update("distanceKm", e.target.value)} placeholder="Ex.: 9" inputMode="decimal" className={inputClass} />
+              </label>
+              <label className="block">
+                <span className={labelClass}>Duração (min)</span>
+                <input value={form.durationMin} onChange={(e) => update("durationMin", e.target.value)} placeholder="Ex.: 55" inputMode="numeric" className={inputClass} />
+              </label>
+              <label className="block">
+                <span className={labelClass}>Pace alvo (/km)</span>
+                <input value={form.pace} onChange={(e) => update("pace", e.target.value)} placeholder="Ex.: 4:42" className={inputClass} />
+              </label>
+              <label className="block">
+                <span className={labelClass}>RPE alvo</span>
+                <input value={form.rpe} onChange={(e) => update("rpe", e.target.value)} placeholder="1-10" inputMode="numeric" className={inputClass} />
+              </label>
+            </div>
+
+            <label className="block">
+              <span className={labelClass}>Zona de FC alvo</span>
+              <select value={form.hrZone} onChange={(e) => update("hrZone", e.target.value)} className={inputClass}>
+                {hrZones.map((z) => (
+                  <option key={z} value={z} className="bg-card text-text">
+                    {z}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </CardContent>
+        </Card>
+
+        <Card className="order-6 lg:order-none lg:col-start-1 lg:row-start-5">
+          <CardContent className="space-y-4 p-5">
+            <h3 className="font-display text-sm font-semibold text-text">Estrutura do treino</h3>
+            <label className="block">
+              <span className={labelClass}>Objetivo</span>
+              <textarea rows={2} value={form.objective} onChange={(e) => update("objective", e.target.value)} placeholder="O que esse treino desenvolve no contexto do plano…" className={textareaClass} />
+            </label>
+            <label className="block">
+              <span className={labelClass}>Aquecimento</span>
+              <textarea rows={2} value={form.warmup} onChange={(e) => update("warmup", e.target.value)} placeholder="Ex.: 15 min de corrida leve em Zona 1-2 + mobilidade dinâmica…" className={textareaClass} />
+            </label>
+            <label className="block">
+              <span className={labelClass}>Parte principal</span>
+              <textarea rows={3} value={form.mainSet} onChange={(e) => update("mainSet", e.target.value)} placeholder="Ex.: 8 x 400 m a 4:20-4:30/km, com 90s de trote leve entre os tiros…" className={textareaClass} />
+            </label>
+            <label className="block">
+              <span className={labelClass}>Volta à calma</span>
+              <textarea rows={2} value={form.cooldown} onChange={(e) => update("cooldown", e.target.value)} placeholder="Ex.: 10 min de trote regenerativo + alongamento…" className={textareaClass} />
+            </label>
+          </CardContent>
+        </Card>
+
+        <Card className="order-7 lg:order-none lg:col-start-1 lg:row-start-6">
+          <CardContent className="space-y-4 p-5">
+            <h3 className="font-display text-sm font-semibold text-text">Mídia &amp; observações</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className={labelClass}><Video className="mr-1 inline h-3 w-3" /> Vídeo de apoio (URL)</span>
+                <input value={form.videoUrl} onChange={(e) => update("videoUrl", e.target.value)} placeholder="https://…" className={inputClass} />
+              </label>
+              <label className="block">
+                <span className={labelClass}><ImageIcon className="mr-1 inline h-3 w-3" /> Imagem de referência (URL)</span>
+                <input value={form.imageUrl} onChange={(e) => update("imageUrl", e.target.value)} placeholder="https://…" className={inputClass} />
+              </label>
+            </div>
+            <label className="block">
+              <span className={labelClass}>Observações para o atleta</span>
+              <textarea rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Ex.: Se sentir desconforto na canela, reduza a intensidade dos tiros e me avise no check-in…" className={textareaClass} />
+            </label>
+          </CardContent>
+        </Card>
+
+        <Card className="order-4 lg:order-none lg:col-start-2 lg:row-start-1 border-primary/30 bg-gradient-to-br from-primary/12 to-card">
+          <CardContent className="p-5">
+            <h3 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold text-text">
+              <Sparkles className="h-4 w-4 text-primary" /> Motor de prescrição inteligente
+            </h3>
+            <p className="text-xs text-text-muted">
+              {vdot > 0 ? (
+                <>
+                  Pace calculado pelas zonas de Daniels (VDOT {vdot.toFixed(1)}), carga semanal e objetivo de{" "}
+                  {athlete.name.split(" ")[0]} para um treino de{" "}
+                  <span className="text-text">{selectedType.label.toLowerCase()}</span>.
+                </>
+              ) : (
+                <>
+                  Sugestão calculada a partir do nível, pace de referência, carga semanal e objetivo de{" "}
+                  {athlete.name.split(" ")[0]} para um treino de{" "}
+                  <span className="text-text">{selectedType.label.toLowerCase()}</span>.
+                </>
+              )}
+            </p>
+
+            <div className="mt-4 space-y-2 rounded-xl border border-border bg-background/40 p-3.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-text-muted">Distância sugerida</span>
+                <span className="font-semibold text-text">{suggestion.distanceKm} km</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-text-muted">Duração estimada</span>
+                <span className="font-semibold text-text">{suggestion.durationMin} min</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-text-muted">Pace alvo</span>
+                <span className="font-semibold text-text">{formatPace(suggestion.paceSecPerKm)} /km</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-text-muted">RPE alvo</span>
+                <span className="font-semibold text-text">{suggestion.rpe}/10</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-text-muted">Zona de FC</span>
+                <span className="font-semibold text-text">{suggestion.hrZone.split(" — ")[0]}</span>
+              </div>
+            </div>
+
+            <Button onClick={applySuggestion} className="mt-4 w-full">
+              <Wand2 className="h-4 w-4" /> Aplicar sugestão ao formulário
+            </Button>
+            <p className="mt-2 text-[11px] text-text-muted">
+              A sugestão é apenas um ponto de partida — você pode editar livremente qualquer campo antes de prescrever.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="order-8 lg:order-none lg:col-start-2 lg:row-start-2">
+          <CardContent className="p-5">
+            <h3 className="mb-3 font-display text-sm font-semibold text-text">Pré-visualização</h3>
+            <div className="rounded-xl border border-border bg-card-hover/30 p-4">
+              <div className="flex items-center justify-between">
+                {(() => {
+                  const color = getSubtypeColor("corrida", selectedType.label);
+                  return (
+                    <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="border">
+                      {selectedType.label}
+                    </Badge>
+                  );
+                })()}
+                {form.rpe && <span className="text-xs text-text-muted">RPE {form.rpe}</span>}
+              </div>
+              <p className="mt-2 truncate text-sm font-semibold text-text">{form.title || `${selectedType.label} — ${athlete.name.split(" ")[0]}`}</p>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
+                {form.distanceKm && <span>{form.distanceKm} km</span>}
+                {form.durationMin && <span>{form.durationMin} min</span>}
+                {form.pace && <span>{form.pace} /km</span>}
+                {form.hrZone && <span>{form.hrZone.split(" — ")[0]}</span>}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <motion.div initial={false} animate={{ opacity: 1 }} className="order-9 lg:order-none lg:col-start-2 lg:row-start-3">
+          <Button onClick={submit} size="lg" className="w-full">
+            <Send className="h-4 w-4" /> Enviar prescrição para {athlete.name.split(" ")[0]}
+          </Button>
+          {sent && (
+            <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="mt-3">
+              <Card className="border-success/30 bg-success/5">
+                <CardContent className="flex items-center gap-2.5 p-3.5 text-sm text-text-muted">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+                  Treino prescrito para <span className="font-semibold text-text">{athlete.name}</span>. Ele aparecerá no
+                  plano assim que a semana for liberada.
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </motion.div>
       </div>
     </div>
   );
