@@ -7,6 +7,7 @@ import { Check, Clock, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { b2bPlans } from "@/lib/mock-data";
+import { formatBRL } from "@/lib/utils";
 
 // ── Shared input style ────────────────────────────────────────────────────
 const inputClass =
@@ -87,9 +88,9 @@ function B2bPlanSummaryCard({
       </p>
       <div className="mt-3 flex items-end gap-1">
         <span className="font-display text-2xl font-extrabold text-text">
-          R$ {plan.price}
+          {plan.price === 0 ? "Grátis" : `R$ ${formatBRL(plan.price)}`}
         </span>
-        <span className="mb-0.5 text-sm text-text-muted">/mês</span>
+        {plan.price > 0 && <span className="mb-0.5 text-sm text-text-muted">/mês</span>}
       </div>
       {plan.badge && (
         <span className="mt-2 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
@@ -264,9 +265,9 @@ function AssessoriaContent() {
                 </div>
                 <div className="mt-4 flex items-end gap-1">
                   <span className="font-display text-2xl font-extrabold text-text">
-                    R$ {p.price}
+                    {p.price === 0 ? "Grátis" : `R$ ${formatBRL(p.price)}`}
                   </span>
-                  <span className="mb-0.5 text-sm text-text-muted">/mês</span>
+                  {p.price > 0 && <span className="mb-0.5 text-sm text-text-muted">/mês</span>}
                 </div>
                 {selectedPlan === p.id && (
                   <ul className="mt-4 space-y-1.5">
@@ -587,7 +588,9 @@ function AssessoriaContent() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-muted">Valor mensal</span>
-                    <span className="font-bold text-text">R$ {plan.price}/mês</span>
+                    <span className="font-bold text-text">
+                      {plan.price === 0 ? "Grátis" : `R$ ${formatBRL(plan.price)}/mês`}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-muted">Treinador responsável</span>

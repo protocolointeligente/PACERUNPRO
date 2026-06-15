@@ -730,6 +730,7 @@ export const clubs = [
 export const coachOverview = {
   name: "Ricardo Pace Júnior",
   credential: "CREF 014626-G/MG",
+  currentPlanId: "b2b-free",
   athletesCount: 1,
   prescribedThisWeek: 6,
   pendingCheckIns: 0,
@@ -1085,9 +1086,9 @@ export const b2cPlans = [
   {
     id: "mensal",
     name: "Mensal",
-    price: 197,
-    pricePerMonth: 197,
-    totalPrice: 197,
+    price: 149.9,
+    pricePerMonth: 149.9,
+    totalPrice: 149.9,
     months: 1,
     discountPct: 0,
     badge: null,
@@ -1097,9 +1098,9 @@ export const b2cPlans = [
   {
     id: "trimestral",
     name: "Trimestral",
-    price: 167,
-    pricePerMonth: 167,
-    totalPrice: 501,
+    price: 127.9,
+    pricePerMonth: 127.9,
+    totalPrice: 383.7,
     months: 3,
     discountPct: 15,
     badge: "15% OFF",
@@ -1109,9 +1110,9 @@ export const b2cPlans = [
   {
     id: "semestral",
     name: "Semestral",
-    price: 147,
-    pricePerMonth: 147,
-    totalPrice: 882,
+    price: 112.9,
+    pricePerMonth: 112.9,
+    totalPrice: 677.4,
     months: 6,
     discountPct: 25,
     badge: "25% OFF",
@@ -1121,9 +1122,9 @@ export const b2cPlans = [
   {
     id: "anual",
     name: "Anual",
-    price: 127,
-    pricePerMonth: 127,
-    totalPrice: 1524,
+    price: 97.9,
+    pricePerMonth: 97.9,
+    totalPrice: 1174.8,
     months: 12,
     discountPct: 35,
     badge: "Melhor custo",
@@ -1147,15 +1148,32 @@ export const b2cIncludes = [
 
 export const b2bPlans = [
   {
+    id: "b2b-free",
+    name: "Grátis",
+    price: 0,
+    maxAthletes: 1,
+    maxCoaches: 1,
+    highlight: false,
+    badge: "Grátis para sempre",
+    features: [
+      "1 atleta",
+      "1 treinador",
+      "Prescrição de treino básica",
+      "Check-in semanal",
+      "Acesso ao app do aluno",
+      "Suporte por e-mail",
+    ],
+  },
+  {
     id: "b2b-starter",
     name: "Starter",
-    price: 89,
-    maxAthletes: 20,
+    price: 79.9,
+    maxAthletes: 10,
     maxCoaches: 2,
     highlight: false,
     badge: null,
     features: [
-      "Até 20 atletas",
+      "Até 10 atletas",
       "Até 2 treinadores",
       "Prescrição corrida e força",
       "Check-in inteligente",
@@ -1167,13 +1185,13 @@ export const b2bPlans = [
   {
     id: "b2b-pro",
     name: "Pro",
-    price: 189,
-    maxAthletes: 50,
+    price: 199.9,
+    maxAthletes: 30,
     maxCoaches: 5,
     highlight: true,
     badge: "Mais popular",
     features: [
-      "Até 50 atletas",
+      "Até 30 atletas",
       "Até 5 treinadores",
       "Tudo do Starter",
       "Motor de prescrição inteligente com IA",
@@ -1186,13 +1204,13 @@ export const b2bPlans = [
   {
     id: "b2b-premium",
     name: "Premium",
-    price: 389,
-    maxAthletes: 150,
+    price: 429.9,
+    maxAthletes: 80,
     maxCoaches: 15,
     highlight: false,
     badge: null,
     features: [
-      "Até 150 atletas",
+      "Até 80 atletas",
       "Até 15 treinadores",
       "Tudo do Pro",
       "Painel financeiro do roster",
@@ -1205,7 +1223,7 @@ export const b2bPlans = [
   {
     id: "b2b-unlimited",
     name: "Ilimitado",
-    price: 997,
+    price: 899.9,
     maxAthletes: null,
     maxCoaches: null,
     highlight: false,
@@ -1222,6 +1240,16 @@ export const b2bPlans = [
     ],
   },
 ];
+
+// Retorna o plano B2B recomendado para uma assessoria/treinador com base
+// no número de atletas informado, escolhendo o menor plano que comporta
+// esse total (ou o plano Ilimitado, se nenhum limite for suficiente).
+export function getRecommendedB2BPlan(athleteCount: number) {
+  return (
+    b2bPlans.find((p) => p.maxAthletes === null || athleteCount <= p.maxAthletes) ??
+    b2bPlans[b2bPlans.length - 1]
+  );
+}
 
 // ── Super Admin ──────────────────────────────────────────────────────────
 

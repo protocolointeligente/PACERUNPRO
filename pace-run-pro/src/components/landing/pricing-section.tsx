@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { b2cPlans, b2cIncludes, b2bPlans } from "@/lib/mock-data";
+import { formatBRL } from "@/lib/utils";
 
 export function PricingSection() {
   const [activeTab, setActiveTab] = useState<"atletas" | "assessorias">("atletas");
@@ -87,13 +88,13 @@ export function PricingSection() {
                     <div className="mb-2">
                       <div className="flex items-end gap-1">
                         <span className="font-display text-3xl font-extrabold text-text">
-                          R$ {plan.pricePerMonth}
+                          R$ {formatBRL(plan.pricePerMonth)}
                         </span>
                         <span className="mb-1 text-sm text-text-muted">/mês</span>
                       </div>
                       {plan.months > 1 && (
                         <p className="mt-1 text-xs text-text-muted">
-                          Total: R$ {plan.totalPrice} em {plan.months}x
+                          Total: R$ {formatBRL(plan.totalPrice)} em {plan.months}x
                         </p>
                       )}
                       {plan.discountPct > 0 && (
@@ -165,9 +166,9 @@ export function PricingSection() {
                     <div className="mb-4">
                       <div className="flex items-end gap-1">
                         <span className="font-display text-3xl font-extrabold text-text">
-                          R$ {plan.price}
+                          {plan.price === 0 ? "Grátis" : `R$ ${formatBRL(plan.price)}`}
                         </span>
-                        <span className="mb-1 text-sm text-text-muted">/mês</span>
+                        {plan.price > 0 && <span className="mb-1 text-sm text-text-muted">/mês</span>}
                       </div>
                     </div>
 
@@ -180,13 +181,19 @@ export function PricingSection() {
                       ))}
                     </ul>
 
-                    <Link href={`/onboarding/assessoria?plano=${plan.id}`}>
+                    <Link
+                      href={
+                        plan.price === 0
+                          ? "/cadastro?perfil=treinador"
+                          : `/onboarding/assessoria?plano=${plan.id}`
+                      }
+                    >
                       <Button
                         variant={plan.highlight ? "primary" : "outline"}
                         size="md"
                         className="w-full"
                       >
-                        Começar grátis 14 dias
+                        {plan.price === 0 ? "Começar grátis" : "Solicitar acesso"}
                       </Button>
                     </Link>
                   </div>

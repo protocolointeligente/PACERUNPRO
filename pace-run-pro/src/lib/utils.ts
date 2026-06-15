@@ -25,3 +25,10 @@ export function formatNumber(value: number, fractionDigits = 1) {
     maximumFractionDigits: fractionDigits,
   });
 }
+
+export function formatBRL(value: number) {
+  return value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}

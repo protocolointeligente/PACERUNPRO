@@ -7,6 +7,7 @@ import { Check, Copy, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { b2cPlans, b2cIncludes } from "@/lib/mock-data";
+import { formatBRL } from "@/lib/utils";
 
 // ── Shared input style ────────────────────────────────────────────────────
 const inputClass =
@@ -56,13 +57,13 @@ function PlanSummaryCard({ planId }: { planId: string }) {
       <p className="text-xs text-text-muted">{plan.description}</p>
       <div className="mt-3 flex items-end gap-1">
         <span className="font-display text-2xl font-extrabold text-text">
-          R$ {plan.pricePerMonth}
+          R$ {formatBRL(plan.pricePerMonth)}
         </span>
         <span className="mb-0.5 text-sm text-text-muted">/mês</span>
       </div>
       {plan.months > 1 && (
         <p className="mt-1 text-xs text-text-muted">
-          Total: R$ {plan.totalPrice} em {plan.months}x
+          Total: R$ {formatBRL(plan.totalPrice)} em {plan.months}x
         </p>
       )}
       {plan.discountPct > 0 && (
@@ -223,13 +224,13 @@ function CheckoutContent() {
                 </div>
                 <div className="mt-4 flex items-end gap-1">
                   <span className="font-display text-2xl font-extrabold text-text">
-                    R$ {p.pricePerMonth}
+                    R$ {formatBRL(p.pricePerMonth)}
                   </span>
                   <span className="mb-0.5 text-sm text-text-muted">/mês</span>
                 </div>
                 {p.months > 1 && (
                   <p className="mt-1 text-xs text-text-muted">
-                    Total: R$ {p.totalPrice} em {p.months}x
+                    Total: R$ {formatBRL(p.totalPrice)} em {p.months}x
                   </p>
                 )}
                 {p.discountPct > 0 && (
@@ -295,14 +296,14 @@ function CheckoutContent() {
                   <div className="flex justify-between">
                     <span className="text-text-muted">Valor mensal</span>
                     <span className="font-medium text-text">
-                      R$ {plan.pricePerMonth}/mês
+                      R$ {formatBRL(plan.pricePerMonth)}/mês
                     </span>
                   </div>
                   {plan.months > 1 && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">Total cobrado hoje</span>
                       <span className="font-bold text-text">
-                        R$ {plan.totalPrice}
+                        R$ {formatBRL(plan.totalPrice)}
                       </span>
                     </div>
                   )}
