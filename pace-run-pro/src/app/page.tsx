@@ -12,6 +12,9 @@ import {
   integrationLogos,
 } from "@/lib/mock-data";
 import { PricingSection } from "@/components/landing/pricing-section";
+import { PlatformShowcase } from "@/components/landing/platform-showcase";
+import { ComparisonTable } from "@/components/landing/comparison-table";
+import { AboutCoachSection } from "@/components/landing/about-coach";
 
 export default function LandingPage() {
   return (
@@ -90,6 +93,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Platform showcase */}
+      <PlatformShowcase />
+
       {/* Features */}
       <section id="funcionalidades" className="py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6">
@@ -134,6 +140,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Comparison */}
+      <ComparisonTable />
+
       {/* Integrations */}
       <section id="integracoes" className="py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6">
@@ -164,6 +173,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* About the coach */}
+      <AboutCoachSection />
 
       {/* Pricing */}
       <PricingSection />
