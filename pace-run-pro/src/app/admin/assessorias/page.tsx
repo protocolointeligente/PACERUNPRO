@@ -94,7 +94,7 @@ export default function AssessoriasPage() {
       >
         <div>
           <Badge variant="primary" className="mb-2">Assessorias</Badge>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
             Gestão de assessorias
           </h1>
         </div>
@@ -127,7 +127,7 @@ export default function AssessoriasPage() {
           placeholder="Buscar assessoria ou cidade…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-white placeholder:text-text-muted focus:border-primary/50 focus:outline-none sm:max-w-sm"
+          className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary/50 focus:outline-none sm:max-w-sm"
         />
         <div className="flex flex-wrap gap-2">
           {planFilters.map((f) => (
@@ -138,7 +138,7 @@ export default function AssessoriasPage() {
                 "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                 planFilter === f.id
                   ? "border-primary/50 bg-primary/15 text-primary"
-                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-white"
+                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text"
               )}
             >
               {f.label}
@@ -154,7 +154,7 @@ export default function AssessoriasPage() {
                 "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                 statusFilter === f.id
                   ? "border-primary/50 bg-primary/15 text-primary"
-                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-white"
+                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text"
               )}
             >
               {f.label}
@@ -192,7 +192,7 @@ export default function AssessoriasPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-semibold text-white">
+                      <p className="text-sm font-semibold text-text">
                         {a.name}
                       </p>
                       <p className="text-xs text-text-muted">{a.city}</p>
@@ -211,7 +211,7 @@ export default function AssessoriasPage() {
                       <Users className="h-3.5 w-3.5" />
                       <span>{a.athletes} atletas</span>
                     </div>
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-semibold text-text">
                       R${a.mrr}/mês
                     </span>
                     <Badge variant={effectiveStatus === "ativo" ? "success" : "warning"}>

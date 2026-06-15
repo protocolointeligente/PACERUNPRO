@@ -50,7 +50,7 @@ export default function AdminTreinadoresPage() {
         <Badge variant="primary" className="mb-2">
           Painel Administrativo
         </Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
           Treinadores
         </h1>
         <p className="text-sm text-text-muted">
@@ -65,7 +65,7 @@ export default function AdminTreinadoresPage() {
           placeholder="Buscar por nome ou credencial..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-white placeholder-text-muted focus:border-primary/60 focus:outline-none sm:max-w-sm"
+          className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-text placeholder-text-muted focus:border-primary/60 focus:outline-none sm:max-w-sm"
         />
         <div className="flex flex-wrap gap-2">
           {planFilters.map((plan) => (
@@ -76,7 +76,7 @@ export default function AdminTreinadoresPage() {
                 "rounded-full border px-4 py-1.5 text-xs font-medium transition-colors",
                 planFilter === plan
                   ? "border-primary/60 bg-primary/10 text-primary"
-                  : "border-border bg-transparent text-text-muted hover:border-primary/40 hover:text-white"
+                  : "border-border bg-transparent text-text-muted hover:border-primary/40 hover:text-text"
               )}
             >
               {plan}
@@ -116,7 +116,7 @@ export default function AdminTreinadoresPage() {
                       <AvatarFallback>{getInitials(coach.name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-white">
+                      <p className="truncate text-sm font-medium text-text">
                         {coach.name}
                       </p>
                       <p className="truncate text-xs text-text-muted">
@@ -132,7 +132,7 @@ export default function AdminTreinadoresPage() {
 
                   {/* Atletas */}
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-semibold text-text">
                       {coach.athletes}
                     </span>
                     <span className="text-xs text-text-muted hidden sm:inline">atletas</span>

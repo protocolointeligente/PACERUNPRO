@@ -29,7 +29,7 @@ function parseClock(input: string) {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
 
 export default function PerformanceTestsPage() {
   return (
@@ -38,7 +38,7 @@ export default function PerformanceTestsPage() {
         <Badge variant="primary" className="mb-2">
           <Sparkles className="h-3 w-3" /> Cálculos automáticos
         </Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Testes de performance</h1>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Testes de performance</h1>
         <p className="mt-1.5 max-w-2xl text-sm text-text-muted">
           Registre seus protocolos de campo e receba estimativas automáticas de VO2máx, VAM, limiar e potência —
           os mesmos dados usados pelo motor de prescrição inteligente para calibrar o seu plano.
@@ -57,7 +57,7 @@ export default function PerformanceTestsPage() {
 
       {/* History */}
       <div>
-        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
+        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-text">
           <History className="h-4 w-4 text-text-muted" />
           Histórico de testes
         </div>
@@ -69,9 +69,9 @@ export default function PerformanceTestsPage() {
                   <Activity className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-white">{t.type}</p>
+                  <p className="text-sm font-semibold text-text">{t.type}</p>
                   <p className="text-xs text-text-muted">{t.description}</p>
-                  <p className="mt-1.5 text-xs text-text-muted">Última realização: <span className="text-white">{t.date}</span></p>
+                  <p className="mt-1.5 text-xs text-text-muted">Última realização: <span className="text-text">{t.date}</span></p>
                 </div>
               </CardContent>
             </Card>
@@ -113,7 +113,7 @@ function ResultBox({ items }: { items: { label: string; value: string }[] }) {
       {items.map((it) => (
         <div key={it.label}>
           <p className="text-[10px] uppercase tracking-wider text-text-muted">{it.label}</p>
-          <p className="font-display text-base font-bold text-white">{it.value}</p>
+          <p className="font-display text-base font-bold text-text">{it.value}</p>
         </div>
       ))}
     </div>

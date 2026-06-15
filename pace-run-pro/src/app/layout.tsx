@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Sora } from "next/font/google";
+import { ThemeToggle } from "@/components/theme-toggle";
 import "./globals.css";
 
 const inter = Inter({
@@ -19,10 +20,15 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#050816",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#07030f" },
+    { media: "(prefers-color-scheme: light)", color: "#f8f6fb" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
+
+const themeScript = `(function(){try{var t=localStorage.getItem("theme");if(t==="light"){document.documentElement.classList.add("light");}}catch(e){}})();`;
 
 export default function RootLayout({
   children,
@@ -32,10 +38,14 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${sora.variable} h-full dark`}
+      className={`${inter.variable} ${sora.variable} h-full`}
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full flex flex-col font-sans antialiased">
+        <ThemeToggle />
         {children}
       </body>
     </html>

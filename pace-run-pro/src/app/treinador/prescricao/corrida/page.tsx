@@ -93,7 +93,7 @@ function formatRaceTime(sec: number): string {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
 const textareaClass = cn(inputClass, "resize-none");
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted";
 
@@ -211,7 +211,7 @@ export default function RunPrescriptionPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
         <Badge variant="primary" className="mb-2">Prescrição de treino</Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Prescrever treino de corrida</h1>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Prescrever treino de corrida</h1>
         <p className="mt-1.5 text-sm text-text-muted">
           Monte a sessão por tipo de estímulo, ajuste pace, RPE e estrutura, e use o motor de prescrição inteligente para
           sugerir valores com base no perfil e histórico do atleta.
@@ -223,7 +223,7 @@ export default function RunPrescriptionPage() {
         <div className="space-y-5">
           <Card>
             <CardContent className="p-5">
-              <h3 className="mb-3 font-display text-sm font-semibold text-white">Atleta</h3>
+              <h3 className="mb-3 font-display text-sm font-semibold text-text">Atleta</h3>
               <div className="flex flex-wrap gap-2">
                 {athleteList.map((a) => (
                   <button
@@ -241,7 +241,7 @@ export default function RunPrescriptionPage() {
                       <AvatarFallback className="text-xs">{a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold text-white">{a.name}</p>
+                      <p className="truncate text-xs font-semibold text-text">{a.name}</p>
                       <p className="truncate text-[11px] text-text-muted">{a.goal} · {a.level}</p>
                     </div>
                   </button>
@@ -252,7 +252,7 @@ export default function RunPrescriptionPage() {
 
           <Card>
             <CardContent className="p-5">
-              <h3 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold text-white">
+              <h3 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold text-text">
                 <Activity className="h-4 w-4 text-primary" /> Nível de fitness — VDOT (Daniels)
               </h3>
               <p className="mb-3 text-xs text-text-muted">
@@ -268,7 +268,7 @@ export default function RunPrescriptionPage() {
                     className={inputClass}
                   >
                     {RACE_DISTANCES.map((d) => (
-                      <option key={d.id} value={d.meters} className="bg-card text-white">
+                      <option key={d.id} value={d.meters} className="bg-card text-text">
                         {d.label}
                       </option>
                     ))}
@@ -289,7 +289,7 @@ export default function RunPrescriptionPage() {
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3.5 py-2.5">
                     <span className="text-xs text-text-muted">VDOT estimado</span>
-                    <span className="font-display text-lg font-bold text-white">{vdot.toFixed(1)}</span>
+                    <span className="font-display text-lg font-bold text-text">{vdot.toFixed(1)}</span>
                   </div>
                   <div className="overflow-hidden rounded-xl border border-border">
                     <table className="w-full text-sm">
@@ -311,7 +311,7 @@ export default function RunPrescriptionPage() {
                                   {z.label}
                                 </span>
                               </td>
-                              <td className="px-3 py-2 text-white">
+                              <td className="px-3 py-2 text-text">
                                 {formatPace(range.fastSecPerKm).replace("/km", "")}–{formatPace(range.slowSecPerKm)}
                               </td>
                               <td className="hidden px-3 py-2 text-text-muted sm:table-cell">{z.description}</td>
@@ -328,7 +328,7 @@ export default function RunPrescriptionPage() {
 
           <Card>
             <CardContent className="p-5">
-              <h3 className="mb-3 font-display text-sm font-semibold text-white">Tipo de treino</h3>
+              <h3 className="mb-3 font-display text-sm font-semibold text-text">Tipo de treino</h3>
               <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
                 {runTypes.map((t) => {
                   const color = getSubtypeColor("corrida", t.label);
@@ -344,7 +344,7 @@ export default function RunPrescriptionPage() {
                         typeId === t.id ? "border-primary/60 bg-primary/15" : "border-border bg-card-hover/30 hover:border-primary/30"
                       )}
                     >
-                      <p className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <p className="flex items-center gap-2 text-sm font-semibold text-text">
                         <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
                         {t.label}
                       </p>
@@ -358,7 +358,7 @@ export default function RunPrescriptionPage() {
 
           <Card>
             <CardContent className="space-y-4 p-5">
-              <h3 className="font-display text-sm font-semibold text-white">Detalhes da sessão</h3>
+              <h3 className="font-display text-sm font-semibold text-text">Detalhes da sessão</h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block">
                   <span className={labelClass}>Título do treino</span>
@@ -398,7 +398,7 @@ export default function RunPrescriptionPage() {
                 <span className={labelClass}>Zona de FC alvo</span>
                 <select value={form.hrZone} onChange={(e) => update("hrZone", e.target.value)} className={inputClass}>
                   {hrZones.map((z) => (
-                    <option key={z} value={z} className="bg-card text-white">
+                    <option key={z} value={z} className="bg-card text-text">
                       {z}
                     </option>
                   ))}
@@ -409,7 +409,7 @@ export default function RunPrescriptionPage() {
 
           <Card>
             <CardContent className="space-y-4 p-5">
-              <h3 className="font-display text-sm font-semibold text-white">Estrutura do treino</h3>
+              <h3 className="font-display text-sm font-semibold text-text">Estrutura do treino</h3>
               <label className="block">
                 <span className={labelClass}>Objetivo</span>
                 <textarea rows={2} value={form.objective} onChange={(e) => update("objective", e.target.value)} placeholder="O que esse treino desenvolve no contexto do plano…" className={textareaClass} />
@@ -431,7 +431,7 @@ export default function RunPrescriptionPage() {
 
           <Card>
             <CardContent className="space-y-4 p-5">
-              <h3 className="font-display text-sm font-semibold text-white">Mídia &amp; observações</h3>
+              <h3 className="font-display text-sm font-semibold text-text">Mídia &amp; observações</h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block">
                   <span className={labelClass}><Video className="mr-1 inline h-3 w-3" /> Vídeo de apoio (URL)</span>
@@ -454,7 +454,7 @@ export default function RunPrescriptionPage() {
         <div className="space-y-5">
           <Card className="border-primary/30 bg-gradient-to-br from-primary/12 to-card">
             <CardContent className="p-5">
-              <h3 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold text-white">
+              <h3 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold text-text">
                 <Sparkles className="h-4 w-4 text-primary" /> Motor de prescrição inteligente
               </h3>
               <p className="text-xs text-text-muted">
@@ -462,13 +462,13 @@ export default function RunPrescriptionPage() {
                   <>
                     Pace calculado pelas zonas de Daniels (VDOT {vdot.toFixed(1)}), carga semanal e objetivo de{" "}
                     {athlete.name.split(" ")[0]} para um treino de{" "}
-                    <span className="text-white">{selectedType.label.toLowerCase()}</span>.
+                    <span className="text-text">{selectedType.label.toLowerCase()}</span>.
                   </>
                 ) : (
                   <>
                     Sugestão calculada a partir do nível, pace de referência, carga semanal e objetivo de{" "}
                     {athlete.name.split(" ")[0]} para um treino de{" "}
-                    <span className="text-white">{selectedType.label.toLowerCase()}</span>.
+                    <span className="text-text">{selectedType.label.toLowerCase()}</span>.
                   </>
                 )}
               </p>
@@ -476,23 +476,23 @@ export default function RunPrescriptionPage() {
               <div className="mt-4 space-y-2 rounded-xl border border-border bg-background/40 p-3.5 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-text-muted">Distância sugerida</span>
-                  <span className="font-semibold text-white">{suggestion.distanceKm} km</span>
+                  <span className="font-semibold text-text">{suggestion.distanceKm} km</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-text-muted">Duração estimada</span>
-                  <span className="font-semibold text-white">{suggestion.durationMin} min</span>
+                  <span className="font-semibold text-text">{suggestion.durationMin} min</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-text-muted">Pace alvo</span>
-                  <span className="font-semibold text-white">{formatPace(suggestion.paceSecPerKm)} /km</span>
+                  <span className="font-semibold text-text">{formatPace(suggestion.paceSecPerKm)} /km</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-text-muted">RPE alvo</span>
-                  <span className="font-semibold text-white">{suggestion.rpe}/10</span>
+                  <span className="font-semibold text-text">{suggestion.rpe}/10</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-text-muted">Zona de FC</span>
-                  <span className="font-semibold text-white">{suggestion.hrZone.split(" — ")[0]}</span>
+                  <span className="font-semibold text-text">{suggestion.hrZone.split(" — ")[0]}</span>
                 </div>
               </div>
 
@@ -507,7 +507,7 @@ export default function RunPrescriptionPage() {
 
           <Card>
             <CardContent className="p-5">
-              <h3 className="mb-3 font-display text-sm font-semibold text-white">Pré-visualização</h3>
+              <h3 className="mb-3 font-display text-sm font-semibold text-text">Pré-visualização</h3>
               <div className="rounded-xl border border-border bg-card-hover/30 p-4">
                 <div className="flex items-center justify-between">
                   {(() => {
@@ -520,7 +520,7 @@ export default function RunPrescriptionPage() {
                   })()}
                   {form.rpe && <span className="text-xs text-text-muted">RPE {form.rpe}</span>}
                 </div>
-                <p className="mt-2 truncate text-sm font-semibold text-white">{form.title || `${selectedType.label} — ${athlete.name.split(" ")[0]}`}</p>
+                <p className="mt-2 truncate text-sm font-semibold text-text">{form.title || `${selectedType.label} — ${athlete.name.split(" ")[0]}`}</p>
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
                   {form.distanceKm && <span>{form.distanceKm} km</span>}
                   {form.durationMin && <span>{form.durationMin} min</span>}
@@ -540,7 +540,7 @@ export default function RunPrescriptionPage() {
                 <Card className="border-success/30 bg-success/5">
                   <CardContent className="flex items-center gap-2.5 p-3.5 text-sm text-text-muted">
                     <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
-                    Treino prescrito para <span className="font-semibold text-white">{athlete.name}</span>. Ele aparecerá no
+                    Treino prescrito para <span className="font-semibold text-text">{athlete.name}</span>. Ele aparecerá no
                     plano assim que a semana for liberada.
                   </CardContent>
                 </Card>

@@ -27,7 +27,7 @@ export function BottomNav({ items }: { items: NavItem[] }) {
                 />
               )}
               <item.icon className={cn("h-5 w-5 transition-colors", active ? "text-primary" : "text-text-muted")} />
-              <span className={cn(active ? "text-white" : "")}>{item.label}</span>
+              <span className={cn(active ? "text-text" : "")}>{item.label}</span>
             </Link>
           );
         })}

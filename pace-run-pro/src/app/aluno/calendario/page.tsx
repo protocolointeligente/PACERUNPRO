@@ -39,16 +39,16 @@ export default function CalendarPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <Badge variant="primary" className="mb-2">Calendário de treinos</Badge>
-          <h1 className="font-display text-2xl font-bold capitalize text-white sm:text-3xl">{monthLabel}</h1>
+          <h1 className="font-display text-2xl font-bold capitalize text-text sm:text-3xl">{monthLabel}</h1>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setMonthOffset((m) => m - 1)} className="rounded-lg border border-border p-2 text-text-muted hover:border-primary/40 hover:text-white">
+          <button onClick={() => setMonthOffset((m) => m - 1)} className="rounded-lg border border-border p-2 text-text-muted hover:border-primary/40 hover:text-text">
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <button onClick={() => setMonthOffset(0)} className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-text-muted hover:border-primary/40 hover:text-white">
+          <button onClick={() => setMonthOffset(0)} className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-text-muted hover:border-primary/40 hover:text-text">
             Hoje
           </button>
-          <button onClick={() => setMonthOffset((m) => m + 1)} className="rounded-lg border border-border p-2 text-text-muted hover:border-primary/40 hover:text-white">
+          <button onClick={() => setMonthOffset((m) => m + 1)} className="rounded-lg border border-border p-2 text-text-muted hover:border-primary/40 hover:text-text">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -157,7 +157,7 @@ export default function CalendarPage() {
                               </span>
                             </span>
                             <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-white">{e.title}</p>
+                              <p className="truncate text-sm font-semibold text-text">{e.title}</p>
                               <span className="flex items-center gap-1 text-xs text-text-muted">
                                 <Clock className="h-3 w-3" /> {TYPE_LABELS[e.type]}
                               </span>

@@ -36,7 +36,7 @@ export default function AthleteListPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <Badge variant="primary" className="mb-2">Gestão de atletas</Badge>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Seus atletas</h1>
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Seus atletas</h1>
           <p className="mt-1 text-sm text-text-muted">{athleteList.length} atletas sob sua orientação</p>
         </div>
       </div>
@@ -48,7 +48,7 @@ export default function AthleteListPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Pesquisar por nome ou objetivo…"
-            className="w-full bg-transparent text-sm text-white placeholder:text-text-muted/60 outline-none"
+            className="w-full bg-transparent text-sm text-text placeholder:text-text-muted/60 outline-none"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -59,7 +59,7 @@ export default function AthleteListPage() {
               onClick={() => setFilter(f)}
               className={cn(
                 "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
-                filter === f ? "border-primary/60 bg-primary/15 text-white" : "border-border bg-card text-text-muted hover:border-primary/30"
+                filter === f ? "border-primary/60 bg-primary/15 text-primary" : "border-border bg-card text-text-muted hover:border-primary/30"
               )}
             >
               {f}
@@ -87,13 +87,13 @@ export default function AthleteListPage() {
                     <AvatarFallback>{a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-white">{a.name}</p>
+                    <p className="truncate text-sm font-semibold text-text">{a.name}</p>
                     <p className="truncate text-xs text-text-muted">Check-in: {a.lastCheckIn}</p>
                   </div>
                 </div>
 
                 <div className="text-sm text-text-muted">
-                  <span className="text-white">{a.goal}</span> · {a.level}
+                  <span className="text-text">{a.goal}</span> · {a.level}
                 </div>
 
                 <div>
@@ -102,10 +102,10 @@ export default function AthleteListPage() {
 
                 <div className="flex items-center gap-2">
                   <Progress value={a.adherence * 100} className="h-1.5 max-w-[100px]" />
-                  <span className="text-xs font-semibold text-white">{Math.round(a.adherence * 100)}%</span>
+                  <span className="text-xs font-semibold text-text">{Math.round(a.adherence * 100)}%</span>
                 </div>
 
-                <div className="text-sm text-white">{a.weeklyLoad} <span className="text-xs text-text-muted">UA</span></div>
+                <div className="text-sm text-text">{a.weeklyLoad} <span className="text-xs text-text-muted">UA</span></div>
 
                 <div className="text-sm text-text-muted">{a.raceDate}</div>
               </div>

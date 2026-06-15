@@ -115,7 +115,7 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
 
       {/* Primary readouts */}
       <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
-        <BigStat label="Tempo" value={formatDuration(elapsed)} accent="text-white" />
+        <BigStat label="Tempo" value={formatDuration(elapsed)} accent="text-text" />
         <BigStat label="Distância" value={`${distanceKm.toFixed(2)} km`} accent="gradient-text" />
         <BigStat label="Pace médio" value={formatPace(Math.round(elapsed > 0 ? elapsed / Math.max(distanceKm, 0.01) : basePaceSec))} accent="text-info" className="col-span-2 sm:col-span-1" />
       </div>
@@ -131,7 +131,7 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
       {/* Zone indicator */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="font-medium text-white">Zona atual</span>
+          <span className="font-medium text-text">Zona atual</span>
           <span className="font-display font-bold" style={{ color: currentZone.color }}>
             Z{currentZone.zone} · {currentZone.name}
           </span>
@@ -153,12 +153,12 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
       {/* Splits */}
       {splits.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-4">
-          <h3 className="mb-3 font-display text-sm font-semibold text-white">Splits automáticos</h3>
+          <h3 className="mb-3 font-display text-sm font-semibold text-text">Splits automáticos</h3>
           <div className="space-y-2">
             {splits.map((s) => (
               <div key={s.km} className="flex items-center justify-between rounded-lg bg-card-hover/50 px-3 py-2 text-sm">
                 <span className="text-text-muted">Km {s.km}</span>
-                <span className="font-semibold text-white">{s.pace}</span>
+                <span className="font-semibold text-text">{s.pace}</span>
               </div>
             ))}
           </div>
@@ -205,7 +205,7 @@ function SmallStat({
       <Icon className="mx-auto h-4 w-4 text-text-muted" />
       <p className="mt-1.5 text-[10px] uppercase tracking-wider text-text-muted">{label}</p>
       <p className="mt-0.5 font-display text-base font-bold tabular-nums" style={accent ? { color: accent } : undefined}>
-        <span className={accent ? "" : "text-white"}>{value}</span>
+        <span className={accent ? "" : "text-text"}>{value}</span>
       </p>
     </div>
   );

@@ -124,13 +124,13 @@ function ActivityCard({ post }: { post: ActivityPost }) {
         <div className="absolute top-3 left-3 flex items-center gap-2">
           <div
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white",
+              "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-text",
               post.avatarColor
             )}
           >
             {post.athleteAvatar}
           </div>
-          <span className="text-xs font-semibold text-white/90">{post.athleteName}</span>
+          <span className="text-xs font-semibold text-text/90">{post.athleteName}</span>
         </div>
 
         <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1">
@@ -139,11 +139,11 @@ function ActivityCard({ post }: { post: ActivityPost }) {
               <SplitsBars splits={post.metrics.splits} />
             </div>
           )}
-          <p className="text-white font-bold text-center"
+          <p className="text-text font-bold text-center"
             style={{ fontSize: "2.5rem", lineHeight: 1.1 }}>
             {post.metrics.distance.toFixed(2).replace(".", ",")} <span className="text-2xl font-semibold">km</span>
           </p>
-          <div className="flex items-center justify-center gap-4 text-white/80 text-sm font-medium">
+          <div className="flex items-center justify-center gap-4 text-text/80 text-sm font-medium">
             <span>{post.metrics.pace} /km</span>
             <span>·</span>
             <span>{post.metrics.duration}</span>
@@ -156,7 +156,7 @@ function ActivityCard({ post }: { post: ActivityPost }) {
           </div>
         </div>
 
-        <div className="absolute bottom-3 right-3 text-white/40 text-xs font-semibold tracking-wide">
+        <div className="absolute bottom-3 right-3 text-text/40 text-xs font-semibold tracking-wide">
           ⚡ PACE RUN PRO
         </div>
       </div>
@@ -165,14 +165,14 @@ function ActivityCard({ post }: { post: ActivityPost }) {
         <div className="flex items-center gap-2 mb-2">
           <div
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0",
+              "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-text flex-shrink-0",
               post.avatarColor
             )}
           >
             {post.athleteAvatar}
           </div>
           <div>
-            <p className="text-sm font-semibold text-white leading-none">{post.athleteName}</p>
+            <p className="text-sm font-semibold text-text leading-none">{post.athleteName}</p>
             <p className="text-xs text-text-muted">{post.timeAgo}</p>
           </div>
         </div>
@@ -190,13 +190,13 @@ function ActivityCard({ post }: { post: ActivityPost }) {
             <Heart className={cn("h-4 w-4 transition-transform", isLiked && "fill-current scale-110")} />
             {post.likes + (isLiked ? 1 : 0)}
           </button>
-          <button className="flex items-center gap-1.5 transition-colors hover:text-white">
+          <button className="flex items-center gap-1.5 transition-colors hover:text-text">
             <MessageCircle className="h-4 w-4" />
             {post.comments.length}
           </button>
           <button
             onClick={() => sharePost(post)}
-            className="flex items-center gap-1.5 transition-colors hover:text-white ml-auto"
+            className="flex items-center gap-1.5 transition-colors hover:text-text ml-auto"
           >
             <Share2 className="h-4 w-4" />
             <span className="text-xs">Compartilhar</span>
@@ -207,7 +207,7 @@ function ActivityCard({ post }: { post: ActivityPost }) {
           <div className="mt-3 space-y-1.5 border-t border-border pt-3">
             {post.comments.map((c, i) => (
               <div key={i} className="text-xs text-text-muted">
-                <span className="font-semibold text-white/80">{c.author}</span>{" "}
+                <span className="font-semibold text-text/80">{c.author}</span>{" "}
                 {c.text}
               </div>
             ))}
@@ -235,7 +235,7 @@ function ChallengeCard({
         <div className="flex items-start gap-2 mb-3">
           <span className="text-2xl">{challenge.emoji}</span>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-white text-sm leading-tight">{challenge.title}</p>
+            <p className="font-semibold text-text text-sm leading-tight">{challenge.title}</p>
             <Badge variant="default" className="mt-1 text-xs">{challenge.theme}</Badge>
           </div>
         </div>
@@ -264,7 +264,7 @@ function ChallengeCard({
 
         <button
           onClick={onToggle}
-          className="flex items-center gap-1 text-xs text-text-muted hover:text-white transition-colors w-full mb-2"
+          className="flex items-center gap-1 text-xs text-text-muted hover:text-text transition-colors w-full mb-2"
         >
           {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           <span>{expanded ? "Ocultar" : "Ver"} ranking do desafio</span>
@@ -292,13 +292,13 @@ function ChallengeCard({
                 </span>
                 <div
                   className={cn(
-                    "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0",
+                    "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-text flex-shrink-0",
                     entry.isYou ? colorProgress(challenge.color) : "bg-white/20"
                   )}
                 >
                   {entry.avatar}
                 </div>
-                <span className={cn("flex-1 truncate", entry.isYou ? "text-white font-semibold" : "text-white/80")}>
+                <span className={cn("flex-1 truncate", entry.isYou ? "text-text font-semibold" : "text-text/80")}>
                   {entry.name} {entry.isYou && "(você)"}
                 </span>
                 <span className={cn(entry.isYou ? colorText(challenge.color) : "text-text-muted")}>
@@ -310,7 +310,7 @@ function ChallengeCard({
         )}
 
         <p className="text-xs text-text-muted italic">
-          Prêmio: <span className="text-white/70 not-italic">{challenge.prize}</span>
+          Prêmio: <span className="text-text/70 not-italic">{challenge.prize}</span>
         </p>
       </CardContent>
     </Card>
@@ -335,7 +335,7 @@ export default function CommunityPage() {
     <div className="mx-auto max-w-6xl space-y-7">
       <div>
         <Badge variant="primary" className="mb-2">Comunidade</Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Desafios, feed e clubes</h1>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Desafios, feed e clubes</h1>
         <p className="mt-1.5 text-sm text-text-muted">
           Conecte-se com outros corredores, participe de desafios mensais e acompanhe seu ranking.
         </p>
@@ -361,7 +361,7 @@ export default function CommunityPage() {
             <TabsContent value="ranking">
               <Card>
                 <CardContent className="p-5">
-                  <h3 className="mb-4 flex items-center gap-2 font-display text-base font-semibold text-white">
+                  <h3 className="mb-4 flex items-center gap-2 font-display text-base font-semibold text-text">
                     <Medal className="h-4 w-4 text-warning" />
                     Ranking do mês
                   </h3>
@@ -392,7 +392,7 @@ export default function CommunityPage() {
                           >
                             #{r.position}
                           </span>
-                          <span className="flex-1 truncate text-sm font-medium text-white">
+                          <span className="flex-1 truncate text-sm font-medium text-text">
                             {r.name}
                           </span>
                           <span className="text-xs text-text-muted">{r.value}</span>
@@ -414,7 +414,7 @@ export default function CommunityPage() {
                         <Users className="h-5 w-5" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-white">{c.name}</p>
+                        <p className="truncate text-sm font-semibold text-text">{c.name}</p>
                         <p className="text-xs text-text-muted">
                           {c.members} membros · {c.location}
                         </p>
@@ -434,7 +434,7 @@ export default function CommunityPage() {
           <div className="lg:sticky lg:top-6">
             <div className="flex items-center gap-2 mb-3">
               <CalendarDays className="h-4 w-4 text-primary" />
-              <h2 className="font-display text-base font-semibold text-white">Desafios do Mês</h2>
+              <h2 className="font-display text-base font-semibold text-text">Desafios do Mês</h2>
             </div>
 
             <div className="space-y-3">
@@ -454,7 +454,7 @@ export default function CommunityPage() {
 
             <Card className="mt-4">
               <CardContent className="p-5">
-                <h3 className="mb-3 font-display text-base font-semibold text-white">Gamificação</h3>
+                <h3 className="mb-3 font-display text-base font-semibold text-text">Gamificação</h3>
                 <p className="text-sm text-text-muted">
                   Ganhe pontos completando treinos, mantendo sua sequência de adesão e participando de
                   desafios. Troque pontos por medalhas exclusivas e benefícios no plano.

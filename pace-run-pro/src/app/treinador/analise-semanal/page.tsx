@@ -128,7 +128,7 @@ function AthleteCard({
         <CardContent className="p-5 space-y-4">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="font-semibold text-white">{analysis.athleteName}</p>
+              <p className="font-semibold text-text">{analysis.athleteName}</p>
               <p className="text-xs text-text-muted mt-0.5">{analysis.weekLabel}</p>
             </div>
             <span
@@ -146,21 +146,21 @@ function AthleteCard({
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-xl bg-card-hover p-2.5 space-y-1">
               <p className="text-[10px] text-text-muted uppercase tracking-wide">Volume</p>
-              <p className="text-sm font-bold text-white">
+              <p className="text-sm font-bold text-text">
                 {volumeMetric.value} km
               </p>
               <DeltaChip delta={volumeMetric.delta} unit={volumeMetric.unit} />
             </div>
             <div className="rounded-xl bg-card-hover p-2.5 space-y-1">
               <p className="text-[10px] text-text-muted uppercase tracking-wide">Sessões</p>
-              <p className="text-sm font-bold text-white">
+              <p className="text-sm font-bold text-text">
                 {sessionsMetric.value}
               </p>
               <DeltaChip delta={sessionsMetric.delta} unit={sessionsMetric.unit} />
             </div>
             <div className="rounded-xl bg-card-hover p-2.5 space-y-1">
               <p className="text-[10px] text-text-muted uppercase tracking-wide">Pace médio</p>
-              <p className="text-sm font-bold text-white">
+              <p className="text-sm font-bold text-text">
                 {formatPaceDisplay(paceMetric.value)}
               </p>
               <DeltaChip delta={paceMetric.delta} unit={paceMetric.unit} />
@@ -216,7 +216,7 @@ export default function AnaliseSemanalPage() {
         </Badge>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+            <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
               Análise Semanal
             </h1>
             <p className="mt-1 text-sm text-text-muted">
@@ -227,17 +227,17 @@ export default function AnaliseSemanalPage() {
             <button
               onClick={() => setWeekIndex((i) => Math.max(0, i - 1))}
               disabled={weekIndex === 0}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-card text-text-muted transition-all hover:border-primary/40 hover:text-white disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-card text-text-muted transition-all hover:border-primary/40 hover:text-text disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="min-w-[170px] text-center text-sm font-semibold text-white">
+            <span className="min-w-[170px] text-center text-sm font-semibold text-text">
               {WEEKS[weekIndex]}
             </span>
             <button
               onClick={() => setWeekIndex((i) => Math.min(WEEKS.length - 1, i + 1))}
               disabled={weekIndex === WEEKS.length - 1}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-card text-text-muted transition-all hover:border-primary/40 hover:text-white disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-card text-text-muted transition-all hover:border-primary/40 hover:text-text disabled:opacity-40"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -253,13 +253,13 @@ export default function AnaliseSemanalPage() {
       >
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="text-xs text-text-muted">Atletas analisados</p>
-          <p className="mt-1 font-display text-2xl font-bold text-white">
+          <p className="mt-1 font-display text-2xl font-bold text-text">
             {weeklyAnalyses.length}
           </p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="text-xs text-text-muted">Aderência média</p>
-          <p className="mt-1 font-display text-2xl font-bold text-white">{avgAdherence}%</p>
+          <p className="mt-1 font-display text-2xl font-bold text-text">{avgAdherence}%</p>
         </div>
         <div className="rounded-2xl border border-danger/30 bg-danger/5 p-4">
           <p className="text-xs text-text-muted">Alto risco</p>
@@ -267,7 +267,7 @@ export default function AnaliseSemanalPage() {
         </div>
         <div className="rounded-2xl border border-primary/20 bg-primary/8 p-4">
           <p className="text-xs text-text-muted">Volume total</p>
-          <p className="mt-1 font-display text-2xl font-bold text-white">{totalVolume} km</p>
+          <p className="mt-1 font-display text-2xl font-bold text-text">{totalVolume} km</p>
         </div>
       </motion.div>
 
@@ -284,8 +284,8 @@ export default function AnaliseSemanalPage() {
             className={cn(
               "rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition-all",
               riskFilter === f.value
-                ? "border-primary/60 bg-primary/15 text-white"
-                : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-white"
+                ? "border-primary/60 bg-primary/15 text-primary"
+                : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text"
             )}
           >
             {f.label}

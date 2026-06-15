@@ -36,7 +36,7 @@ export default function AdminAssinaturasPage() {
         <Badge variant="primary" className="mb-2">
           Painel Administrativo
         </Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
           Assinaturas
         </h1>
         <p className="text-sm text-text-muted">
@@ -82,7 +82,7 @@ export default function AdminAssinaturasPage() {
       {/* Plan distribution */}
       <Card>
         <CardContent className="p-5">
-          <h2 className="mb-5 font-display text-base font-semibold text-white">
+          <h2 className="mb-5 font-display text-base font-semibold text-text">
             Distribuição por plano
           </h2>
 
@@ -102,7 +102,7 @@ export default function AdminAssinaturasPage() {
                   key={item.plan}
                   className="flex flex-col gap-3 py-4 sm:grid sm:grid-cols-[1.5fr_1fr_1fr_2fr] sm:items-center sm:gap-4"
                 >
-                  <span className="font-semibold text-white">{item.plan}</span>
+                  <span className="font-semibold text-text">{item.plan}</span>
                   <span className="text-sm text-text-muted">
                     {item.count} treinadores
                   </span>
@@ -125,7 +125,7 @@ export default function AdminAssinaturasPage() {
           </div>
 
           <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-            <span className="text-sm font-semibold text-white">Total</span>
+            <span className="text-sm font-semibold text-text">Total</span>
             <span className="text-sm font-bold text-success">
               {formatCurrency(totalRevenue)}
             </span>
@@ -136,7 +136,7 @@ export default function AdminAssinaturasPage() {
       {/* Recent subscriptions */}
       <Card>
         <CardContent className="p-5">
-          <h2 className="mb-5 font-display text-base font-semibold text-white">
+          <h2 className="mb-5 font-display text-base font-semibold text-text">
             Atividade recente
           </h2>
           <div className="space-y-3">
@@ -155,7 +155,7 @@ export default function AdminAssinaturasPage() {
                       {sub.coachName.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white">
+                      <p className="text-sm font-medium text-text">
                         {sub.coachName}
                       </p>
                       <p className="text-xs text-text-muted">

@@ -7,7 +7,7 @@ import { Eye, EyeOff, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 function RedefinirSenhaContent() {
   const router = useRouter();
@@ -63,7 +63,7 @@ function RedefinirSenhaContent() {
   }
 
   return (
-    <div className="min-h-dvh bg-background text-white">
+    <div className="min-h-dvh bg-background text-text">
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
@@ -71,7 +71,7 @@ function RedefinirSenhaContent() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
               <Zap className="h-5 w-5 text-white" fill="white" />
             </div>
-            <span className="font-display text-lg font-extrabold tracking-wide text-white">
+            <span className="font-display text-lg font-extrabold tracking-wide text-text">
               PACE RUN <span className="gradient-text">PRO</span>
             </span>
           </Link>
@@ -83,7 +83,7 @@ function RedefinirSenhaContent() {
           <div className="rounded-2xl border border-border bg-card p-8 shadow-2xl shadow-black/40">
             {/* Header */}
             <div className="mb-8 text-center">
-              <h1 className="font-display text-3xl font-extrabold text-white">
+              <h1 className="font-display text-3xl font-extrabold text-text">
                 Criar nova senha
               </h1>
               <p className="mt-2 text-sm text-text-muted">
@@ -92,7 +92,7 @@ function RedefinirSenhaContent() {
             </div>
 
             {success ? (
-              <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3.5 text-sm text-white">
+              <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3.5 text-sm text-primary">
                 Senha redefinida com sucesso! Redirecionando para o login...
               </div>
             ) : !token ? (
@@ -119,7 +119,7 @@ function RedefinirSenhaContent() {
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
                       aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

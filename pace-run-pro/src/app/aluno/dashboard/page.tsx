@@ -49,7 +49,7 @@ export default function AthleteDashboard() {
       <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-sm text-text-muted">{greeting}, {currentAthlete.firstName} 👋</p>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
             Vamos evoluir mais um dia?
           </h1>
         </div>
@@ -69,7 +69,7 @@ export default function AthleteDashboard() {
                   <Badge variant="primary">Treino de hoje</Badge>
                   <Badge variant="success">Liberado</Badge>
                 </div>
-                <h2 className="mt-3 font-display text-xl font-bold text-white sm:text-2xl">{todayWorkout.title}</h2>
+                <h2 className="mt-3 font-display text-xl font-bold text-text sm:text-2xl">{todayWorkout.title}</h2>
                 <p className="mt-1.5 max-w-md text-sm text-text-muted">{todayWorkout.objective}</p>
               </div>
 
@@ -146,7 +146,7 @@ export default function AthleteDashboard() {
         <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show" className="space-y-5 lg:col-span-1">
           <Card>
             <CardContent className="space-y-5 p-5">
-              <h3 className="font-display text-base font-semibold text-white">Seus indicadores</h3>
+              <h3 className="font-display text-base font-semibold text-text">Seus indicadores</h3>
 
               <IndicatorBar
                 icon={<CalendarCheck2 className="h-4 w-4" />}
@@ -166,7 +166,7 @@ export default function AthleteDashboard() {
               <div className="rounded-xl border border-border bg-card-hover/50 p-3">
                 <p className="text-xs text-text-muted">
                   Progresso do ciclo —{" "}
-                  <span className="font-semibold text-white">
+                  <span className="font-semibold text-text">
                     semana {macrocycle.currentWeek} de {macrocycle.totalWeeks}
                   </span>
                 </p>
@@ -182,7 +182,7 @@ export default function AthleteDashboard() {
                   <Activity className="h-4.5 w-4.5" />
                 </span>
                 <div>
-                  <h3 className="font-display text-base font-semibold text-white">Check-in rápido</h3>
+                  <h3 className="font-display text-base font-semibold text-text">Check-in rápido</h3>
                   <p className="text-xs text-text-muted">Como você está se sentindo hoje?</p>
                 </div>
               </div>
@@ -215,16 +215,16 @@ export default function AthleteDashboard() {
                   <Badge variant="success" className="mb-2">
                     {s.badge}
                   </Badge>
-                  <p className="text-sm font-semibold text-white">{s.title}</p>
+                  <p className="text-sm font-semibold text-text">{s.title}</p>
                   <p className="text-xs text-text-muted">{s.date}</p>
                   <div className="mt-3 flex items-center justify-between text-xs text-text-muted">
                     <span>{s.distanceKm ? `${s.distanceKm} km` : "Sessão"}</span>
-                    <span className="font-medium text-white">{s.pace}</span>
+                    <span className="font-medium text-text">{s.pace}</span>
                   </div>
                   <div className="mt-2 flex items-center gap-1.5 text-xs text-text-muted">
                     RPE
                     <Progress value={s.rpe * 10} className="h-1.5 flex-1" />
-                    <span className="font-medium text-white">{s.rpe}</span>
+                    <span className="font-medium text-text">{s.rpe}</span>
                   </div>
                 </Card>
               ))}
@@ -243,7 +243,7 @@ function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string
         {icon}
         <span className="text-[11px] uppercase tracking-wider">{label}</span>
       </div>
-      <p className="mt-1.5 font-display text-base font-bold text-white">{value}</p>
+      <p className="mt-1.5 font-display text-base font-bold text-text">{value}</p>
     </div>
   );
 }
@@ -264,11 +264,11 @@ function IndicatorBar({
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between text-sm">
-        <span className="flex items-center gap-1.5 font-medium text-white">
+        <span className="flex items-center gap-1.5 font-medium text-text">
           {icon}
           {label}
         </span>
-        <span className="font-display font-bold text-white">{Math.round(value * 100)}%</span>
+        <span className="font-display font-bold text-text">{Math.round(value * 100)}%</span>
       </div>
       <Progress value={value * 100} colorClassName={color} />
       <p className="mt-1.5 text-xs text-text-muted">{hint}</p>

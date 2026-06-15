@@ -28,7 +28,7 @@ export default function CoachDashboard() {
       <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-sm text-text-muted">Painel do treinador</p>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Olá, {coachOverview.name.split(" ")[0]} 👋</h1>
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Olá, {coachOverview.name.split(" ")[0]} 👋</h1>
           <p className="mt-1 text-xs text-text-muted">{coachOverview.credential}</p>
         </div>
         <Link href="/treinador/prescricao/corrida">
@@ -76,16 +76,16 @@ export default function CoachDashboard() {
                           {a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
                         </span>
                         <div>
-                          <p className="text-sm font-semibold text-white">{a.name}</p>
+                          <p className="text-sm font-semibold text-text">{a.name}</p>
                           <p className="text-xs text-text-muted">Meta: {a.goal} · {a.level}</p>
                         </div>
                       </div>
                       <Badge variant="danger">Em risco</Badge>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-text-muted sm:grid-cols-3">
-                      <span>Adesão: <span className="font-semibold text-white">{Math.round(a.adherence * 100)}%</span></span>
-                      <span>Carga semanal: <span className="font-semibold text-white">{a.weeklyLoad} UA</span></span>
-                      <span>Último check-in: <span className="font-semibold text-white">{a.lastCheckIn}</span></span>
+                      <span>Adesão: <span className="font-semibold text-text">{Math.round(a.adherence * 100)}%</span></span>
+                      <span>Carga semanal: <span className="font-semibold text-text">{a.weeklyLoad} UA</span></span>
+                      <span>Último check-in: <span className="font-semibold text-text">{a.lastCheckIn}</span></span>
                     </div>
                   </Card>
                 </Link>
@@ -98,13 +98,13 @@ export default function CoachDashboard() {
         <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show" className="space-y-5">
           <Card>
             <CardContent className="p-5">
-              <h3 className="mb-4 font-display text-base font-semibold text-white">Carga da equipe</h3>
+              <h3 className="mb-4 font-display text-base font-semibold text-text">Carga da equipe</h3>
               <div className="space-y-3">
                 {athleteList.slice(0, 6).map((a) => (
                   <div key={a.id}>
                     <div className="mb-1 flex items-center justify-between text-xs">
                       <span className="truncate text-text-muted">{a.name}</span>
-                      <span className="font-semibold text-white">{a.weeklyLoad} UA</span>
+                      <span className="font-semibold text-text">{a.weeklyLoad} UA</span>
                     </div>
                     <Progress
                       value={(a.weeklyLoad / 500) * 100}
@@ -118,7 +118,7 @@ export default function CoachDashboard() {
 
           <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-card">
             <CardContent className="p-5">
-              <h3 className="font-display text-base font-semibold text-white">Liberação semanal</h3>
+              <h3 className="font-display text-base font-semibold text-text">Liberação semanal</h3>
               <p className="mt-1.5 text-sm text-text-muted">
                 Camila Andrade aguarda liberação da próxima semana de treinos. Revise e libere blocos específicos do plano.
               </p>

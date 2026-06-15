@@ -10,7 +10,7 @@ import { b2cPlans, b2cIncludes } from "@/lib/mock-data";
 
 // ── Shared input style ────────────────────────────────────────────────────
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 // ── Step indicator ────────────────────────────────────────────────────────
 function StepIndicator({ current, total }: { current: number; total: number }) {
@@ -52,10 +52,10 @@ function PlanSummaryCard({ planId }: { planId: string }) {
       <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-muted">
         Plano selecionado
       </p>
-      <h4 className="font-display text-lg font-bold text-white">{plan.name}</h4>
+      <h4 className="font-display text-lg font-bold text-text">{plan.name}</h4>
       <p className="text-xs text-text-muted">{plan.description}</p>
       <div className="mt-3 flex items-end gap-1">
-        <span className="font-display text-2xl font-extrabold text-white">
+        <span className="font-display text-2xl font-extrabold text-text">
           R$ {plan.pricePerMonth}
         </span>
         <span className="mb-0.5 text-sm text-text-muted">/mês</span>
@@ -99,8 +99,8 @@ function PaymentToggle({
           className={[
             "flex-1 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all",
             value === o.id
-              ? "border-primary/60 bg-primary/10 text-white"
-              : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-white",
+              ? "border-primary/60 bg-primary/10 text-primary"
+              : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text",
           ].join(" ")}
         >
           {o.label}
@@ -158,7 +158,7 @@ function AssinarContent() {
           <CheckCircle className="h-10 w-10 text-success" />
         </div>
         <div>
-          <h2 className="font-display text-3xl font-extrabold text-white">
+          <h2 className="font-display text-3xl font-extrabold text-text">
             Assinatura confirmada!
           </h2>
           <p className="mx-auto mt-4 max-w-md text-text-muted">
@@ -185,7 +185,7 @@ function AssinarContent() {
       {/* ── Step 1 ── */}
       {step === 1 && (
         <div>
-          <h1 className="mt-8 font-display text-3xl font-extrabold text-white">
+          <h1 className="mt-8 font-display text-3xl font-extrabold text-text">
             Escolha seu plano
           </h1>
           <p className="mt-2 text-sm text-text-muted">
@@ -214,17 +214,17 @@ function AssinarContent() {
                 )}
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-display text-base font-bold text-white">{p.name}</h3>
+                    <h3 className="font-display text-base font-bold text-text">{p.name}</h3>
                     <p className="mt-0.5 text-xs text-text-muted">{p.description}</p>
                   </div>
                   {selectedPlan === p.id && (
                     <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary">
-                      <Check className="h-3 w-3 text-white" />
+                      <Check className="h-3 w-3 text-text" />
                     </div>
                   )}
                 </div>
                 <div className="mt-4 flex items-end gap-1">
-                  <span className="font-display text-2xl font-extrabold text-white">
+                  <span className="font-display text-2xl font-extrabold text-text">
                     R$ {p.pricePerMonth}
                   </span>
                   <span className="mb-0.5 text-sm text-text-muted">/mês</span>
@@ -245,7 +245,7 @@ function AssinarContent() {
 
           {/* Includes checklist */}
           <div className="mt-8 rounded-2xl border border-border bg-card p-6">
-            <p className="mb-4 text-sm font-semibold text-white">Todos os planos incluem:</p>
+            <p className="mb-4 text-sm font-semibold text-text">Todos os planos incluem:</p>
             <ul className="space-y-2">
               {b2cIncludes.map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-sm text-text-muted">
@@ -270,7 +270,7 @@ function AssinarContent() {
       {/* ── Step 2 ── */}
       {step === 2 && (
         <div>
-          <h1 className="mt-8 font-display text-3xl font-extrabold text-white">
+          <h1 className="mt-8 font-display text-3xl font-extrabold text-text">
             Crie sua conta
           </h1>
           <p className="mt-2 text-sm text-text-muted">
@@ -400,7 +400,7 @@ function AssinarContent() {
       {/* ── Step 3 ── */}
       {step === 3 && (
         <div>
-          <h1 className="mt-8 font-display text-3xl font-extrabold text-white">
+          <h1 className="mt-8 font-display text-3xl font-extrabold text-text">
             Finalizar assinatura
           </h1>
           <p className="mt-2 text-sm text-text-muted">
@@ -411,20 +411,20 @@ function AssinarContent() {
             <div className="space-y-6 lg:col-span-2">
               {/* Order summary */}
               <div className="rounded-2xl border border-border bg-card p-6">
-                <p className="mb-4 text-sm font-semibold text-white">Resumo do pedido</p>
+                <p className="mb-4 text-sm font-semibold text-text">Resumo do pedido</p>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-text-muted">Plano</span>
-                    <span className="font-medium text-white">{plan.name}</span>
+                    <span className="font-medium text-text">{plan.name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-muted">Valor mensal</span>
-                    <span className="font-medium text-white">R$ {plan.pricePerMonth}/mês</span>
+                    <span className="font-medium text-text">R$ {plan.pricePerMonth}/mês</span>
                   </div>
                   {plan.months > 1 && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">Total cobrado hoje</span>
-                      <span className="font-bold text-white">R$ {plan.totalPrice}</span>
+                      <span className="font-bold text-text">R$ {plan.totalPrice}</span>
                     </div>
                   )}
                   <div className="border-t border-border pt-3 text-xs text-text-muted">
@@ -435,7 +435,7 @@ function AssinarContent() {
 
               {/* Payment method */}
               <div className="space-y-4">
-                <p className="text-sm font-semibold text-white">Forma de pagamento</p>
+                <p className="text-sm font-semibold text-text">Forma de pagamento</p>
                 <PaymentToggle value={paymentMethod} onChange={setPaymentMethod} />
 
                 {/* Cartão */}
@@ -581,7 +581,7 @@ function AssinarContent() {
 // ── Page wrapper ──────────────────────────────────────────────────────────
 export default function AssinarPage() {
   return (
-    <div className="min-h-dvh bg-background text-white">
+    <div className="min-h-dvh bg-background text-text">
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
@@ -589,7 +589,7 @@ export default function AssinarPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
               <Zap className="h-5 w-5 text-white" fill="white" />
             </div>
-            <span className="font-display text-lg font-extrabold tracking-wide text-white">
+            <span className="font-display text-lg font-extrabold tracking-wide text-text">
               PACE RUN <span className="gradient-text">PRO</span>
             </span>
           </Link>

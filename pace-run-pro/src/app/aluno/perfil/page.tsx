@@ -128,7 +128,7 @@ export default function ProfilePage() {
               <AvatarFallback className="text-2xl">{currentAthlete.name.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="font-display text-xl font-bold text-white sm:text-2xl">{currentAthlete.name}</h1>
+              <h1 className="font-display text-xl font-bold text-text sm:text-2xl">{currentAthlete.name}</h1>
               <p className="text-sm text-text-muted">{currentAthlete.city}</p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 <Badge variant="primary">{currentAthlete.level}</Badge>
@@ -172,17 +172,17 @@ export default function ProfilePage() {
                   <Target className="h-4 w-4" />
                 </span>
                 <div>
-                  <h3 className="font-display text-sm font-semibold text-white">Objetivo atual</h3>
+                  <h3 className="font-display text-sm font-semibold text-text">Objetivo atual</h3>
                   <p className="mt-1 text-sm text-text-muted">{currentAthlete.goal}</p>
                   <p className="mt-1 text-xs text-text-muted">
-                    Data da prova: <span className="text-white">{new Date(currentAthlete.raceDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}</span>
+                    Data da prova: <span className="text-text">{new Date(currentAthlete.raceDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}</span>
                   </p>
                 </div>
               </CardContent>
             </Card>
 
             <div>
-              <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-white">
+              <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-text">
                 <Award className="h-4 w-4 text-warning" />
                 Histórico de recordes
               </h3>
@@ -190,9 +190,9 @@ export default function ProfilePage() {
                 {personalRecords.map((r) => (
                   <Card key={r.distance}>
                     <CardContent className="flex items-center justify-between p-3.5">
-                      <span className="text-sm font-medium text-white">{r.distance}</span>
+                      <span className="text-sm font-medium text-text">{r.distance}</span>
                       <span className="text-sm text-text-muted">
-                        <span className="font-display font-bold text-white">{r.time}</span> · {r.pace}
+                        <span className="font-display font-bold text-text">{r.time}</span> · {r.pace}
                       </span>
                     </CardContent>
                   </Card>
@@ -224,7 +224,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setBanner(null)}
-                  className="text-text-muted transition-colors hover:text-white"
+                  className="text-text-muted transition-colors hover:text-text"
                   aria-label="Fechar"
                 >
                   <XCircle className="h-4 w-4" />
@@ -250,7 +250,7 @@ export default function ProfilePage() {
                         <Smartphone className="h-5 w-5" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-white">{d.name}</p>
+                        <p className="truncate text-sm font-semibold text-text">{d.name}</p>
                         <p className="truncate text-xs text-text-muted">{d.description}</p>
                         {isStrava && connected && stravaLastSync && (
                           <p className="mt-0.5 truncate text-[11px] text-text-muted">
@@ -336,7 +336,7 @@ export default function ProfilePage() {
 
             {/* Synced activities */}
             <div>
-              <h3 className="mb-3 font-display text-sm font-semibold text-white">
+              <h3 className="mb-3 font-display text-sm font-semibold text-text">
                 Atividades sincronizadas
               </h3>
               <div className="space-y-2.5">
@@ -365,17 +365,17 @@ export default function ProfilePage() {
                               </span>
                               <span className="text-text-muted text-xs">{dateFormatted}</span>
                             </div>
-                            <p className="font-display text-sm font-semibold text-white">{act.title}</p>
+                            <p className="font-display text-sm font-semibold text-text">{act.title}</p>
                             {/* Metrics row */}
                             <div className="flex flex-wrap gap-3 text-xs text-text-muted">
                               <span>
-                                <span className="font-medium text-white">{act.distanceKm.toFixed(1)} km</span>
+                                <span className="font-medium text-text">{act.distanceKm.toFixed(1)} km</span>
                               </span>
-                              <span>Pace <span className="font-medium text-white">{act.pace}</span></span>
-                              <span>FC méd <span className="font-medium text-white">{act.avgHrBpm} bpm</span></span>
-                              <span>Calorias <span className="font-medium text-white">{act.calories} kcal</span></span>
-                              <span>Elevação <span className="font-medium text-white">{act.elevationM} m</span></span>
-                              <span>RPE estimado <span className="font-medium text-white">{act.estimatedRpe}</span></span>
+                              <span>Pace <span className="font-medium text-text">{act.pace}</span></span>
+                              <span>FC méd <span className="font-medium text-text">{act.avgHrBpm} bpm</span></span>
+                              <span>Calorias <span className="font-medium text-text">{act.calories} kcal</span></span>
+                              <span>Elevação <span className="font-medium text-text">{act.elevationM} m</span></span>
+                              <span>RPE estimado <span className="font-medium text-text">{act.estimatedRpe}</span></span>
                             </div>
                           </div>
                           {/* Check-in badge or button */}
@@ -405,7 +405,7 @@ export default function ProfilePage() {
           <div className="space-y-4">
             <Card>
               <CardContent className="space-y-3 p-5">
-                <h3 className="flex items-center gap-2 font-display text-sm font-semibold text-white">
+                <h3 className="flex items-center gap-2 font-display text-sm font-semibold text-text">
                   <Bell className="h-4 w-4 text-primary" /> Notificações
                 </h3>
                 {(
@@ -416,7 +416,7 @@ export default function ProfilePage() {
                   ] as const
                 ).map((n) => (
                   <label key={n.key} className="flex items-center justify-between rounded-xl border border-border bg-card-hover/30 px-4 py-3">
-                    <span className="text-sm text-white">{n.label}</span>
+                    <span className="text-sm text-text">{n.label}</span>
                     <button
                       type="button"
                       onClick={() => setNotifs((s) => ({ ...s, [n.key]: !s[n.key] }))}
@@ -431,12 +431,12 @@ export default function ProfilePage() {
 
             <Card>
               <CardContent className="space-y-3 p-5">
-                <h3 className="flex items-center gap-2 font-display text-sm font-semibold text-white">
+                <h3 className="flex items-center gap-2 font-display text-sm font-semibold text-text">
                   <CreditCard className="h-4 w-4 text-primary" /> Plano contratado
                 </h3>
                 <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
                   <div>
-                    <p className="text-sm font-semibold text-white">{currentAthlete.plan}</p>
+                    <p className="text-sm font-semibold text-text">{currentAthlete.plan}</p>
                     <p className="text-xs text-text-muted">Renovação automática · próxima cobrança em 12/07/2026</p>
                   </div>
                   <Button size="sm" variant="secondary">Gerenciar</Button>
@@ -461,14 +461,14 @@ function InfoField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-[11px] uppercase tracking-wider text-text-muted">{label}</p>
-      <p className="mt-1 font-display text-base font-bold text-white">{value}</p>
+      <p className="mt-1 font-display text-base font-bold text-text">{value}</p>
     </div>
   );
 }
 
 function SettingsLink({ icon: Icon, label, danger }: { icon: React.ComponentType<{ className?: string }>; label: string; danger?: boolean }) {
   return (
-    <button className={cn("flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 text-left text-sm font-medium transition-colors hover:border-primary/40", danger ? "text-danger hover:border-danger/40" : "text-white")}>
+    <button className={cn("flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 text-left text-sm font-medium transition-colors hover:border-primary/40", danger ? "text-danger hover:border-danger/40" : "text-text")}>
       <Icon className="h-4 w-4" />
       {label}
     </button>

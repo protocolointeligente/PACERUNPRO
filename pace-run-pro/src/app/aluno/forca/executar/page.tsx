@@ -169,10 +169,10 @@ export default function StrengthExecutarPage() {
           >
             <CheckCircle2 className="h-12 w-12" style={{ color: "var(--color-success, #84cc16)" }} />
           </motion.div>
-          <h1 className="font-display text-3xl font-bold text-white">Treino concluído!</h1>
+          <h1 className="font-display text-3xl font-bold text-text">Treino concluído!</h1>
           <p className="mt-2 text-text-muted">
             Você completou todas as séries de{" "}
-            <span className="text-white">{strengthSessionExample.label}</span>. Ótimo trabalho!
+            <span className="text-text">{strengthSessionExample.label}</span>. Ótimo trabalho!
           </p>
           <Button
             size="lg"
@@ -182,7 +182,7 @@ export default function StrengthExecutarPage() {
             <CheckCircle2 className="h-5 w-5" />
             Fazer check-in pós-treino
           </Button>
-          <Link href="/aluno/forca" className="mt-4 block text-sm text-text-muted hover:text-white">
+          <Link href="/aluno/forca" className="mt-4 block text-sm text-text-muted hover:text-text">
             Voltar para força
           </Link>
         </div>
@@ -214,7 +214,7 @@ export default function StrengthExecutarPage() {
       <div className="flex items-center gap-2">
         <Link
           href="/aluno/forca"
-          className="flex items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-white"
+          className="flex items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-text"
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar
@@ -265,7 +265,7 @@ export default function StrengthExecutarPage() {
             </div>
 
             <CardContent className="p-5">
-              <h2 className="font-display text-xl font-bold text-white">{exercise.name}</h2>
+              <h2 className="font-display text-xl font-bold text-text">{exercise.name}</h2>
 
               {/* Stats row */}
               <div className="mt-3 flex flex-wrap gap-2 text-xs text-text-muted">
@@ -316,7 +316,7 @@ export default function StrengthExecutarPage() {
                     {/* Set counter */}
                     <div className="text-center">
                       <p className="text-xs uppercase tracking-widest text-text-muted">Série atual</p>
-                      <p className="font-display text-5xl font-bold text-white">
+                      <p className="font-display text-5xl font-bold text-text">
                         {currentSet}
                         <span className="text-2xl text-text-muted">/{totalSets}</span>
                       </p>
@@ -337,7 +337,7 @@ export default function StrengthExecutarPage() {
                       <div className="flex justify-center pt-1">
                         <button
                           onClick={finish}
-                          className="text-xs text-text-muted transition-colors hover:text-white"
+                          className="text-xs text-text-muted transition-colors hover:text-text"
                         >
                           Encerrar sessão
                         </button>
@@ -399,7 +399,7 @@ export default function StrengthExecutarPage() {
                           />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <span className="font-display text-3xl font-bold text-white">
+                          <span className="font-display text-3xl font-bold text-text">
                             {formatCountdown(restRemaining)}
                           </span>
                           <span className="text-[10px] uppercase tracking-widest text-text-muted">
@@ -425,7 +425,7 @@ export default function StrengthExecutarPage() {
                             }
                           })
                         }
-                        className="flex items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-white"
+                        className="flex items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-text"
                       >
                         Pular descanso
                         <SkipForward className="h-3.5 w-3.5" />
@@ -490,7 +490,7 @@ export default function StrengthExecutarPage() {
                 key={ex.id}
                 className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-text-muted"
               >
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-card-hover text-[10px] font-bold text-white">
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-card-hover text-[10px] font-bold text-text">
                   {exerciseIdx + 2 + i}
                 </span>
                 <Dumbbell className="h-3 w-3 text-primary" />

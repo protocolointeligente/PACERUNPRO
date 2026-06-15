@@ -195,7 +195,7 @@ export default function OnboardingPage() {
                       className={cn(
                         "h-12 w-14 rounded-xl border text-sm font-semibold transition-colors",
                         selected
-                          ? "border-primary bg-primary/15 text-white"
+                          ? "border-primary bg-primary/15 text-primary"
                           : "border-border bg-card text-text-muted hover:border-primary/30"
                       )}
                     >
@@ -307,7 +307,7 @@ export default function OnboardingPage() {
             exit={{ opacity: 0, x: direction > 0 ? -48 : 48 }}
             transition={{ duration: 0.35, ease: "easeInOut" }}
           >
-            <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">{current.title}</h1>
+            <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">{current.title}</h1>
             <p className="mt-2 text-sm text-text-muted">{current.subtitle}</p>
             <div className="mt-7">{current.content}</div>
           </motion.div>
@@ -339,7 +339,7 @@ export default function OnboardingPage() {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-white placeholder:text-text-muted/60 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-text placeholder:text-text-muted/60 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

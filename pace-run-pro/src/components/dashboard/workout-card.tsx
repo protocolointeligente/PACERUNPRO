@@ -27,7 +27,7 @@ export function WorkoutCard({ workout, href }: { workout: WorkoutSummary; href?:
         style={{ borderColor: `${workout.color}55`, backgroundColor: `${workout.color}1a` }}
       >
         <span className="text-[10px] uppercase text-text-muted">{weekday.replace(".", "")}</span>
-        <span className="text-sm font-bold text-white">{day.split(" ")[0]}</span>
+        <span className="text-sm font-bold text-text">{day.split(" ")[0]}</span>
       </div>
 
       <div className="min-w-0 flex-1">
@@ -48,7 +48,7 @@ export function WorkoutCard({ workout, href }: { workout: WorkoutSummary; href?:
             </span>
           )}
         </div>
-        <p className="mt-1 truncate text-sm font-semibold text-white">{workout.title}</p>
+        <p className="mt-1 truncate text-sm font-semibold text-text">{workout.title}</p>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-text-muted">
           {workout.distanceKm && (
             <span className="flex items-center gap-1">

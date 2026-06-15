@@ -18,7 +18,7 @@ export default function StrengthPage() {
     <div className="mx-auto max-w-6xl space-y-7">
       <div>
         <Badge variant="primary" className="mb-2">Força &amp; Funcional</Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Seu treino de força de hoje</h1>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Seu treino de força de hoje</h1>
         <p className="mt-1.5 text-sm text-text-muted">
           O diferencial do Pace Run Pro: sessões completas de força e funcional, criadas pelo seu treinador, com biblioteca de exercícios em vídeo.
         </p>
@@ -34,7 +34,7 @@ export default function StrengthPage() {
               </span>
               <div>
                 <p className="text-xs uppercase tracking-wider text-text-muted">Sessão de hoje · Divisão ABCD</p>
-                <h2 className="font-display text-lg font-bold text-white">{strengthSessionExample.label}</h2>
+                <h2 className="font-display text-lg font-bold text-text">{strengthSessionExample.label}</h2>
               </div>
             </div>
             <Badge variant="success">Liberado pelo treinador</Badge>
@@ -52,7 +52,7 @@ export default function StrengthPage() {
                     style={{ backgroundImage: `url('${ex.imageUrl}')` }}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">{ex.name}</p>
+                    <p className="truncate text-sm font-semibold text-text">{ex.name}</p>
                     <p className="text-xs text-text-muted">{ex.category}</p>
                   </div>
                   <div className="hidden gap-4 text-xs text-text-muted sm:flex">
@@ -76,13 +76,13 @@ export default function StrengthPage() {
 
       {/* Library */}
       <div>
-        <h2 className="mb-3 font-display text-lg font-semibold text-white">Biblioteca de exercícios</h2>
+        <h2 className="mb-3 font-display text-lg font-semibold text-text">Biblioteca de exercícios</h2>
         <div className="mb-4 flex flex-wrap gap-2">
           <button
             onClick={() => setActiveCategory(null)}
             className={cn(
               "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
-              activeCategory === null ? "border-primary/60 bg-primary/15 text-white" : "border-border bg-card text-text-muted hover:border-primary/30"
+              activeCategory === null ? "border-primary/60 bg-primary/15 text-primary" : "border-border bg-card text-text-muted hover:border-primary/30"
             )}
           >
             Todas
@@ -93,7 +93,7 @@ export default function StrengthPage() {
               onClick={() => setActiveCategory(c)}
               className={cn(
                 "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
-                activeCategory === c ? "border-primary/60 bg-primary/15 text-white" : "border-border bg-card text-text-muted hover:border-primary/30"
+                activeCategory === c ? "border-primary/60 bg-primary/15 text-primary" : "border-border bg-card text-text-muted hover:border-primary/30"
               )}
             >
               {c}
@@ -108,7 +108,7 @@ export default function StrengthPage() {
                 <div className="h-36 bg-cover bg-center" style={{ backgroundImage: `url('${ex.imageUrl}')` }} />
                 <CardContent className="p-4">
                   <Badge variant="primary" className="mb-2">{ex.category}</Badge>
-                  <p className="text-sm font-semibold text-white">{ex.name}</p>
+                  <p className="text-sm font-semibold text-text">{ex.name}</p>
                   <p className="mt-1 line-clamp-2 text-xs text-text-muted">{ex.description}</p>
                   <div className="mt-3 flex items-center gap-3 text-xs text-text-muted">
                     <span>{ex.sets}x {ex.reps}</span>

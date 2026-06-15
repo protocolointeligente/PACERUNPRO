@@ -125,7 +125,7 @@ function LeadCard({ lead, onAdvance }: { lead: CrmLead; onAdvance: () => void })
           {lead.avatar}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-white">{lead.name}</p>
+          <p className="truncate text-sm font-semibold text-text">{lead.name}</p>
           <SourceBadge source={lead.source} />
         </div>
       </div>
@@ -174,7 +174,7 @@ function NewLeadForm({ onClose, onAdd }: { onClose: () => void; onAdd: (lead: Cr
     onClose();
   }
 
-  const inputCls = "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-white placeholder:text-text-muted focus:border-primary focus:outline-none";
+  const inputCls = "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none";
   const labelCls = "mb-1 block text-xs font-medium text-text-muted";
 
   return (
@@ -185,8 +185,8 @@ function NewLeadForm({ onClose, onAdd }: { onClose: () => void; onAdd: (lead: Cr
       className="rounded-2xl border border-border bg-card p-5 space-y-4"
     >
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-white">Novo lead</h3>
-        <button onClick={onClose} className="text-text-muted hover:text-white transition-colors">
+        <h3 className="font-semibold text-text">Novo lead</h3>
+        <button onClick={onClose} className="text-text-muted hover:text-text transition-colors">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -266,7 +266,7 @@ export default function CrmPage() {
             <Kanban className="h-3 w-3" />
             CRM de Leads
           </Badge>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">CRM de Leads</h1>
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">CRM de Leads</h1>
           <p className="text-sm text-text-muted">Gerencie o pipeline de novos alunos da sua assessoria.</p>
         </div>
         <button
@@ -304,7 +304,7 @@ export default function CrmPage() {
                 {s.icon}
                 {s.label}
               </div>
-              <p className="text-xl font-bold text-white">{s.value}</p>
+              <p className="text-xl font-bold text-text">{s.value}</p>
             </CardContent>
           </Card>
         ))}
@@ -313,14 +313,14 @@ export default function CrmPage() {
       <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show" className="flex items-center gap-2">
         <button
           onClick={() => setView("kanban")}
-          className={cn("inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors", view === "kanban" ? "border-primary bg-primary/10 text-primary" : "border-border text-text-muted hover:text-white")}
+          className={cn("inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors", view === "kanban" ? "border-primary bg-primary/10 text-primary" : "border-border text-text-muted hover:text-primary")}
         >
           <Kanban className="h-4 w-4" />
           Kanban
         </button>
         <button
           onClick={() => setView("lista")}
-          className={cn("inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors", view === "lista" ? "border-primary bg-primary/10 text-primary" : "border-border text-text-muted hover:text-white")}
+          className={cn("inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors", view === "lista" ? "border-primary bg-primary/10 text-primary" : "border-border text-text-muted hover:text-primary")}
         >
           <List className="h-4 w-4" />
           Lista
@@ -341,7 +341,7 @@ export default function CrmPage() {
               return (
                 <div key={stage} className="min-w-[260px] flex-shrink-0 space-y-3 rounded-2xl border border-border bg-card/50 p-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-white">{STAGE_LABELS[stage]}</span>
+                    <span className="text-sm font-semibold text-text">{STAGE_LABELS[stage]}</span>
                     <span className={cn("rounded-full px-2 py-0.5 text-xs font-bold", STAGE_COLORS[stage])}>
                       {stageLeads.length}
                     </span>
@@ -397,7 +397,7 @@ export default function CrmPage() {
                                   {lead.avatar}
                                 </span>
                                 <div>
-                                  <p className="text-sm font-medium text-white">{lead.name}</p>
+                                  <p className="text-sm font-medium text-text">{lead.name}</p>
                                   <p className="text-xs text-text-muted">{lead.email}</p>
                                 </div>
                               </div>
@@ -415,7 +415,7 @@ export default function CrmPage() {
                                     )
                                   )
                                 }
-                                className="rounded-lg border border-border bg-background px-2 py-1 text-xs text-white focus:border-primary focus:outline-none"
+                                className="rounded-lg border border-border bg-background px-2 py-1 text-xs text-text focus:border-primary focus:outline-none"
                               >
                                 {STAGE_ORDER.map((s) => (
                                   <option key={s} value={s}>{STAGE_LABELS[s]}</option>

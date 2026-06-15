@@ -13,7 +13,7 @@ export default async function ExerciseDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <Link href="/aluno/forca" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-white transition-colors">
+      <Link href="/aluno/forca" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors">
         <ArrowLeft className="h-4 w-4" />
         Voltar
       </Link>
@@ -24,7 +24,7 @@ export default async function ExerciseDetailPage({ params }: { params: Promise<{
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-5">
             <div>
               <Badge variant="primary" className="mb-2">{exercise.category}</Badge>
-              <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">{exercise.name}</h1>
+              <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">{exercise.name}</h1>
             </div>
             <Button variant="secondary" size="sm">
               <PlayCircle className="h-4 w-4" />
@@ -50,7 +50,7 @@ export default async function ExerciseDetailPage({ params }: { params: Promise<{
 
       <Card>
         <CardContent className="p-5">
-          <h3 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-white">Músculos envolvidos</h3>
+          <h3 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-text">Músculos envolvidos</h3>
           <div className="flex flex-wrap gap-2">
             {exercise.muscles.map((m) => (
               <Badge key={m} variant="outline">{m}</Badge>
@@ -69,7 +69,7 @@ function Metric({ icon: Icon, label, value }: { icon: React.ComponentType<{ clas
         <Icon className="h-3.5 w-3.5" />
         <span className="text-[10px] uppercase tracking-wider">{label}</span>
       </div>
-      <p className="mt-1 font-display text-base font-bold text-white">{value}</p>
+      <p className="mt-1 font-display text-base font-bold text-text">{value}</p>
     </div>
   );
 }
@@ -79,7 +79,7 @@ function Block({ icon: Icon, color, title, text }: { icon: React.ComponentType<{
     <div>
       <div className="mb-1.5 flex items-center gap-2">
         <Icon className={`h-4 w-4 ${color}`} />
-        <h3 className="font-display text-sm font-semibold text-white">{title}</h3>
+        <h3 className="font-display text-sm font-semibold text-text">{title}</h3>
       </div>
       <p className="text-sm leading-relaxed text-text-muted">{text}</p>
     </div>

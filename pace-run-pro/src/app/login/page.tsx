@@ -9,7 +9,7 @@ import { Logo } from "@/components/logo";
 
 // ── Shared input style ────────────────────────────────────────────────────
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 // ── Inner content (reads searchParams) ───────────────────────────────────
 function LoginContent() {
@@ -62,7 +62,7 @@ function LoginContent() {
           <div className="mb-5 flex justify-center">
             <Logo size={40} />
           </div>
-          <h1 className="font-display text-2xl font-extrabold text-white">
+          <h1 className="font-display text-2xl font-extrabold text-text">
             Entrar na sua conta
           </h1>
           <p className="mt-2 text-sm text-text-muted">
@@ -74,7 +74,7 @@ function LoginContent() {
         <button
           type="button"
           onClick={handleGoogle}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-card py-3 text-sm font-semibold text-white hover:border-primary/40 hover:bg-card-hover transition-colors"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-card py-3 text-sm font-semibold text-text hover:border-primary/40 hover:bg-card-hover transition-colors"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5">
             <path
@@ -138,7 +138,7 @@ function LoginContent() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
                 aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
               >
                 {showPassword ? (

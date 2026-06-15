@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 export default function TenisPage() {
   const [shoes, setShoes] = useState(shoesList);
@@ -90,7 +90,7 @@ export default function TenisPage() {
       <div className="space-y-3">
         <Link
           href="/aluno/perfil"
-          className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar ao perfil
@@ -99,7 +99,7 @@ export default function TenisPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1">
             <Badge variant="primary">Tênis</Badge>
-            <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+            <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
               Monitoramento de tênis
             </h1>
             <p className="max-w-lg text-sm text-text-muted">
@@ -130,7 +130,7 @@ export default function TenisPage() {
           >
             <Card>
               <CardContent className="space-y-4 pt-5">
-                <h2 className="font-semibold text-white">Novo tênis</h2>
+                <h2 className="font-semibold text-text">Novo tênis</h2>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-text-muted">
@@ -205,13 +205,13 @@ export default function TenisPage() {
       <div className="grid grid-cols-3 gap-3">
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-white">{activeShoes.length}</p>
+            <p className="text-2xl font-bold text-text">{activeShoes.length}</p>
             <p className="mt-0.5 text-xs text-text-muted">Pares ativos</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-white">
+            <p className="text-2xl font-bold text-text">
               {totalKm.toLocaleString("pt-BR")}
             </p>
             <p className="mt-0.5 text-xs text-text-muted">Km acumulados</p>
@@ -262,7 +262,7 @@ export default function TenisPage() {
                         {shoe.imageEmoji}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-sm font-semibold text-text">
                           {shoe.brand} {shoe.model}
                         </p>
                         <p className="text-xs text-text-muted">{shoe.name}</p>
@@ -286,7 +286,7 @@ export default function TenisPage() {
                     {/* Km counter */}
                     <div className="space-y-2">
                       <div className="flex items-end justify-between">
-                        <span className="text-3xl font-bold tabular-nums text-white">
+                        <span className="text-3xl font-bold tabular-nums text-text">
                           {shoe.kmAccumulated.toLocaleString("pt-BR")}
                           <span className="ml-1 text-base font-normal text-text-muted">
                             km
@@ -345,7 +345,7 @@ export default function TenisPage() {
       {retiredShoes.length > 0 && (
         <div>
           <button
-            className="mb-3 flex w-full items-center justify-between text-sm font-semibold uppercase tracking-widest text-text-muted hover:text-white transition-colors"
+            className="mb-3 flex w-full items-center justify-between text-sm font-semibold uppercase tracking-widest text-text-muted hover:text-text transition-colors"
             onClick={() => setShowRetired((v) => !v)}
           >
             <span>Tênis aposentados ({retiredShoes.length})</span>
@@ -382,7 +382,7 @@ export default function TenisPage() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <p className="text-sm font-semibold text-white">
+                              <p className="text-sm font-semibold text-text">
                                 {shoe.brand} {shoe.model}
                               </p>
                               <Badge variant="outline" className="text-[10px]">

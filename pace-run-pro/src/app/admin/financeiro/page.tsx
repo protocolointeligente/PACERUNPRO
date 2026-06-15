@@ -101,7 +101,7 @@ export default function FinanceiroPage() {
       >
         <div>
           <Badge variant="success" className="mb-2">Financeiro</Badge>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
             Receita e faturamento
           </h1>
         </div>
@@ -159,11 +159,11 @@ export default function FinanceiroPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="text-sm font-semibold text-white">B2C — Atletas diretos</p>
+                    <p className="text-sm font-semibold text-text">B2C — Atletas diretos</p>
                     <p className="text-xs text-text-muted">312 atletas ativos</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-xl font-bold text-white">
+                    <p className="font-display text-xl font-bold text-text">
                       R${b2cMrr.toLocaleString("pt-BR")}
                     </p>
                     <p className="text-xs text-text-muted">{b2cPct}% do MRR</p>
@@ -182,11 +182,11 @@ export default function FinanceiroPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="text-sm font-semibold text-white">B2B — Assessorias</p>
+                    <p className="text-sm font-semibold text-text">B2B — Assessorias</p>
                     <p className="text-xs text-text-muted">48 assessorias ativas</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-xl font-bold text-white">
+                    <p className="font-display text-xl font-bold text-text">
                       R${b2bMrr.toLocaleString("pt-BR")}
                     </p>
                     <p className="text-xs text-text-muted">{b2bPct}% do MRR</p>
@@ -221,15 +221,15 @@ export default function FinanceiroPage() {
                     <p className="text-center text-sm text-text-muted">
                       {row.count}×R${row.price}
                     </p>
-                    <p className="text-right text-sm font-semibold text-white">
+                    <p className="text-right text-sm font-semibold text-text">
                       R${row.mrr.toLocaleString("pt-BR")}
                     </p>
                   </div>
                 ))}
                 {/* Total row */}
                 <div className="grid grid-cols-3 items-center gap-2 border-t border-border pt-2">
-                  <span className="text-sm font-bold text-white">Total</span>
-                  <p className="text-center text-sm font-bold text-white">
+                  <span className="text-sm font-bold text-text">Total</span>
+                  <p className="text-center text-sm font-bold text-text">
                     {b2bBreakdown.reduce((acc, r) => acc + r.count, 0)}
                   </p>
                   <p className="text-right text-sm font-bold text-primary">
@@ -258,13 +258,13 @@ export default function FinanceiroPage() {
             <Card key={charge.id}>
               <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div>
-                  <p className="text-sm font-semibold text-white">{charge.name}</p>
+                  <p className="text-sm font-semibold text-text">{charge.name}</p>
                   <p className="text-xs text-text-muted">
                     Plano {charge.plan} · Vencimento: {charge.dueDate}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-display text-base font-bold text-white">
+                  <span className="font-display text-base font-bold text-text">
                     R${charge.amount.toLocaleString("pt-BR")}
                   </span>
                   <Badge

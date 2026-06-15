@@ -101,7 +101,7 @@ export default function TimelinePage() {
       <div className="space-y-3">
         <Link
           href="/aluno/dashboard"
-          className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar ao dashboard
@@ -109,7 +109,7 @@ export default function TimelinePage() {
 
         <div className="space-y-1">
           <Badge variant="primary">Linha do Tempo</Badge>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
             Sua jornada esportiva
           </h1>
           <p className="max-w-lg text-sm text-text-muted">
@@ -130,7 +130,7 @@ export default function TimelinePage() {
               "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all",
               filter === opt.value
                 ? "border-primary/50 bg-primary/15 text-primary"
-                : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-white"
+                : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text"
             )}
           >
             {opt.label}
@@ -207,7 +207,7 @@ export default function TimelinePage() {
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="min-w-0">
-                                <p className="text-sm font-semibold text-white">
+                                <p className="text-sm font-semibold text-text">
                                   {ev.title}
                                 </p>
                                 {ev.subtitle && (

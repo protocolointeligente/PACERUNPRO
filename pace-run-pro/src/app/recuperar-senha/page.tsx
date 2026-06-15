@@ -6,7 +6,7 @@ import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 export default function RecuperarSenhaPage() {
   const [email, setEmail] = useState("");
@@ -42,7 +42,7 @@ export default function RecuperarSenhaPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background text-white">
+    <div className="min-h-dvh bg-background text-text">
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
@@ -50,7 +50,7 @@ export default function RecuperarSenhaPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
               <Zap className="h-5 w-5 text-white" fill="white" />
             </div>
-            <span className="font-display text-lg font-extrabold tracking-wide text-white">
+            <span className="font-display text-lg font-extrabold tracking-wide text-text">
               PACE RUN <span className="gradient-text">PRO</span>
             </span>
           </Link>
@@ -62,7 +62,7 @@ export default function RecuperarSenhaPage() {
           <div className="rounded-2xl border border-border bg-card p-8 shadow-2xl shadow-black/40">
             {/* Header */}
             <div className="mb-8 text-center">
-              <h1 className="font-display text-3xl font-extrabold text-white">
+              <h1 className="font-display text-3xl font-extrabold text-text">
                 Recuperar senha
               </h1>
               <p className="mt-2 text-sm text-text-muted">
@@ -71,7 +71,7 @@ export default function RecuperarSenhaPage() {
             </div>
 
             {sent ? (
-              <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3.5 text-sm text-white">
+              <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3.5 text-sm text-primary">
                 Se este e-mail estiver cadastrado, você receberá em breve uma mensagem com
                 instruções para criar uma nova senha.
               </div>

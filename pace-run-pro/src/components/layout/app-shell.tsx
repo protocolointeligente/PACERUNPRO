@@ -47,14 +47,14 @@ export function AppShell({
         className={cn(
           "group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-text-muted transition-colors",
           active
-            ? "bg-primary/15 text-white"
-            : "hover:bg-card-hover hover:text-white"
+            ? "bg-primary/15 text-primary"
+            : "hover:bg-card-hover hover:text-text"
         )}
       >
         <item.icon
           className={cn(
             "h-[18px] w-[18px] transition-colors",
-            active ? "text-primary" : "text-text-muted group-hover:text-white"
+            active ? "text-primary" : "text-text-muted group-hover:text-text"
           )}
         />
         {item.label}
@@ -93,7 +93,7 @@ export function AppShell({
           {switchHref && (
             <Link
               href={switchHref}
-              className="mb-3 flex items-center justify-center rounded-xl border border-border px-3 py-2 text-xs font-semibold text-text-muted transition-colors hover:border-primary/50 hover:text-white"
+              className="mb-3 flex items-center justify-center rounded-xl border border-border px-3 py-2 text-xs font-semibold text-text-muted transition-colors hover:border-primary/50 hover:text-text"
             >
               {switchLabel}
             </Link>
@@ -104,7 +104,7 @@ export function AppShell({
               <AvatarFallback>{userName.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">{userName}</p>
+              <p className="truncate text-sm font-semibold text-text">{userName}</p>
               <p className="truncate text-xs text-text-muted">{userSubtitle}</p>
             </div>
           </div>
@@ -161,7 +161,7 @@ export function AppShell({
       <div className="flex min-h-dvh flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-xl sm:px-6">
           <button
-            className="rounded-lg p-2 text-text-muted hover:bg-card hover:text-white lg:hidden"
+            className="rounded-lg p-2 text-text-muted hover:bg-card hover:text-text lg:hidden"
             onClick={() => setMobileOpen(true)}
             aria-label="Abrir menu"
           >
@@ -176,7 +176,7 @@ export function AppShell({
               <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-primary" />
               {roleLabel}
             </Badge>
-            <button className="relative rounded-lg p-2 text-text-muted hover:bg-card hover:text-white" aria-label="Notificações">
+            <button className="relative rounded-lg p-2 text-text-muted hover:bg-card hover:text-text" aria-label="Notificações">
               <Bell className="h-5 w-5" />
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-danger" />
             </button>

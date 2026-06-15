@@ -96,7 +96,7 @@ export default function MinhaSemanPage() {
         </Badge>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+            <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
               Minha Semana
             </h1>
             <p className="mt-1 text-sm text-text-muted">{myAnalysis.weekLabel}</p>
@@ -109,7 +109,7 @@ export default function MinhaSemanPage() {
           <Card key={metric.label}>
             <CardContent className="p-3.5 space-y-1.5">
               <p className="text-[10px] uppercase tracking-wide text-text-muted">{metric.label}</p>
-              <p className="font-display text-lg font-bold text-white leading-tight">
+              <p className="font-display text-lg font-bold text-text leading-tight">
                 {formatMetricValue(metric.label, metric.value)}
               </p>
               <div className="flex items-center gap-1.5">
@@ -124,7 +124,7 @@ export default function MinhaSemanPage() {
       <motion.div {...fadeUp(0.14)}>
         <Card>
           <CardContent className="p-5">
-            <h2 className="font-display text-base font-semibold text-white mb-4">
+            <h2 className="font-display text-base font-semibold text-text mb-4">
               Volume por dia (km)
             </h2>
             <ResponsiveContainer width="100%" height={180}>
@@ -167,7 +167,7 @@ export default function MinhaSemanPage() {
       </motion.div>
 
       <motion.div {...fadeUp(0.2)}>
-        <h2 className="font-display text-base font-semibold text-white mb-3">Destaques da semana</h2>
+        <h2 className="font-display text-base font-semibold text-text mb-3">Destaques da semana</h2>
         <div className="space-y-3">
           {myAnalysis.highlights.map((highlight, i) => (
             <div

@@ -29,7 +29,7 @@ export function Logo({ variant = "horizontal", size = 36, className = "" }: Logo
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       {Icon}
       <span className="flex flex-col leading-none">
-        <span className={`font-display ${textSize} font-extrabold tracking-wide text-white`}>
+        <span className={`font-display ${textSize} font-extrabold tracking-wide text-text`}>
           PACE RUN{" "}
           <span
             style={{

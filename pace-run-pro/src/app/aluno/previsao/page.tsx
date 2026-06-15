@@ -78,10 +78,10 @@ const TEMPS = ["< 15°C", "15–22°C", "22–28°C", "> 28°C"];
 const ELEV = ["Plana", "Moderada", "Íngreme"];
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 const selectClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -139,7 +139,7 @@ function zoneColor(zoneNum: number): string {
     4: "text-warning",
     5: "text-danger",
   };
-  return map[zoneNum] ?? "text-white";
+  return map[zoneNum] ?? "text-text";
 }
 
 function zoneBgColor(zoneNum: number): string {
@@ -347,7 +347,7 @@ export default function PrevisaoPage() {
       <div>
         <div className="mb-3 flex items-center gap-3">
           <Link href="/aluno/testes">
-            <Button variant="ghost" size="sm" className="gap-1.5 text-text-muted hover:text-white">
+            <Button variant="ghost" size="sm" className="gap-1.5 text-text-muted hover:text-text">
               <ArrowLeft className="h-4 w-4" /> Testes
             </Button>
           </Link>
@@ -355,7 +355,7 @@ export default function PrevisaoPage() {
         <Badge variant="primary" className="mb-2">
           <Target className="h-3 w-3" /> Previsão & Estratégia
         </Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
           Preveja seu tempo e monte sua estratégia de prova
         </h1>
         <p className="mt-1.5 max-w-2xl text-sm text-text-muted">
@@ -384,8 +384,8 @@ export default function PrevisaoPage() {
                   onClick={() => setRefDist(d.value)}
                   className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
                     refDist === d.value
-                      ? "border-primary/60 bg-primary/15 text-white"
-                      : "border-border bg-transparent text-text-muted hover:border-primary/40 hover:text-white"
+                      ? "border-primary/60 bg-primary/15 text-primary"
+                      : "border-border bg-transparent text-text-muted hover:border-primary/40 hover:text-text"
                   }`}
                 >
                   {d.label}
@@ -423,7 +423,7 @@ export default function PrevisaoPage() {
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.4 }}
           >
-            <h2 className="mb-4 font-display text-lg font-semibold text-white">Tempos previstos</h2>
+            <h2 className="mb-4 font-display text-lg font-semibold text-text">Tempos previstos</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {results.map((r, i) => {
                 const paceSecPerKm = r.timeSec / r.dist;
@@ -449,7 +449,7 @@ export default function PrevisaoPage() {
                           )}
                         </div>
 
-                        <p className="font-display text-3xl font-bold text-white">
+                        <p className="font-display text-3xl font-bold text-text">
                           {formatRaceTime(r.timeSec)}
                         </p>
                         <p className="mt-0.5 text-sm text-text-muted">{formatPace(paceSecPerKm)}</p>
@@ -517,8 +517,8 @@ export default function PrevisaoPage() {
                         onClick={() => handleRaceChange(idx)}
                         className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
                           raceIdx === idx
-                            ? "border-primary/60 bg-primary/15 text-white"
-                            : "border-border bg-transparent text-text-muted hover:border-primary/40 hover:text-white"
+                            ? "border-primary/60 bg-primary/15 text-primary"
+                            : "border-border bg-transparent text-text-muted hover:border-primary/40 hover:text-text"
                         }`}
                       >
                         {r.label}
@@ -623,7 +623,7 @@ export default function PrevisaoPage() {
                       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div className="rounded-xl border border-border bg-background p-3.5">
                           <p className="text-[10px] uppercase tracking-wider text-text-muted">Pace médio</p>
-                          <p className="mt-1 font-display text-xl font-bold text-white">
+                          <p className="mt-1 font-display text-xl font-bold text-text">
                             {formatPace(strategy.avgPaceSecPerKm)}
                           </p>
                         </div>
@@ -651,7 +651,7 @@ export default function PrevisaoPage() {
                         </div>
                         <div className="rounded-xl border border-border bg-background p-3.5">
                           <p className="text-[10px] uppercase tracking-wider text-text-muted">FC alvo</p>
-                          <p className="mt-1 font-display text-base font-bold text-white">Zona 3–4</p>
+                          <p className="mt-1 font-display text-base font-bold text-text">Zona 3–4</p>
                           <p className="text-[10px] text-text-muted">150–170 bpm</p>
                         </div>
                       </div>
@@ -701,8 +701,8 @@ export default function PrevisaoPage() {
                                   i % 2 === 0 ? "" : "brightness-90"
                                 }`}
                               >
-                                <td className="px-4 py-2 font-mono text-sm text-white">{row.km}</td>
-                                <td className="px-4 py-2 font-mono text-sm text-white">{row.pace}</td>
+                                <td className="px-4 py-2 font-mono text-sm text-text">{row.km}</td>
+                                <td className="px-4 py-2 font-mono text-sm text-text">{row.pace}</td>
                                 <td className="px-4 py-2 font-mono text-sm text-text-muted">
                                   {formatRaceTime(row.cumTimeSec)}
                                 </td>
@@ -718,7 +718,7 @@ export default function PrevisaoPage() {
                       {strategy.splits.length > 5 && (
                         <button
                           onClick={() => setSplitsOpen((v) => !v)}
-                          className="mt-2 flex w-full items-center justify-center gap-1.5 text-xs text-text-muted transition-colors hover:text-white"
+                          className="mt-2 flex w-full items-center justify-center gap-1.5 text-xs text-text-muted transition-colors hover:text-text"
                         >
                           {splitsOpen ? (
                             <>
@@ -749,7 +749,7 @@ export default function PrevisaoPage() {
                           <p className="text-[10px] uppercase tracking-wider text-text-muted">
                             Carboidratos totais
                           </p>
-                          <p className="mt-1 font-display text-xl font-bold text-white">
+                          <p className="mt-1 font-display text-xl font-bold text-text">
                             {strategy.carbsTotalG} g
                           </p>
                           <p className="text-[10px] text-text-muted">durante a prova</p>
@@ -791,7 +791,7 @@ export default function PrevisaoPage() {
                                 </span>
                                 <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-card px-3 py-1.5">
                                   <span className="text-xs font-semibold text-text-muted">km {ev.km}</span>
-                                  <span className="text-xs text-white">{ev.label}</span>
+                                  <span className="text-xs text-text">{ev.label}</span>
                                 </div>
                               </motion.div>
                             ))}
@@ -822,7 +822,7 @@ export default function PrevisaoPage() {
                               )}
                               <span
                                 className={`text-sm transition-colors ${
-                                  checked[i] ? "text-text-muted line-through" : "text-white"
+                                  checked[i] ? "text-text-muted line-through" : "text-text"
                                 }`}
                               >
                                 {item}
@@ -867,10 +867,10 @@ export default function PrevisaoPage() {
             <Target className="h-4 w-4" />
           </span>
           <div>
-            <p className="font-display text-sm font-semibold text-white">Fórmula de Riegel</p>
+            <p className="font-display text-sm font-semibold text-text">Fórmula de Riegel</p>
             <p className="mt-1 text-sm text-text-muted">
               A previsão usa a equação{" "}
-              <span className="font-mono text-white">t₂ = t₁ × (d₂/d₁)^1.06</span>, validada
+              <span className="font-mono text-text">t₂ = t₁ × (d₂/d₁)^1.06</span>, validada
               cientificamente para distâncias de corrida. Quanto maior a distância, maior o fator de
               fadiga (expoente 1.06).
             </p>

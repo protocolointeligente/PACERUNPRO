@@ -93,7 +93,7 @@ export default function IATreinadoraPage() {
             IA Treinadora
           </Badge>
         </div>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
           IA Treinadora
         </h1>
         <p className="mt-1 text-sm text-text-muted">
@@ -110,27 +110,27 @@ export default function IATreinadoraPage() {
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-3">
             <div>
               <span className="text-[11px] text-text-muted">Atleta</span>
-              <p className="text-sm font-semibold text-white">{ATHLETE_CONTEXT.name}</p>
+              <p className="text-sm font-semibold text-text">{ATHLETE_CONTEXT.name}</p>
             </div>
             <div>
               <span className="text-[11px] text-text-muted">Nível</span>
-              <p className="text-sm font-semibold text-white">{ATHLETE_CONTEXT.level}</p>
+              <p className="text-sm font-semibold text-text">{ATHLETE_CONTEXT.level}</p>
             </div>
             <div>
               <span className="text-[11px] text-text-muted">Volume</span>
-              <p className="text-sm font-semibold text-white">{ATHLETE_CONTEXT.weeklyVolume}</p>
+              <p className="text-sm font-semibold text-text">{ATHLETE_CONTEXT.weeklyVolume}</p>
             </div>
             <div>
               <span className="text-[11px] text-text-muted">PR 5k</span>
-              <p className="text-sm font-semibold text-white">{ATHLETE_CONTEXT.recentPRs["5k"]}</p>
+              <p className="text-sm font-semibold text-text">{ATHLETE_CONTEXT.recentPRs["5k"]}</p>
             </div>
             <div>
               <span className="text-[11px] text-text-muted">PR 10k</span>
-              <p className="text-sm font-semibold text-white">{ATHLETE_CONTEXT.recentPRs["10k"]}</p>
+              <p className="text-sm font-semibold text-text">{ATHLETE_CONTEXT.recentPRs["10k"]}</p>
             </div>
             <div>
               <span className="text-[11px] text-text-muted">Próxima prova</span>
-              <p className="text-sm font-semibold text-white">{ATHLETE_CONTEXT.nextRace}</p>
+              <p className="text-sm font-semibold text-text">{ATHLETE_CONTEXT.nextRace}</p>
             </div>
           </div>
         </CardContent>
@@ -151,7 +151,7 @@ export default function IATreinadoraPage() {
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
                   <Bot className="h-7 w-7 text-primary" />
                 </div>
-                <p className="mb-1 font-semibold text-white">Olá, {ATHLETE_CONTEXT.name}!</p>
+                <p className="mb-1 font-semibold text-text">Olá, {ATHLETE_CONTEXT.name}!</p>
                 <p className="mb-6 max-w-xs text-sm text-text-muted">
                   Sou sua IA Treinadora. Pergunte sobre treino, pace, nutrição ou sua próxima prova.
                 </p>
@@ -160,7 +160,7 @@ export default function IATreinadoraPage() {
                     <button
                       key={q}
                       onClick={() => sendMessage(q)}
-                      className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-text-muted transition-colors hover:border-primary/40 hover:text-white"
+                      className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-text-muted transition-colors hover:border-primary/40 hover:text-text"
                     >
                       {q}
                     </button>
@@ -195,7 +195,7 @@ export default function IATreinadoraPage() {
                   className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                     msg.role === "user"
                       ? "gradient-primary text-white"
-                      : "bg-background text-white"
+                      : "bg-background text-text"
                   }`}
                 >
                   {msg.content.split("\n").map((line, i) => (
@@ -249,7 +249,7 @@ export default function IATreinadoraPage() {
               onKeyDown={handleKeyDown}
               placeholder="Pergunte sobre seu treino, pace, nutrição..."
               rows={1}
-              className="flex-1 resize-none rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors"
+              className="flex-1 resize-none rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors"
               style={{ minHeight: "44px", maxHeight: "120px" }}
               onInput={(e) => {
                 const target = e.currentTarget;

@@ -46,7 +46,7 @@ export function PricingSection() {
             {/* ── B2C Track ─────────────────────────────────────────── */}
             <TabsContent value="atletas" className="mt-10">
               <div className="mb-10 text-center">
-                <h3 className="font-display text-2xl font-bold text-white">
+                <h3 className="font-display text-2xl font-bold text-text">
                   Treine com o Ricardo Pace e equipe
                 </h3>
                 <p className="mt-3 text-sm text-text-muted">Todos os planos incluem:</p>
@@ -80,13 +80,13 @@ export function PricingSection() {
                     )}
 
                     <div className="mb-4">
-                      <h4 className="font-display text-lg font-bold text-white">{plan.name}</h4>
+                      <h4 className="font-display text-lg font-bold text-text">{plan.name}</h4>
                       <p className="mt-1 text-xs text-text-muted">{plan.description}</p>
                     </div>
 
                     <div className="mb-2">
                       <div className="flex items-end gap-1">
-                        <span className="font-display text-3xl font-extrabold text-white">
+                        <span className="font-display text-3xl font-extrabold text-text">
                           R$ {plan.pricePerMonth}
                         </span>
                         <span className="mb-1 text-sm text-text-muted">/mês</span>
@@ -126,7 +126,7 @@ export function PricingSection() {
             {/* ── B2B Track ─────────────────────────────────────────── */}
             <TabsContent value="assessorias" className="mt-10">
               <div className="mb-10 text-center">
-                <h3 className="font-display text-2xl font-bold text-white">
+                <h3 className="font-display text-2xl font-bold text-text">
                   Para assessorias e treinadores
                 </h3>
                 <p className="mt-2 text-sm text-text-muted">
@@ -154,7 +154,7 @@ export function PricingSection() {
                     )}
 
                     <div className="mb-4">
-                      <h4 className="font-display text-lg font-bold text-white">{plan.name}</h4>
+                      <h4 className="font-display text-lg font-bold text-text">{plan.name}</h4>
                       <p className="mt-1 text-xs text-text-muted">
                         {plan.maxAthletes === null ? "Ilimitado" : `até ${plan.maxAthletes} atletas`}
                         {" · "}
@@ -164,7 +164,7 @@ export function PricingSection() {
 
                     <div className="mb-4">
                       <div className="flex items-end gap-1">
-                        <span className="font-display text-3xl font-extrabold text-white">
+                        <span className="font-display text-3xl font-extrabold text-text">
                           R$ {plan.price}
                         </span>
                         <span className="mb-1 text-sm text-text-muted">/mês</span>

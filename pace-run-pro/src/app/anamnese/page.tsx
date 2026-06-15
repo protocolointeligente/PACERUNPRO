@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 // ── Shared input style ────────────────────────────────────────────────────
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 // ── Step indicator ────────────────────────────────────────────────────────
 function StepIndicator({ current, total }: { current: number; total: number }) {
@@ -67,10 +67,10 @@ function RadioCard({
     >
       {selected && (
         <div className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-primary">
-          <Check className="h-3 w-3 text-white" />
+          <Check className="h-3 w-3 text-text" />
         </div>
       )}
-      <span className="text-sm font-semibold text-white">{label}</span>
+      <span className="text-sm font-semibold text-text">{label}</span>
       {sub && <span className="mt-0.5 text-xs text-text-muted">{sub}</span>}
     </button>
   );
@@ -162,14 +162,14 @@ export default function AnamnesePage() {
   // ── Loading screen ────────────────────────────────────────────────────
   if (generating) {
     return (
-      <div className="min-h-dvh bg-background text-white">
+      <div className="min-h-dvh bg-background text-text">
         <Nav />
         <div className="flex min-h-[calc(100dvh-65px)] flex-col items-center justify-center gap-6 px-6 py-12 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-full gradient-primary shadow-2xl shadow-primary/40">
             <Zap className="h-10 w-10 animate-pulse text-white" fill="white" />
           </div>
           <div>
-            <h2 className="font-display text-2xl font-extrabold text-white">
+            <h2 className="font-display text-2xl font-extrabold text-text">
               Gerando seu plano...
             </h2>
             <p className="mt-2 text-sm text-text-muted">
@@ -184,7 +184,7 @@ export default function AnamnesePage() {
   // ── Result screen ─────────────────────────────────────────────────────
   if (done) {
     return (
-      <div className="min-h-dvh bg-background text-white">
+      <div className="min-h-dvh bg-background text-text">
         <Nav />
         <main className="mx-auto max-w-2xl px-6 py-12">
           {/* Header */}
@@ -193,12 +193,12 @@ export default function AnamnesePage() {
               <CheckCircle className="h-8 w-8 text-success" />
             </div>
             <div>
-              <h1 className="font-display text-3xl font-extrabold text-white">
+              <h1 className="font-display text-3xl font-extrabold text-text">
                 Seu plano de 4 semanas está pronto!
               </h1>
               <p className="mx-auto mt-3 max-w-lg text-sm text-text-muted">
                 Baseado nas suas respostas, o treinador{" "}
-                <span className="font-semibold text-white">Ricardo Pace</span>{" "}
+                <span className="font-semibold text-text">Ricardo Pace</span>{" "}
                 criou um plano personalizado:
               </p>
             </div>
@@ -219,13 +219,13 @@ export default function AnamnesePage() {
                     <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
                       {w.badge}
                     </span>
-                    <h3 className="mt-0.5 font-display text-base font-bold text-white">
+                    <h3 className="mt-0.5 font-display text-base font-bold text-text">
                       {w.label}
                     </h3>
                     <p className="mt-1 text-xs text-text-muted">{w.focus}</p>
                   </div>
                   <div className="flex-shrink-0 text-right">
-                    <div className="font-display text-xl font-extrabold text-white">
+                    <div className="font-display text-xl font-extrabold text-text">
                       {w.km} km
                     </div>
                     <div className="text-xs text-text-muted">
@@ -247,7 +247,7 @@ export default function AnamnesePage() {
                 "Treino liberado para hoje no seu painel",
                 "Treinador Ricardo Pace entrará em contato em 24h",
               ].map((item) => (
-                <li key={item} className="flex items-start gap-2.5 text-sm text-white">
+                <li key={item} className="flex items-start gap-2.5 text-sm text-text">
                   <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
                   <span>{item}</span>
                 </li>
@@ -267,7 +267,7 @@ export default function AnamnesePage() {
 
   // ── Quiz steps ────────────────────────────────────────────────────────
   return (
-    <div className="min-h-dvh bg-background text-white">
+    <div className="min-h-dvh bg-background text-text">
       <Nav />
       <main className="mx-auto max-w-2xl px-6 py-12">
         <StepIndicator current={step} total={3} />
@@ -275,7 +275,7 @@ export default function AnamnesePage() {
         {/* ── Step 1: Sobre você ── */}
         {step === 1 && (
           <div className="mt-8">
-            <h1 className="font-display text-3xl font-extrabold text-white">
+            <h1 className="font-display text-3xl font-extrabold text-text">
               Sobre você
             </h1>
             <p className="mt-2 text-sm text-text-muted">
@@ -284,7 +284,7 @@ export default function AnamnesePage() {
 
             {/* Distância alvo */}
             <div className="mt-8 space-y-3">
-              <p className="text-sm font-semibold text-white">
+              <p className="text-sm font-semibold text-text">
                 Qual sua distância alvo?
               </p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -308,7 +308,7 @@ export default function AnamnesePage() {
 
             {/* Nível atual */}
             <div className="mt-8 space-y-3">
-              <p className="text-sm font-semibold text-white">
+              <p className="text-sm font-semibold text-text">
                 Qual seu nível atual?
               </p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -343,7 +343,7 @@ export default function AnamnesePage() {
             {/* Anos correndo */}
             <div className="mt-8 space-y-2">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-semibold text-white">
+                <span className="mb-1.5 block text-sm font-semibold text-text">
                   Há quantos anos você corre?
                 </span>
                 <select
@@ -377,7 +377,7 @@ export default function AnamnesePage() {
         {/* ── Step 2: Disponibilidade ── */}
         {step === 2 && (
           <div className="mt-8">
-            <h1 className="font-display text-3xl font-extrabold text-white">
+            <h1 className="font-display text-3xl font-extrabold text-text">
               Disponibilidade
             </h1>
             <p className="mt-2 text-sm text-text-muted">
@@ -386,7 +386,7 @@ export default function AnamnesePage() {
 
             {/* Dias por semana */}
             <div className="mt-8 space-y-3">
-              <p className="text-sm font-semibold text-white">
+              <p className="text-sm font-semibold text-text">
                 Quantos dias por semana pode treinar?
               </p>
               <div className="flex gap-3">
@@ -398,8 +398,8 @@ export default function AnamnesePage() {
                     className={[
                       "flex h-14 flex-1 items-center justify-center rounded-xl border text-lg font-bold transition-all",
                       daysPerWeek === d
-                        ? "border-primary/60 bg-primary/15 text-white"
-                        : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-white",
+                        ? "border-primary/60 bg-primary/15 text-primary"
+                        : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text",
                     ].join(" ")}
                   >
                     {d}
@@ -411,7 +411,7 @@ export default function AnamnesePage() {
 
             {/* Academia */}
             <div className="mt-8 space-y-3">
-              <p className="text-sm font-semibold text-white">
+              <p className="text-sm font-semibold text-text">
                 Você tem acesso a academia?
               </p>
               <div className="grid grid-cols-2 gap-3">
@@ -431,7 +431,7 @@ export default function AnamnesePage() {
             {/* Lesão */}
             <div className="mt-8 space-y-2">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-semibold text-white">
+                <span className="mb-1.5 block text-sm font-semibold text-text">
                   Alguma lesão ou limitação física?{" "}
                   <span className="text-xs font-normal text-text-muted/60">
                     (opcional)
@@ -450,7 +450,7 @@ export default function AnamnesePage() {
             {/* Data da prova */}
             <div className="mt-6 space-y-2">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-semibold text-white">
+                <span className="mb-1.5 block text-sm font-semibold text-text">
                   Data da sua próxima prova{" "}
                   <span className="text-xs font-normal text-text-muted/60">
                     (opcional)
@@ -490,7 +490,7 @@ export default function AnamnesePage() {
         {/* ── Step 3: Testes de performance ── */}
         {step === 3 && (
           <div className="mt-8">
-            <h1 className="font-display text-3xl font-extrabold text-white">
+            <h1 className="font-display text-3xl font-extrabold text-text">
               Testes de performance
             </h1>
             <p className="mt-2 text-sm text-text-muted">
@@ -500,7 +500,7 @@ export default function AnamnesePage() {
             {/* Tempo 5k */}
             <div className="mt-8 space-y-2">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-semibold text-white">
+                <span className="mb-1.5 block text-sm font-semibold text-text">
                   Seu melhor tempo em 5 km (ou último resultado)
                 </span>
                 <input
@@ -516,7 +516,7 @@ export default function AnamnesePage() {
             {/* Cooper */}
             <div className="mt-6 space-y-2">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-semibold text-white">
+                <span className="mb-1.5 block text-sm font-semibold text-text">
                   Distância no teste de Cooper (12 min)
                 </span>
                 <input
@@ -531,7 +531,7 @@ export default function AnamnesePage() {
 
             {/* GPS / app */}
             <div className="mt-8 space-y-3">
-              <p className="text-sm font-semibold text-white">
+              <p className="text-sm font-semibold text-text">
                 Você usa relógio GPS ou aplicativo?
               </p>
               <div className="grid grid-cols-2 gap-3">
@@ -583,7 +583,7 @@ function Nav() {
           <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
             <Zap className="h-5 w-5 text-white" fill="white" />
           </div>
-          <span className="font-display text-lg font-extrabold tracking-wide text-white">
+          <span className="font-display text-lg font-extrabold tracking-wide text-text">
             PACE RUN <span className="gradient-text">PRO</span>
           </span>
         </Link>

@@ -28,7 +28,7 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition-all data-[state=active]:gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md hover:text-white",
+      "inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition-all data-[state=active]:gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md hover:text-text",
       className
     )}
     {...props}

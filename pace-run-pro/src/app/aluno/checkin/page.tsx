@@ -58,7 +58,7 @@ export default function CheckInPage() {
         <Badge variant="primary" className="mb-2">
           Check-in pós-treino
         </Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Como foi o seu treino hoje?</h1>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Como foi o seu treino hoje?</h1>
         <p className="mt-1.5 text-sm text-text-muted">
           Suas respostas alimentam o motor de prescrição inteligente — ele ajusta automaticamente a carga das próximas
           sessões com base no que você sentir.
@@ -81,7 +81,7 @@ export default function CheckInPage() {
 
         <Card>
           <CardContent className="p-4 sm:p-5">
-            <span className="mb-3 block text-sm font-semibold text-white">Qual tênis você usou neste treino?</span>
+            <span className="mb-3 block text-sm font-semibold text-text">Qual tênis você usou neste treino?</span>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {activeShoes.map((shoe) => (
                 <button
@@ -102,7 +102,7 @@ export default function CheckInPage() {
                     {shoe.imageEmoji}
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-white">
+                    <p className="truncate text-sm font-semibold text-text">
                       {shoe.brand} {shoe.model}
                     </p>
                     <p className="text-xs text-text-muted">{shoe.kmAccumulated.toLocaleString("pt-BR")} km</p>
@@ -117,13 +117,13 @@ export default function CheckInPage() {
         <Card>
           <CardContent className="p-4 sm:p-5">
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-white">Observações (opcional)</span>
+              <span className="mb-2 block text-sm font-semibold text-text">Observações (opcional)</span>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
                 placeholder="Ex.: Senti um leve incômodo na canela direita no final do treino…"
-                className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-white placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+                className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-text placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
               />
             </label>
           </CardContent>
@@ -140,7 +140,7 @@ export default function CheckInPage() {
             </div>
             {selectedShoe && (
               <p className="text-sm text-text-muted">
-                Tênis registrado: <span className="font-semibold text-white">{selectedShoe.brand} {selectedShoe.model}</span>
+                Tênis registrado: <span className="font-semibold text-text">{selectedShoe.brand} {selectedShoe.model}</span>
               </p>
             )}
             {ruleResults.map((r, i) => {
@@ -152,7 +152,7 @@ export default function CheckInPage() {
                       <cfg.icon className="h-3 w-3" />
                     </Badge>
                     <div>
-                      <p className="text-sm font-semibold text-white">{r.title}</p>
+                      <p className="text-sm font-semibold text-text">{r.title}</p>
                       <p className="mt-0.5 text-sm text-text-muted">{r.message}</p>
                     </div>
                   </CardContent>
@@ -175,7 +175,7 @@ export default function CheckInPage() {
 
       {/* History */}
       <div>
-        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
+        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-text">
           <History className="h-4 w-4 text-text-muted" />
           Histórico recente
         </div>
@@ -186,7 +186,7 @@ export default function CheckInPage() {
             .map((c) => (
               <Card key={c.date}>
                 <CardContent className="flex flex-wrap items-center gap-x-5 gap-y-2 p-4 text-xs text-text-muted">
-                  <span className="font-medium text-white">
+                  <span className="font-medium text-text">
                     {new Date(c.date + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", weekday: "short" })}
                   </span>
                   <span>RPE {c.rpe}</span>

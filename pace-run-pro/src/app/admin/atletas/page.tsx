@@ -58,7 +58,7 @@ export default function AtletasB2CPage() {
       >
         <div>
           <Badge variant="info" className="mb-2">Atletas B2C</Badge>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
             Atletas com plano direto
           </h1>
         </div>
@@ -96,7 +96,7 @@ export default function AtletasB2CPage() {
                   <Badge variant={planBadgeVariant(plan.id)} className="mb-3">
                     {plan.name}
                   </Badge>
-                  <p className="font-display text-2xl font-bold text-white">
+                  <p className="font-display text-2xl font-bold text-text">
                     {count}
                   </p>
                   <p className="mt-1 text-xs text-text-muted">
@@ -138,7 +138,7 @@ export default function AtletasB2CPage() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm font-semibold text-white">{a.name}</p>
+                    <p className="text-sm font-semibold text-text">{a.name}</p>
                     <p className="text-xs text-text-muted">
                       {a.city} · desde {a.startDate}
                     </p>
@@ -149,7 +149,7 @@ export default function AtletasB2CPage() {
                   <Badge variant={planBadgeVariant(a.plan)}>
                     {planLabel(a.plan)}
                   </Badge>
-                  <span className="text-sm font-semibold text-white">
+                  <span className="text-sm font-semibold text-text">
                     R${a.mrr}/mês
                   </span>
                   <Badge variant={a.status === "ativo" ? "success" : "warning"}>

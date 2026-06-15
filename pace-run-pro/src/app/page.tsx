@@ -15,7 +15,7 @@ import { PricingSection } from "@/components/landing/pricing-section";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-dvh bg-background text-white">
+    <div className="min-h-dvh bg-background text-text">
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
@@ -23,13 +23,13 @@ export default function LandingPage() {
             <Logo size={34} />
           </Link>
           <div className="hidden items-center gap-8 md:flex">
-            <a href="#funcionalidades" className="text-sm text-text-muted transition-colors hover:text-white">
+            <a href="#funcionalidades" className="text-sm text-text-muted transition-colors hover:text-text">
               Funcionalidades
             </a>
-            <a href="#precos" className="text-sm text-text-muted transition-colors hover:text-white">
+            <a href="#precos" className="text-sm text-text-muted transition-colors hover:text-text">
               Preços
             </a>
-            <a href="#integracoes" className="text-sm text-text-muted transition-colors hover:text-white">
+            <a href="#integracoes" className="text-sm text-text-muted transition-colors hover:text-text">
               Integrações
             </a>
           </div>
@@ -122,7 +122,7 @@ export default function LandingPage() {
                     <Card key={item.title} className="glass border-border/50">
                       <CardContent className="p-6">
                         <div className="mb-3 text-3xl">{item.icon}</div>
-                        <h4 className="mb-1 font-display font-semibold text-white">{item.title}</h4>
+                        <h4 className="mb-1 font-display font-semibold text-text">{item.title}</h4>
                         <p className="text-sm text-text-muted">{item.description}</p>
                       </CardContent>
                     </Card>
@@ -152,7 +152,7 @@ export default function LandingPage() {
             {integrationLogos.map((integration) => (
               <div
                 key={integration.id}
-                className="glass flex items-center gap-2.5 rounded-full px-5 py-2.5 text-sm font-medium text-white"
+                className="glass flex items-center gap-2.5 rounded-full px-5 py-2.5 text-sm font-medium text-text"
               >
                 <span
                   className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
@@ -187,7 +187,7 @@ export default function LandingPage() {
                       {t.avatar}
                     </div>
                     <div>
-                      <div className="font-semibold text-white">{t.name}</div>
+                      <div className="font-semibold text-text">{t.name}</div>
                       <div className="text-xs text-text-muted">{t.role}</div>
                     </div>
                   </div>
@@ -261,10 +261,10 @@ export default function LandingPage() {
                 Produto
               </h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#funcionalidades" className="text-text-muted hover:text-white transition-colors">Funcionalidades</a></li>
-                <li><a href="#precos" className="text-text-muted hover:text-white transition-colors">Preços</a></li>
-                <li><a href="#integracoes" className="text-text-muted hover:text-white transition-colors">Integrações</a></li>
-                <li><Link href="/treinador/dashboard" className="text-text-muted hover:text-white transition-colors">Demonstração</Link></li>
+                <li><a href="#funcionalidades" className="text-text-muted hover:text-text transition-colors">Funcionalidades</a></li>
+                <li><a href="#precos" className="text-text-muted hover:text-text transition-colors">Preços</a></li>
+                <li><a href="#integracoes" className="text-text-muted hover:text-text transition-colors">Integrações</a></li>
+                <li><Link href="/treinador/dashboard" className="text-text-muted hover:text-text transition-colors">Demonstração</Link></li>
               </ul>
             </div>
 
@@ -273,10 +273,10 @@ export default function LandingPage() {
                 Empresa
               </h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-text-muted hover:text-white transition-colors">Sobre nós</a></li>
-                <li><a href="#" className="text-text-muted hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="text-text-muted hover:text-white transition-colors">Carreiras</a></li>
-                <li><a href="#" className="text-text-muted hover:text-white transition-colors">Parceiros</a></li>
+                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Sobre nós</a></li>
+                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Blog</a></li>
+                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Carreiras</a></li>
+                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Parceiros</a></li>
               </ul>
             </div>
 
@@ -285,10 +285,10 @@ export default function LandingPage() {
                 Suporte
               </h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-text-muted hover:text-white transition-colors">Central de ajuda</a></li>
-                <li><a href="#" className="text-text-muted hover:text-white transition-colors">Contato</a></li>
-                <li><a href="#" className="text-text-muted hover:text-white transition-colors">Termos de uso</a></li>
-                <li><a href="#" className="text-text-muted hover:text-white transition-colors">Privacidade</a></li>
+                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Central de ajuda</a></li>
+                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Contato</a></li>
+                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Termos de uso</a></li>
+                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Privacidade</a></li>
               </ul>
             </div>
           </div>

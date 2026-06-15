@@ -12,9 +12,9 @@ import type { ExerciseLibraryItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
 const miniInputClass =
-  "w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-white outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-text outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
 
 interface PrescribedExercise {
   uid: string;
@@ -119,7 +119,7 @@ export default function StrengthPrescriptionPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
         <Badge variant="primary" className="mb-2">Prescrição de treino</Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Prescrever treino de força &amp; funcional</h1>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Prescrever treino de força &amp; funcional</h1>
         <p className="mt-1.5 text-sm text-text-muted">
           Escolha a divisão de treino, monte cada sessão com exercícios da biblioteca e personalize séries, repetições,
           descanso, RPE — e até o nome do exercício — para o atleta selecionado.
@@ -131,7 +131,7 @@ export default function StrengthPrescriptionPage() {
         <div className="space-y-5">
           <Card>
             <CardContent className="p-5">
-              <h3 className="mb-3 font-display text-sm font-semibold text-white">Atleta</h3>
+              <h3 className="mb-3 font-display text-sm font-semibold text-text">Atleta</h3>
               <div className="flex flex-wrap gap-2">
                 {athleteList.map((a) => (
                   <button
@@ -149,7 +149,7 @@ export default function StrengthPrescriptionPage() {
                       <AvatarFallback className="text-xs">{a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold text-white">{a.name}</p>
+                      <p className="truncate text-xs font-semibold text-text">{a.name}</p>
                       <p className="truncate text-[11px] text-text-muted">{a.goal} · {a.level}</p>
                     </div>
                   </button>
@@ -160,7 +160,7 @@ export default function StrengthPrescriptionPage() {
 
           <Card>
             <CardContent className="p-5">
-              <h3 className="mb-3 font-display text-sm font-semibold text-white">Divisão de treino</h3>
+              <h3 className="mb-3 font-display text-sm font-semibold text-text">Divisão de treino</h3>
               <div className="flex flex-wrap gap-2">
                 {strengthDivisions.map((d) => (
                   <button
@@ -168,7 +168,7 @@ export default function StrengthPrescriptionPage() {
                     onClick={() => setDivision(d)}
                     className={cn(
                       "rounded-full border px-4 py-1.5 text-xs font-medium transition-colors",
-                      division === d ? "border-primary/60 bg-primary/15 text-white" : "border-border bg-card text-text-muted hover:border-primary/30"
+                      division === d ? "border-primary/60 bg-primary/15 text-primary" : "border-border bg-card text-text-muted hover:border-primary/30"
                     )}
                   >
                     {d}
@@ -181,7 +181,7 @@ export default function StrengthPrescriptionPage() {
           <Card>
             <CardContent className="p-5">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <h3 className="font-display text-sm font-semibold text-white">Sessões da semana</h3>
+                <h3 className="font-display text-sm font-semibold text-text">Sessões da semana</h3>
                 {division === "Personalizada" && (
                   <Button size="sm" variant="secondary" onClick={addCustomSession}>
                     <Plus className="h-3.5 w-3.5" /> Nova sessão
@@ -196,7 +196,7 @@ export default function StrengthPrescriptionPage() {
                     onClick={() => setActiveIndex(i)}
                     className={cn(
                       "rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                      activeIndex === i ? "border-primary/60 bg-primary/15 text-white" : "border-border bg-card-hover/30 text-text-muted hover:border-primary/30"
+                      activeIndex === i ? "border-primary/60 bg-primary/15 text-primary" : "border-border bg-card-hover/30 text-text-muted hover:border-primary/30"
                     )}
                   >
                     {s.label} <span className="ml-1 text-[10px] font-normal text-text-muted">({s.exercises.length})</span>
@@ -225,7 +225,7 @@ export default function StrengthPrescriptionPage() {
                           <input
                             value={ex.name}
                             onChange={(e) => patchExercise(ex.uid, { name: e.target.value })}
-                            className="w-full truncate bg-transparent text-sm font-semibold text-white outline-none focus:underline"
+                            className="w-full truncate bg-transparent text-sm font-semibold text-text outline-none focus:underline"
                           />
                         </label>
                         <button onClick={() => removeExercise(ex.uid)} className="shrink-0 text-text-muted transition-colors hover:text-danger">
@@ -275,7 +275,7 @@ export default function StrengthPrescriptionPage() {
         <div className="space-y-5">
           <Card>
             <CardContent className="p-5">
-              <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-white">
+              <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-text">
                 <Dumbbell className="h-4 w-4 text-primary" /> Biblioteca de exercícios
               </h3>
               <div className="mb-3 flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
@@ -284,7 +284,7 @@ export default function StrengthPrescriptionPage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Buscar exercício ou músculo…"
-                  className="w-full bg-transparent text-sm text-white placeholder:text-text-muted/60 outline-none"
+                  className="w-full bg-transparent text-sm text-text placeholder:text-text-muted/60 outline-none"
                 />
               </div>
               <div className="mb-4 flex flex-wrap gap-1.5">
@@ -294,7 +294,7 @@ export default function StrengthPrescriptionPage() {
                     onClick={() => setCategory(c)}
                     className={cn(
                       "rounded-full border px-3 py-1 text-[11px] font-medium transition-colors",
-                      category === c ? "border-primary/60 bg-primary/15 text-white" : "border-border bg-card text-text-muted hover:border-primary/30"
+                      category === c ? "border-primary/60 bg-primary/15 text-primary" : "border-border bg-card text-text-muted hover:border-primary/30"
                     )}
                   >
                     {c}
@@ -307,7 +307,7 @@ export default function StrengthPrescriptionPage() {
                   <div key={ex.id} className="rounded-xl border border-border bg-card-hover/30 p-3.5">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-white">{ex.name}</p>
+                        <p className="truncate text-sm font-semibold text-text">{ex.name}</p>
                         <p className="truncate text-[11px] text-text-muted">{ex.category} · {ex.muscles.slice(0, 2).join(", ")}</p>
                       </div>
                       <Button size="sm" variant="secondary" onClick={() => addExercise(ex)} className="shrink-0">
@@ -329,11 +329,11 @@ export default function StrengthPrescriptionPage() {
               <CardContent className="space-y-3 p-5">
                 <div className="flex items-center justify-between text-xs text-text-muted">
                   <span>Sessões montadas</span>
-                  <span className="font-semibold text-white">{sessions.length}</span>
+                  <span className="font-semibold text-text">{sessions.length}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs text-text-muted">
                   <span>Exercícios prescritos</span>
-                  <span className="font-semibold text-white">{totalExercises}</span>
+                  <span className="font-semibold text-text">{totalExercises}</span>
                 </div>
                 <Button onClick={submit} size="lg" className="w-full">
                   <Send className="h-4 w-4" /> Enviar prescrição para {athlete.name.split(" ")[0]}
@@ -345,8 +345,8 @@ export default function StrengthPrescriptionPage() {
                 <Card className="border-success/30 bg-success/5">
                   <CardContent className="flex items-center gap-2.5 p-3.5 text-sm text-text-muted">
                     <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
-                    Treino de força prescrito para <span className="font-semibold text-white">{athlete.name}</span> — divisão{" "}
-                    <span className="font-semibold text-white">{division}</span>.
+                    Treino de força prescrito para <span className="font-semibold text-text">{athlete.name}</span> — divisão{" "}
+                    <span className="font-semibold text-text">{division}</span>.
                   </CardContent>
                 </Card>
               </motion.div>

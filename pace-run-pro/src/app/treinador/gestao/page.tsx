@@ -35,7 +35,7 @@ export default function GestaoPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
           <Badge variant="primary">Gestão &amp; Vendas</Badge>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
             Gestão financeira do roster
           </h1>
         </div>
@@ -88,9 +88,9 @@ export default function GestaoPage() {
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-text-muted">
-                    Capacidade do plano <span className="font-semibold text-white">{coachRosterStats.planName}</span>
+                    Capacidade do plano <span className="font-semibold text-text">{coachRosterStats.planName}</span>
                   </span>
-                  <span className="font-display font-bold text-white">
+                  <span className="font-display font-bold text-text">
                     {coachRosterStats.usedSlots} / {coachRosterStats.totalSlots} atletas
                   </span>
                 </div>
@@ -108,7 +108,7 @@ export default function GestaoPage() {
                   <CardContent className="flex flex-wrap items-center gap-3 p-4">
                     {/* Name + plan */}
                     <div className="min-w-0 flex-1 space-y-0.5">
-                      <p className="truncate font-display text-sm font-semibold text-white">
+                      <p className="truncate font-display text-sm font-semibold text-text">
                         {athlete.name}
                       </p>
                       <p className="truncate text-xs text-text-muted">{athlete.plan}</p>
@@ -136,7 +136,7 @@ export default function GestaoPage() {
 
                     {/* Billing info */}
                     <div className="hidden text-right sm:block">
-                      <p className="text-sm font-semibold text-white">
+                      <p className="text-sm font-semibold text-text">
                         R$ {athlete.monthlyFee}/mês
                       </p>
                       <p className="text-xs text-text-muted">
@@ -182,7 +182,7 @@ export default function GestaoPage() {
                 <p className="text-xs uppercase tracking-wider text-text-muted">
                   Receita Recorrente Mensal (MRR)
                 </p>
-                <p className="mt-1 font-display text-3xl font-bold text-white">
+                <p className="mt-1 font-display text-3xl font-bold text-text">
                   R$ {coachRosterStats.mrr.toLocaleString("pt-BR")}
                   <span className="ml-1 text-base font-normal text-text-muted">/mês</span>
                 </p>
@@ -195,7 +195,7 @@ export default function GestaoPage() {
             {/* Revenue breakdown */}
             <Card>
               <CardContent className="p-5 space-y-3">
-                <h3 className="font-display text-sm font-semibold text-white">
+                <h3 className="font-display text-sm font-semibold text-text">
                   Receita por atleta
                 </h3>
                 <div className="space-y-2">
@@ -204,7 +204,7 @@ export default function GestaoPage() {
                       key={athlete.id}
                       className="flex items-center justify-between rounded-lg border border-border bg-card-hover/30 px-3 py-2.5"
                     >
-                      <span className="text-sm text-white">{athlete.name}</span>
+                      <span className="text-sm text-text">{athlete.name}</span>
                       <span className="font-display text-sm font-semibold text-success">
                         R$ {athlete.monthlyFee}/mês
                       </span>
@@ -217,7 +217,7 @@ export default function GestaoPage() {
             {/* Payment history */}
             <Card>
               <CardContent className="p-5 space-y-3">
-                <h3 className="font-display text-sm font-semibold text-white">
+                <h3 className="font-display text-sm font-semibold text-text">
                   Histórico de pagamentos da plataforma
                 </h3>
                 <div className="space-y-2">
@@ -227,12 +227,12 @@ export default function GestaoPage() {
                       className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card-hover/30 px-3 py-2.5"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-white">{payment.description}</p>
+                        <p className="truncate text-sm text-text">{payment.description}</p>
                         <p className="text-xs text-text-muted">
                           {payment.period} · {payment.date}
                         </p>
                       </div>
-                      <span className="font-display text-sm font-semibold text-white">
+                      <span className="font-display text-sm font-semibold text-text">
                         R$ {payment.amount.toLocaleString("pt-BR")}
                       </span>
                       <Badge variant={payment.status === "pago" ? "success" : "warning"}>
@@ -263,7 +263,7 @@ export default function GestaoPage() {
                     <Link2 className="h-4 w-4" />
                   </span>
                   <div>
-                    <h3 className="font-display text-sm font-semibold text-white">
+                    <h3 className="font-display text-sm font-semibold text-text">
                       Link de convite personalizado
                     </h3>
                     <p className="mt-1 text-sm text-text-muted">
@@ -293,7 +293,7 @@ export default function GestaoPage() {
 
                 {/* Toggle */}
                 <div className="flex items-center justify-between rounded-xl border border-border bg-card-hover/30 px-4 py-3">
-                  <span className="text-sm text-white">Aceitar novos cadastros via link</span>
+                  <span className="text-sm text-text">Aceitar novos cadastros via link</span>
                   <button
                     type="button"
                     onClick={() => setInviteEnabled((v) => !v)}
@@ -317,7 +317,7 @@ export default function GestaoPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <Card>
                 <CardContent className="p-4 text-center">
-                  <p className="font-display text-2xl font-bold text-white">1</p>
+                  <p className="font-display text-2xl font-bold text-text">1</p>
                   <p className="text-xs text-text-muted">atleta cadastrou-se via link</p>
                 </CardContent>
               </Card>
@@ -332,7 +332,7 @@ export default function GestaoPage() {
             {/* QR Code placeholder */}
             <Card>
               <CardContent className="flex flex-col items-center gap-4 p-6">
-                <h3 className="font-display text-sm font-semibold text-white">QR Code</h3>
+                <h3 className="font-display text-sm font-semibold text-text">QR Code</h3>
                 <div className="flex h-40 w-40 items-center justify-center rounded-xl border-2 border-dashed border-border text-sm text-text-muted">
                   QR Code
                 </div>
@@ -365,7 +365,7 @@ function StatCard({ icon, label, value, color, bgColor }: StatCardProps) {
         </span>
         <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-wider text-text-muted">{label}</p>
-          <p className="font-display text-base font-bold text-white">{value}</p>
+          <p className="font-display text-base font-bold text-text">{value}</p>
         </div>
       </CardContent>
     </Card>

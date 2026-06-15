@@ -14,9 +14,9 @@ export default function PlansPage() {
     <div className="mx-auto max-w-5xl space-y-7">
       <div>
         <Badge variant="primary" className="mb-2">Planos &amp; periodização</Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">{macrocycle.name}</h1>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">{macrocycle.name}</h1>
         <p className="mt-1.5 text-sm text-text-muted">
-          Meta: <span className="text-white">{macrocycle.goal}</span> · {macrocycle.start} → {macrocycle.end}
+          Meta: <span className="text-text">{macrocycle.goal}</span> · {macrocycle.start} → {macrocycle.end}
         </p>
       </div>
 
@@ -24,11 +24,11 @@ export default function PlansPage() {
       <Card>
         <CardContent className="p-5">
           <div className="mb-3 flex items-center justify-between">
-            <span className="flex items-center gap-2 text-sm font-semibold text-white">
+            <span className="flex items-center gap-2 text-sm font-semibold text-text">
               <CalendarRange className="h-4 w-4 text-primary" />
               Macrociclo — {macrocycle.totalWeeks} semanas
             </span>
-            <span className="font-display text-sm font-bold text-white">
+            <span className="font-display text-sm font-bold text-text">
               Semana {macrocycle.currentWeek} de {macrocycle.totalWeeks}
             </span>
           </div>
@@ -39,7 +39,7 @@ export default function PlansPage() {
 
       {/* Interactive timeline of phases */}
       <div>
-        <h2 className="mb-4 font-display text-lg font-semibold text-white">Linha do tempo das fases</h2>
+        <h2 className="mb-4 font-display text-lg font-semibold text-text">Linha do tempo das fases</h2>
         <div className="relative space-y-4 pl-8">
           <div className="absolute bottom-2 left-[18px] top-2 w-0.5 bg-border" />
           {periodizationPhases.map((phase, i) => (
@@ -65,7 +65,7 @@ export default function PlansPage() {
                 <CardContent className="p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-display text-base font-bold text-white">{phase.name}</h3>
+                      <h3 className="font-display text-base font-bold text-text">{phase.name}</h3>
                       <Badge style={{ borderColor: `${phase.color}55`, color: phase.color, backgroundColor: `${phase.color}1a` }} className="border">
                         Semanas {phase.weeks}
                       </Badge>
@@ -82,7 +82,7 @@ export default function PlansPage() {
 
       {/* Mesocycles */}
       <div>
-        <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-white">
+        <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-text">
           <Target className="h-4 w-4 text-primary" />
           Mesociclos do plano
         </h2>
@@ -91,7 +91,7 @@ export default function PlansPage() {
             <Card key={m.id}>
               <CardContent className="p-4">
                 <Badge variant="outline" className="mb-2">{m.weeks}</Badge>
-                <p className="font-display text-sm font-bold text-white">{m.name}</p>
+                <p className="font-display text-sm font-bold text-text">{m.name}</p>
                 <p className="mt-1 text-xs text-text-muted">Foco: {m.focus}</p>
                 <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-primary">
                   <Flag className="h-3 w-3" /> Fase: {m.phase}
@@ -108,11 +108,11 @@ export default function PlansPage() {
             <Layers className="h-4 w-4" />
           </span>
           <div>
-            <h3 className="font-display text-sm font-semibold text-white">Como funciona a periodização</h3>
+            <h3 className="font-display text-sm font-semibold text-text">Como funciona a periodização</h3>
             <p className="mt-1 text-sm text-text-muted">
-              Seu plano é dividido em <span className="text-white">macrociclo</span> (objetivo de longo prazo),{" "}
-              <span className="text-white">mesociclos</span> (blocos de 3-5 semanas com foco específico) e{" "}
-              <span className="text-white">microciclos semanais</span> — sempre alternando estímulo e recuperação para
+              Seu plano é dividido em <span className="text-text">macrociclo</span> (objetivo de longo prazo),{" "}
+              <span className="text-text">mesociclos</span> (blocos de 3-5 semanas com foco específico) e{" "}
+              <span className="text-text">microciclos semanais</span> — sempre alternando estímulo e recuperação para
               maximizar sua evolução com segurança.
             </p>
           </div>

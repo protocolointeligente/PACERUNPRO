@@ -100,10 +100,10 @@ const goals: Goal[] = ["5k", "10k", "Meia-maratona", "Maratona", "Trail", "Perso
 const levels: Level[] = ["Iniciante", "Intermediário", "Avançado"];
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
 
 const selectClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer";
 
 // ── Component ────────────────────────────────────────────────────────────────
 
@@ -167,7 +167,7 @@ export default function PeriodizacaoPage() {
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center gap-3">
           <Link
             href="/treinador/prescricao/corrida"
-            className="flex items-center gap-1.5 text-sm text-text-muted hover:text-white transition-colors"
+            className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar
@@ -175,7 +175,7 @@ export default function PeriodizacaoPage() {
           <span className="text-border">·</span>
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-primary" />
-            <span className="font-display text-sm font-semibold text-white">
+            <span className="font-display text-sm font-semibold text-text">
               Planejamento Periodização
             </span>
           </div>
@@ -246,7 +246,7 @@ export default function PeriodizacaoPage() {
                           "flex-1 rounded-lg border py-2 text-xs font-medium transition-all",
                           level === l
                             ? "border-primary/50 bg-primary/10 text-primary"
-                            : "border-border bg-background text-text-muted hover:border-primary/30 hover:text-white"
+                            : "border-border bg-background text-text-muted hover:border-primary/30 hover:text-text"
                         )}
                       >
                         {l === "Intermediário" ? "Inter." : l}
@@ -261,7 +261,7 @@ export default function PeriodizacaoPage() {
                     <label className="text-xs font-medium text-text-muted">
                       Semanas totais
                     </label>
-                    <span className="text-sm font-semibold text-white">{totalWeeks}</span>
+                    <span className="text-sm font-semibold text-text">{totalWeeks}</span>
                   </div>
                   <input
                     type="range"
@@ -332,7 +332,7 @@ export default function PeriodizacaoPage() {
                 className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-20 text-center"
               >
                 <CalendarDays className="h-12 w-12 text-primary/30 mb-4" />
-                <p className="font-display text-lg font-semibold text-white">
+                <p className="font-display text-lg font-semibold text-text">
                   Nenhuma periodização gerada
                 </p>
                 <p className="mt-1 text-sm text-text-muted">
@@ -353,7 +353,7 @@ export default function PeriodizacaoPage() {
                   {/* Title row */}
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div>
-                      <h2 className="font-display text-xl font-bold text-white">
+                      <h2 className="font-display text-xl font-bold text-text">
                         Macrociclo — {totalWeeks} semanas
                       </h2>
                       <p className="text-sm text-text-muted mt-0.5">
@@ -482,7 +482,7 @@ export default function PeriodizacaoPage() {
                         <Badge variant={PHASE_BADGE[p]} className="text-[10px]">
                           {p}
                         </Badge>
-                        <span className="text-white font-medium text-xs">
+                        <span className="text-text font-medium text-xs">
                           {phaseCounts[p] ?? 0} sem
                         </span>
                       </div>
@@ -511,7 +511,7 @@ export default function PeriodizacaoPage() {
                   </div>
                   <p className="text-xs text-text-muted leading-relaxed">
                     A estrutura gerada é uma{" "}
-                    <span className="text-white">referência automática</span>. Edite
+                    <span className="text-text">referência automática</span>. Edite
                     volume, intensidade e notas de cada semana para adaptar ao atleta.
                     Semanas de descarga (↓) reduzem o volume para favorecer a
                     supercompensação.
@@ -545,7 +545,7 @@ function WeekRow({
       )}
     >
       {/* Week number */}
-      <span className="text-xs font-semibold text-white">{week.week}</span>
+      <span className="text-xs font-semibold text-text">{week.week}</span>
 
       {/* Phase badge */}
       <Badge variant={PHASE_BADGE[week.phase]} className="w-fit text-[10px] px-2">
@@ -568,7 +568,7 @@ function WeekRow({
           onChange={(e) =>
             onChange(week.week, "volume", Math.min(100, Math.max(10, Number(e.target.value))))
           }
-          className="w-full rounded-md border border-border bg-background px-1.5 py-0.5 text-[11px] text-white text-center outline-none focus:border-primary/60"
+          className="w-full rounded-md border border-border bg-background px-1.5 py-0.5 text-[11px] text-text text-center outline-none focus:border-primary/60"
         />
       </div>
 
@@ -581,7 +581,7 @@ function WeekRow({
         onChange={(e) =>
           onChange(week.week, "intensity", Math.min(100, Math.max(10, Number(e.target.value))))
         }
-        className="w-full rounded-md border border-border bg-background px-1.5 py-1 text-[11px] text-white text-center outline-none focus:border-primary/60"
+        className="w-full rounded-md border border-border bg-background px-1.5 py-1 text-[11px] text-text text-center outline-none focus:border-primary/60"
       />
 
       {/* km */}
@@ -590,7 +590,7 @@ function WeekRow({
         min={0}
         value={week.km}
         onChange={(e) => onChange(week.week, "km", Number(e.target.value))}
-        className="w-full rounded-md border border-border bg-background px-1.5 py-1 text-[11px] text-white text-center outline-none focus:border-primary/60"
+        className="w-full rounded-md border border-border bg-background px-1.5 py-1 text-[11px] text-text text-center outline-none focus:border-primary/60"
       />
 
       {/* Sessions */}
@@ -602,7 +602,7 @@ function WeekRow({
         onChange={(e) =>
           onChange(week.week, "sessions", Math.min(7, Math.max(1, Number(e.target.value))))
         }
-        className="w-full rounded-md border border-border bg-background px-1.5 py-1 text-[11px] text-white text-center outline-none focus:border-primary/60"
+        className="w-full rounded-md border border-border bg-background px-1.5 py-1 text-[11px] text-text text-center outline-none focus:border-primary/60"
       />
 
       {/* Deload indicator */}
@@ -623,7 +623,7 @@ function WeekRow({
         placeholder="Adicionar nota…"
         value={week.notes}
         onChange={(e) => onChange(week.week, "notes", e.target.value)}
-        className="w-full rounded-md border border-border bg-background px-2 py-1 text-[11px] text-white placeholder:text-text-muted/40 outline-none focus:border-primary/60 transition-colors"
+        className="w-full rounded-md border border-border bg-background px-2 py-1 text-[11px] text-text placeholder:text-text-muted/40 outline-none focus:border-primary/60 transition-colors"
       />
     </div>
   );
@@ -635,7 +635,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-xs text-text-muted">{label}</span>
-      <span className="text-xs font-semibold text-white">{value}</span>
+      <span className="text-xs font-semibold text-text">{value}</span>
     </div>
   );
 }

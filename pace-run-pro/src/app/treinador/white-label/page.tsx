@@ -38,12 +38,12 @@ const ALL_MODULES = [
 ];
 
 const inputCls =
-  "w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-white placeholder:text-text-muted focus:border-primary focus:outline-none transition-colors";
+  "w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none transition-colors";
 const labelCls = "mb-1.5 block text-sm font-medium text-text-muted";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-white">
+    <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-text">
       {children}
     </h2>
   );
@@ -58,7 +58,7 @@ function PreviewCard({ config }: { config: WhiteLabelConfig }) {
       <div className="flex items-center gap-3">
         <span className="text-3xl">{config.logoEmoji}</span>
         <div>
-          <p className="font-bold text-white">{config.assessoriaName || "Assessoria"}</p>
+          <p className="font-bold text-text">{config.assessoriaName || "Assessoria"}</p>
           <p className="text-xs" style={{ color: config.accentColor }}>{config.customDomain}</p>
         </div>
       </div>
@@ -67,7 +67,7 @@ function PreviewCard({ config }: { config: WhiteLabelConfig }) {
         {config.featuresEnabled.map((f) => (
           <span
             key={f}
-            className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
+            className="rounded-full px-2 py-0.5 text-xs font-medium text-text"
             style={{ background: config.primaryColor + "50", border: `1px solid ${config.primaryColor}80` }}
           >
             {f}
@@ -75,7 +75,7 @@ function PreviewCard({ config }: { config: WhiteLabelConfig }) {
         ))}
       </div>
       <div
-        className="rounded-xl px-4 py-2 text-center text-sm font-semibold text-white"
+        className="rounded-xl px-4 py-2 text-center text-sm font-semibold text-text"
         style={{ background: `linear-gradient(135deg, ${config.primaryColor}, ${config.accentColor})` }}
       >
         Entrar na plataforma
@@ -117,7 +117,7 @@ export default function WhiteLabelPage() {
             <Palette className="h-3 w-3" />
             White-label
           </Badge>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
             Configurações White-label
           </h1>
           <p className="text-sm text-text-muted">
@@ -227,8 +227,8 @@ export default function WhiteLabelPage() {
                         className={cn(
                           "flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-medium transition-all",
                           enabled
-                            ? "border-primary/60 bg-primary/10 text-white"
-                            : "border-border bg-card text-text-muted hover:border-border/80 hover:text-white"
+                            ? "border-primary/60 bg-primary/10 text-primary"
+                            : "border-border bg-card text-text-muted hover:border-border/80 hover:text-text"
                         )}
                       >
                         <span>{mod}</span>
@@ -241,7 +241,7 @@ export default function WhiteLabelPage() {
                               exit={{ scale: 0 }}
                               className="flex h-5 w-5 items-center justify-center rounded-full bg-primary"
                             >
-                              <Check className="h-3 w-3 text-white" />
+                              <Check className="h-3 w-3 text-text" />
                             </motion.span>
                           ) : (
                             <motion.span
@@ -273,7 +273,7 @@ export default function WhiteLabelPage() {
                   <Check className="h-4 w-4 text-emerald-400 shrink-0" />
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-emerald-300">Domínio ativo</p>
-                    <p className="truncate text-sm font-mono text-white">{config.customDomain}</p>
+                    <p className="truncate text-sm font-mono text-text">{config.customDomain}</p>
                   </div>
                 </div>
 
@@ -289,7 +289,7 @@ export default function WhiteLabelPage() {
                     <button
                       onClick={handleVerifyDns}
                       disabled={dnsStatus === "checking" || !newDomain.trim()}
-                      className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-white transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-text transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {dnsStatus === "checking" ? (
                         <>
@@ -337,7 +337,7 @@ export default function WhiteLabelPage() {
                       <div className={cn("mb-1 flex items-center justify-center gap-1 text-xs font-medium", s.color)}>
                         {s.icon}
                       </div>
-                      <p className="text-lg font-bold text-white">{s.value}</p>
+                      <p className="text-lg font-bold text-text">{s.value}</p>
                       <p className="text-xs text-text-muted">{s.label}</p>
                     </div>
                   ))}

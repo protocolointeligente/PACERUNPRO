@@ -104,7 +104,7 @@ export default function AdminDashboard() {
       >
         <div>
           <Badge variant="danger" className="mb-2">Super Admin</Badge>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
             Painel do Administrador
           </h1>
           <p className="mt-1 text-sm text-text-muted">
@@ -233,7 +233,7 @@ export default function AdminDashboard() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-semibold text-white">
+                      <p className="text-sm font-semibold text-text">
                         {a.name}
                       </p>
                       <p className="text-xs text-text-muted">{a.city}</p>
@@ -314,7 +314,7 @@ export default function AdminDashboard() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-text">
                       {a.name}
                     </p>
                     <p className="text-xs text-text-muted">
@@ -326,7 +326,7 @@ export default function AdminDashboard() {
                   <Badge variant={b2cPlanBadgeVariant(a.plan)}>
                     {b2cPlanLabel(a.plan)}
                   </Badge>
-                  <span className="text-sm font-semibold text-white">
+                  <span className="text-sm font-semibold text-text">
                     R${a.mrr}/mês
                   </span>
                   <Badge

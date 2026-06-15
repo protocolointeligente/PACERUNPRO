@@ -36,7 +36,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <Link href="/aluno/calendario" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-white transition-colors">
+      <Link href="/aluno/calendario" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors">
         <ArrowLeft className="h-4 w-4" />
         Voltar
       </Link>
@@ -62,7 +62,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
                   );
                 })()}
               </div>
-              <h1 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">{workout.title}</h1>
+              <h1 className="mt-2 font-display text-2xl font-bold text-text sm:text-3xl">{workout.title}</h1>
               <p className="mt-0.5 text-sm capitalize text-text-muted">{dateLabel}</p>
             </div>
             {workout.videoUrl && (
@@ -90,7 +90,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
             <CardContent className="p-5">
               <div className="mb-2 flex items-center gap-2">
                 <s.icon className={`h-4 w-4 ${s.color}`} />
-                <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-white">{s.title}</h3>
+                <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-text">{s.title}</h3>
               </div>
               <p className="text-sm leading-relaxed text-text-muted">{s.text}</p>
             </CardContent>
@@ -105,7 +105,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
               <Target className="h-4 w-4" />
             </span>
             <div>
-              <h3 className="font-display text-sm font-semibold text-white">Observações do treinador</h3>
+              <h3 className="font-display text-sm font-semibold text-text">Observações do treinador</h3>
               <p className="mt-1 text-sm text-text-muted">{workout.notes}</p>
             </div>
           </CardContent>
@@ -132,7 +132,7 @@ function Metric({ icon: Icon, label, value }: { icon: React.ComponentType<{ clas
         <Icon className="h-3.5 w-3.5" />
         <span className="text-[10px] uppercase tracking-wider">{label}</span>
       </div>
-      <p className="mt-1 font-display text-base font-bold text-white">{value}</p>
+      <p className="mt-1 font-display text-base font-bold text-text">{value}</p>
     </div>
   );
 }

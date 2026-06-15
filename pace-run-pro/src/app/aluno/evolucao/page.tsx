@@ -23,7 +23,7 @@ export default function EvolutionPage() {
     <div className="mx-auto max-w-6xl space-y-7">
       <div>
         <Badge variant="primary" className="mb-2">Sua evolução</Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Acompanhe seu progresso</h1>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Acompanhe seu progresso</h1>
         <p className="mt-1.5 text-sm text-text-muted">Volume, intensidade, fisiologia e composição corporal — tudo em um só lugar.</p>
       </div>
 
@@ -92,12 +92,12 @@ export default function EvolutionPage() {
                       <Medal className="h-5 w-5" />
                     </span>
                     <div>
-                      <p className="font-display text-base font-bold text-white">{r.distance}</p>
+                      <p className="font-display text-base font-bold text-text">{r.distance}</p>
                       <p className="text-xs text-text-muted">{r.date}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-lg font-bold text-white">{r.time}</p>
+                    <p className="font-display text-lg font-bold text-text">{r.time}</p>
                     <p className="text-xs text-text-muted">{r.pace}</p>
                   </div>
                 </CardContent>
@@ -111,8 +111,14 @@ export default function EvolutionPage() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {achievements.map((a) => (
               <Card key={a.id} className={`p-4 text-center ${!a.earned ? "opacity-40 grayscale" : ""}`}>
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-card-hover text-2xl">{a.icon}</div>
-                <p className="mt-2 text-sm font-semibold text-white">{a.title}</p>
+                <div
+                  className={`mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-card-hover text-2xl ${
+                    a.earned ? "animate-glow-pulse" : ""
+                  }`}
+                >
+                  {a.icon}
+                </div>
+                <p className="mt-2 text-sm font-semibold text-text">{a.title}</p>
                 <p className="mt-0.5 text-[11px] leading-snug text-text-muted">{a.description}</p>
                 {a.earned && (
                   <Badge variant="success" className="mt-2">

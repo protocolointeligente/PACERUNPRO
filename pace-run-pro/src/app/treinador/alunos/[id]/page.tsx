@@ -21,7 +21,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <Link href="/treinador/alunos" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-white transition-colors">
+      <Link href="/treinador/alunos" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors">
         <ArrowLeft className="h-4 w-4" />
         Voltar
       </Link>
@@ -33,7 +33,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
               <AvatarFallback className="text-lg">{athlete.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}</AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="font-display text-xl font-bold text-white sm:text-2xl">{athlete.name}</h1>
+              <h1 className="font-display text-xl font-bold text-text sm:text-2xl">{athlete.name}</h1>
               <div className="mt-1 flex flex-wrap items-center gap-1.5">
                 <Badge variant={statusVariants[athlete.status]}>{statusLabels[athlete.status]}</Badge>
                 <Badge variant="outline">{athlete.level}</Badge>
@@ -53,7 +53,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
           <CardContent className="flex items-start gap-3 p-4">
             <Badge variant="danger" className="mt-0.5 shrink-0"><AlertTriangle className="h-3 w-3" /></Badge>
             <p className="text-sm text-text-muted">
-              <span className="font-semibold text-white">Atenção:</span> esse atleta apresenta queda de adesão e
+              <span className="font-semibold text-text">Atenção:</span> esse atleta apresenta queda de adesão e
               indicadores de fadiga elevados nos últimos check-ins. O motor de check-in inteligente já reduziu o
               volume da semana automaticamente — revise o plano antes de liberar a próxima semana.
             </p>
@@ -81,13 +81,13 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
             <Card>
               <CardContent className="p-5">
-                <h3 className="mb-3 font-display text-sm font-semibold text-white">Volume semanal (km)</h3>
+                <h3 className="mb-3 font-display text-sm font-semibold text-text">Volume semanal (km)</h3>
                 <AreaTrend data={weeklyVolumeSeries} dataKey="km" color="#38bdf8" unit=" km" />
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-5">
-                <h3 className="mb-3 font-display text-sm font-semibold text-white">Evolução do peso (kg)</h3>
+                <h3 className="mb-3 font-display text-sm font-semibold text-text">Evolução do peso (kg)</h3>
                 <AreaTrend data={weightSeries} dataKey="kg" color="#a855f7" unit=" kg" />
               </CardContent>
             </Card>
@@ -102,7 +102,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
             <Metric icon={HeartPulse} label="FC máxima" value="188 bpm" />
           </div>
           <div className="mt-5">
-            <h3 className="mb-3 font-display text-sm font-semibold text-white">Avaliações &amp; testes recentes</h3>
+            <h3 className="mb-3 font-display text-sm font-semibold text-text">Avaliações &amp; testes recentes</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               {[
                 { name: "Cooper — 2.600 m", date: "18 mai 2026", result: "VO2máx ≈ 46.8 ml/kg/min" },
@@ -112,7 +112,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
               ].map((t) => (
                 <Card key={t.name}>
                   <CardContent className="p-4">
-                    <p className="text-sm font-semibold text-white">{t.name}</p>
+                    <p className="text-sm font-semibold text-text">{t.name}</p>
                     <p className="text-xs text-text-muted">{t.date}</p>
                     <p className="mt-1.5 text-sm text-text-muted">{t.result}</p>
                   </CardContent>
@@ -133,12 +133,12 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
                       <ClipboardList className="h-4 w-4" />
                     </span>
                     <div>
-                      <p className="text-sm font-semibold text-white">{s.title}</p>
+                      <p className="text-sm font-semibold text-text">{s.title}</p>
                       <p className="text-xs text-text-muted">{s.date}</p>
                     </div>
                   </div>
                   <div className="text-right text-xs text-text-muted">
-                    <p className="font-semibold text-white">{s.pace}</p>
+                    <p className="font-semibold text-text">{s.pace}</p>
                     <p>RPE {s.rpe}</p>
                   </div>
                 </CardContent>
@@ -152,7 +152,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardContent className="p-5">
-                <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-white">
+                <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-text">
                   <Moon className="h-4 w-4 text-info" /> Sono x Fadiga (últimos check-ins)
                 </h3>
                 <LineTrend
@@ -164,7 +164,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
             </Card>
             <Card>
               <CardContent className="p-5">
-                <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-white">
+                <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-text">
                   <Activity className="h-4 w-4 text-danger" /> Dor reportada
                 </h3>
                 <LineTrend
@@ -180,7 +180,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
             {checkInHistory.slice().reverse().map((c) => (
               <Card key={c.date}>
                 <CardContent className="flex flex-wrap items-center gap-x-5 gap-y-2 p-4 text-xs text-text-muted">
-                  <span className="font-medium text-white">
+                  <span className="font-medium text-text">
                     {new Date(c.date + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", weekday: "short" })}
                   </span>
                   <span>RPE {c.rpe}</span>
@@ -208,7 +208,7 @@ function Metric({ icon: Icon, label, value }: { icon: React.ComponentType<{ clas
         </span>
         <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-wider text-text-muted">{label}</p>
-          <p className="truncate font-display text-base font-bold text-white">{value}</p>
+          <p className="truncate font-display text-base font-bold text-text">{value}</p>
         </div>
       </CardContent>
     </Card>
