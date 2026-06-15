@@ -2,14 +2,14 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Search, SlidersHorizontal, ArrowUpDown, ArrowUpCircle } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
-import { athleteList } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
+import { athleteList, b2bPlans, coachOverview, getRecommendedB2BPlan } from "@/lib/mock-data";
+import { cn, formatBRL } from "@/lib/utils";
 
 const statusLabels = { ativo: "Ativo", risco: "Em risco", inativo: "Inativo" } as const;
 const statusVariants = { ativo: "success", risco: "danger", inativo: "default" } as const;
@@ -19,6 +19,10 @@ const filters = ["Todos", "Ativos", "Em risco", "Inativos"] as const;
 export default function AthleteListPage() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<(typeof filters)[number]>("Todos");
+
+  const currentPlan = b2bPlans.find((p) => p.id === coachOverview.currentPlanId) ?? b2bPlans[0];
+  const recommendedPlan = getRecommendedB2BPlan(athleteList.length);
+  const exceedsCurrentPlan = recommendedPlan.id !== currentPlan.id;
 
   const filtered = useMemo(() => {
     return athleteList.filter((a) => {
@@ -41,6 +45,30 @@ export default function AthleteListPage() {
           <p className="mt-1 text-sm text-text-muted">{athleteList.length} atletas sob sua orientação</p>
         </div>
       </div>
+
+      {exceedsCurrentPlan && (
+        <Card className="flex flex-col gap-3 border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+              <ArrowUpCircle className="h-4.5 w-4.5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-text">
+                Seu plano foi atualizado automaticamente para {recommendedPlan.name}
+              </p>
+              <p className="mt-0.5 text-xs text-text-muted">
+                Você já atende {athleteList.length}{" "}
+                {athleteList.length === 1 ? "atleta" : "atletas"} — acima do limite do plano{" "}
+                {currentPlan.name}. O plano {recommendedPlan.name} comporta{" "}
+                {recommendedPlan.maxAthletes === null ? "atletas ilimitados" : `até ${recommendedPlan.maxAthletes} atletas`}.
+              </p>
+            </div>
+          </div>
+          <Badge variant="primary" className="self-start whitespace-nowrap sm:self-center">
+            {recommendedPlan.price === 0 ? "Grátis" : `R$ ${formatBRL(recommendedPlan.price)}/mês`}
+          </Badge>
+        </Card>
+      )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5">
