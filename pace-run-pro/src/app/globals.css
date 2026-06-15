@@ -20,6 +20,7 @@
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-stat: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 
   --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
   --animate-float: float 6s ease-in-out infinite;

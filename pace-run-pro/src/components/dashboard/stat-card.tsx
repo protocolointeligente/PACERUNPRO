@@ -30,7 +30,7 @@ export function StatCard({
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-text-muted">{label}</p>
-          <p className="mt-2 font-display text-2xl font-bold text-text">
+          <p className="mt-2 font-stat text-2xl font-bold text-text">
             {value}
             {unit && <span className="ml-1 text-sm font-medium text-text-muted">{unit}</span>}
           </p>

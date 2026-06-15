@@ -52,6 +52,9 @@ function formatCountdown(seconds: number): string {
 
 const exercises = strengthSessionExample.exercises;
 
+// Melhor tempo anterior registrado para esta sessão
+const PREVIOUS_BEST_SECONDS = 32 * 60;
+
 export default function StrengthExecutarPage() {
   const router = useRouter();
 
@@ -156,6 +159,7 @@ export default function StrengthExecutarPage() {
   if (phase === "done") {
     const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
     const totalDuration = `${Math.floor(elapsedSeconds / 60)}min ${elapsedSeconds % 60}s`;
+    const isPersonalRecord = elapsedSeconds > 0 && elapsedSeconds < PREVIOUS_BEST_SECONDS;
 
     return (
       <>
@@ -195,6 +199,7 @@ export default function StrengthExecutarPage() {
             exerciseCount: exercises.length,
           }}
           activityType="forca"
+          isPersonalRecord={isPersonalRecord}
         />
       </>
     );

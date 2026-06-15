@@ -97,7 +97,7 @@ export default function EvolutionPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-lg font-bold text-text">{r.time}</p>
+                    <p className="font-stat text-lg font-bold text-text">{r.time}</p>
                     <p className="text-xs text-text-muted">{r.pace}</p>
                   </div>
                 </CardContent>

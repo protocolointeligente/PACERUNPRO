@@ -184,7 +184,7 @@ function BigStat({ label, value, accent, className }: { label: string; value: st
   return (
     <div className={`rounded-2xl border border-border bg-card p-5 ${className ?? ""}`}>
       <p className="text-[11px] uppercase tracking-wider text-text-muted">{label}</p>
-      <p className={`mt-1 font-display text-3xl font-extrabold tabular-nums ${accent}`}>{value}</p>
+      <p className={`mt-1 font-stat text-3xl font-extrabold tabular-nums ${accent}`}>{value}</p>
     </div>
   );
 }
@@ -204,7 +204,7 @@ function SmallStat({
     <div className="rounded-xl border border-border bg-card p-3.5 text-center">
       <Icon className="mx-auto h-4 w-4 text-text-muted" />
       <p className="mt-1.5 text-[10px] uppercase tracking-wider text-text-muted">{label}</p>
-      <p className="mt-0.5 font-display text-base font-bold tabular-nums" style={accent ? { color: accent } : undefined}>
+      <p className="mt-0.5 font-stat text-base font-bold tabular-nums" style={accent ? { color: accent } : undefined}>
         <span className={accent ? "" : "text-text"}>{value}</span>
       </p>
     </div>

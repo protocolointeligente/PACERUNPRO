@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, X } from "lucide-react";
+import { ParticleBurst } from "@/components/particle-burst";
 
 interface WorkoutShareModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface WorkoutShareModalProps {
     exerciseCount?: number;
   };
   activityType: "corrida" | "forca" | "outro";
+  isPersonalRecord?: boolean;
 }
 
 export function WorkoutShareModal({
@@ -25,6 +27,7 @@ export function WorkoutShareModal({
   onClose,
   metrics,
   activityType,
+  isPersonalRecord = false,
 }: WorkoutShareModalProps) {
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
@@ -43,6 +46,7 @@ export function WorkoutShareModal({
   function drawOverlay(
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
+    statFont: string,
     resolve: (b: Blob | null) => void
   ) {
     const darkGrad = ctx.createLinearGradient(0, 900, 0, 1920);
@@ -52,20 +56,26 @@ export function WorkoutShareModal({
     ctx.fillRect(0, 0, 1080, 1920);
 
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 180px Arial";
+    ctx.font = `800 180px ${statFont}`;
     ctx.textAlign = "center";
     const mainText = metrics.distance
       ? `${metrics.distance.toFixed(2).replace(".", ",")} km`
       : metrics.sessionName ?? "Treino concluído";
     ctx.fillText(mainText, 540, 1100);
 
-    ctx.font = "72px Arial";
+    ctx.font = `700 72px ${statFont}`;
     ctx.fillStyle = "rgba(255,255,255,0.85)";
     const subParts = [
       metrics.pace && `${metrics.pace} /km`,
       metrics.duration,
     ].filter(Boolean);
     ctx.fillText(subParts.join("  ·  "), 540, 1220);
+
+    if (isPersonalRecord) {
+      ctx.font = `800 56px ${statFont}`;
+      ctx.fillStyle = "rgba(255,106,26,0.95)";
+      ctx.fillText("🎉 NOVO RECORDE PESSOAL", 540, 1320);
+    }
 
     ctx.font = "bold 52px Arial";
     ctx.fillStyle = "rgba(255,106,26,0.95)";
@@ -75,6 +85,14 @@ export function WorkoutShareModal({
   }
 
   async function generateShareImage(): Promise<Blob | null> {
+    if (typeof document !== "undefined" && "fonts" in document) {
+      await document.fonts.ready;
+    }
+    const statFont =
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--font-stat")
+        .trim() || "Arial";
+
     return new Promise((resolve) => {
       const canvas = document.createElement("canvas");
       canvas.width = 1080;
@@ -89,7 +107,7 @@ export function WorkoutShareModal({
         const img = new Image();
         img.onload = () => {
           ctx.drawImage(img, 0, 0, 1080, 1920);
-          drawOverlay(ctx, canvas, resolve);
+          drawOverlay(ctx, canvas, statFont, resolve);
         };
         img.src = photoDataUrl;
       } else {
@@ -99,7 +117,7 @@ export function WorkoutShareModal({
         grad.addColorStop(1, "#07030f");
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 1080, 1920);
-        drawOverlay(ctx, canvas, resolve);
+        drawOverlay(ctx, canvas, statFont, resolve);
       }
     });
   }
@@ -209,6 +227,8 @@ export function WorkoutShareModal({
             style={{ maxHeight: "90vh" }}
             onClick={(e) => e.stopPropagation()}
           >
+            {isPersonalRecord && <ParticleBurst />}
+
             <button
               onClick={onClose}
               className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-card-hover text-text-muted transition-colors hover:text-text"
@@ -218,13 +238,15 @@ export function WorkoutShareModal({
 
             <div className="p-5 pb-2">
               <div className="flex items-center gap-3">
-                <span className="text-3xl">🏆</span>
+                <span className={`text-3xl ${isPersonalRecord ? "animate-glow-pulse rounded-full" : ""}`}>
+                  {isPersonalRecord ? "🎉" : "🏆"}
+                </span>
                 <div>
                   <h2 className="font-bold text-text text-lg leading-tight">
-                    Treino concluído!
+                    {isPersonalRecord ? "Novo recorde pessoal!" : "Treino concluído!"}
                   </h2>
                   <p className="text-sm text-text-muted">
-                    Registrar sua conquista
+                    {isPersonalRecord ? "Você superou seu melhor tempo 🚀" : "Registrar sua conquista"}
                   </p>
                 </div>
               </div>
@@ -235,7 +257,7 @@ export function WorkoutShareModal({
                     key={m.label}
                     className="flex flex-1 flex-col items-center rounded-xl border border-border bg-background/50 py-2.5 px-1"
                   >
-                    <span className="text-base font-bold text-text leading-tight">
+                    <span className="font-stat text-base font-bold text-text leading-tight">
                       {m.value}
                     </span>
                     <span className="text-[11px] text-text-muted mt-0.5">
@@ -284,16 +306,21 @@ export function WorkoutShareModal({
                 </div>
 
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-center">
+                  {isPersonalRecord && (
+                    <p className="mb-1 font-stat text-xs font-extrabold uppercase tracking-wider text-primary">
+                      🎉 Novo recorde pessoal
+                    </p>
+                  )}
                   {metrics.distance ? (
-                    <p className="text-3xl font-bold text-white leading-tight">
+                    <p className="font-stat text-3xl font-extrabold text-white leading-tight">
                       {metrics.distance.toFixed(2).replace(".", ",")} km
                     </p>
                   ) : (
-                    <p className="text-2xl font-bold text-white leading-tight">
+                    <p className="font-stat text-2xl font-extrabold text-white leading-tight">
                       {metrics.sessionName ?? "Treino concluído"}
                     </p>
                   )}
-                  <p className="mt-1 text-sm text-white/80">
+                  <p className="mt-1 font-stat text-sm font-semibold text-white/80">
                     {[metrics.pace && `${metrics.pace} /km`, metrics.duration]
                       .filter(Boolean)
                       .join("  ·  ")}
