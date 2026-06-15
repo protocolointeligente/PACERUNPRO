@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { athleteList } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
@@ -75,7 +76,10 @@ export default function AthleteListPage() {
           <span>Objetivo / Nível</span>
           <span className="flex items-center gap-1">Status</span>
           <span className="flex items-center gap-1">Adesão <ArrowUpDown className="h-3 w-3" /></span>
-          <span>Carga semanal</span>
+          <span className="flex items-center gap-1">
+            Carga semanal
+            <InfoTooltip text="UA = Unidades Arbitrárias. Mede a carga de treino combinando duração (min) e percepção de esforço (RPE de 1 a 10) de cada sessão, somadas na semana." />
+          </span>
           <span>Próx. prova</span>
         </div>
         <div className="divide-y divide-border">

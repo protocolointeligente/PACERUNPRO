@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import type { LucideIcon } from "lucide-react";
 
 export function StatCard({
@@ -9,6 +10,7 @@ export function StatCard({
   icon: Icon,
   accent = "primary",
   hint,
+  tooltip,
 }: {
   label: string;
   value: string;
@@ -16,6 +18,7 @@ export function StatCard({
   icon: LucideIcon;
   accent?: "primary" | "success" | "warning" | "info" | "danger";
   hint?: string;
+  tooltip?: string;
 }) {
   const accentMap: Record<string, string> = {
     primary: "bg-primary/15 text-primary",
@@ -29,7 +32,10 @@ export function StatCard({
     <Card className="p-4 sm:p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-text-muted">{label}</p>
+          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-text-muted">
+            {label}
+            {tooltip && <InfoTooltip text={tooltip} />}
+          </p>
           <p className="mt-2 font-stat text-2xl font-bold text-text">
             {value}
             {unit && <span className="ml-1 text-sm font-medium text-text-muted">{unit}</span>}

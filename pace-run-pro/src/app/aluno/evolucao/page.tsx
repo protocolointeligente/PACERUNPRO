@@ -3,6 +3,7 @@
 import { Award, Medal, TrendingDown, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { SectionHeader } from "@/components/shared/section-header";
 import { AreaTrend, BarTrend, LineTrend } from "@/components/charts/trend-chart";
 import {
@@ -40,7 +41,13 @@ export default function EvolutionPage() {
           <LineTrend data={avgPaceSeries} dataKey="paceSec" color="#84cc16" reverse formatValue={(v) => formatPace(v)} />
         </ChartCard>
 
-        <ChartCard title="Carga de treino" description="Carga semanal estimada (UA = duração × RPE)" trend="up" trendLabel="Dentro da faixa segura de progressão">
+        <ChartCard
+          title="Carga de treino"
+          description="Carga semanal estimada (UA = duração × RPE)"
+          trend="up"
+          trendLabel="Dentro da faixa segura de progressão"
+          tooltip="UA = Unidades Arbitrárias. Mede a carga de treino combinando duração (min) e percepção de esforço (RPE de 1 a 10) de cada sessão, somadas na semana — quanto maior, mais intenso foi o estímulo total."
+        >
           <AreaTrend data={trainingLoadSeries} dataKey="load" color="#facc15" unit=" UA" />
         </ChartCard>
 
@@ -140,12 +147,14 @@ function ChartCard({
   description,
   trend,
   trendLabel,
+  tooltip,
   children,
 }: {
   title: string;
   description: string;
   trend: "up" | "down";
   trendLabel: string;
+  tooltip?: string;
   children: React.ReactNode;
 }) {
   const TrendIcon = trend === "up" ? TrendingUp : TrendingDown;
@@ -153,7 +162,10 @@ function ChartCard({
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-3">
         <div>
-          <CardTitle>{title}</CardTitle>
+          <CardTitle className="flex items-center gap-1.5">
+            {title}
+            {tooltip && <InfoTooltip text={tooltip} />}
+          </CardTitle>
           <CardDescription>{description}</CardDescription>
         </div>
         <Badge variant={trend === "up" ? "success" : "info"} className="shrink-0">

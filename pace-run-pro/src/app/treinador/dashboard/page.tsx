@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { SectionHeader } from "@/components/shared/section-header";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { athleteList, coachOverview } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
@@ -98,7 +99,10 @@ export default function CoachDashboard() {
         <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show" className="space-y-5">
           <Card>
             <CardContent className="p-5">
-              <h3 className="mb-4 font-display text-base font-semibold text-text">Carga da equipe</h3>
+              <h3 className="mb-4 flex items-center gap-1.5 font-display text-base font-semibold text-text">
+                Carga da equipe
+                <InfoTooltip text="UA = Unidades Arbitrárias. Mede a carga de treino combinando duração (min) e percepção de esforço (RPE de 1 a 10) de cada sessão, somadas na semana." />
+              </h3>
               <div className="space-y-3">
                 {athleteList.slice(0, 6).map((a) => (
                   <div key={a.id}>

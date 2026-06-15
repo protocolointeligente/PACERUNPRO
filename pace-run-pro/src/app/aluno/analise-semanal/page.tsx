@@ -19,6 +19,7 @@ import {
 } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { weeklyAnalyses } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
@@ -108,7 +109,12 @@ export default function MinhaSemanPage() {
         {myAnalysis.metrics.map((metric) => (
           <Card key={metric.label}>
             <CardContent className="p-3.5 space-y-1.5">
-              <p className="text-[10px] uppercase tracking-wide text-text-muted">{metric.label}</p>
+              <p className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-text-muted">
+                {metric.label}
+                {metric.label === "Carga" && (
+                  <InfoTooltip text="UA = Unidades Arbitrárias. Mede a carga de treino combinando duração (min) e percepção de esforço (RPE de 1 a 10) de cada sessão, somadas na semana." />
+                )}
+              </p>
               <p className="font-display text-lg font-bold text-text leading-tight">
                 {formatMetricValue(metric.label, metric.value)}
               </p>

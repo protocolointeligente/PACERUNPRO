@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaTrend, LineTrend } from "@/components/charts/trend-chart";
 import { WeeklyReleaseDialog } from "@/components/coach/weekly-release-dialog";
@@ -75,7 +76,12 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
             <Metric icon={Target} label="Objetivo" value={athlete.goal} />
             <Metric icon={Calendar} label="Próxima prova" value={athlete.raceDate ?? "—"} />
             <Metric icon={TrendingUp} label="Adesão" value={`${Math.round(athlete.adherence * 100)}%`} />
-            <Metric icon={Activity} label="Carga semanal" value={`${athlete.weeklyLoad} UA`} />
+            <Metric
+              icon={Activity}
+              label="Carga semanal"
+              value={`${athlete.weeklyLoad} UA`}
+              tooltip="UA = Unidades Arbitrárias. Mede a carga de treino combinando duração (min) e percepção de esforço (RPE de 1 a 10) de cada sessão, somadas na semana."
+            />
           </div>
 
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
@@ -199,7 +205,17 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
   );
 }
 
-function Metric({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
+function Metric({
+  icon: Icon,
+  label,
+  value,
+  tooltip,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  tooltip?: string;
+}) {
   return (
     <Card>
       <CardContent className="flex items-center gap-3 p-4">
@@ -207,7 +223,10 @@ function Metric({ icon: Icon, label, value }: { icon: React.ComponentType<{ clas
           <Icon className="h-4.5 w-4.5" />
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-wider text-text-muted">{label}</p>
+          <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-text-muted">
+            {label}
+            {tooltip && <InfoTooltip text={tooltip} />}
+          </p>
           <p className="truncate font-display text-base font-bold text-text">{value}</p>
         </div>
       </CardContent>

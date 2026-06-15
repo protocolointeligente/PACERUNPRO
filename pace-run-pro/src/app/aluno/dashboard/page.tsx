@@ -129,6 +129,7 @@ export default function AthleteDashboard() {
             icon={Flame}
             accent={weekSummary.weeklyLoad > weekSummary.previousAvgLoad * 1.3 ? "warning" : "success"}
             hint={`Média anterior: ${weekSummary.previousAvgLoad} UA`}
+            tooltip="UA = Unidades Arbitrárias. Mede a carga de treino combinando duração (min) e percepção de esforço (RPE de 1 a 10) de cada sessão, somadas na semana — quanto maior, mais intenso foi o estímulo total."
           />
           <StatCard
             label="Ciclo atual"
