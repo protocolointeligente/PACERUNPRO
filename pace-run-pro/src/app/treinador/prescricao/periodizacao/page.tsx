@@ -163,7 +163,7 @@ export default function PeriodizacaoPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* ── Header ── */}
-      <div className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+      <div className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md print:hidden">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center gap-3">
           <Link
             href="/treinador/prescricao/corrida"
@@ -186,7 +186,7 @@ export default function PeriodizacaoPage() {
       <div className="mx-auto max-w-7xl px-4 pt-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* ── Left panel: Generator ── */}
-          <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-4">
+          <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-4 print:hidden">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -363,11 +363,11 @@ export default function PeriodizacaoPage() {
                           : ""}
                       </p>
                     </div>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-2 flex-wrap print:hidden">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => alert("Exportar PDF — em breve")}
+                        onClick={() => window.print()}
                       >
                         <FileDown className="h-4 w-4" />
                         Exportar PDF
@@ -383,7 +383,17 @@ export default function PeriodizacaoPage() {
                     </div>
                   </div>
 
+                  {/* Print-friendly summary table */}
+                  <PeriodizacaoPrintTable
+                    weeks={weeks}
+                    goal={goal}
+                    level={level}
+                    totalWeeks={totalWeeks}
+                    athleteName={athleteList.find((a) => a.id === selectedAthlete)?.name}
+                  />
+
                   {/* Mesocycle blocks */}
+                  <div className="space-y-4 print:hidden">
                   {Object.entries(mesocycles).map(([meso, mesoWeeks]) => {
                     const dominantPhase = mesoWeeks.reduce(
                       (acc, w) => {
@@ -432,7 +442,6 @@ export default function PeriodizacaoPage() {
                             <WeekRow
                               key={w.week}
                               week={w}
-                              phase={topPhase}
                               onChange={handleWeekChange}
                             />
                           ))}
@@ -446,7 +455,7 @@ export default function PeriodizacaoPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => alert("Exportar PDF — em breve")}
+                      onClick={() => window.print()}
                     >
                       <FileDown className="h-4 w-4" />
                       Exportar PDF
@@ -460,6 +469,7 @@ export default function PeriodizacaoPage() {
                       {saved ? "Salvo!" : "Salvar periodização"}
                     </Button>
                   </div>
+                  </div>
                 </motion.div>
               </AnimatePresence>
             )}
@@ -467,7 +477,7 @@ export default function PeriodizacaoPage() {
 
           {/* ── Right sidebar ── */}
           {generated && (
-            <aside className="w-full lg:w-60 xl:w-64 shrink-0 space-y-4">
+            <aside className="w-full lg:w-60 xl:w-64 shrink-0 space-y-4 print:hidden">
               {/* Summary card */}
               <Card>
                 <CardHeader>
@@ -530,11 +540,9 @@ export default function PeriodizacaoPage() {
 
 function WeekRow({
   week,
-  phase,
   onChange,
 }: {
   week: Week;
-  phase: Phase;
   onChange: (weekNum: number, field: keyof Week, value: string | number) => void;
 }) {
   return (
@@ -636,6 +644,62 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
     <div className="flex items-center justify-between">
       <span className="text-xs text-text-muted">{label}</span>
       <span className="text-xs font-semibold text-text">{value}</span>
+    </div>
+  );
+}
+
+// ── PeriodizacaoPrintTable ──────────────────────────────────────────────────
+
+function PeriodizacaoPrintTable({
+  weeks,
+  goal,
+  level,
+  totalWeeks,
+  athleteName,
+}: {
+  weeks: Week[];
+  goal: Goal;
+  level: Level;
+  totalWeeks: number;
+  athleteName?: string;
+}) {
+  return (
+    <div className="hidden print:block">
+      <h1 className="text-xl font-bold text-black">Pace Run Pro — Periodização</h1>
+      <p className="mb-4 text-sm text-black">
+        {athleteName ? `Atleta: ${athleteName} · ` : ""}
+        Objetivo: {goal} · Nível: {level} · {totalWeeks} semanas
+      </p>
+      <table className="w-full border-collapse text-xs text-black">
+        <thead>
+          <tr>
+            <th className="border border-black px-2 py-1 text-left">Sem.</th>
+            <th className="border border-black px-2 py-1 text-left">Mesociclo</th>
+            <th className="border border-black px-2 py-1 text-left">Fase</th>
+            <th className="border border-black px-2 py-1 text-left">Volume</th>
+            <th className="border border-black px-2 py-1 text-left">Intensidade</th>
+            <th className="border border-black px-2 py-1 text-left">km/sem</th>
+            <th className="border border-black px-2 py-1 text-left">Sessões</th>
+            <th className="border border-black px-2 py-1 text-left">Descarga</th>
+            <th className="border border-black px-2 py-1 text-left">Notas</th>
+          </tr>
+        </thead>
+        <tbody>
+          {weeks.map((w) => (
+            <tr key={w.week}>
+              <td className="border border-black px-2 py-1">{w.week}</td>
+              <td className="border border-black px-2 py-1">{w.mesocycle}</td>
+              <td className="border border-black px-2 py-1">{w.phase}</td>
+              <td className="border border-black px-2 py-1">{w.volume}%</td>
+              <td className="border border-black px-2 py-1">{w.intensity}%</td>
+              <td className="border border-black px-2 py-1">{w.km} km</td>
+              <td className="border border-black px-2 py-1">{w.sessions}</td>
+              <td className="border border-black px-2 py-1">{w.isDeload ? "Sim" : "—"}</td>
+              <td className="border border-black px-2 py-1">{w.notes || "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -76,7 +76,7 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh w-full">
       {/* Sidebar — desktop */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-card/60 backdrop-blur-xl lg:flex">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-card/60 backdrop-blur-xl lg:flex print:hidden">
         <div className="px-5 py-5">
           <Logo size={32} />
           <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-text-muted/70 pl-0.5">{roleLabel}</p>
@@ -182,7 +182,7 @@ export function AppShell({
 
       {/* Main column */}
       <div className="flex min-h-dvh flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-xl sm:px-6">
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-xl sm:px-6 print:hidden">
           <button
             className="rounded-lg p-2 text-text-muted hover:bg-card hover:text-text lg:hidden"
             onClick={() => setMobileOpen(true)}

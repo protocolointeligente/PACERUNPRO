@@ -10,7 +10,7 @@ export function BottomNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-[#070b18]/90 backdrop-blur-xl lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-[#070b18]/90 backdrop-blur-xl lg:hidden print:hidden">
       <div className="mx-auto flex max-w-2xl items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)]">
         {items.map((item) => {
           const active = pathname?.startsWith(item.href);
