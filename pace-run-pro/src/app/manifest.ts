@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "Plataforma profissional para treinadores de corrida, assessorias esportivas, personal trainers e corredores.",
     start_url: "/",
     display: "standalone",
-    background_color: "#050816",
-    theme_color: "#050816",
+    background_color: "#07030f",
+    theme_color: "#07030f",
     icons: [
       {
         src: "/icons/icon-192.png",
