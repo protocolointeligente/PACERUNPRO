@@ -12,8 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { SectionHeader } from "@/components/shared/section-header";
-import { superAdminStats } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
+import { superAdminStats, b2bPlans } from "@/lib/mock-data";
+import { formatBRL } from "@/lib/utils";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -25,12 +25,14 @@ const fadeUp = {
 };
 
 // B2B plan breakdown (mock)
+const planPrice = (id: string) => b2bPlans.find((p) => p.id === id)?.price ?? 0;
+
 const b2bBreakdown = [
-  { name: "Starter", count: 12, price: 89, mrr: 12 * 89 },
-  { name: "Pro", count: 22, price: 189, mrr: 22 * 189 },
-  { name: "Premium", count: 8, price: 389, mrr: 8 * 389 },
-  { name: "Ilimitado", count: 6, price: 997, mrr: 6 * 997 },
-];
+  { name: "Starter", count: 12, price: planPrice("b2b-starter") },
+  { name: "Pro", count: 22, price: planPrice("b2b-pro") },
+  { name: "Premium", count: 8, price: planPrice("b2b-premium") },
+  { name: "Ilimitado", count: 6, price: planPrice("b2b-unlimited") },
+].map((row) => ({ ...row, mrr: row.count * row.price }));
 
 const b2bBadgeVariant = (name: string) => {
   if (name === "Ilimitado") return "danger" as const;
@@ -45,7 +47,7 @@ const upcomingCharges = [
     id: "uc-1",
     name: "Run Tribe Assessoria",
     plan: "Ilimitado",
-    amount: 997,
+    amount: planPrice("b2b-unlimited"),
     dueDate: "10 jun 2026",
     status: "processando",
   },
@@ -53,7 +55,7 @@ const upcomingCharges = [
     id: "uc-2",
     name: "Pace & Cia Esportes",
     plan: "Pro",
-    amount: 189,
+    amount: planPrice("b2b-pro"),
     dueDate: "12 jun 2026",
     status: "agendado",
   },
@@ -61,7 +63,7 @@ const upcomingCharges = [
     id: "uc-3",
     name: "Runners BH",
     plan: "Premium",
-    amount: 389,
+    amount: planPrice("b2b-premium"),
     dueDate: "15 jun 2026",
     status: "agendado",
   },
@@ -69,7 +71,7 @@ const upcomingCharges = [
     id: "uc-4",
     name: "Ultra Training SP",
     plan: "Pro",
-    amount: 189,
+    amount: planPrice("b2b-pro"),
     dueDate: "18 jun 2026",
     status: "agendado",
   },
@@ -77,7 +79,7 @@ const upcomingCharges = [
     id: "uc-5",
     name: "Maratonistas do Sul",
     plan: "Starter",
-    amount: 89,
+    amount: planPrice("b2b-starter"),
     dueDate: "22 jun 2026",
     status: "agendado",
   },
@@ -219,10 +221,10 @@ export default function FinanceiroPage() {
                       {row.name}
                     </Badge>
                     <p className="text-center text-sm text-text-muted">
-                      {row.count}×R${row.price}
+                      {row.count}×R${formatBRL(row.price)}
                     </p>
                     <p className="text-right text-sm font-semibold text-text">
-                      R${row.mrr.toLocaleString("pt-BR")}
+                      R${formatBRL(row.mrr)}
                     </p>
                   </div>
                 ))}
@@ -233,7 +235,7 @@ export default function FinanceiroPage() {
                     {b2bBreakdown.reduce((acc, r) => acc + r.count, 0)}
                   </p>
                   <p className="text-right text-sm font-bold text-primary">
-                    R${b2bBreakdown.reduce((acc, r) => acc + r.mrr, 0).toLocaleString("pt-BR")}
+                    R${formatBRL(b2bBreakdown.reduce((acc, r) => acc + r.mrr, 0))}
                   </p>
                 </div>
               </div>
@@ -265,7 +267,7 @@ export default function FinanceiroPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-display text-base font-bold text-text">
-                    R${charge.amount.toLocaleString("pt-BR")}
+                    R${formatBRL(charge.amount)}
                   </span>
                   <Badge
                     variant={
