@@ -71,6 +71,7 @@ model User {
   feedLikes     FeedLike[]
   accounts      Account[]
   sessions      Session[]
+  vouchersCreated Voucher[] @relation("VouchersCreated")
 
   @@map("users")
 }
@@ -681,4 +682,40 @@ model Payment {
   createdAt      DateTime      @default(now())
 
   @@map("payments")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Vouchers de desconto
+// ────────────────────────────────────────────────────────────────────────────
+
+enum VoucherType {
+  PERCENT      // desconto percentual (1-100) sobre a mensalidade
+  FREE_MONTHS  // número de meses grátis
+}
+
+enum VoucherAudience {
+  B2C // planos de atleta
+  B2B // planos de assessoria/treinador
+  ALL
+}
+
+model Voucher {
+  id          String          @id @default(cuid())
+  code        String          @unique
+  type        VoucherType
+  value       Int             // percentual (1-100) ou nº de meses grátis
+  audience    VoucherAudience @default(ALL)
+  maxUses     Int?            // null = uso ilimitado
+  usedCount   Int             @default(0)
+  expiresAt   DateTime?
+  active      Boolean         @default(true)
+  note        String?         // descrição interna (ex.: "Black Friday 2026")
+
+  createdById String
+  createdBy   User            @relation("VouchersCreated", fields: [createdById], references: [id])
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("vouchers")
 }

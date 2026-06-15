@@ -7,6 +7,7 @@ import { Check, CheckCircle, Copy, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { b2cPlans, b2cIncludes } from "@/lib/mock-data";
+import { formatBRL } from "@/lib/utils";
 
 // ── Shared input style ────────────────────────────────────────────────────
 const inputClass =
@@ -56,13 +57,13 @@ function PlanSummaryCard({ planId }: { planId: string }) {
       <p className="text-xs text-text-muted">{plan.description}</p>
       <div className="mt-3 flex items-end gap-1">
         <span className="font-display text-2xl font-extrabold text-text">
-          R$ {plan.pricePerMonth}
+          R$ {formatBRL(plan.pricePerMonth)}
         </span>
         <span className="mb-0.5 text-sm text-text-muted">/mês</span>
       </div>
       {plan.months > 1 && (
         <p className="mt-1 text-xs text-text-muted">
-          Total: R$ {plan.totalPrice} em {plan.months}x
+          Total: R$ {formatBRL(plan.totalPrice)} em {plan.months}x
         </p>
       )}
       {plan.discountPct > 0 && (
@@ -140,7 +141,43 @@ function AssinarContent() {
   const [cardCvv, setCardCvv] = useState("");
   const [pixCopied, setPixCopied] = useState(false);
 
+  // Cupom de desconto
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
+  const [coupon, setCoupon] = useState<{ code: string; type: "PERCENT" | "FREE_MONTHS"; value: number } | null>(null);
+
   const plan = b2cPlans.find((p) => p.id === selectedPlan) ?? b2cPlans[2];
+
+  const discountPct = coupon?.type === "PERCENT" ? coupon.value : 0;
+  const discountedMonthly = plan.pricePerMonth * (1 - discountPct / 100);
+  const discountedTotal = plan.totalPrice * (1 - discountPct / 100);
+
+  async function applyCoupon() {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError("");
+    try {
+      const res = await fetch("/api/vouchers/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode, audience: "B2C" }),
+      });
+      const data = await res.json();
+      if (!data.valid) {
+        setCoupon(null);
+        setCouponError(data.error ?? "Cupom inválido.");
+      } else {
+        setCoupon({ code: couponCode.trim().toUpperCase(), type: data.type, value: data.value });
+        setCouponError("");
+      }
+    } catch {
+      setCoupon(null);
+      setCouponError("Não foi possível validar o cupom.");
+    } finally {
+      setCouponLoading(false);
+    }
+  }
 
   function handleCopyPix() {
     navigator.clipboard
@@ -167,7 +204,9 @@ function AssinarContent() {
           </p>
         </div>
         <div className="rounded-2xl border border-success/20 bg-success/5 px-6 py-4 text-sm text-success">
-          Plano <strong>{plan.name}</strong> · R$ {plan.pricePerMonth}/mês ativo
+          Plano <strong>{plan.name}</strong> · R$ {formatBRL(discountedMonthly)}/mês ativo
+          {coupon?.type === "FREE_MONTHS" &&
+            ` · +${coupon.value} ${coupon.value === 1 ? "mês" : "meses"} grátis`}
         </div>
         <Link href="/aluno/dashboard">
           <Button variant="primary" size="lg" className="gap-2">
@@ -225,13 +264,13 @@ function AssinarContent() {
                 </div>
                 <div className="mt-4 flex items-end gap-1">
                   <span className="font-display text-2xl font-extrabold text-text">
-                    R$ {p.pricePerMonth}
+                    R$ {formatBRL(p.pricePerMonth)}
                   </span>
                   <span className="mb-0.5 text-sm text-text-muted">/mês</span>
                 </div>
                 {p.months > 1 && (
                   <p className="mt-1 text-xs text-text-muted">
-                    Total: R$ {p.totalPrice} em {p.months}x
+                    Total: R$ {formatBRL(p.totalPrice)} em {p.months}x
                   </p>
                 )}
                 {p.discountPct > 0 && (
@@ -419,17 +458,87 @@ function AssinarContent() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-muted">Valor mensal</span>
-                    <span className="font-medium text-text">R$ {plan.pricePerMonth}/mês</span>
+                    <span className="font-medium text-text">
+                      {discountPct > 0 && (
+                        <span className="mr-1.5 text-xs text-text-muted line-through">
+                          R$ {formatBRL(plan.pricePerMonth)}
+                        </span>
+                      )}
+                      R$ {formatBRL(discountedMonthly)}/mês
+                    </span>
                   </div>
                   {plan.months > 1 && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">Total cobrado hoje</span>
-                      <span className="font-bold text-text">R$ {plan.totalPrice}</span>
+                      <span className="font-bold text-text">
+                        {discountPct > 0 && (
+                          <span className="mr-1.5 text-xs font-normal text-text-muted line-through">
+                            R$ {formatBRL(plan.totalPrice)}
+                          </span>
+                        )}
+                        R$ {formatBRL(discountedTotal)}
+                      </span>
                     </div>
                   )}
+
+                  {coupon?.type === "PERCENT" && (
+                    <div className="rounded-xl border border-success/30 bg-success/10 px-3 py-2 text-xs text-success">
+                      🎉 Cupom <strong>{coupon.code}</strong> aplicado: {coupon.value}% de desconto.
+                    </div>
+                  )}
+                  {coupon?.type === "FREE_MONTHS" && (
+                    <div className="rounded-xl border border-success/30 bg-success/10 px-3 py-2 text-xs text-success">
+                      🎁 Cupom <strong>{coupon.code}</strong> aplicado: {coupon.value}{" "}
+                      {coupon.value === 1 ? "mês" : "meses"} grátis serão adicionados após a confirmação.
+                    </div>
+                  )}
+
                   <div className="border-t border-border pt-3 text-xs text-text-muted">
                     {plan.description}
                   </div>
+                </div>
+
+                {/* Cupom de desconto */}
+                <div className="mt-4 border-t border-border pt-4">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    Cupom de desconto
+                  </span>
+                  <div className="flex gap-2">
+                    <input
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Ex.: PACE-ABC123"
+                      className={inputClass}
+                      disabled={!!coupon}
+                    />
+                    {coupon ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="md"
+                        className="flex-shrink-0"
+                        onClick={() => {
+                          setCoupon(null);
+                          setCouponCode("");
+                          setCouponError("");
+                        }}
+                      >
+                        Remover
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="md"
+                        className="flex-shrink-0"
+                        onClick={applyCoupon}
+                        disabled={couponLoading || !couponCode.trim()}
+                      >
+                        {couponLoading ? "Validando…" : "Aplicar"}
+                      </Button>
+                    )}
+                  </div>
+                  {couponError && <p className="mt-1.5 text-xs text-red-400">{couponError}</p>}
                 </div>
               </div>
 

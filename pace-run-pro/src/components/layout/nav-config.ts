@@ -20,6 +20,7 @@ import {
   Palette,
   Bot,
   GraduationCap,
+  Ticket,
   type LucideIcon,
 } from "lucide-react";
 
@@ -56,6 +57,7 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/prescricao/periodizacao", label: "Periodização", icon: CalendarDays },
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
   { href: "/treinador/gestao", label: "Gestão & vendas", icon: DollarSign },
+  { href: "/treinador/vouchers", label: "Vouchers", icon: Ticket },
   { href: "/treinador/crm", label: "CRM de leads", icon: Kanban },
   { href: "/treinador/white-label", label: "White-label", icon: Palette },
   { href: "/treinador/admin", label: "Admin", icon: Settings },
@@ -67,4 +69,5 @@ export const adminNav: NavItem[] = [
   { href: "/admin/assessorias", label: "Assessorias", icon: Building2 },
   { href: "/admin/atletas", label: "Atletas B2C", icon: Users },
   { href: "/admin/financeiro", label: "Financeiro", icon: DollarSign },
+  { href: "/admin/vouchers", label: "Vouchers", icon: Ticket },
 ];
