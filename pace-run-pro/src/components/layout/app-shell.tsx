@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Menu, Search } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { Bell, LogOut, Menu, Search } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -36,6 +37,10 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  function handleLogout() {
+    signOut({ callbackUrl: "/login" });
+  }
 
   function renderNavLink(item: NavItem, onClick?: () => void) {
     const active = pathname?.startsWith(item.href);
@@ -103,10 +108,18 @@ export function AppShell({
               <AvatarImage src={avatarUrl} alt={userName} />
               <AvatarFallback>{userName.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-text">{userName}</p>
               <p className="truncate text-xs text-text-muted">{userSubtitle}</p>
             </div>
+            <button
+              onClick={handleLogout}
+              aria-label="Sair"
+              title="Sair"
+              className="shrink-0 rounded-lg p-1.5 text-text-muted transition-colors hover:bg-card hover:text-danger"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </aside>
@@ -151,6 +164,16 @@ export function AppShell({
                     {switchLabel}
                   </Link>
                 )}
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    handleLogout();
+                  }}
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold text-danger transition-colors hover:border-danger/50 hover:bg-danger/5"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Sair
+                </button>
               </nav>
             </motion.aside>
           </>
