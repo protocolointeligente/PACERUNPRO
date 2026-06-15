@@ -7,9 +7,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   Award,
-  Calendar,
-  CheckCircle2,
-  Dumbbell,
   Filter,
   Heart,
   MapPin,
@@ -18,7 +15,6 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   timelineEvents,

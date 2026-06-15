@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, X } from "lucide-react";
 import { ParticleBurst } from "@/components/particle-burst";
@@ -285,6 +285,7 @@ export function WorkoutShareModal({
                   }}
                 >
                   {photoDataUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element -- data URL gerada via canvas, sem ganho de otimização do next/image
                     <img
                       src={photoDataUrl}
                       alt="Foto do treino"

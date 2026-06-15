@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Check, CheckCircle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -125,8 +124,6 @@ function generateWeeklyPlan(distance: string, level: string, days: number) {
 
 // ── Main page component ───────────────────────────────────────────────────
 export default function AnamnesePage() {
-  const router = useRouter();
-
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [generating, setGenerating] = useState(false);
   const [done, setDone] = useState(false);

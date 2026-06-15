@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Heart, MessageCircle, Share2, Trophy, Users, Medal, ChevronUp, ChevronDown, Minus, CalendarDays } from "lucide-react";
+import { Heart, MessageCircle, Share2, Users, Medal, ChevronUp, ChevronDown, Minus, CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { activityFeed, monthlyChallenges, clubs, ranking, type ActivityPost } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
@@ -318,7 +317,6 @@ function ChallengeCard({
 }
 
 export default function CommunityPage() {
-  const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null);
   const [posts, setPosts] = useState<ActivityPost[]>(activityFeed);
 

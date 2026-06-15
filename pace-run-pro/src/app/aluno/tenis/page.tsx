@@ -5,13 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
   ArrowLeft,
-  Award,
-  CheckCircle2,
   ChevronDown,
   ChevronUp,
   Plus,
-  Trash2,
-  TrendingUp,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

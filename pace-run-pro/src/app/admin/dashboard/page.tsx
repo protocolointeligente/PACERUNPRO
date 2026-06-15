@@ -8,7 +8,6 @@ import {
   Building2,
   UserPlus,
   Clock,
-  DollarSign,
   CheckCircle2,
   XCircle,
 } from "lucide-react";
@@ -24,7 +23,6 @@ import {
   b2cAthletesList,
   pendingApprovals,
 } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },

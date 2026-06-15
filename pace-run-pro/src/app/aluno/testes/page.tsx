@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Activity, Calculator, History, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { performanceTests } from "@/lib/mock-data";
 import {
   calculateRast,
