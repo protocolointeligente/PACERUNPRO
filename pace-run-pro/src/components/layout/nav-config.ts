@@ -19,6 +19,7 @@ import {
   Kanban,
   Palette,
   Bot,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 
@@ -58,6 +59,7 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/crm", label: "CRM de leads", icon: Kanban },
   { href: "/treinador/white-label", label: "White-label", icon: Palette },
   { href: "/treinador/admin", label: "Admin", icon: Settings },
+  { href: "/treinador/conheca-o-sistema", label: "Conheça o sistema", icon: GraduationCap },
 ];
 
 export const adminNav: NavItem[] = [
