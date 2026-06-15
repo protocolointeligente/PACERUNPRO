@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Award, Footprints, GraduationCap, HeartPulse, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { coachOverview } from "@/lib/mock-data";
@@ -17,8 +18,15 @@ export function AboutCoachSection() {
         <div className="glass overflow-hidden rounded-3xl border border-border/50 p-8 sm:p-12">
           <div className="grid gap-8 md:grid-cols-[auto_1fr] md:items-center md:gap-12">
             <div className="flex flex-col items-center text-center md:items-start md:text-left">
-              <div className="flex h-28 w-28 items-center justify-center rounded-full gradient-primary font-display text-4xl font-extrabold text-white shadow-lg shadow-primary/30">
-                RP
+              <div className="h-56 w-44 overflow-hidden rounded-2xl border border-border shadow-lg shadow-primary/20 sm:h-64 sm:w-52">
+                <Image
+                  src="/brand/ricardo-pace.jpg"
+                  alt="Ricardo Luiz Pace Júnior"
+                  width={448}
+                  height={597}
+                  className="h-full w-full object-cover"
+                  priority
+                />
               </div>
               <Badge variant="primary" className="mt-4">Fundador &amp; treinador-chefe</Badge>
             </div>
