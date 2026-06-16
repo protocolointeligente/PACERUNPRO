@@ -746,7 +746,7 @@ function AssinarContent() {
                         </div>
                         <p className="text-center text-xs text-text-muted">
                           Após pagar, clique em{" "}
-                          <strong className="text-text">"Já paguei →"</strong> abaixo para confirmar.
+                          <strong className="text-text">&ldquo;Já paguei →&rdquo;</strong> abaixo para confirmar.
                         </p>
                       </>
                     ) : (
@@ -760,7 +760,7 @@ function AssinarContent() {
                         </div>
                         <p className="text-xs text-text-muted">
                           Clique em{" "}
-                          <strong className="text-text">"Gerar QR Code PIX"</strong> para continuar
+                          <strong className="text-text">&ldquo;Gerar QR Code PIX&rdquo;</strong> para continuar
                         </p>
                       </>
                     )}

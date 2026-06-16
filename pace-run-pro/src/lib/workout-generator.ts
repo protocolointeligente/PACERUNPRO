@@ -22,7 +22,9 @@ export interface GeneratedWorkout {
   paceRangeStr: string;
   targetRpe: number;
   objective: string;
+  warmup: string;
   mainSet: string;
+  cooldown: string;
 }
 
 export type PhaseType = "Base" | "Construção" | "Específico" | "Taper";
@@ -32,6 +34,7 @@ export type LevelType = "Iniciante" | "Intermediário" | "Avançado";
 export interface WorkoutGeneratorParams {
   phase: PhaseType;
   sessionsPerWeek: number;
+  trainingDays: string[];   // specific day labels in order, e.g. ["Segunda-feira","Quarta-feira","Sábado"]
   targetKm: number;
   vdot: number | null;
   goal: GoalType;
@@ -41,8 +44,8 @@ export interface WorkoutGeneratorParams {
 
 type SessionRole = "recovery" | "aerobic" | "quality" | "quality2" | "long";
 
-// Day labels by number of sessions per week
-const DAY_LABELS: Record<number, string[]> = {
+// Default day labels when no specific days provided (by session count)
+const DEFAULT_DAYS: Record<number, string[]> = {
   1: ["Quarta-feira"],
   2: ["Segunda-feira", "Quinta-feira"],
   3: ["Segunda-feira", "Quarta-feira", "Sábado"],
@@ -52,7 +55,7 @@ const DAY_LABELS: Record<number, string[]> = {
   7: ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"],
 };
 
-// Session role sequence
+// Session role distribution by count
 const SESSION_ROLES: Record<number, SessionRole[]> = {
   1: ["long"],
   2: ["aerobic", "long"],
@@ -63,7 +66,7 @@ const SESSION_ROLES: Record<number, SessionRole[]> = {
   7: ["recovery", "aerobic", "quality", "aerobic", "quality2", "aerobic", "long"],
 };
 
-// Relative km distribution per session (sums to 1.0)
+// Relative km distribution per session
 const KM_DISTRIBUTION: Record<number, number[]> = {
   1: [1.0],
   2: [0.35, 0.65],
@@ -74,24 +77,24 @@ const KM_DISTRIBUTION: Record<number, number[]> = {
   7: [0.07, 0.10, 0.20, 0.10, 0.18, 0.13, 0.22],
 };
 
-// Level-based fallback paces (sec/km) when VDOT is unknown
+// Level-based fallback paces (sec/km) when VDOT not available
 const FALLBACK_PACES: Record<LevelType, Record<TrainingZoneId, number>> = {
-  Iniciante:      { E: 410, M: 375, T: 340, I: 305, R: 275 },
-  Intermediário:  { E: 340, M: 305, T: 275, I: 245, R: 215 },
-  Avançado:       { E: 285, M: 255, T: 228, I: 202, R: 180 },
+  Iniciante:     { E: 410, M: 375, T: 340, I: 305, R: 275 },
+  Intermediário: { E: 340, M: 305, T: 275, I: 245, R: 215 },
+  Avançado:      { E: 285, M: 255, T: 228, I: 202, R: 180 },
 };
 
 const ZONE_RPE: Record<TrainingZoneId, number> = { E: 5, M: 6, T: 7, I: 8, R: 9 };
 
 const SUBTYPE_ZONE: Record<WorkoutSubtype, TrainingZoneId> = {
-  "Rodagem leve":       "E",
-  "Regenerativo":       "E",
-  "Longão":             "E",
-  "Fartlek":            "T",
-  "Progressivo":        "M",
-  "Tempo Run":          "T",
-  "Intervalado curto":  "I",
-  "Intervalado longo":  "I",
+  "Rodagem leve":      "E",
+  "Regenerativo":      "E",
+  "Longão":            "E",
+  "Fartlek":           "T",
+  "Progressivo":       "M",
+  "Tempo Run":         "T",
+  "Intervalado curto": "I",
+  "Intervalado longo": "I",
 };
 
 export const ZONE_COLORS: Record<TrainingZoneId, string> = {
@@ -138,8 +141,7 @@ function getQualitySubtype(
     if (role === "quality2") return "Progressivo";
     return isShortGoal ? "Intervalado curto" : "Intervalado longo";
   }
-  // Taper — lighter work
-  return "Fartlek";
+  return "Fartlek"; // Taper
 }
 
 function getLongZone(goal: GoalType, phase: PhaseType): TrainingZoneId {
@@ -148,52 +150,104 @@ function getLongZone(goal: GoalType, phase: PhaseType): TrainingZoneId {
   return "E";
 }
 
-function buildMainSet(
-  subtype: WorkoutSubtype,
-  distanceKm: number,
-  paceRangeStr: string
-): string {
+// ── Warmup by subtype ─────────────────────────────────────────────────────────
+
+function buildWarmup(subtype: WorkoutSubtype): string {
+  switch (subtype) {
+    case "Regenerativo":
+      return "Caminhada ativa por 3–5 min. Sem necessidade de aquecimento adicional — o próprio trote leve já é o aquecimento.";
+    case "Rodagem leve":
+      return "5 min de caminhada progressiva + mobilidade dinâmica: rotação de tornozelos, elevação de joelhos e circundução de quadril (30 s cada).";
+    case "Longão":
+      return "10 min de corrida leve (ritmo E−) + 2 × 30 s de strides suaves (acelerações progressivas) com 1 min de trote entre cada.";
+    case "Fartlek":
+      return "2 km de corrida leve (ritmo E) + mobilidade dinâmica de quadril + 2 × 20 s de acelerações suaves. Total ≈ 10–12 min.";
+    case "Tempo Run":
+      return "2 km em ritmo E fácil + mobilidade dinâmica + 3 × 20 s de acelerações progressivas saindo do ritmo E até o ritmo T. Total ≈ 12–15 min.";
+    case "Progressivo":
+      return "Os primeiros 2–3 km do próprio treino servem de aquecimento — comece em ritmo E confortável e progrida gradualmente.";
+    case "Intervalado curto":
+      return "2 km de corrida leve (ritmo E) + mobilidade dinâmica + 3 × 100 m de strides progressivos com 1 min de trote entre cada. Total ≈ 12–15 min.";
+    case "Intervalado longo":
+      return "2 km em ritmo E + mobilidade de quadril e panturrilha + 2 × 200 m de acelerações suaves abaixo do ritmo I. Total ≈ 12–15 min.";
+  }
+}
+
+// ── Cooldown by subtype ───────────────────────────────────────────────────────
+
+function buildCooldown(subtype: WorkoutSubtype): string {
+  switch (subtype) {
+    case "Regenerativo":
+      return "2–3 min de caminhada. Foam roller opcional em panturrilhas e glúteos se disponível.";
+    case "Rodagem leve":
+      return "5 min de caminhada + alongamento estático: panturrilha (30 s), isquiotibial (30 s), quadríceps (30 s) e flexor do quadril (30 s) — cada lado.";
+    case "Longão":
+      return "10 min de caminhada progressivamente mais lenta + alongamento estático completo (5–8 min): foco em panturrilha, isquiotibial, quadríceps, TI e glúteos. Hidratação e reposição de carboidratos nos primeiros 30 min pós-treino.";
+    case "Fartlek":
+      return "1–2 km de trote muito leve (ritmo E−) + 5 min de caminhada + alongamento estático de panturrilha, quadríceps e isquiotibiais (30 s cada lado).";
+    case "Tempo Run":
+      return "1–2 km de corrida regenerativa (ritmo E−) + 5 min de caminhada + alongamento estático completo (8–10 min). Priorize hidratação imediata.";
+    case "Progressivo":
+      return "2–3 min de caminhada + alongamento estático suave (5 min). O final em ritmo T exige boa recuperação — priorize hidratação e alimentação pós-treino.";
+    case "Intervalado curto":
+      return "1 km de trote muito leve + 5 min de caminhada + alongamento estático completo (8–10 min). Foam roller em panturrilha e quadríceps se disponível.";
+    case "Intervalado longo":
+      return "1–2 km de trote regenerativo (ritmo E−) + 5–8 min de caminhada + alongamento estático completo. Priorize reposição proteica e de carboidratos nos 30 min seguintes.";
+  }
+}
+
+// ── Main set by subtype ───────────────────────────────────────────────────────
+
+function buildMainSet(subtype: WorkoutSubtype, distanceKm: number, paceRangeStr: string): string {
   switch (subtype) {
     case "Rodagem leve":
-      return `Corrida contínua de ${distanceKm} km em ritmo E (fácil), pace ${paceRangeStr}. Conversa confortável durante todo o treino.`;
+      return `Corrida contínua de ${distanceKm} km em ritmo E (fácil), pace ${paceRangeStr}. Conversa confortável durante todo o treino. Mantenha cadência entre 160–170 ppm.`;
     case "Regenerativo":
-      return `Corrida muito leve de ${distanceKm} km em ritmo E−, abaixo de ${paceRangeStr}. Foco em recuperação ativa — pode incluir trechos de caminhada.`;
+      return `Corrida muito leve de ${distanceKm} km em ritmo E−, abaixo de ${paceRangeStr}. Pode incluir trechos de caminhada se necessário. Foco na recuperação, não no volume.`;
     case "Longão":
-      return `Corrida longa de ${distanceKm} km em ritmo E/M, pace ${paceRangeStr}. Mantenha hidratação a cada 3–4 km.`;
+      return `Corrida longa de ${distanceKm} km em ritmo E, pace ${paceRangeStr}. Mantenha hidratação a cada 3–4 km. Nos últimos 20% pode progredir levemente para ritmo M se sentir bem.`;
     case "Fartlek":
-      return `Aquecimento 2 km E + 4–6 acelerações de 1–3 min em T/I (${paceRangeStr}) com 2 min trote entre cada + 1–2 km regenerativo.`;
+      return `Corrida contínua com variações livres de ritmo: após aquecimento, realize 4–6 acelerações de 1–3 min em ritmo T/I (${paceRangeStr}) com 2 min de trote entre cada. Retorne ao ritmo E no final. Total do set principal: ${Math.round(distanceKm * 0.7)} km.`;
     case "Tempo Run":
-      return `Aquecimento 2 km E + ${Math.max(2, Math.round(distanceKm * 0.55))} km contínuos em ritmo T (${paceRangeStr}) + 1–2 km regenerativo.`;
+      return `Após aquecimento: ${Math.max(2, Math.round(distanceKm * 0.55))} km contínuos em ritmo T (${paceRangeStr}) sem paradas. Mantenha respiração controlada e postura ereta. Não sprint — ritmo sustentável e constante.`;
     case "Progressivo":
-      return `Início em ritmo E, progressão a cada 3–5 km até atingir ritmo M/T (${paceRangeStr}) nos últimos 20–30% do treino.`;
+      return `Início em ritmo E (${paceRangeStr} + 30 s), progressão a cada ${Math.max(2, Math.round(distanceKm / 4))} km. Atingir ritmo M/T (${paceRangeStr}) nos últimos 20–30% do treino (${Math.round(distanceKm * 0.25)} km finais). Total: ${distanceKm} km.`;
     case "Intervalado curto":
-      return `Aquecimento 2 km E + 6–10 × 400–600 m em ritmo I (${paceRangeStr}) com 60–90 s de recuperação ativa + 1 km regenerativo.`;
+      return `6–10 × 400–600 m em ritmo I (${paceRangeStr}) com 60–90 s de recuperação ativa (trote leve) entre cada. Mantenha o ritmo constante em todas as repetições — interrompa se o pace cair >10 s/km.`;
     case "Intervalado longo":
-      return `Aquecimento 2 km E + 4–5 × 1000–1200 m em ritmo I (${paceRangeStr}) com 2–3 min de trote entre cada + 1–2 km regenerativo.`;
+      return `4–5 × 1000–1200 m em ritmo I (${paceRangeStr}) com 2–3 min de trote entre cada. Concentre-se em manter forma técnica e o mesmo pace em todas as repetições. Última repetição com esforço máximo controlado.`;
   }
 }
 
 function buildObjective(subtype: WorkoutSubtype): string {
   const map: Record<WorkoutSubtype, string> = {
-    "Rodagem leve": "Acúmulo de volume aeróbico com baixa tensão metabólica",
-    "Regenerativo": "Recuperação ativa e manutenção do padrão motor",
-    "Longão": "Desenvolvimento da resistência aeróbica e eficiência metabólica",
-    "Fartlek": "Estimulação variada do limiar de lactato em contexto livre",
-    "Tempo Run": "Elevação do limiar de lactato e suporte ao ritmo de prova",
-    "Progressivo": "Adaptação ao ritmo de prova e eficiência crescente",
+    "Rodagem leve":      "Acúmulo de volume aeróbico com baixa tensão metabólica",
+    "Regenerativo":      "Recuperação ativa e manutenção do padrão motor",
+    "Longão":            "Desenvolvimento da resistência aeróbica e eficiência metabólica",
+    "Fartlek":           "Estimulação variada do limiar de lactato em contexto livre",
+    "Tempo Run":         "Elevação do limiar de lactato e suporte ao ritmo de prova",
+    "Progressivo":       "Adaptação ao ritmo de prova e eficiência a velocidades crescentes",
     "Intervalado curto": "Desenvolvimento da potência aeróbica e VO2máx",
     "Intervalado longo": "Maximização do VO2máx e sustentação de alta intensidade",
   };
   return map[subtype];
 }
 
+// ── Main export ───────────────────────────────────────────────────────────────
+
 /** Generates all workout sessions for a given training week. */
 export function generateWorkoutsForWeek(params: WorkoutGeneratorParams): GeneratedWorkout[] {
-  const { phase, sessionsPerWeek, targetKm, vdot, goal, level, isDeload } = params;
-  const n = Math.min(7, Math.max(1, sessionsPerWeek));
-  const days = DAY_LABELS[n] ?? DAY_LABELS[3];
-  const roles = (SESSION_ROLES[n] ?? SESSION_ROLES[3]) as SessionRole[];
-  const kmDist = KM_DISTRIBUTION[n] ?? KM_DISTRIBUTION[3];
+  const { phase, sessionsPerWeek, trainingDays, targetKm, vdot, goal, level, isDeload } = params;
+
+  // Resolve the actual days and session count
+  const days =
+    trainingDays.length > 0
+      ? trainingDays
+      : (DEFAULT_DAYS[Math.min(7, Math.max(1, sessionsPerWeek))] ?? DEFAULT_DAYS[3]);
+  const n = days.length;
+
+  const roles = (SESSION_ROLES[Math.min(7, n)] ?? SESSION_ROLES[3]) as SessionRole[];
+  const kmDist = KM_DISTRIBUTION[Math.min(7, n)] ?? KM_DISTRIBUTION[3];
   const weekKm = isDeload ? targetKm * 0.65 : targetKm;
 
   return roles.map((role, i) => {
@@ -203,7 +257,12 @@ export function generateWorkoutsForWeek(params: WorkoutGeneratorParams): Generat
     // Resolve subtype
     let subtype: WorkoutSubtype;
     if (isDeload) {
-      subtype = role === "long" ? "Rodagem leve" : role === "quality" || role === "quality2" ? "Rodagem leve" : "Regenerativo";
+      subtype =
+        role === "long"
+          ? "Rodagem leve"
+          : role === "quality" || role === "quality2"
+          ? "Rodagem leve"
+          : "Regenerativo";
     } else if (role === "quality" || role === "quality2") {
       subtype = getQualitySubtype(phase, goal, role);
     } else if (role === "long") {
@@ -245,7 +304,9 @@ export function generateWorkoutsForWeek(params: WorkoutGeneratorParams): Generat
       paceRangeStr: rangeStr,
       targetRpe: rpe,
       objective: buildObjective(subtype),
+      warmup: buildWarmup(subtype),
       mainSet: buildMainSet(subtype, distanceKm, rangeStr),
+      cooldown: buildCooldown(subtype),
     };
   });
 }
