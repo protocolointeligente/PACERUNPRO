@@ -1,6 +1,7 @@
 "use client";
 
-import { Award, Medal, TrendingDown, TrendingUp } from "lucide-react";
+import { useRef, useState } from "react";
+import { Award, Camera, Medal, TrendingDown, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
@@ -19,7 +20,22 @@ import {
 } from "@/lib/mock-data";
 import { formatPace } from "@/lib/utils";
 
+const BODY_PHOTO_LABELS = ["Jan 2026", "Mar 2026", "Jun 2026"];
+
 export default function EvolutionPage() {
+  const [bodyPhotos, setBodyPhotos] = useState<(string | null)[]>([null, null, null]);
+  const fileRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+
+  function handlePhotoChange(idx: number, file: File | undefined) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const url = e.target?.result as string | undefined;
+      if (url) setBodyPhotos((prev) => prev.map((p, i) => (i === idx ? url : p)));
+    };
+    reader.readAsDataURL(file);
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-7">
       <div>
@@ -66,20 +82,36 @@ export default function EvolutionPage() {
         <Card>
           <CardHeader>
             <CardTitle>Evolução corporal</CardTitle>
-            <CardDescription>Fotos de progresso e medidas registradas com seu treinador</CardDescription>
+            <CardDescription>Tire ou anexe fotos de progresso para cada período de treino</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-3 gap-3 pt-4">
-            {["Jan 2026", "Mar 2026", "Jun 2026"].map((label, i) => (
+            {BODY_PHOTO_LABELS.map((label, i) => (
               <div key={label} className="overflow-hidden rounded-xl border border-border">
-                <div
-                  className="aspect-[3/4] bg-cover bg-center"
-                  style={{
-                    backgroundImage: `url('https://images.unsplash.com/photo-${
-                      ["1517836357463-d25dfeac3438", "1571019613454-1cb2f99b2d8b", "1483721310020-03333e577078"][i]
-                    }?w=400&h=560&fit=crop')`,
-                  }}
-                />
+                <button
+                  type="button"
+                  className="relative aspect-[3/4] w-full overflow-hidden bg-card-hover/40 transition-opacity hover:opacity-80"
+                  onClick={() => fileRefs[i].current?.click()}
+                  title={`Adicionar foto — ${label}`}
+                >
+                  {bodyPhotos[i] ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={bodyPhotos[i]!} alt={`Foto ${label}`} className="absolute inset-0 h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full flex-col items-center justify-center gap-2 text-text-muted">
+                      <Camera className="h-6 w-6 opacity-50" />
+                      <span className="text-[10px] text-center px-1 opacity-60">Toque para adicionar foto</span>
+                    </div>
+                  )}
+                </button>
                 <p className="bg-card-hover/60 py-1.5 text-center text-[11px] text-text-muted">{label}</p>
+                <input
+                  ref={fileRefs[i]}
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  className="hidden"
+                  onChange={(e) => handlePhotoChange(i, e.target.files?.[0])}
+                />
               </div>
             ))}
           </CardContent>

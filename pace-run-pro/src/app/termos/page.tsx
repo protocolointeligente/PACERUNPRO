@@ -51,7 +51,7 @@ export default function TermosPage() {
             </p>
             <p>
               A Pace Run Pro é operada por Ricardo Luiz Pace Júnior, Técnico em Treinamento Desportivo
-              registrado sob o CREF 014626-G/MG, doravante denominado &quot;Responsável Técnico&quot;.
+              registrado sob o CREF 014626-G/MG, CNPJ 40.342.441/0001-96, doravante denominado &quot;Responsável Técnico&quot;.
             </p>
           </Section>
 

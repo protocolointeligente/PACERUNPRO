@@ -226,6 +226,7 @@ function ChallengeCard({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const [joined, setJoined] = useState(false);
   const progressPct = Math.round((challenge.currentProgress / challenge.target) * 100);
 
   return (
@@ -308,9 +309,19 @@ function ChallengeCard({
           </div>
         )}
 
-        <p className="text-xs text-text-muted italic">
-          Prêmio: <span className="text-text/70 not-italic">{challenge.prize}</span>
-        </p>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-xs text-text-muted italic">
+            Prêmio: <span className="text-text/70 not-italic">{challenge.prize}</span>
+          </p>
+          <Button
+            size="sm"
+            variant={joined ? "secondary" : "primary"}
+            className={cn("shrink-0 text-xs", joined && "text-success")}
+            onClick={() => setJoined((v) => !v)}
+          >
+            {joined ? "✓ Participando" : "Participar"}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

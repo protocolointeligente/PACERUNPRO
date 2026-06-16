@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, CheckCircle2, History, Info, Save } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, Download, History, Info, Save, Share2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScaleInput } from "@/components/checkin/scale-input";
 import { checkInHistory, shoesList } from "@/lib/mock-data";
 import { evaluateCheckInRules, type CheckInRecord } from "@/lib/calculations";
-import { cn } from "@/lib/utils";
+import { cn, formatDuration, formatPace } from "@/lib/utils";
 
 const fields = [
   { key: "rpe", label: "RPE — esforço percebido", emojis: ["😴", "🙂", "😊", "😅", "🥵"], low: "Muito leve", high: "Esforço máximo", accent: "#8b5cf6" },
@@ -22,12 +22,92 @@ const fields = [
 
 type Key = (typeof fields)[number]["key"];
 
+interface LastWorkout {
+  distanceKm: number;
+  durationSec: number;
+  avgPaceSec: number | null;
+  elevationGain: number | null;
+  title: string;
+  splits: { km: number; pace: string }[];
+}
+
 export default function CheckInPage() {
   const router = useRouter();
   const [values, setValues] = useState<Record<Key, number>>({ rpe: 5, pain: 1, sleep: 7, fatigue: 4, mood: 7 });
   const [notes, setNotes] = useState("");
   const [selectedShoeId, setSelectedShoeId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [lastWorkout, setLastWorkout] = useState<LastWorkout | null>(null);
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const raw = localStorage.getItem("lastWorkout");
+    if (raw) {
+      try { setLastWorkout(JSON.parse(raw) as LastWorkout); } catch { /* ignore */ }
+    }
+  }, []);
+
+  async function shareWorkout() {
+    if (!lastWorkout) return;
+    setSharing(true);
+    const W = 1080, H = 1920;
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext("2d")!;
+
+    if (photoDataUrl) {
+      const img = new Image();
+      img.src = photoDataUrl;
+      await new Promise<void>((res) => { img.onload = () => res(); });
+      ctx.drawImage(img, 0, 0, W, H);
+    }
+
+    const grad = ctx.createLinearGradient(0, H * 0.35, 0, H);
+    grad.addColorStop(0, "rgba(5,8,22,0)");
+    grad.addColorStop(0.6, "rgba(5,8,22,0.85)");
+    grad.addColorStop(1, "rgba(5,8,22,1)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    if (!photoDataUrl) {
+      const bg = ctx.createLinearGradient(0, 0, W, H);
+      bg.addColorStop(0, "#1a1040"); bg.addColorStop(1, "#050816");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `bold 220px sans-serif`;
+    ctx.fillText(`${lastWorkout.distanceKm.toFixed(2).replace(".", ",")} km`, W / 2, H * 0.62);
+    ctx.font = `90px sans-serif`;
+    ctx.fillStyle = "rgba(255,255,255,0.75)";
+    const parts = [
+      formatDuration(lastWorkout.durationSec),
+      lastWorkout.avgPaceSec ? `${formatPace(lastWorkout.avgPaceSec)}/km` : null,
+      lastWorkout.elevationGain != null ? `↑${lastWorkout.elevationGain.toFixed(0)}m` : null,
+    ].filter(Boolean).join("  ·  ");
+    ctx.fillText(parts, W / 2, H * 0.71);
+    ctx.font = `bold 56px sans-serif`;
+    ctx.fillStyle = "rgba(139,92,246,0.95)";
+    ctx.fillText("⚡ PACE RUN PRO", W / 2, H * 0.88);
+
+    canvas.toBlob(async (blob) => {
+      setSharing(false);
+      if (!blob) return;
+      const file = new File([blob], "treino.png", { type: "image/png" });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Meu treino", text: `Completei ${lastWorkout.distanceKm.toFixed(2)} km! ⚡` });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a"); a.href = url;
+        a.download = `treino-${lastWorkout.distanceKm.toFixed(2)}km.png`; a.click();
+        URL.revokeObjectURL(url);
+      }
+    }, "image/png");
+  }
 
   const activeShoes = shoesList.filter((s) => s.active);
   const selectedShoe = activeShoes.find((s) => s.id === selectedShoeId);
@@ -64,6 +144,60 @@ export default function CheckInPage() {
           sessões com base no que você sentir.
         </p>
       </div>
+
+      {/* Post-workout share card */}
+      {lastWorkout && (
+        <Card>
+          <CardContent className="p-4 sm:p-5">
+            <h2 className="mb-3 font-display text-sm font-semibold text-text">Compartilhar treino</h2>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+              <div className="flex-1">
+                <p className="font-stat text-2xl font-extrabold text-text">
+                  {lastWorkout.distanceKm.toFixed(2)} km
+                </p>
+                <p className="mt-0.5 text-sm text-text-muted">
+                  {formatDuration(lastWorkout.durationSec)}
+                  {lastWorkout.avgPaceSec ? ` · ${formatPace(lastWorkout.avgPaceSec)}/km` : ""}
+                  {lastWorkout.elevationGain != null ? ` · ↑${lastWorkout.elevationGain.toFixed(0)}m` : ""}
+                </p>
+                {lastWorkout.title && (
+                  <p className="mt-0.5 text-xs text-text-muted">{lastWorkout.title}</p>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="secondary" onClick={() => photoInputRef.current?.click()}>
+                  <Camera className="h-3.5 w-3.5" />
+                  {photoDataUrl ? "Trocar foto" : "Adicionar foto"}
+                </Button>
+                <Button size="sm" variant="secondary" disabled={sharing} onClick={shareWorkout}>
+                  {sharing ? <Download className="h-3.5 w-3.5 animate-bounce" /> : <Share2 className="h-3.5 w-3.5" />}
+                  {sharing ? "Gerando..." : "Compartilhar"}
+                </Button>
+              </div>
+            </div>
+            {photoDataUrl && (
+              <div className="mt-3 max-h-48 overflow-hidden rounded-xl border border-border">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={photoDataUrl} alt="foto do treino" className="h-full w-full object-cover" />
+              </div>
+            )}
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => setPhotoDataUrl(ev.target?.result as string ?? null);
+                reader.readAsDataURL(file);
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <div className="space-y-4">
         {fields.map((f) => (

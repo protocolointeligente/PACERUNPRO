@@ -51,8 +51,8 @@ export default function PrivacidadePage() {
           <Section title="2. Quem Somos (Controlador dos Dados)">
             <p>
               O controlador dos dados pessoais tratados na Plataforma é Ricardo Luiz Pace Júnior,
-              responsável técnico pela Pace Run Pro (CREF 014626-G/MG), que pode ser contatado pelo
-              e-mail{" "}
+              responsável técnico pela Pace Run Pro (CREF 014626-G/MG | CNPJ 40.342.441/0001-96),
+              que pode ser contatado pelo e-mail{" "}
               <a href="mailto:privacidade@pacerunpro.com.br" className="font-semibold text-primary hover:text-primary/80">
                 privacidade@pacerunpro.com.br
               </a>
