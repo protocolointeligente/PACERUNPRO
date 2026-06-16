@@ -1,0 +1,146 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import type { CyclePhase, Goal, WorkoutType } from "@prisma/client";
+
+const GOAL_MAP: Record<string, Goal> = {
+  "5k": "CINCO_KM",
+  "10k": "DEZ_KM",
+  "Meia-maratona": "VINTE_E_UM_KM",
+  "Maratona": "QUARENTA_E_DOIS_KM",
+  "Trail": "ULTRAMARATONA",
+  "Personalizado": "PERFORMANCE",
+};
+
+const PHASE_MAP: Record<string, CyclePhase> = {
+  "Base": "BASE",
+  "Construção": "CONSTRUCAO",
+  "Específico": "ESPECIFICO",
+  "Taper": "POLIMENTO",
+};
+
+const SUBTYPE_MAP: Record<string, WorkoutType> = {
+  "Rodagem leve": "RODAGEM_LEVE",
+  "Intervalado curto": "INTERVALADO_CURTO",
+  "Intervalado longo": "INTERVALADO_LONGO",
+  "Tempo Run": "TEMPO_RUN",
+  "Fartlek": "FARTLEK",
+  "Progressivo": "PROGRESSIVO",
+  "Longão": "LONGAO",
+  "Regenerativo": "REGENERATIVO",
+};
+
+export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
+  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } });
+  if (!coach) {
+    return NextResponse.json({ error: "Treinador não encontrado" }, { status: 403 });
+  }
+
+  const body = await req.json() as {
+    athleteId: string;
+    goal: string;
+    level: string;
+    totalWeeks: number;
+    trainingDays: string[];
+    liberar: boolean;
+    weeks: Array<{
+      week: number;
+      phase: string;
+      mesocycle: number;
+      isDeload: boolean;
+      volume: number;
+      intensity: number;
+      notes: string;
+      km: number;
+      sessions: number;
+    }>;
+    workoutsMap: Record<string, Array<{
+      sessionIndex: number;
+      dayLabel: string;
+      subtype: string;
+      title: string;
+      distanceKm: number;
+      durationMin: number;
+      targetPaceSecPerKm: number;
+      targetRpe: number;
+      objective: string;
+      warmup: string;
+      mainSet: string;
+      cooldown: string;
+    }>>;
+  };
+
+  const { athleteId, goal, liberar, weeks, workoutsMap } = body;
+
+  const athlete = await prisma.athlete.findFirst({
+    where: { id: athleteId, coachId: coach.id },
+  });
+  if (!athlete) {
+    return NextResponse.json({ error: "Atleta não encontrado" }, { status: 404 });
+  }
+
+  const startDate = new Date();
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + body.totalWeeks * 7);
+
+  const goalEnum = GOAL_MAP[goal] ?? "PERFORMANCE";
+
+  const plan = await prisma.trainingPlan.create({
+    data: {
+      athleteId,
+      coachId: coach.id,
+      name: `${goal} — ${body.totalWeeks} semanas`,
+      goal: goalEnum,
+      startDate,
+      endDate,
+      macrocycle: goal,
+      weeks: {
+        create: weeks.map((w) => {
+          const weekStart = new Date(startDate);
+          weekStart.setDate(weekStart.getDate() + (w.week - 1) * 7);
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekEnd.getDate() + 6);
+
+          const sessionList = workoutsMap[String(w.week)] ?? [];
+
+          return {
+            weekNumber: w.week,
+            mesocycle: String(w.mesocycle),
+            phase: PHASE_MAP[w.phase] ?? "BASE",
+            startDate: weekStart,
+            endDate: weekEnd,
+            targetVolumeKm: w.km,
+            released: liberar,
+            releasedAt: liberar ? new Date() : undefined,
+            workouts: {
+              create: sessionList.map((s) => {
+                const workoutDate = new Date(weekStart);
+                return {
+                  date: workoutDate,
+                  type: SUBTYPE_MAP[s.subtype] ?? "RODAGEM_LEVE",
+                  title: s.title,
+                  status: liberar ? ("LIBERADO" as const) : ("AGENDADO" as const),
+                  objective: s.objective,
+                  warmup: s.warmup,
+                  mainSet: s.mainSet,
+                  cooldown: s.cooldown,
+                  targetPaceSecPerKm: s.targetPaceSecPerKm,
+                  targetRpe: s.targetRpe,
+                  targetDistanceKm: s.distanceKm,
+                  targetDurationMin: s.durationMin,
+                };
+              }),
+            },
+          };
+        }),
+      },
+    },
+  });
+
+  return NextResponse.json({ planId: plan.id, liberated: liberar });
+}

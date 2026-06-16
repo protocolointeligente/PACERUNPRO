@@ -18,6 +18,8 @@ import {
   Check,
   RefreshCw,
   Zap,
+  Send,
+  CheckCircle2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,8 +34,10 @@ import {
   type GoalType,
   type LevelType,
   type PhaseType,
+  type WorkoutSubtype,
 } from "@/lib/workout-generator";
-import { calculateVDOT, parseRaceTime, RACE_DISTANCES } from "@/lib/vdot";
+import { calculateVDOT, getTrainingPaces, parseRaceTime, RACE_DISTANCES, TRAINING_ZONES } from "@/lib/vdot";
+import { formatPace } from "@/lib/utils";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -173,6 +177,8 @@ export default function PeriodizacaoPage() {
   const [workoutsMap, setWorkoutsMap] = useState<Record<number, GeneratedWorkout[]>>({});
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
   const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [liberating, setLiberating] = useState(false);
+  const [liberated, setLiberated] = useState(false);
 
   // Computed VDOT from race result
   const raceDistMeters = RACE_DISTANCES.find((d) => d.id === raceDistId)?.meters ?? 5000;
@@ -232,6 +238,35 @@ export default function PeriodizacaoPage() {
 
   function handleRecalcPaces() {
     setWorkoutsMap(buildWorkoutsMap());
+  }
+
+  async function handleLiberar() {
+    if (!selectedAthlete || totalWorkouts === 0) return;
+    setLiberating(true);
+    try {
+      const res = await fetch("/api/planos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: selectedAthlete,
+          goal,
+          level,
+          totalWeeks,
+          trainingDays,
+          liberar: true,
+          weeks,
+          workoutsMap: Object.fromEntries(
+            Object.entries(workoutsMap).map(([k, v]) => [k, v])
+          ),
+        }),
+      });
+      if (res.ok) {
+        setLiberated(true);
+        setTimeout(() => setLiberated(false), 4000);
+      }
+    } finally {
+      setLiberating(false);
+    }
   }
 
   function handleUpdateWorkout(
@@ -648,6 +683,21 @@ export default function PeriodizacaoPage() {
                           {saved ? "Salvo!" : "Salvar"}
                         </Button>
                       )}
+                      {view === "treinos" && totalWorkouts > 0 && (
+                        <Button
+                          variant={liberated ? "success" : "primary"}
+                          size="sm"
+                          disabled={!selectedAthlete || liberating}
+                          onClick={handleLiberar}
+                          title={!selectedAthlete ? "Selecione um atleta primeiro" : ""}
+                        >
+                          {liberated ? (
+                            <><CheckCircle2 className="h-4 w-4" /> Liberado!</>
+                          ) : (
+                            <><Send className="h-4 w-4" /> {liberating ? "Liberando…" : "Liberar para atleta"}</>
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -827,6 +877,48 @@ export default function PeriodizacaoPage() {
                   </p>
                 </CardContent>
               </Card>
+
+              {/* VDOT intensity reference table */}
+              {vdotNum && (() => {
+                const paces = getTrainingPaces(vdotNum);
+                return (
+                  <Card>
+                    <CardContent className="py-4 space-y-2">
+                      <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">
+                        Tabela de intensidade · VDOT {vdotNum}
+                      </p>
+                      <div className="overflow-hidden rounded-lg border border-border">
+                        <table className="w-full text-[11px]">
+                          <thead>
+                            <tr className="bg-card-hover/40 text-text-muted">
+                              <th className="px-2 py-1.5 text-left font-medium">Zona</th>
+                              <th className="px-2 py-1.5 text-right font-medium">Pace</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border">
+                            {TRAINING_ZONES.map((z) => {
+                              const r = paces[z.id];
+                              return (
+                                <tr key={z.id}>
+                                  <td className="px-2 py-1.5">
+                                    <span className="flex items-center gap-1.5 font-semibold" style={{ color: z.color }}>
+                                      <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: z.color }} />
+                                      {z.label}
+                                    </span>
+                                  </td>
+                                  <td className="px-2 py-1.5 text-right font-mono text-text">
+                                    {formatPace(r.fastSecPerKm).replace("/km","")}–{formatPace(r.slowSecPerKm)}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
             </aside>
           )}
         </div>
@@ -1089,8 +1181,22 @@ function WorkoutSessionRow({
             className="overflow-hidden border-t border-border/20 bg-background/50"
           >
             <div className="px-4 py-4 space-y-3">
-              {/* Título + métricas */}
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_6rem_8rem_6rem] gap-2">
+              {/* Tipo + Título + métricas */}
+              <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr_6rem_8rem_6rem] gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    Tipo de treino
+                  </label>
+                  <select
+                    value={workout.subtype}
+                    onChange={(e) => onChange("subtype", e.target.value as WorkoutSubtype)}
+                    className={cn(smallInput, "w-full cursor-pointer")}
+                  >
+                    {(["Rodagem leve","Intervalado curto","Intervalado longo","Tempo Run","Fartlek","Progressivo","Longão","Regenerativo"] as WorkoutSubtype[]).map((s) => (
+                      <option key={s} value={s} className="bg-card text-text">{s}</option>
+                    ))}
+                  </select>
+                </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
                     Título
