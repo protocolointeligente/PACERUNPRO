@@ -12,12 +12,28 @@ import {
   ChevronDown,
   Info,
   CalendarDays,
+  Dumbbell,
+  ChevronRight,
+  Pencil,
+  Check,
+  RefreshCw,
+  Zap,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { athleteList } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import {
+  generateWorkoutsForWeek,
+  formatPaceSec,
+  ZONE_COLORS,
+  type GeneratedWorkout,
+  type GoalType,
+  type LevelType,
+  type PhaseType,
+} from "@/lib/workout-generator";
+import { calculateVDOT, parseRaceTime, RACE_DISTANCES } from "@/lib/vdot";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,8 +53,9 @@ interface Week {
 
 type Goal = "5k" | "10k" | "Meia-maratona" | "Maratona" | "Trail" | "Personalizado";
 type Level = "Iniciante" | "Intermediário" | "Avançado";
+type ViewTab = "macro" | "treinos";
 
-// ── Auto-generation logic ────────────────────────────────────────────────────
+// ── Periodization auto-generation ────────────────────────────────────────────
 
 function generatePeriodization(totalWeeks: number): Week[] {
   const baseEnd = Math.round(totalWeeks * 0.35);
@@ -105,9 +122,10 @@ const inputClass =
 const selectClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer";
 
-// ── Component ────────────────────────────────────────────────────────────────
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PeriodizacaoPage() {
+  // Macro state
   const [selectedAthlete, setSelectedAthlete] = useState("");
   const [goal, setGoal] = useState<Goal>("Meia-maratona");
   const [level, setLevel] = useState<Level>("Intermediário");
@@ -116,17 +134,34 @@ export default function PeriodizacaoPage() {
   const [generated, setGenerated] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  // Treinos state
+  const [view, setView] = useState<ViewTab>("macro");
+  const [vdotValue, setVdotValue] = useState("");
+  const [raceDistId, setRaceDistId] = useState("5000");
+  const [raceTime, setRaceTime] = useState("");
+  const [workoutsMap, setWorkoutsMap] = useState<Record<number, GeneratedWorkout[]>>({});
+  const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
+  const [editingKey, setEditingKey] = useState<string | null>(null); // "weekNum-sessionIndex"
+
+  // Computed VDOT from race result
+  const raceDistMeters = RACE_DISTANCES.find((d) => d.id === raceDistId)?.meters ?? 5000;
+  const raceTimeSec = parseRaceTime(raceTime);
+  const computedVdot =
+    raceTimeSec > 0 ? Math.round(calculateVDOT(raceDistMeters, raceTimeSec) * 10) / 10 : null;
+
+  const vdotNum = vdotValue ? Number(vdotValue) : (computedVdot ?? null);
+
   function handleGenerate() {
     const result = generatePeriodization(totalWeeks);
     setWeeks(result);
     setGenerated(true);
     setSaved(false);
+    setWorkoutsMap({});
+    setView("macro");
   }
 
   function handleWeekChange(weekNum: number, field: keyof Week, value: string | number) {
-    setWeeks((prev) =>
-      prev.map((w) => (w.week === weekNum ? { ...w, [field]: value } : w))
-    );
+    setWeeks((prev) => prev.map((w) => (w.week === weekNum ? { ...w, [field]: value } : w)));
     setSaved(false);
   }
 
@@ -135,28 +170,73 @@ export default function PeriodizacaoPage() {
     setTimeout(() => setSaved(false), 2500);
   }
 
-  // ── Summary stats ──────────────────────────────────────────────────────────
-  const phaseCounts = weeks.reduce(
-    (acc, w) => {
-      acc[w.phase] = (acc[w.phase] ?? 0) + 1;
-      return acc;
-    },
-    {} as Record<Phase, number>
-  );
+  function handleGenerateWorkouts() {
+    const map: Record<number, GeneratedWorkout[]> = {};
+    for (const w of weeks) {
+      map[w.week] = generateWorkoutsForWeek({
+        phase: w.phase as PhaseType,
+        sessionsPerWeek: w.sessions,
+        targetKm: w.km,
+        vdot: vdotNum,
+        goal: goal as GoalType,
+        level: level as LevelType,
+        isDeload: w.isDeload,
+      });
+    }
+    setWorkoutsMap(map);
+    setView("treinos");
+    setExpandedWeek(1);
+    setEditingKey(null);
+  }
+
+  function handleRecalcPaces() {
+    setWorkoutsMap((prev) => {
+      const next: Record<number, GeneratedWorkout[]> = {};
+      for (const w of weeks) {
+        next[w.week] = generateWorkoutsForWeek({
+          phase: w.phase as PhaseType,
+          sessionsPerWeek: w.sessions,
+          targetKm: w.km,
+          vdot: vdotNum,
+          goal: goal as GoalType,
+          level: level as LevelType,
+          isDeload: w.isDeload,
+        });
+      }
+      return next;
+    });
+  }
+
+  function handleUpdateWorkout(
+    weekNum: number,
+    sessionIdx: number,
+    field: keyof GeneratedWorkout,
+    value: string | number
+  ) {
+    setWorkoutsMap((prev) => {
+      const weekArr = [...(prev[weekNum] ?? [])];
+      weekArr[sessionIdx] = { ...weekArr[sessionIdx], [field]: value };
+      return { ...prev, [weekNum]: weekArr };
+    });
+  }
+
+  // ── Summary stats ─────────────────────────────────────────────────────────
+  const phaseCounts = weeks.reduce((acc, w) => {
+    acc[w.phase] = (acc[w.phase] ?? 0) + 1;
+    return acc;
+  }, {} as Record<Phase, number>);
 
   const peakVolumeWeek = weeks.reduce(
     (best, w) => (w.volume > (best?.volume ?? 0) ? w : best),
     null as Week | null
   );
-
   const taperWeeks = weeks.filter((w) => w.phase === "Taper").length;
   const deloadWeeks = weeks.filter((w) => w.isDeload).length;
+  const totalWorkouts = Object.values(workoutsMap).reduce((s, arr) => s + arr.length, 0);
 
-  // Group weeks by mesocycle for visual separation
   const mesocycles = weeks.reduce((acc, w) => {
-    const key = w.mesocycle;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(w);
+    if (!acc[w.mesocycle]) acc[w.mesocycle] = [];
+    acc[w.mesocycle].push(w);
     return acc;
   }, {} as Record<number, Week[]>);
 
@@ -179,13 +259,53 @@ export default function PeriodizacaoPage() {
               Planejamento Periodização
             </span>
           </div>
+          {generated && (
+            <>
+              <span className="text-border">·</span>
+              {/* View tabs */}
+              <div className="flex items-center rounded-lg border border-border bg-card p-0.5 gap-0.5">
+                <button
+                  onClick={() => setView("macro")}
+                  className={cn(
+                    "rounded-md px-3 py-1 text-xs font-medium transition-all",
+                    view === "macro"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-text-muted hover:text-text"
+                  )}
+                >
+                  Macro
+                </button>
+                <button
+                  onClick={() => {
+                    if (totalWorkouts > 0) setView("treinos");
+                  }}
+                  className={cn(
+                    "flex items-center gap-1 rounded-md px-3 py-1 text-xs font-medium transition-all",
+                    view === "treinos"
+                      ? "bg-primary text-white shadow-sm"
+                      : totalWorkouts > 0
+                      ? "text-text-muted hover:text-text"
+                      : "text-text-muted/40 cursor-not-allowed"
+                  )}
+                >
+                  <Dumbbell className="h-3 w-3" />
+                  Treinos
+                  {totalWorkouts > 0 && (
+                    <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[10px]">
+                      {totalWorkouts}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
       {/* ── Body ── */}
       <div className="mx-auto max-w-7xl px-4 pt-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* ── Left panel: Generator ── */}
+          {/* ── Left sidebar ── */}
           <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-4 print:hidden">
             <Card>
               <CardHeader>
@@ -225,9 +345,7 @@ export default function PeriodizacaoPage() {
                       onChange={(e) => setGoal(e.target.value as Goal)}
                     >
                       {goals.map((g) => (
-                        <option key={g} value={g}>
-                          {g}
-                        </option>
+                        <option key={g} value={g}>{g}</option>
                       ))}
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
@@ -255,12 +373,10 @@ export default function PeriodizacaoPage() {
                   </div>
                 </div>
 
-                {/* Total weeks */}
+                {/* Weeks */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-text-muted">
-                      Semanas totais
-                    </label>
+                    <label className="text-xs font-medium text-text-muted">Semanas totais</label>
                     <span className="text-sm font-semibold text-text">{totalWeeks}</span>
                   </div>
                   <input
@@ -287,30 +403,119 @@ export default function PeriodizacaoPage() {
                   />
                 </div>
 
-                {/* Generate button */}
-                <Button
-                  variant="primary"
-                  size="md"
-                  className="w-full"
-                  onClick={handleGenerate}
-                >
+                <Button variant="primary" size="md" className="w-full" onClick={handleGenerate}>
                   <Wand2 className="h-4 w-4" />
                   Gerar periodização
                 </Button>
               </CardContent>
             </Card>
 
+            {/* VDOT section — shown after periodization is generated */}
+            {generated && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Zap className="h-4 w-4 text-primary" />
+                    VDOT do atleta
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-[11px] text-text-muted leading-relaxed">
+                    Informe o VDOT para calcular os paces de cada treino automaticamente.
+                  </p>
+
+                  {/* Direct VDOT input */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-text-muted">VDOT direto</label>
+                    <input
+                      type="number"
+                      min={20}
+                      max={85}
+                      step={0.5}
+                      placeholder="Ex.: 42.5"
+                      value={vdotValue}
+                      onChange={(e) => setVdotValue(e.target.value)}
+                      className={cn(inputClass, "text-sm py-2")}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 text-[10px] text-text-muted">
+                    <div className="flex-1 h-px bg-border" />
+                    ou calcule pelo resultado
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+
+                  {/* Race-based VDOT calculation */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-text-muted">Distância</label>
+                    <div className="relative">
+                      <select
+                        className={cn(selectClass, "py-2 text-sm")}
+                        value={raceDistId}
+                        onChange={(e) => setRaceDistId(e.target.value)}
+                      >
+                        {RACE_DISTANCES.map((d) => (
+                          <option key={d.id} value={d.id}>{d.label}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-text-muted">Tempo (MM:SS ou H:MM:SS)</label>
+                    <input
+                      type="text"
+                      placeholder="Ex.: 22:30"
+                      value={raceTime}
+                      onChange={(e) => setRaceTime(e.target.value)}
+                      className={cn(inputClass, "text-sm py-2")}
+                    />
+                  </div>
+                  {computedVdot && !vdotValue && (
+                    <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-primary font-semibold">
+                      VDOT calculado: {computedVdot}
+                    </div>
+                  )}
+
+                  {/* Generate workouts button */}
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full"
+                    onClick={handleGenerateWorkouts}
+                  >
+                    <Dumbbell className="h-3.5 w-3.5" />
+                    Gerar {totalWeeks} semanas de treinos
+                  </Button>
+
+                  {totalWorkouts > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full gap-1.5"
+                      onClick={handleRecalcPaces}
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      Recalcular paces
+                    </Button>
+                  )}
+
+                  {totalWorkouts > 0 && (
+                    <p className="text-[10px] text-text-muted text-center">
+                      {totalWorkouts} treinos gerados em {Object.keys(workoutsMap).length} semanas
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Phase legend */}
             <Card>
               <CardContent className="py-4 space-y-2">
-                <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-3">
-                  Fases
-                </p>
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-3">Fases</p>
                 {(["Base", "Construção", "Específico", "Taper"] as Phase[]).map((p) => (
                   <div key={p} className="flex items-center gap-2">
-                    <Badge variant={PHASE_BADGE[p]} className="w-24 justify-center text-[11px]">
-                      {p}
-                    </Badge>
+                    <Badge variant={PHASE_BADGE[p]} className="w-24 justify-center text-[11px]">{p}</Badge>
                     <span className="text-xs text-text-muted">
                       {p === "Base" && "Aeróbico e adaptação"}
                       {p === "Construção" && "Volume e limiar"}
@@ -332,9 +537,7 @@ export default function PeriodizacaoPage() {
                 className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-20 text-center"
               >
                 <CalendarDays className="h-12 w-12 text-primary/30 mb-4" />
-                <p className="font-display text-lg font-semibold text-text">
-                  Nenhuma periodização gerada
-                </p>
+                <p className="font-display text-lg font-semibold text-text">Nenhuma periodização gerada</p>
                 <p className="mt-1 text-sm text-text-muted">
                   Configure os parâmetros e clique em{" "}
                   <span className="text-primary">Gerar periodização</span>
@@ -343,11 +546,11 @@ export default function PeriodizacaoPage() {
             ) : (
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={`${totalWeeks}-${goal}-${level}`}
+                  key={`${view}-${totalWeeks}-${goal}-${level}`}
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.25 }}
                   className="space-y-4"
                 >
                   {/* Title row */}
@@ -361,115 +564,131 @@ export default function PeriodizacaoPage() {
                         {selectedAthlete
                           ? ` · ${athleteList.find((a) => a.id === selectedAthlete)?.name ?? ""}`
                           : ""}
+                        {vdotNum ? ` · VDOT ${vdotNum}` : ""}
                       </p>
                     </div>
                     <div className="flex gap-2 flex-wrap print:hidden">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.print()}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => window.print()}>
                         <FileDown className="h-4 w-4" />
                         Exportar PDF
                       </Button>
-                      <Button
-                        variant={saved ? "success" : "primary"}
-                        size="sm"
-                        onClick={handleSave}
-                      >
-                        <Save className="h-4 w-4" />
-                        {saved ? "Salvo!" : "Salvar periodização"}
-                      </Button>
+                      {view === "macro" && (
+                        <Button variant={saved ? "success" : "primary"} size="sm" onClick={handleSave}>
+                          <Save className="h-4 w-4" />
+                          {saved ? "Salvo!" : "Salvar periodização"}
+                        </Button>
+                      )}
+                      {view === "treinos" && totalWorkouts === 0 && (
+                        <Button variant="primary" size="sm" onClick={handleGenerateWorkouts}>
+                          <Dumbbell className="h-4 w-4" />
+                          Gerar treinos
+                        </Button>
+                      )}
                     </div>
                   </div>
 
-                  {/* Print-friendly summary table */}
-                  <PeriodizacaoPrintTable
-                    weeks={weeks}
-                    goal={goal}
-                    level={level}
-                    totalWeeks={totalWeeks}
-                    athleteName={athleteList.find((a) => a.id === selectedAthlete)?.name}
-                  />
+                  {/* ── MACRO VIEW ── */}
+                  {view === "macro" && (
+                    <>
+                      {/* Print-only table */}
+                      <PeriodizacaoPrintTable
+                        weeks={weeks}
+                        goal={goal}
+                        level={level}
+                        totalWeeks={totalWeeks}
+                        athleteName={athleteList.find((a) => a.id === selectedAthlete)?.name}
+                      />
 
-                  {/* Mesocycle blocks */}
-                  <div className="space-y-4 print:hidden">
-                  {Object.entries(mesocycles).map(([meso, mesoWeeks]) => {
-                    const dominantPhase = mesoWeeks.reduce(
-                      (acc, w) => {
-                        acc[w.phase] = (acc[w.phase] ?? 0) + 1;
-                        return acc;
-                      },
-                      {} as Record<Phase, number>
-                    );
-                    const topPhase = (
-                      Object.entries(dominantPhase) as [Phase, number][]
-                    ).sort((a, b) => b[1] - a[1])[0][0];
+                      <div className="space-y-4 print:hidden">
+                        {Object.entries(mesocycles).map(([meso, mesoWeeks]) => {
+                          const dominantPhase = mesoWeeks.reduce((acc, w) => {
+                            acc[w.phase] = (acc[w.phase] ?? 0) + 1;
+                            return acc;
+                          }, {} as Record<Phase, number>);
+                          const topPhase = (Object.entries(dominantPhase) as [Phase, number][]).sort(
+                            (a, b) => b[1] - a[1]
+                          )[0][0];
 
-                    return (
-                      <div key={meso} className="space-y-1">
-                        {/* Mesocycle header */}
-                        <div className="flex items-center gap-2 px-1">
-                          <span className="text-xs font-semibold text-text-muted uppercase tracking-widest">
-                            Mesociclo {meso}
-                          </span>
-                          <div className="flex-1 h-px bg-border" />
-                          <Badge variant={PHASE_BADGE[topPhase]} className="text-[10px]">
-                            {topPhase}
-                          </Badge>
-                        </div>
+                          return (
+                            <div key={meso} className="space-y-1">
+                              <div className="flex items-center gap-2 px-1">
+                                <span className="text-xs font-semibold text-text-muted uppercase tracking-widest">
+                                  Mesociclo {meso}
+                                </span>
+                                <div className="flex-1 h-px bg-border" />
+                                <Badge variant={PHASE_BADGE[topPhase]} className="text-[10px]">
+                                  {topPhase}
+                                </Badge>
+                              </div>
+                              <div className={cn("rounded-2xl border overflow-hidden", PHASE_BG[topPhase])}>
+                                <div className="grid grid-cols-[3rem_7rem_5rem_6rem_6rem_4rem_4rem_1fr] gap-x-2 border-b border-border/50 px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+                                  <span>Sem.</span>
+                                  <span>Fase</span>
+                                  <span>Volume</span>
+                                  <span>Inten. %</span>
+                                  <span>km/sem</span>
+                                  <span>Sessões</span>
+                                  <span>Descarga</span>
+                                  <span>Notas</span>
+                                </div>
+                                {mesoWeeks.map((w) => (
+                                  <WeekRow key={w.week} week={w} onChange={handleWeekChange} />
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
 
-                        {/* Week rows */}
-                        <div
-                          className={cn(
-                            "rounded-2xl border overflow-hidden",
-                            PHASE_BG[topPhase]
-                          )}
-                        >
-                          {/* Table header */}
-                          <div className="grid grid-cols-[3rem_7rem_5rem_6rem_6rem_4rem_4rem_1fr] gap-x-2 border-b border-border/50 px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
-                            <span>Sem.</span>
-                            <span>Fase</span>
-                            <span>Volume</span>
-                            <span>Inten. %</span>
-                            <span>km/sem</span>
-                            <span>Sessões</span>
-                            <span>Descarga</span>
-                            <span>Notas</span>
-                          </div>
-
-                          {mesoWeeks.map((w) => (
-                            <WeekRow
-                              key={w.week}
-                              week={w}
-                              onChange={handleWeekChange}
-                            />
-                          ))}
+                        <div className="flex justify-end gap-2 pt-2">
+                          <Button variant="outline" size="sm" onClick={() => window.print()}>
+                            <FileDown className="h-4 w-4" />
+                            Exportar PDF
+                          </Button>
+                          <Button variant={saved ? "success" : "primary"} size="sm" onClick={handleSave}>
+                            <Save className="h-4 w-4" />
+                            {saved ? "Salvo!" : "Salvar periodização"}
+                          </Button>
                         </div>
                       </div>
-                    );
-                  })}
+                    </>
+                  )}
 
-                  {/* Bottom save */}
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.print()}
-                    >
-                      <FileDown className="h-4 w-4" />
-                      Exportar PDF
-                    </Button>
-                    <Button
-                      variant={saved ? "success" : "primary"}
-                      size="sm"
-                      onClick={handleSave}
-                    >
-                      <Save className="h-4 w-4" />
-                      {saved ? "Salvo!" : "Salvar periodização"}
-                    </Button>
-                  </div>
-                  </div>
+                  {/* ── TREINOS VIEW ── */}
+                  {view === "treinos" && (
+                    <div className="space-y-3 print:hidden">
+                      {totalWorkouts === 0 ? (
+                        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-16 text-center">
+                          <Dumbbell className="h-10 w-10 text-primary/30 mb-3" />
+                          <p className="font-display text-base font-semibold text-text">
+                            Treinos não gerados ainda
+                          </p>
+                          <p className="mt-1 text-sm text-text-muted">
+                            Clique em{" "}
+                            <span className="text-primary">Gerar treinos</span> no painel lateral
+                          </p>
+                        </div>
+                      ) : (
+                        weeks.map((w) => {
+                          const workouts = workoutsMap[w.week] ?? [];
+                          const isExpanded = expandedWeek === w.week;
+                          return (
+                            <WeekWorkoutsCard
+                              key={w.week}
+                              week={w}
+                              workouts={workouts}
+                              isExpanded={isExpanded}
+                              onToggleExpand={() =>
+                                setExpandedWeek(isExpanded ? null : w.week)
+                              }
+                              editingKey={editingKey}
+                              onEdit={(key) => setEditingKey(editingKey === key ? null : key)}
+                              onUpdateWorkout={handleUpdateWorkout}
+                            />
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
                 </motion.div>
               </AnimatePresence>
             )}
@@ -478,53 +697,46 @@ export default function PeriodizacaoPage() {
           {/* ── Right sidebar ── */}
           {generated && (
             <aside className="w-full lg:w-60 xl:w-64 shrink-0 space-y-4 print:hidden">
-              {/* Summary card */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-sm">Resumo</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <SummaryRow label="Total de semanas" value={`${totalWeeks} sem`} />
+                  {totalWorkouts > 0 && (
+                    <SummaryRow label="Total de treinos" value={`${totalWorkouts}`} />
+                  )}
                   <div className="space-y-1.5">
                     <span className="text-xs text-text-muted">Fases</span>
                     {(["Base", "Construção", "Específico", "Taper"] as Phase[]).map((p) => (
                       <div key={p} className="flex items-center justify-between">
-                        <Badge variant={PHASE_BADGE[p]} className="text-[10px]">
-                          {p}
-                        </Badge>
-                        <span className="text-text font-medium text-xs">
-                          {phaseCounts[p] ?? 0} sem
-                        </span>
+                        <Badge variant={PHASE_BADGE[p]} className="text-[10px]">{p}</Badge>
+                        <span className="text-text font-medium text-xs">{phaseCounts[p] ?? 0} sem</span>
                       </div>
                     ))}
                   </div>
                   <div className="h-px bg-border" />
                   <SummaryRow
                     label="Pico de volume"
-                    value={
-                      peakVolumeWeek
-                        ? `Sem. ${peakVolumeWeek.week} — ${peakVolumeWeek.volume}%`
-                        : "—"
-                    }
+                    value={peakVolumeWeek ? `Sem. ${peakVolumeWeek.week} — ${peakVolumeWeek.volume}%` : "—"}
                   />
-                  <SummaryRow label="Semanas de taper" value={`${taperWeeks} sem`} />
+                  <SummaryRow label="Semanas taper" value={`${taperWeeks} sem`} />
                   <SummaryRow label="Semanas descarga" value={`${deloadWeeks} sem`} />
                 </CardContent>
               </Card>
 
-              {/* Tip card */}
               <Card className="border-info/30 bg-info/5">
                 <CardContent className="py-4 space-y-2">
                   <div className="flex items-center gap-2 text-info">
                     <Info className="h-4 w-4 shrink-0" />
-                    <span className="text-xs font-semibold">Sobre periodização</span>
+                    <span className="text-xs font-semibold">
+                      {view === "macro" ? "Sobre periodização" : "Sobre os treinos"}
+                    </span>
                   </div>
                   <p className="text-xs text-text-muted leading-relaxed">
-                    A estrutura gerada é uma{" "}
-                    <span className="text-text">referência automática</span>. Edite
-                    volume, intensidade e notas de cada semana para adaptar ao atleta.
-                    Semanas de descarga (↓) reduzem o volume para favorecer a
-                    supercompensação.
+                    {view === "macro"
+                      ? "Edite volume, intensidade e notas de cada semana para adaptar ao atleta. Semanas de descarga (↓) reduzem o volume para supercompensação."
+                      : "Os treinos são sugestões baseadas no VDOT, fase e objetivo. Clique em ✎ para ajustar qualquer sessão individualmente. Use \"Recalcular paces\" ao atualizar o VDOT."}
                   </p>
                 </CardContent>
               </Card>
@@ -536,7 +748,7 @@ export default function PeriodizacaoPage() {
   );
 }
 
-// ── WeekRow ──────────────────────────────────────────────────────────────────
+// ── WeekRow (macro view) ──────────────────────────────────────────────────────
 
 function WeekRow({
   week,
@@ -552,15 +764,8 @@ function WeekRow({
         week.isDeload && "bg-warning/[0.04]"
       )}
     >
-      {/* Week number */}
       <span className="text-xs font-semibold text-text">{week.week}</span>
-
-      {/* Phase badge */}
-      <Badge variant={PHASE_BADGE[week.phase]} className="w-fit text-[10px] px-2">
-        {week.phase}
-      </Badge>
-
-      {/* Volume bar */}
+      <Badge variant={PHASE_BADGE[week.phase]} className="w-fit text-[10px] px-2">{week.phase}</Badge>
       <div className="space-y-0.5">
         <div className="h-1.5 w-full rounded-full bg-border overflow-hidden">
           <div
@@ -573,26 +778,18 @@ function WeekRow({
           min={10}
           max={100}
           value={week.volume}
-          onChange={(e) =>
-            onChange(week.week, "volume", Math.min(100, Math.max(10, Number(e.target.value))))
-          }
+          onChange={(e) => onChange(week.week, "volume", Math.min(100, Math.max(10, Number(e.target.value))))}
           className="w-full rounded-md border border-border bg-background px-1.5 py-0.5 text-[11px] text-text text-center outline-none focus:border-primary/60"
         />
       </div>
-
-      {/* Intensity */}
       <input
         type="number"
         min={10}
         max={100}
         value={week.intensity}
-        onChange={(e) =>
-          onChange(week.week, "intensity", Math.min(100, Math.max(10, Number(e.target.value))))
-        }
+        onChange={(e) => onChange(week.week, "intensity", Math.min(100, Math.max(10, Number(e.target.value))))}
         className="w-full rounded-md border border-border bg-background px-1.5 py-1 text-[11px] text-text text-center outline-none focus:border-primary/60"
       />
-
-      {/* km */}
       <input
         type="number"
         min={0}
@@ -600,32 +797,23 @@ function WeekRow({
         onChange={(e) => onChange(week.week, "km", Number(e.target.value))}
         className="w-full rounded-md border border-border bg-background px-1.5 py-1 text-[11px] text-text text-center outline-none focus:border-primary/60"
       />
-
-      {/* Sessions */}
       <input
         type="number"
         min={1}
         max={7}
         value={week.sessions}
-        onChange={(e) =>
-          onChange(week.week, "sessions", Math.min(7, Math.max(1, Number(e.target.value))))
-        }
+        onChange={(e) => onChange(week.week, "sessions", Math.min(7, Math.max(1, Number(e.target.value))))}
         className="w-full rounded-md border border-border bg-background px-1.5 py-1 text-[11px] text-text text-center outline-none focus:border-primary/60"
       />
-
-      {/* Deload indicator */}
       <div className="flex justify-center">
         {week.isDeload ? (
-          <span title="Semana de descarga" className="flex items-center gap-0.5 text-warning text-[11px] font-semibold">
-            <TrendingDown className="h-3.5 w-3.5" />
-            ↓
+          <span className="flex items-center gap-0.5 text-warning text-[11px] font-semibold">
+            <TrendingDown className="h-3.5 w-3.5" />↓
           </span>
         ) : (
           <span className="text-text-muted text-[11px]">—</span>
         )}
       </div>
-
-      {/* Notes */}
       <input
         type="text"
         placeholder="Adicionar nota…"
@@ -637,7 +825,296 @@ function WeekRow({
   );
 }
 
-// ── SummaryRow ───────────────────────────────────────────────────────────────
+// ── WeekWorkoutsCard (treinos view) ───────────────────────────────────────────
+
+function WeekWorkoutsCard({
+  week,
+  workouts,
+  isExpanded,
+  onToggleExpand,
+  editingKey,
+  onEdit,
+  onUpdateWorkout,
+}: {
+  week: Week;
+  workouts: GeneratedWorkout[];
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  editingKey: string | null;
+  onEdit: (key: string) => void;
+  onUpdateWorkout: (weekNum: number, sessionIdx: number, field: keyof GeneratedWorkout, value: string | number) => void;
+}) {
+  const totalKm = workouts.reduce((s, w) => s + w.distanceKm, 0);
+
+  return (
+    <div
+      className={cn(
+        "rounded-2xl border overflow-hidden transition-all",
+        PHASE_BG[week.phase],
+        week.isDeload && "border-warning/30"
+      )}
+    >
+      {/* Week header */}
+      <button
+        type="button"
+        onClick={onToggleExpand}
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors"
+      >
+        <ChevronRight
+          className={cn(
+            "h-4 w-4 text-text-muted transition-transform shrink-0",
+            isExpanded && "rotate-90"
+          )}
+        />
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs font-bold text-text-muted shrink-0">S{week.week}</span>
+          <Badge variant={PHASE_BADGE[week.phase]} className="text-[10px] shrink-0">{week.phase}</Badge>
+          {week.isDeload && (
+            <Badge variant="warning" className="text-[10px] shrink-0">
+              <TrendingDown className="h-2.5 w-2.5 mr-0.5" />
+              Descarga
+            </Badge>
+          )}
+          <span className="text-xs text-text truncate">
+            Mesociclo {week.mesocycle} · {workouts.length} sessões · {totalKm.toFixed(1)} km
+          </span>
+        </div>
+        <div className="ml-auto flex items-center gap-3 shrink-0">
+          <span className="text-[10px] text-text-muted hidden sm:block">
+            Vol. {week.volume}% · Inten. {week.intensity}%
+          </span>
+        </div>
+      </button>
+
+      {/* Workout rows */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden border-t border-border/30"
+          >
+            {workouts.map((wo, idx) => {
+              const key = `${week.week}-${idx}`;
+              const isEditing = editingKey === key;
+              return (
+                <WorkoutSessionRow
+                  key={key}
+                  workout={wo}
+                  isEditing={isEditing}
+                  onEdit={() => onEdit(key)}
+                  onChange={(field, value) => onUpdateWorkout(week.week, idx, field, value)}
+                  isLast={idx === workouts.length - 1}
+                />
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── WorkoutSessionRow ─────────────────────────────────────────────────────────
+
+const DAY_ABBR: Record<string, string> = {
+  "Segunda-feira": "SEG",
+  "Terça-feira": "TER",
+  "Quarta-feira": "QUA",
+  "Quinta-feira": "QUI",
+  "Sexta-feira": "SEX",
+  "Sábado": "SAB",
+  "Domingo": "DOM",
+};
+
+const smallInput =
+  "rounded-lg border border-border bg-background/60 px-2.5 py-1.5 text-xs text-text outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-colors";
+
+function WorkoutSessionRow({
+  workout,
+  isEditing,
+  onEdit,
+  onChange,
+  isLast,
+}: {
+  workout: GeneratedWorkout;
+  isEditing: boolean;
+  onEdit: () => void;
+  onChange: (field: keyof GeneratedWorkout, value: string | number) => void;
+  isLast: boolean;
+}) {
+  const zoneColor = ZONE_COLORS[workout.zone];
+  const dayAbbr = DAY_ABBR[workout.dayLabel] ?? workout.dayLabel.slice(0, 3).toUpperCase();
+
+  return (
+    <div className={cn("bg-background/30", !isLast && "border-b border-border/20")}>
+      {/* Compact row */}
+      <div className="flex items-center gap-3 px-4 py-2.5">
+        {/* Day */}
+        <span className="text-[10px] font-bold text-text-muted w-8 shrink-0">{dayAbbr}</span>
+
+        {/* Zone dot + subtype */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div
+            className="h-2.5 w-2.5 rounded-full shrink-0"
+            style={{ backgroundColor: zoneColor }}
+          />
+          <span className="text-xs font-semibold text-text truncate">{workout.subtype}</span>
+          <span className="text-[10px] text-text-muted shrink-0 hidden sm:block">
+            {workout.distanceKm} km
+          </span>
+          <span
+            className="text-[10px] font-mono font-semibold shrink-0 hidden md:block"
+            style={{ color: zoneColor }}
+          >
+            {formatPaceSec(workout.targetPaceSecPerKm)}/km
+          </span>
+          <span className="text-[10px] text-text-muted shrink-0 hidden lg:block">
+            {workout.durationMin} min
+          </span>
+          <span className="text-[10px] text-text-muted shrink-0 hidden lg:block">
+            RPE {workout.targetRpe}
+          </span>
+          <span
+            className="ml-auto text-[10px] font-bold shrink-0 hidden sm:block"
+            style={{ color: zoneColor }}
+          >
+            Zona {workout.zone}
+          </span>
+        </div>
+
+        {/* Edit button */}
+        <button
+          type="button"
+          onClick={onEdit}
+          className={cn(
+            "flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[10px] font-medium transition-all shrink-0",
+            isEditing
+              ? "border-primary/50 bg-primary/10 text-primary"
+              : "border-border text-text-muted hover:border-primary/30 hover:text-text"
+          )}
+        >
+          {isEditing ? <Check className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}
+          {isEditing ? "Fechar" : "Editar"}
+        </button>
+      </div>
+
+      {/* Expanded editor */}
+      <AnimatePresence>
+        {isEditing && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="overflow-hidden border-t border-border/20 bg-background/50"
+          >
+            <div className="px-4 py-4 space-y-3">
+              {/* Row 1: title + km + pace + rpe */}
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_6rem_8rem_6rem] gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    Título
+                  </label>
+                  <input
+                    type="text"
+                    value={workout.title}
+                    onChange={(e) => onChange("title", e.target.value)}
+                    className={cn(smallInput, "w-full")}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    Distância (km)
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    step={0.5}
+                    value={workout.distanceKm}
+                    onChange={(e) => onChange("distanceKm", Number(e.target.value))}
+                    className={cn(smallInput, "w-full text-center")}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    Pace alvo (s/km)
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min={150}
+                      max={600}
+                      value={workout.targetPaceSecPerKm}
+                      onChange={(e) => onChange("targetPaceSecPerKm", Number(e.target.value))}
+                      className={cn(smallInput, "w-full text-center")}
+                    />
+                    <span className="text-[10px] text-text-muted whitespace-nowrap">
+                      = {formatPaceSec(workout.targetPaceSecPerKm)}/km
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    RPE (1–10)
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={workout.targetRpe}
+                    onChange={(e) => onChange("targetRpe", Number(e.target.value))}
+                    className={cn(smallInput, "w-full text-center")}
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: objective */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                  Objetivo
+                </label>
+                <input
+                  type="text"
+                  value={workout.objective}
+                  onChange={(e) => onChange("objective", e.target.value)}
+                  className={cn(smallInput, "w-full")}
+                />
+              </div>
+
+              {/* Row 3: main set */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                  Set principal
+                </label>
+                <textarea
+                  rows={3}
+                  value={workout.mainSet}
+                  onChange={(e) => onChange("mainSet", e.target.value)}
+                  className={cn(smallInput, "w-full resize-none leading-relaxed")}
+                />
+              </div>
+
+              {/* Pace range hint */}
+              <p className="text-[10px] text-text-muted">
+                Faixa de pace gerada: <span className="font-mono text-text">{workout.paceRangeStr}</span>
+                {" "}· Zona{" "}
+                <span className="font-semibold" style={{ color: ZONE_COLORS[workout.zone] }}>
+                  {workout.zone}
+                </span>
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── SummaryRow ────────────────────────────────────────────────────────────────
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
@@ -648,7 +1125,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-// ── PeriodizacaoPrintTable ──────────────────────────────────────────────────
+// ── PeriodizacaoPrintTable ────────────────────────────────────────────────────
 
 function PeriodizacaoPrintTable({
   weeks,
