@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Download, FileSpreadsheet, FileText, FileType2, Sparkles } from "lucide-react";
+import { CheckCircle2, Download, FileSpreadsheet, FileText, FileType2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ const inputClass =
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted";
 
 const reportTypes = [
-  { id: "individual", label: "Relatório individual do atleta", description: "Evolução, treinos, check-ins e testes — PDF premium estilo IronGuides." },
+  { id: "individual", label: "Relatório individual do atleta", description: "Evolução, treinos, check-ins e testes do atleta no período selecionado." },
   { id: "carga-equipe", label: "Carga da equipe", description: "Volume, RPE médio e adesão de todos os atletas no período." },
   { id: "avaliacao-fisica", label: "Avaliação física & testes", description: "VO2máx, VAM, limiar, RAST e composição corporal." },
   { id: "checkins", label: "Exportação de check-ins", description: "Histórico bruto de RPE, dor, sono, fadiga e humor para análise externa." },
@@ -25,7 +25,7 @@ type ReportTypeId = (typeof reportTypes)[number]["id"];
 const periods = ["Últimos 7 dias", "Últimos 30 dias", "Mês atual", "Ciclo completo", "Personalizado"];
 
 const formats = [
-  { id: "PDF", label: "PDF premium", description: "Layout estilo IronGuides, pronto para enviar ao atleta", icon: FileText, accent: "text-danger bg-danger/15" },
+  { id: "PDF", label: "PDF", description: "Relatório formatado, pronto para enviar ao atleta", icon: FileText, accent: "text-danger bg-danger/15" },
   { id: "Excel", label: "Excel (.xlsx)", description: "Planilhas dinâmicas para análise detalhada", icon: FileSpreadsheet, accent: "text-success bg-success/15" },
   { id: "CSV", label: "CSV", description: "Dados brutos para importar em outras ferramentas", icon: FileType2, accent: "text-info bg-info/15" },
 ] as const;
@@ -192,8 +192,8 @@ export default function ReportsPage() {
         <Badge variant="primary" className="mb-2">Relatórios</Badge>
         <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Relatórios e exportações</h1>
         <p className="mt-1.5 text-sm text-text-muted">
-          Gere relatórios em PDF premium no estilo IronGuides, planilhas Excel ou exportações CSV para acompanhar a
-          evolução individual e da equipe — prontos para enviar aos seus atletas ou analisar offline.
+          Gere relatórios em PDF, planilhas Excel ou exportações CSV para acompanhar a evolução individual e da equipe —
+          prontos para enviar aos seus atletas ou analisar offline.
         </p>
       </div>
 
@@ -332,19 +332,6 @@ export default function ReportsPage() {
 
         {/* Sidebar */}
         <div className="space-y-5">
-          <Card className="border-primary/30 bg-gradient-to-br from-primary/12 to-card">
-            <CardContent className="p-5">
-              <h3 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold text-text">
-                <Sparkles className="h-4 w-4 text-primary" /> PDF premium estilo IronGuides
-              </h3>
-              <p className="text-xs text-text-muted">
-                Layout editorial com identidade visual da Pace Run Pro — capa com dados do atleta e do treinador
-                ({coachOverview.name}, {coachOverview.credential}), gráficos de evolução, resumo de check-ins, recordes
-                pessoais e recomendações para o próximo ciclo.
-              </p>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardContent className="space-y-3 p-5 text-xs text-text-muted">
               <div className="flex items-center justify-between">

@@ -47,12 +47,12 @@
 }
 
 .light {
-  --bg: #f8f6fb;
-  --card: #ffffff;
-  --card-hover: #f1edf7;
-  --border: #e6e1ef;
-  --text: #14101f;
-  --text-muted: #6f6680;
+  --bg: #eae4f5;
+  --card: #faf8fd;
+  --card-hover: #e0d8f0;
+  --border: #c9bfe2;
+  --text: #0f0b1c;
+  --text-muted: #5a5170;
 }
 
 @keyframes pulse-soft {
@@ -102,9 +102,14 @@ body {
 
 .light body {
   background:
-    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(255, 106, 26, 0.08), transparent 60%),
-    radial-gradient(ellipse 900px 500px at 100% 20%, rgba(139, 61, 255, 0.06), transparent 55%),
+    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(139, 61, 255, 0.10), transparent 60%),
+    radial-gradient(ellipse 900px 500px at 100% 20%, rgba(255, 106, 26, 0.07), transparent 55%),
     var(--color-background);
+}
+
+/* In light mode the primary button uses violet instead of the orange gradient */
+.light .gradient-primary {
+  background: linear-gradient(135deg, #7c28f0 0%, #9b40ff 60%, #b26aff 100%);
 }
 
 ::-webkit-scrollbar {
@@ -130,8 +135,16 @@ body {
 }
 
 .light .glass {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(230, 225, 239, 0.7);
+  background: rgba(250, 248, 253, 0.7);
+  border: 1px solid rgba(201, 191, 226, 0.8);
+}
+
+/* Light mode: gradient-text uses violet palette */
+.light .gradient-text {
+  background: linear-gradient(135deg, #7c28f0 0%, #9b40ff 50%, #b84dff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .gradient-text {
