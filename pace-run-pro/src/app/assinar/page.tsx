@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { Check, CheckCircle, Copy, Zap } from "lucide-react";
+import { Check, CheckCircle, Copy, Loader2, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { b2cPlans, b2cIncludes } from "@/lib/mock-data";
@@ -12,6 +12,31 @@ import { formatBRL } from "@/lib/utils";
 // ── Shared input style ────────────────────────────────────────────────────
 const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+
+// ── Input formatters ──────────────────────────────────────────────────────
+function formatCpf(v: string) {
+  return v
+    .replace(/\D/g, "")
+    .slice(0, 11)
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+
+function formatCardNumber(v: string) {
+  return v
+    .replace(/\D/g, "")
+    .slice(0, 16)
+    .replace(/(\d{4})/g, "$1 ")
+    .trim();
+}
+
+function formatCardExpiry(v: string) {
+  return v
+    .replace(/\D/g, "")
+    .slice(0, 4)
+    .replace(/^(\d{2})(\d)/, "$1/$2");
+}
 
 // ── Step indicator ────────────────────────────────────────────────────────
 function StepIndicator({ current, total }: { current: number; total: number }) {
@@ -76,7 +101,7 @@ function PlanSummaryCard({ planId }: { planId: string }) {
 }
 
 // ── Payment method toggle ─────────────────────────────────────────────────
-type PaymentMethod = "cartao" | "pix" | "boleto";
+type PaymentMethod = "cartao" | "pix";
 
 function PaymentToggle({
   value,
@@ -88,7 +113,6 @@ function PaymentToggle({
   const options: { id: PaymentMethod; label: string }[] = [
     { id: "cartao", label: "Cartão de crédito" },
     { id: "pix", label: "PIX" },
-    { id: "boleto", label: "Boleto" },
   ];
   return (
     <div className="flex gap-2">
@@ -128,18 +152,28 @@ function AssinarContent() {
   // Step 2
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [cidade, setCidade] = useState("");
   const [objetivo, setObjetivo] = useState("");
   const [dataProva, setDataProva] = useState("");
 
-  // Step 3
+  // Step 3 — payment
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cartao");
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [pixCopied, setPixCopied] = useState(false);
+
+  // Step 3 — checkout state
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [pixResult, setPixResult] = useState<{
+    orderId: string;
+    pixText: string;
+    pixQrCodeUrl: string | null;
+  } | null>(null);
 
   // Cupom de desconto
   const [couponCode, setCouponCode] = useState("");
@@ -179,12 +213,52 @@ function AssinarContent() {
     }
   }
 
-  function handleCopyPix() {
-    navigator.clipboard
-      .writeText("00020126580014BR.GOV.BCB.PIX0136e7c6d1a2-3f4b-5c6d-7e8f-9a0b1c2d3e4f5204000053039865802BR5925PACE RUN PRO TECNOLOGIA6009SAO PAULO62070503***6304ABCD")
-      .catch(() => undefined);
+  function handleCopyPix(text: string) {
+    navigator.clipboard.writeText(text).catch(() => undefined);
     setPixCopied(true);
     setTimeout(() => setPixCopied(false), 2500);
+  }
+
+  async function handleCheckout() {
+    setCheckoutLoading(true);
+    setCheckoutError("");
+    try {
+      const amountCents = Math.round(discountedTotal * 100);
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          method: paymentMethod,
+          planId: selectedPlan,
+          planName: plan.name,
+          amountCents,
+          customerName: nome,
+          customerEmail: email,
+          customerCpf: cpf,
+          ...(paymentMethod === "cartao" && { cardNumber, cardName, cardExpiry, cardCvv }),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCheckoutError(data.error ?? "Erro ao processar pagamento.");
+        return;
+      }
+      if (paymentMethod === "pix") {
+        setPixResult(data);
+      } else {
+        if (data.status === "PAID") {
+          setConfirmed(true);
+        } else {
+          setCheckoutError(
+            `Pagamento recusado${data.declineCode ? ` (cód. ${data.declineCode})` : ""}. Verifique os dados do cartão.`
+          );
+        }
+      }
+    } catch {
+      setCheckoutError("Não foi possível conectar ao servidor. Tente novamente.");
+    } finally {
+      setCheckoutLoading(false);
+    }
   }
 
   // ── Success screen ──────────────────────────────────────────────────────
@@ -340,6 +414,19 @@ function AssinarContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
+                  className={inputClass}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  CPF
+                </span>
+                <input
+                  value={cpf}
+                  onChange={(e) => setCpf(formatCpf(e.target.value))}
+                  placeholder="000.000.000-00"
+                  inputMode="numeric"
                   className={inputClass}
                 />
               </label>
@@ -545,7 +632,14 @@ function AssinarContent() {
               {/* Payment method */}
               <div className="space-y-4">
                 <p className="text-sm font-semibold text-text">Forma de pagamento</p>
-                <PaymentToggle value={paymentMethod} onChange={setPaymentMethod} />
+                <PaymentToggle
+                  value={paymentMethod}
+                  onChange={(v) => {
+                    setPaymentMethod(v);
+                    setPixResult(null);
+                    setCheckoutError("");
+                  }}
+                />
 
                 {/* Cartão */}
                 {paymentMethod === "cartao" && (
@@ -556,8 +650,9 @@ function AssinarContent() {
                       </span>
                       <input
                         value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
+                        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
                         placeholder="0000 0000 0000 0000"
+                        inputMode="numeric"
                         maxLength={19}
                         className={inputClass}
                       />
@@ -568,8 +663,8 @@ function AssinarContent() {
                       </span>
                       <input
                         value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        placeholder="Exatamente como no cartão"
+                        onChange={(e) => setCardName(e.target.value.toUpperCase())}
+                        placeholder="EXATAMENTE COMO NO CARTÃO"
                         className={inputClass}
                       />
                     </label>
@@ -580,8 +675,9 @@ function AssinarContent() {
                         </span>
                         <input
                           value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value)}
+                          onChange={(e) => setCardExpiry(formatCardExpiry(e.target.value))}
                           placeholder="MM/AA"
+                          inputMode="numeric"
                           maxLength={5}
                           className={inputClass}
                         />
@@ -592,8 +688,9 @@ function AssinarContent() {
                         </span>
                         <input
                           value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value)}
+                          onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
                           placeholder="000"
+                          inputMode="numeric"
                           maxLength={4}
                           className={inputClass}
                         />
@@ -605,51 +702,78 @@ function AssinarContent() {
                 {/* PIX */}
                 {paymentMethod === "pix" && (
                   <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-6">
-                    <div className="flex h-[200px] w-[200px] items-center justify-center rounded-2xl border-2 border-dashed border-border bg-card-hover">
-                      <span className="text-center text-xs text-text-muted">
-                        QR Code PIX
-                        <br />
-                        (mock)
-                      </span>
-                    </div>
-                    <p className="text-xs text-text-muted">
-                      Escaneie o QR code ou copie a chave PIX abaixo
-                    </p>
-                    <div className="flex w-full gap-2">
-                      <input
-                        readOnly
-                        value="00020126580014BR.GOV.BCB.PIX..."
-                        className={`${inputClass} truncate cursor-default`}
-                      />
-                      <Button
-                        variant="outline"
-                        size="md"
-                        className="flex-shrink-0 gap-1.5"
-                        onClick={handleCopyPix}
-                      >
-                        <Copy className="h-4 w-4" />
-                        {pixCopied ? "Copiado!" : "Copiar"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Boleto */}
-                {paymentMethod === "boleto" && (
-                  <div className="rounded-2xl border border-border bg-card p-6 text-center">
-                    <div className="mx-auto mb-4 flex h-14 w-48 items-center justify-center rounded-lg border border-dashed border-border bg-card-hover">
-                      <span className="text-xs text-text-muted">Código de barras</span>
-                    </div>
-                    <p className="text-sm text-text-muted">
-                      Boleto vence em{" "}
-                      <span className="font-semibold text-warning">3 dias úteis</span>
-                    </p>
-                    <p className="mt-1 text-xs text-text-muted">
-                      Após o pagamento, a confirmação ocorre em até 1 dia útil.
-                    </p>
+                    {pixResult ? (
+                      <>
+                        <div className="rounded-2xl bg-white p-3 shadow-sm">
+                          {pixResult.pixQrCodeUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={pixResult.pixQrCodeUrl}
+                              alt="QR Code PIX"
+                              width={200}
+                              height={200}
+                              className="h-[200px] w-[200px]"
+                            />
+                          ) : (
+                            <div className="flex h-[200px] w-[200px] items-center justify-center rounded-xl border border-dashed border-gray-200 text-xs text-gray-400">
+                              QR Code indisponível
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-medium text-warning">
+                          <div className="h-2 w-2 animate-pulse rounded-full bg-warning" />
+                          Aguardando pagamento…
+                        </div>
+                        <p className="text-center text-xs text-text-muted">
+                          Escaneie o QR code ou copie a chave PIX abaixo.
+                          <br />O código expira em 30 minutos.
+                        </p>
+                        <div className="flex w-full gap-2">
+                          <input
+                            readOnly
+                            value={pixResult.pixText}
+                            className={`${inputClass} cursor-default truncate`}
+                          />
+                          <Button
+                            variant="outline"
+                            size="md"
+                            className="flex-shrink-0 gap-1.5"
+                            onClick={() => handleCopyPix(pixResult.pixText)}
+                          >
+                            <Copy className="h-4 w-4" />
+                            {pixCopied ? "Copiado!" : "Copiar"}
+                          </Button>
+                        </div>
+                        <p className="text-center text-xs text-text-muted">
+                          Após pagar, clique em{" "}
+                          <strong className="text-text">"Já paguei →"</strong> abaixo para confirmar.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex h-[200px] w-[200px] items-center justify-center rounded-2xl border-2 border-dashed border-border bg-card-hover">
+                          <span className="text-center text-xs text-text-muted">
+                            QR Code PIX
+                            <br />
+                            será gerado ao confirmar
+                          </span>
+                        </div>
+                        <p className="text-xs text-text-muted">
+                          Clique em{" "}
+                          <strong className="text-text">"Gerar QR Code PIX"</strong> para continuar
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
+
+              {/* Error feedback */}
+              {checkoutError && (
+                <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                  {checkoutError}
+                </div>
+              )}
             </div>
 
             {/* Plan summary — desktop right */}
@@ -669,16 +793,25 @@ function AssinarContent() {
               size="lg"
               className="px-5"
               onClick={() => setStep(2)}
+              disabled={checkoutLoading}
             >
               ← Voltar
             </Button>
             <Button
               variant="primary"
               size="lg"
-              className="flex-1"
-              onClick={() => setConfirmed(true)}
+              className="flex-1 gap-2"
+              onClick={pixResult ? () => setConfirmed(true) : handleCheckout}
+              disabled={checkoutLoading}
             >
-              Confirmar e assinar
+              {checkoutLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {checkoutLoading
+                ? "Processando…"
+                : pixResult
+                ? "Já paguei →"
+                : paymentMethod === "pix"
+                ? "Gerar QR Code PIX"
+                : "Confirmar e assinar"}
             </Button>
           </div>
         </div>
