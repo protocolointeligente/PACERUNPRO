@@ -31,10 +31,10 @@ export function Logo({ variant = "horizontal", size = 36, className = "" }: Logo
       <span className="flex flex-col leading-none">
         <span className={`font-display ${textSize} font-extrabold tracking-wide text-text`}>
           PACE RUN{" "}
-          <span style={{ color: "#c8f135" }}>PRO</span>
+          <span style={{ color: "#F05020" }}>PRO</span>
         </span>
         {size >= 36 && (
-          <span className={`${subSize} uppercase tracking-[0.18em] font-medium`} style={{ color: "#6aaa6a" }}>
+          <span className={`${subSize} uppercase tracking-[0.18em] font-medium`} style={{ color: "#888888" }}>
             Para quem vive a corrida
           </span>
         )}

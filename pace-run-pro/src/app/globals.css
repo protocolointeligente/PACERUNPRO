@@ -30,35 +30,35 @@
 }
 
 /* ── PACE RUN PRO brand palette ─────────────────────────────────────────────
-   Primary accent : #c8f135  (lime / neon green — the brand hero colour)
-   Dark bg        : #070f07  (deep forest-green black — from the PDF cover)
-   Light bg       : #f2fbea  (pale lime tint)
+   Primary accent : #F05020  (coral orange — Runna-style)
+   Dark bg        : #0d0d0d  (near-black neutral)
+   Light bg       : #ffffff  (clean white)
    ───────────────────────────────────────────────────────────────────────── */
 
 :root {
-  --bg: #070f07;
-  --card: #0e1c0e;
-  --card-hover: #162616;
-  --border: #1e361e;
-  --primary: #c8f135;      /* lime / neon green */
-  --secondary: #4ade80;    /* softer green */
-  --accent: #a3e635;       /* slightly deeper lime */
-  --violet: #86efac;       /* light mint */
+  --bg: #0d0d0d;
+  --card: #1a1a1a;
+  --card-hover: #242424;
+  --border: #2e2e2e;
+  --primary: #F05020;      /* coral orange */
+  --secondary: #FF7A50;    /* lighter orange */
+  --accent: #E03A10;       /* deeper orange */
+  --violet: #FF9370;       /* soft peach */
   --success: #22c55e;
   --warning: #facc15;
   --danger: #ef4444;
   --info: #38bdf8;
-  --text: #f0fdf4;
-  --text-muted: #6aaa6a;
+  --text: #f5f5f5;
+  --text-muted: #888888;
 }
 
 .light {
-  --bg: #f2fbea;
-  --card: #ffffff;
-  --card-hover: #e8f8d4;
-  --border: #b8e080;
-  --text: #0a1a0a;
-  --text-muted: #4a6a4a;
+  --bg: #ffffff;
+  --card: #f8f8f8;
+  --card-hover: #f0f0f0;
+  --border: #e0e0e0;
+  --text: #111111;
+  --text-muted: #666666;
 }
 
 @keyframes pulse-soft {
@@ -74,8 +74,8 @@
   100% { background-position: 200% 0; }
 }
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(200, 241, 53, 0); }
-  50% { box-shadow: 0 0 28px 10px rgba(200, 241, 53, 0.45); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(240, 80, 32, 0); }
+  50% { box-shadow: 0 0 28px 10px rgba(240, 80, 32, 0.40); }
 }
 @keyframes fade-scale-in {
   from { opacity: 0; transform: scale(0.95); }
@@ -96,8 +96,8 @@ html.light {
 
 body {
   background:
-    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(200, 241, 53, 0.13), transparent 60%),
-    radial-gradient(ellipse 900px 500px at 100% 20%, rgba(74, 222, 128, 0.09), transparent 55%),
+    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(240, 80, 32, 0.08), transparent 60%),
+    radial-gradient(ellipse 900px 500px at 100% 20%, rgba(255, 122, 80, 0.05), transparent 55%),
     var(--color-background);
   color: var(--color-text);
   font-family: var(--font-sans);
@@ -107,10 +107,7 @@ body {
 }
 
 .light body {
-  background:
-    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(200, 241, 53, 0.12), transparent 60%),
-    radial-gradient(ellipse 900px 500px at 100% 20%, rgba(74, 222, 128, 0.08), transparent 55%),
-    var(--color-background);
+  background: var(--color-background);
 }
 
 ::-webkit-scrollbar {
@@ -129,27 +126,27 @@ body {
 }
 
 .glass {
-  background: rgba(14, 28, 14, 0.65);
+  background: rgba(26, 26, 26, 0.70);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(30, 54, 30, 0.7);
+  border: 1px solid rgba(46, 46, 46, 0.8);
 }
 
 .light .glass {
-  background: rgba(255, 255, 255, 0.70);
-  border: 1px solid rgba(184, 224, 128, 0.7);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(224, 224, 224, 0.8);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #c8f135 0%, #a3e635 50%, #4ade80 100%);
+  background: linear-gradient(135deg, #F05020 0%, #FF7A50 50%, #FFB090 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-/* lime green is a light colour — text on top must be dark */
+/* coral orange — white text on top */
 .gradient-primary {
-  background: linear-gradient(135deg, #c8f135 0%, #aee020 60%, #86efac 100%);
+  background: linear-gradient(135deg, #F05020 0%, #E03A10 60%, #FF7A50 100%);
 }
 
 .no-scrollbar::-webkit-scrollbar {
