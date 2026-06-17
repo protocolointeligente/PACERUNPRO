@@ -29,30 +29,36 @@
   --animate-fade-scale-in: fade-scale-in 300ms ease-out;
 }
 
+/* ── PACE RUN PRO brand palette ─────────────────────────────────────────────
+   Primary accent : #c8f135  (lime / neon green — the brand hero colour)
+   Dark bg        : #070f07  (deep forest-green black — from the PDF cover)
+   Light bg       : #f2fbea  (pale lime tint)
+   ───────────────────────────────────────────────────────────────────────── */
+
 :root {
-  --bg: #07030f;
-  --card: #14101f;
-  --card-hover: #1c1530;
-  --border: #2a2140;
-  --primary: #ff6a1a;
-  --secondary: #8b3dff;
-  --accent: #ff2e8b;
-  --violet: #b84dff;
-  --success: #84cc16;
+  --bg: #070f07;
+  --card: #0e1c0e;
+  --card-hover: #162616;
+  --border: #1e361e;
+  --primary: #c8f135;      /* lime / neon green */
+  --secondary: #4ade80;    /* softer green */
+  --accent: #a3e635;       /* slightly deeper lime */
+  --violet: #86efac;       /* light mint */
+  --success: #22c55e;
   --warning: #facc15;
   --danger: #ef4444;
   --info: #38bdf8;
-  --text: #ffffff;
-  --text-muted: #9b94ad;
+  --text: #f0fdf4;
+  --text-muted: #6aaa6a;
 }
 
 .light {
-  --bg: #eae4f5;
-  --card: #faf8fd;
-  --card-hover: #e0d8f0;
-  --border: #c9bfe2;
-  --text: #0f0b1c;
-  --text-muted: #5a5170;
+  --bg: #f2fbea;
+  --card: #ffffff;
+  --card-hover: #e8f8d4;
+  --border: #b8e080;
+  --text: #0a1a0a;
+  --text-muted: #4a6a4a;
 }
 
 @keyframes pulse-soft {
@@ -68,8 +74,8 @@
   100% { background-position: 200% 0; }
 }
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 106, 26, 0); }
-  50% { box-shadow: 0 0 28px 10px rgba(255, 106, 26, 0.5); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(200, 241, 53, 0); }
+  50% { box-shadow: 0 0 28px 10px rgba(200, 241, 53, 0.45); }
 }
 @keyframes fade-scale-in {
   from { opacity: 0; transform: scale(0.95); }
@@ -90,8 +96,8 @@ html.light {
 
 body {
   background:
-    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(255, 106, 26, 0.14), transparent 60%),
-    radial-gradient(ellipse 900px 500px at 100% 20%, rgba(139, 61, 255, 0.12), transparent 55%),
+    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(200, 241, 53, 0.13), transparent 60%),
+    radial-gradient(ellipse 900px 500px at 100% 20%, rgba(74, 222, 128, 0.09), transparent 55%),
     var(--color-background);
   color: var(--color-text);
   font-family: var(--font-sans);
@@ -102,14 +108,9 @@ body {
 
 .light body {
   background:
-    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(139, 61, 255, 0.10), transparent 60%),
-    radial-gradient(ellipse 900px 500px at 100% 20%, rgba(255, 106, 26, 0.07), transparent 55%),
+    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(200, 241, 53, 0.12), transparent 60%),
+    radial-gradient(ellipse 900px 500px at 100% 20%, rgba(74, 222, 128, 0.08), transparent 55%),
     var(--color-background);
-}
-
-/* In light mode the primary button uses violet instead of the orange gradient */
-.light .gradient-primary {
-  background: linear-gradient(135deg, #7c28f0 0%, #9b40ff 60%, #b26aff 100%);
 }
 
 ::-webkit-scrollbar {
@@ -128,34 +129,27 @@ body {
 }
 
 .glass {
-  background: rgba(20, 16, 31, 0.6);
+  background: rgba(14, 28, 14, 0.65);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(42, 33, 64, 0.7);
+  border: 1px solid rgba(30, 54, 30, 0.7);
 }
 
 .light .glass {
-  background: rgba(250, 248, 253, 0.7);
-  border: 1px solid rgba(201, 191, 226, 0.8);
-}
-
-/* Light mode: gradient-text uses violet palette */
-.light .gradient-text {
-  background: linear-gradient(135deg, #7c28f0 0%, #9b40ff 50%, #b84dff 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  background: rgba(255, 255, 255, 0.70);
+  border: 1px solid rgba(184, 224, 128, 0.7);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #ff6a1a 0%, #ff2e8b 50%, #8b3dff 100%);
+  background: linear-gradient(135deg, #c8f135 0%, #a3e635 50%, #4ade80 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
+/* lime green is a light colour — text on top must be dark */
 .gradient-primary {
-  background: linear-gradient(135deg, #ff6a1a 0%, #ff2e8b 50%, #8b3dff 100%);
+  background: linear-gradient(135deg, #c8f135 0%, #aee020 60%, #86efac 100%);
 }
 
 .no-scrollbar::-webkit-scrollbar {
