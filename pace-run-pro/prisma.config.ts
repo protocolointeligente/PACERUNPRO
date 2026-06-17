@@ -1,10 +1,11 @@
-import { defineConfig } from "prisma/config";
+// prisma.config.ts
+// Deliberately does NOT import from "prisma/config" — that subpath cannot be
+// resolved by the Prisma CLI's isolated module loader on some environments.
+// defineConfig() is a pure type-helper (identity function) so we skip it.
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
-// Prisma 7 CLI does not auto-load .env before evaluating prisma.config.ts.
-// We parse .env files manually using only Node built-ins so no extra deps needed.
-function loadEnvFile(filePath: string) {
+function loadEnvFile(filePath: string): void {
   try {
     const content = readFileSync(filePath, "utf-8");
     for (const line of content.split(/\r?\n/)) {
@@ -21,17 +22,17 @@ function loadEnvFile(filePath: string) {
   }
 }
 
+// Load env files from the project root (same folder as this file).
+// On Vercel / CI the vars are already in process.env so the files don't matter.
 const root = process.cwd();
 loadEnvFile(resolve(root, ".env.local"));
 loadEnvFile(resolve(root, ".env"));
 
-export default defineConfig({
+export default {
   datasource: {
-    // CLI uses the direct (non-pooler) URL for DDL operations.
-    // Runtime uses DATABASE_URL (pooler) via the PrismaClient constructor.
     url: process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL,
   },
   migrations: {
     seed: "tsx prisma/seed.ts",
   },
-});
+};
