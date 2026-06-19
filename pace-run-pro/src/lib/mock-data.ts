@@ -1274,15 +1274,33 @@ export const superAdminStats = {
   ],
 };
 
-export const assessoriaList = [
-  { id: "asc-1", name: "Run Tribe Assessoria", city: "São Paulo, SP", plan: "b2b-unlimited", coaches: 8, athletes: 340, mrr: 997, status: "ativo" as const, approvedAt: "Out 2024", contact: "contato@runtribe.com.br" },
-  { id: "asc-2", name: "Pace & Cia Esportes", city: "Belo Horizonte, MG", plan: "b2b-pro", coaches: 4, athletes: 47, mrr: 189, status: "ativo" as const, approvedAt: "Jan 2025", contact: "admin@paceecia.com.br" },
-  { id: "asc-3", name: "Runners BH", city: "Belo Horizonte, MG", plan: "b2b-premium", coaches: 7, athletes: 118, mrr: 389, status: "ativo" as const, approvedAt: "Fev 2025", contact: "suporte@runnersbh.com" },
-  { id: "asc-4", name: "Ultra Training SP", city: "São Paulo, SP", plan: "b2b-pro", coaches: 3, athletes: 38, mrr: 189, status: "ativo" as const, approvedAt: "Mar 2025", contact: "contato@ultratraining.com.br" },
-  { id: "asc-5", name: "Maratonistas do Sul", city: "Porto Alegre, RS", plan: "b2b-starter", coaches: 1, athletes: 14, mrr: 89, status: "ativo" as const, approvedAt: "Abr 2025", contact: "admin@maratonistassul.com.br" },
-  { id: "asc-6", name: "Sport Life Corridas", city: "Curitiba, PR", plan: "b2b-starter", coaches: 2, athletes: 19, mrr: 89, status: "pendente" as const, approvedAt: "—", contact: "contato@sportlife.com.br" },
-  { id: "asc-7", name: "Run Fast Academy", city: "Rio de Janeiro, RJ", plan: "b2b-pro", coaches: 4, athletes: 0, mrr: 189, status: "pendente" as const, approvedAt: "—", contact: "admin@runfast.com.br" },
-  { id: "asc-8", name: "Fortaleza Runners", city: "Fortaleza, CE", plan: "b2b-premium", coaches: 6, athletes: 0, mrr: 389, status: "pendente" as const, approvedAt: "—", contact: "suporte@fortalezarunners.com.br" },
+export interface AssessoriaItem {
+  id: string;
+  name: string;
+  city: string;
+  plan: string;
+  coaches: number;
+  athletes: number;
+  mrr: number;
+  status: "ativo" | "pendente" | "suspenso";
+  approvedAt: string;
+  contact: string;
+  healthScore: number;      // 0–100
+  churnRisk: "baixo" | "medio" | "alto";
+  lastLoginDays: number;    // dias desde último login do treinador principal
+  prescribedLast7d: number; // treinos prescritos nos últimos 7 dias
+  activeAthletes: number;   // atletas com check-in na última semana
+}
+
+export const assessoriaList: AssessoriaItem[] = [
+  { id: "asc-1", name: "Run Tribe Assessoria",  city: "São Paulo, SP",       plan: "white-label",  coaches: 8,  athletes: 340, mrr: 997, status: "ativo",   approvedAt: "Out 2024", contact: "contato@runtribe.com.br",         healthScore: 91, churnRisk: "baixo", lastLoginDays: 0,  prescribedLast7d: 68, activeAthletes: 298 },
+  { id: "asc-2", name: "Pace & Cia Esportes",   city: "Belo Horizonte, MG",  plan: "pro",          coaches: 4,  athletes: 47,  mrr: 197, status: "ativo",   approvedAt: "Jan 2025", contact: "admin@paceecia.com.br",           healthScore: 54, churnRisk: "medio", lastLoginDays: 5,  prescribedLast7d: 8,  activeAthletes: 22  },
+  { id: "asc-3", name: "Runners BH",            city: "Belo Horizonte, MG",  plan: "assessoria",   coaches: 7,  athletes: 118, mrr: 397, status: "ativo",   approvedAt: "Fev 2025", contact: "suporte@runnersbh.com",           healthScore: 78, churnRisk: "baixo", lastLoginDays: 1,  prescribedLast7d: 31, activeAthletes: 94  },
+  { id: "asc-4", name: "Ultra Training SP",     city: "São Paulo, SP",       plan: "pro",          coaches: 3,  athletes: 38,  mrr: 197, status: "ativo",   approvedAt: "Mar 2025", contact: "contato@ultratraining.com.br",   healthScore: 33, churnRisk: "alto",  lastLoginDays: 12, prescribedLast7d: 2,  activeAthletes: 5   },
+  { id: "asc-5", name: "Maratonistas do Sul",   city: "Porto Alegre, RS",    plan: "starter",      coaches: 1,  athletes: 14,  mrr: 97,  status: "ativo",   approvedAt: "Abr 2025", contact: "admin@maratonistassul.com.br",   healthScore: 62, churnRisk: "medio", lastLoginDays: 3,  prescribedLast7d: 6,  activeAthletes: 10  },
+  { id: "asc-6", name: "Sport Life Corridas",   city: "Curitiba, PR",        plan: "starter",      coaches: 2,  athletes: 0,   mrr: 97,  status: "pendente", approvedAt: "—",        contact: "contato@sportlife.com.br",       healthScore: 0,  churnRisk: "baixo", lastLoginDays: 1,  prescribedLast7d: 0,  activeAthletes: 0   },
+  { id: "asc-7", name: "Run Fast Academy",      city: "Rio de Janeiro, RJ",  plan: "pro",          coaches: 4,  athletes: 0,   mrr: 197, status: "pendente", approvedAt: "—",        contact: "admin@runfast.com.br",           healthScore: 0,  churnRisk: "baixo", lastLoginDays: 0,  prescribedLast7d: 0,  activeAthletes: 0   },
+  { id: "asc-8", name: "Fortaleza Runners",     city: "Fortaleza, CE",       plan: "assessoria",   coaches: 6,  athletes: 0,   mrr: 397, status: "pendente", approvedAt: "—",        contact: "suporte@fortalezarunners.com.br", healthScore: 0,  churnRisk: "baixo", lastLoginDays: 0,  prescribedLast7d: 0,  activeAthletes: 0   },
 ];
 
 export const b2cAthletesList = [

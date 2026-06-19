@@ -21,6 +21,9 @@ import {
   Bot,
   GraduationCap,
   Ticket,
+  LayoutGrid,
+  CheckSquare,
+  ScrollText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -65,9 +68,11 @@ export const coachNav: NavItem[] = [
 ];
 
 export const adminNav: NavItem[] = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/assessorias", label: "Assessorias", icon: Building2 },
-  { href: "/admin/atletas", label: "Atletas B2C", icon: Users },
-  { href: "/admin/financeiro", label: "Financeiro", icon: DollarSign },
-  { href: "/admin/vouchers", label: "Vouchers", icon: Ticket },
+  { href: "/admin/dashboard",   label: "Visão Geral",     icon: LayoutDashboard },
+  { href: "/admin/assessorias", label: "Assessorias",     icon: Building2       },
+  { href: "/admin/planos",      label: "Planos & Módulos",icon: LayoutGrid      },
+  { href: "/admin/financeiro",  label: "Financeiro",      icon: DollarSign      },
+  { href: "/admin/aprovacoes",  label: "Aprovações",      icon: CheckSquare     },
+  { href: "/admin/vouchers",    label: "Vouchers",        icon: Ticket          },
+  { href: "/admin/logs",        label: "Logs e auditoria",icon: ScrollText      },
 ];

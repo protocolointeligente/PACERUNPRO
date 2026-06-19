@@ -22,28 +22,38 @@ const fadeUp = {
 };
 
 const planBadgeVariant = (plan: string) => {
-  if (plan === "b2b-unlimited") return "danger" as const;
-  if (plan === "b2b-premium") return "warning" as const;
-  if (plan === "b2b-pro") return "primary" as const;
+  if (plan.includes("white") || plan.includes("unlimited")) return "danger" as const;
+  if (plan.includes("assessoria") || plan.includes("premium")) return "warning" as const;
+  if (plan.includes("pro")) return "primary" as const;
   return "outline" as const;
 };
 
 const planLabel = (plan: string) => {
   const map: Record<string, string> = {
-    "b2b-starter": "Starter",
-    "b2b-pro": "Pro",
-    "b2b-premium": "Premium",
-    "b2b-unlimited": "Ilimitado",
+    "starter": "Starter", "b2b-starter": "Starter",
+    "pro": "Pro", "b2b-pro": "Pro",
+    "assessoria": "Assessoria", "b2b-premium": "Assessoria",
+    "white-label": "White Label", "b2b-unlimited": "White Label",
   };
   return map[plan] ?? plan;
 };
 
+function HealthBadge({ score }: { score: number }) {
+  const cls = score >= 75 ? "text-success border-success/40" : score >= 50 ? "text-warning border-warning/40" : "text-danger border-danger/40";
+  if (score === 0) return null;
+  return (
+    <span className={`inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-xs font-bold ${cls}`}>
+      {score}<span className="font-normal opacity-60">/100</span>
+    </span>
+  );
+}
+
 const planFilters = [
   { id: "all", label: "Todos" },
-  { id: "b2b-starter", label: "Starter" },
-  { id: "b2b-pro", label: "Pro" },
-  { id: "b2b-premium", label: "Premium" },
-  { id: "b2b-unlimited", label: "Ilimitado" },
+  { id: "starter", label: "Starter" },
+  { id: "pro", label: "Pro" },
+  { id: "assessoria", label: "Assessoria" },
+  { id: "white-label", label: "White Label" },
 ];
 
 const statusFilters = [
@@ -205,28 +215,21 @@ export default function AssessoriasPage() {
                     </Badge>
                     <div className="flex items-center gap-1 text-xs text-text-muted">
                       <Users className="h-3.5 w-3.5" />
-                      <span>{a.coaches} treinadores</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-text-muted">
-                      <Users className="h-3.5 w-3.5" />
-                      <span>{a.athletes} atletas</span>
+                      <span>{a.coaches} trein. · {a.athletes} atletas</span>
                     </div>
                     <span className="text-sm font-semibold text-text">
                       R${a.mrr}/mês
                     </span>
+                    <HealthBadge score={a.healthScore} />
                     <Badge variant={effectiveStatus === "ativo" ? "success" : "warning"}>
                       {effectiveStatus === "ativo" ? "Ativo" : "Pendente"}
                     </Badge>
-                    <Button variant="secondary" size="sm">
-                      Detalhe
-                    </Button>
+                    <Button variant="secondary" size="sm">Detalhe</Button>
                     {effectiveStatus === "pendente" && (
                       <Button
                         variant="success"
                         size="sm"
-                        onClick={() =>
-                          setApprovedIds((prev) => new Set([...prev, a.id]))
-                        }
+                        onClick={() => setApprovedIds((prev) => new Set([...prev, a.id]))}
                       >
                         Aprovar
                       </Button>
