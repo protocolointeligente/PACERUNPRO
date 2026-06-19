@@ -5,6 +5,7 @@ import type {
   ExerciseLibraryItem,
   WorkoutDetail,
   WorkoutSummary,
+  WorkoutTemplate,
 } from "./types";
 
 export const TYPE_COLORS: Record<string, string> = {
@@ -743,6 +744,110 @@ export const coachOverview = {
 
 export const athleteList: AthleteListItem[] = [
   { id: "ath-1", name: "Camila Andrade", avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=128&h=128&fit=crop&crop=faces", goal: "21 km", level: "Intermediário", status: "ativo", adherence: 0.92, lastCheckIn: "Hoje, 07:40", weeklyLoad: 312, raceDate: "16 ago 2026" },
+  { id: "ath-2", name: "Bruno Lacerda", avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=128&h=128&fit=crop&crop=faces", goal: "42 km — Maratona", level: "Avançado", status: "ativo", adherence: 0.88, lastCheckIn: "Ontem, 18:30", weeklyLoad: 420, raceDate: "15 nov 2026" },
+  { id: "ath-3", name: "Fernanda Costa", avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=128&h=128&fit=crop&crop=faces", goal: "10 km", level: "Iniciante", status: "ativo", adherence: 0.75, lastCheckIn: "2 dias atrás", weeklyLoad: 185, raceDate: "20 jul 2026" },
+  { id: "ath-4", name: "Lucas Oliveira", avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=128&h=128&fit=crop&crop=faces", goal: "21 km", level: "Intermediário", status: "risco", adherence: 0.60, lastCheckIn: "4 dias atrás", weeklyLoad: 248, raceDate: "14 set 2026" },
+];
+
+export const workoutTemplates: WorkoutTemplate[] = [
+  {
+    id: "tpl-1",
+    name: "Full Body para Corredores",
+    description: "Treino completo focado em força funcional e prevenção de lesões para corredores de longa distância.",
+    division: "Full Body",
+    targetLevel: "Intermediário",
+    focus: "Força funcional, Prevenção",
+    createdAt: "2026-05-10",
+    sessions: [
+      {
+        label: "Full Body",
+        exercises: [
+          { libraryId: "ex-1", name: "Agachamento búlgaro", sets: 4, reps: "10-12 por perna", rest: "60-90s", rpe: 7 },
+          { libraryId: "ex-5", name: "Ponte de glúteo unilateral", sets: 3, reps: "12 por lado", rest: "45-60s", rpe: 6 },
+          { libraryId: "ex-2", name: "Elevação de panturrilha unilateral", sets: 3, reps: "12-15 por perna", rest: "45-60s", rpe: 6 },
+          { libraryId: "ex-3", name: "Prancha com elevação de perna", sets: 3, reps: "8 elevações por lado", rest: "45s", rpe: 6 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "tpl-2",
+    name: "Força Base AB",
+    description: "Divisão AB para iniciantes que estão começando o treinamento de força complementar à corrida.",
+    division: "AB",
+    targetLevel: "Iniciante",
+    focus: "Força, Estabilidade",
+    createdAt: "2026-04-22",
+    sessions: [
+      {
+        label: "Treino A",
+        exercises: [
+          { libraryId: "ex-5", name: "Ponte de glúteo unilateral", sets: 3, reps: "12 por lado", rest: "45-60s", rpe: 5 },
+          { libraryId: "ex-6", name: "Mobilidade de tornozelo em parede", sets: 3, reps: "10 repetições por lado", rest: "30s", rpe: 4 },
+          { libraryId: "ex-3", name: "Prancha com elevação de perna", sets: 3, reps: "6 elevações por lado", rest: "45s", rpe: 5 },
+        ],
+      },
+      {
+        label: "Treino B",
+        exercises: [
+          { libraryId: "ex-1", name: "Agachamento búlgaro", sets: 3, reps: "8-10 por perna", rest: "60-90s", rpe: 6 },
+          { libraryId: "ex-2", name: "Elevação de panturrilha unilateral", sets: 3, reps: "12-15 por perna", rest: "45-60s", rpe: 6 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "tpl-3",
+    name: "Pliometria Sprint",
+    description: "Treino de potência e velocidade para atletas avançados que buscam melhorar o ritmo de prova.",
+    division: "Full Body",
+    targetLevel: "Avançado",
+    focus: "Potência, Velocidade",
+    createdAt: "2026-05-28",
+    sessions: [
+      {
+        label: "Full Body",
+        exercises: [
+          { libraryId: "ex-4", name: "Skipping com elástico (pliometria)", sets: 5, reps: "20s de esforço", rest: "40s", rpe: 9 },
+          { libraryId: "ex-1", name: "Agachamento búlgaro", sets: 4, reps: "8 por perna", rest: "90s", rpe: 8 },
+          { libraryId: "ex-3", name: "Prancha com elevação de perna", sets: 3, reps: "10 elevações por lado", rest: "45s", rpe: 7 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "tpl-4",
+    name: "Força + Mobilidade ABC",
+    description: "Divisão ABC equilibrada que combina força muscular com exercícios de mobilidade para prevenção de lesões.",
+    division: "ABC",
+    targetLevel: "Intermediário",
+    focus: "Força, Mobilidade",
+    createdAt: "2026-06-01",
+    isCustom: true,
+    sessions: [
+      {
+        label: "Treino A — Inferiores",
+        exercises: [
+          { libraryId: "ex-1", name: "Agachamento búlgaro", sets: 4, reps: "10-12 por perna", rest: "60-90s", rpe: 7 },
+          { libraryId: "ex-5", name: "Ponte de glúteo unilateral", sets: 3, reps: "12 por lado", rest: "45-60s", rpe: 6 },
+        ],
+      },
+      {
+        label: "Treino B — Panturrilha + Potência",
+        exercises: [
+          { libraryId: "ex-2", name: "Elevação de panturrilha unilateral", sets: 4, reps: "12-15 por perna", rest: "45-60s", rpe: 7 },
+          { libraryId: "ex-4", name: "Skipping com elástico (pliometria)", sets: 4, reps: "20s de esforço", rest: "40s", rpe: 8 },
+        ],
+      },
+      {
+        label: "Treino C — Core + Mobilidade",
+        exercises: [
+          { libraryId: "ex-3", name: "Prancha com elevação de perna", sets: 3, reps: "8 elevações por lado", rest: "45s", rpe: 6 },
+          { libraryId: "ex-6", name: "Mobilidade de tornozelo em parede", sets: 3, reps: "10 repetições por lado", rest: "30s", rpe: 4 },
+        ],
+      },
+    ],
+  },
 ];
 
 export const reportsList = [

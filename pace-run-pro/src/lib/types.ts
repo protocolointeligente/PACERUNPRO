@@ -93,3 +93,29 @@ export interface ExerciseLibraryItem {
   rest: string;
   rpe: number;
 }
+
+export interface WorkoutTemplateExercise {
+  libraryId: string;
+  name: string;
+  sets: number;
+  reps: string;
+  rest: string;
+  rpe: number;
+}
+
+export interface WorkoutTemplateSession {
+  label: string;
+  exercises: WorkoutTemplateExercise[];
+}
+
+export interface WorkoutTemplate {
+  id: string;
+  name: string;
+  description: string;
+  division: string;
+  targetLevel: string;
+  focus: string;
+  sessions: WorkoutTemplateSession[];
+  createdAt: string;
+  isCustom?: boolean;
+}
