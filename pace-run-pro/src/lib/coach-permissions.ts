@@ -39,7 +39,7 @@ const coreNav: NavItem[] = [
   { href: "/treinador/analise-semanal", label: "Análise semanal", icon: BarChart2 },
   { href: "/treinador/alunos", label: "Atletas", icon: Users },
   { href: "/treinador/prescricao/periodizacao", label: "Periodização", icon: CalendarDays },
-  { href: "/treinador/prescricao/corrida", label: "Referência VDOT", icon: Activity },
+  { href: "/treinador/prescricao/corrida", label: "Corrida & VDOT", icon: Activity },
   { href: "/treinador/prescricao/forca", label: "Prescrição força", icon: Dumbbell },
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
 ];

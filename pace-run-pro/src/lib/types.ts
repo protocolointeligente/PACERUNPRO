@@ -66,6 +66,7 @@ export interface AthleteListItem {
   lastCheckIn?: string;
   weeklyLoad: number;
   raceDate?: string;
+  vdot?: number;
 }
 
 export interface AthleteRosterItem {
@@ -116,6 +117,29 @@ export interface WorkoutTemplate {
   targetLevel: string;
   focus: string;
   sessions: WorkoutTemplateSession[];
+  createdAt: string;
+  isCustom?: boolean;
+}
+
+export interface RunTemplateSession {
+  dayLabel: string;
+  title: string;
+  type: "corrida" | "forca" | "descanso";
+  zone?: "E" | "M" | "T" | "I" | "R";
+  distanceKm?: number;
+  intervals?: string;
+  description: string;
+}
+
+export interface RunWorkoutTemplate {
+  id: string;
+  name: string;
+  description: string;
+  targetLevel: string;
+  weeklyKm: number;
+  sessionsPerWeek: number;
+  focus: string;
+  sessions: RunTemplateSession[];
   createdAt: string;
   isCustom?: boolean;
 }

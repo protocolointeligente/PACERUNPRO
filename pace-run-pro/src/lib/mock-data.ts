@@ -3,6 +3,7 @@ import type {
   AthleteRosterItem,
   CheckInEntry,
   ExerciseLibraryItem,
+  RunWorkoutTemplate,
   WorkoutDetail,
   WorkoutSummary,
   WorkoutTemplate,
@@ -743,10 +744,78 @@ export const coachOverview = {
 };
 
 export const athleteList: AthleteListItem[] = [
-  { id: "ath-1", name: "Camila Andrade", avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=128&h=128&fit=crop&crop=faces", goal: "21 km", level: "Intermediário", status: "ativo", adherence: 0.92, lastCheckIn: "Hoje, 07:40", weeklyLoad: 312, raceDate: "16 ago 2026" },
-  { id: "ath-2", name: "Bruno Lacerda", avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=128&h=128&fit=crop&crop=faces", goal: "42 km — Maratona", level: "Avançado", status: "ativo", adherence: 0.88, lastCheckIn: "Ontem, 18:30", weeklyLoad: 420, raceDate: "15 nov 2026" },
-  { id: "ath-3", name: "Fernanda Costa", avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=128&h=128&fit=crop&crop=faces", goal: "10 km", level: "Iniciante", status: "ativo", adherence: 0.75, lastCheckIn: "2 dias atrás", weeklyLoad: 185, raceDate: "20 jul 2026" },
-  { id: "ath-4", name: "Lucas Oliveira", avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=128&h=128&fit=crop&crop=faces", goal: "21 km", level: "Intermediário", status: "risco", adherence: 0.60, lastCheckIn: "4 dias atrás", weeklyLoad: 248, raceDate: "14 set 2026" },
+  { id: "ath-1", name: "Camila Andrade", avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=128&h=128&fit=crop&crop=faces", goal: "21 km", level: "Intermediário", status: "ativo", adherence: 0.92, lastCheckIn: "Hoje, 07:40", weeklyLoad: 312, raceDate: "16 ago 2026", vdot: 43 },
+  { id: "ath-2", name: "Bruno Lacerda", avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=128&h=128&fit=crop&crop=faces", goal: "42 km — Maratona", level: "Avançado", status: "ativo", adherence: 0.88, lastCheckIn: "Ontem, 18:30", weeklyLoad: 420, raceDate: "15 nov 2026", vdot: 52 },
+  { id: "ath-3", name: "Fernanda Costa", avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=128&h=128&fit=crop&crop=faces", goal: "10 km", level: "Iniciante", status: "ativo", adherence: 0.75, lastCheckIn: "2 dias atrás", weeklyLoad: 185, raceDate: "20 jul 2026", vdot: 37 },
+  { id: "ath-4", name: "Lucas Oliveira", avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=128&h=128&fit=crop&crop=faces", goal: "21 km", level: "Intermediário", status: "risco", adherence: 0.60, lastCheckIn: "4 dias atrás", weeklyLoad: 248, raceDate: "14 set 2026", vdot: 39 },
+];
+
+export const runWorkoutTemplates: RunWorkoutTemplate[] = [
+  {
+    id: "run-tpl-1",
+    name: "Base Aeróbica — Iniciante",
+    description: "Três sessões semanais em ritmo fácil para construir a base aeróbica sem risco de sobrecarga.",
+    targetLevel: "Iniciante",
+    weeklyKm: 25,
+    sessionsPerWeek: 3,
+    focus: "Volume, Aeróbico",
+    createdAt: "2026-04-15",
+    sessions: [
+      { dayLabel: "Ter", title: "Rodagem leve 6 km", type: "corrida", zone: "E", distanceKm: 6, description: "Ritmo confortável, respira pelo nariz sem dificuldade" },
+      { dayLabel: "Qui", title: "Rodagem leve + strides 7 km", type: "corrida", zone: "E", distanceKm: 7, intervals: "4×80m", description: "Finaliza com 4 acelerações curtas de 80m para ativar a passada" },
+      { dayLabel: "Sáb", title: "Longão 8 km", type: "corrida", zone: "E", distanceKm: 8, description: "Maior sessão da semana — ritmo leve do início ao fim" },
+    ],
+  },
+  {
+    id: "run-tpl-2",
+    name: "Bloco de Limiar — Intermediário",
+    description: "Quatro sessões com ênfase no limiar de lactato para elevar o ritmo de prova em meias maratonas.",
+    targetLevel: "Intermediário",
+    weeklyKm: 45,
+    sessionsPerWeek: 4,
+    focus: "Limiar, Resistência",
+    createdAt: "2026-05-03",
+    sessions: [
+      { dayLabel: "Seg", title: "Rodagem leve 8 km", type: "corrida", zone: "E", distanceKm: 8, description: "Recuperação ativa após o fim de semana" },
+      { dayLabel: "Ter", title: "Tempo Run 6 km", type: "corrida", zone: "T", distanceKm: 6, description: "Aquecimento 2km (E) + 4km contínuos em limiar + volta calma" },
+      { dayLabel: "Qui", title: "Rodagem com progressão 10 km", type: "corrida", zone: "M", distanceKm: 10, description: "Inicia em E, finaliza os últimos 3km em ritmo de maratona" },
+      { dayLabel: "Sáb", title: "Longão 14 km", type: "corrida", zone: "E", distanceKm: 14, description: "Volume longo em zona E, foco em resistência geral" },
+    ],
+  },
+  {
+    id: "run-tpl-3",
+    name: "VO₂máx & Velocidade — Avançado",
+    description: "Cinco sessões de alto volume com intervalados e tempo run para maximizar o VO₂máx e a economia de corrida.",
+    targetLevel: "Avançado",
+    weeklyKm: 70,
+    sessionsPerWeek: 5,
+    focus: "VO₂máx, Velocidade, Volume",
+    createdAt: "2026-05-18",
+    sessions: [
+      { dayLabel: "Seg", title: "Rodagem leve 10 km", type: "corrida", zone: "E", distanceKm: 10, description: "Ativação após descanso — ritmo totalmente confortável" },
+      { dayLabel: "Ter", title: "Intervalado 8×400m", type: "corrida", zone: "R", distanceKm: 8, intervals: "8×400m", description: "Tiros em pace de repetição com 200m de trote entre cada" },
+      { dayLabel: "Qui", title: "Tempo Run 8 km", type: "corrida", zone: "T", distanceKm: 8, description: "Aquecimento 2km + 5km em limiar + 1km de volta calma" },
+      { dayLabel: "Sex", title: "Rodagem leve 8 km", type: "corrida", zone: "E", distanceKm: 8, description: "Recuperação ativa entre o Tempo Run e o longão" },
+      { dayLabel: "Sáb", title: "Longão 20 km", type: "corrida", zone: "E", distanceKm: 20, description: "Maior sessão da semana — últimos 5km em ritmo M se sentir bem" },
+    ],
+  },
+  {
+    id: "run-tpl-4",
+    name: "Pré-Prova 10 km",
+    description: "Semana específica para quem corre 10km, com intervalados em zona I e progressivo para afiar o ritmo de prova.",
+    targetLevel: "Intermediário",
+    weeklyKm: 40,
+    sessionsPerWeek: 4,
+    focus: "Velocidade, VO₂máx",
+    createdAt: "2026-06-10",
+    isCustom: true,
+    sessions: [
+      { dayLabel: "Ter", title: "Intervalado 6×800m", type: "corrida", zone: "I", distanceKm: 9, intervals: "6×800m", description: "Tiros em zona I com 90s de trote entre cada; ritmo próximo à prova" },
+      { dayLabel: "Qui", title: "Progressivo 8 km", type: "corrida", zone: "M", distanceKm: 8, description: "Inicia suave (E) e progride para ritmo de maratona nos últimos 3km" },
+      { dayLabel: "Sex", title: "Pernas leves 5 km", type: "corrida", zone: "E", distanceKm: 5, description: "Recuperação curta — não forçar, só manter o movimento" },
+      { dayLabel: "Dom", title: "Longão leve 10 km", type: "corrida", zone: "E", distanceKm: 10, description: "Volume de fim de semana em ritmo completamente confortável" },
+    ],
+  },
 ];
 
 export const workoutTemplates: WorkoutTemplate[] = [
