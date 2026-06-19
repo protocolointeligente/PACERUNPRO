@@ -72,6 +72,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   vouchersCreated Voucher[] @relation("VouchersCreated")
+  billingSettings BillingSettings?
 
   @@map("users")
 }
@@ -718,4 +719,50 @@ model Voucher {
   updatedAt   DateTime        @updatedAt
 
   @@map("vouchers")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Configurações financeiras da assessoria (recebimento de atletas)
+// ────────────────────────────────────────────────────────────────────────────
+
+enum ReceivingMethod {
+  PIX
+  PAGBANK
+  MERCADOPAGO
+  STRIPE
+}
+
+model BillingSettings {
+  id              String           @id @default(cuid())
+  userId          String           @unique
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Dados fiscais
+  razaoSocial     String?
+  cpfCnpj         String?
+  responsavel     String?
+
+  // Conta de recebimento
+  receivingMethod ReceivingMethod?
+  pixKey          String?
+  bankName        String?
+  bankAgency      String?
+  bankAccount     String?
+  bankAccountType String?          // corrente | poupanca
+
+  // Status de conexão com gateways externos
+  pagbankConnected      Boolean @default(false)
+  mercadopagoConnected  Boolean @default(false)
+  stripeConnected       Boolean @default(false)
+
+  // Módulo de cobrança automática de atletas (plano Assessoria+)
+  autoChargeEnabled     Boolean @default(false)
+  autoChargeDayOfMonth  Int?    @default(5)   // dia do vencimento mensal
+  gracePeriodDays       Int?    @default(3)   // dias antes de notificar
+  blockAfterDays        Int?    @default(15)  // dias de atraso para bloquear acesso
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("billing_settings")
 }
