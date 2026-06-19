@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Dumbbell, Flame, ListChecks, Repeat, Timer } from "lucide-react";
+import { Dumbbell, Flame, ImageOff, ListChecks, Repeat, Timer } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,10 +47,16 @@ export default function StrengthPage() {
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-card text-sm font-bold text-text-muted">
                     {i + 1}
                   </span>
-                  <div
-                    className="h-12 w-16 shrink-0 rounded-lg bg-cover bg-center"
-                    style={{ backgroundImage: `url('${ex.imageUrl}')` }}
-                  />
+                  {ex.imageUrl ? (
+                    <div
+                      className="h-12 w-16 shrink-0 rounded-lg bg-cover bg-center"
+                      style={{ backgroundImage: `url('${ex.imageUrl}')` }}
+                    />
+                  ) : (
+                    <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg bg-card-hover">
+                      <ImageOff className="h-4 w-4 text-text-muted/30" />
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-text">{ex.name}</p>
                     <p className="text-xs text-text-muted">{ex.category}</p>

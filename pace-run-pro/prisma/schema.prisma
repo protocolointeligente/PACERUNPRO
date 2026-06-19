@@ -163,8 +163,13 @@ model Coach {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   credential   String?  // ex.: CREF 014626-G/MG
   bio          String?
+  publicBio    String?  // texto exibido na página pública da assessoria
   specialties  String[]
+  slug         String?  @unique  // ex.: "ricardo-pace" → /p/ricardo-pace
+  logoUrl      String?
+  whatsapp     String?
 
+  plans        CoachPlan[]
   athletes     Athlete[]
   teams        Team[]
   trainingPlans TrainingPlan[]
@@ -719,6 +724,39 @@ model Voucher {
   updatedAt   DateTime        @updatedAt
 
   @@map("vouchers")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Planos de venda da assessoria (o que o coach oferece para seus atletas)
+// ────────────────────────────────────────────────────────────────────────────
+
+enum PlanPeriod {
+  MENSAL
+  TRIMESTRAL
+  SEMESTRAL
+  ANUAL
+}
+
+model CoachPlan {
+  id          String     @id @default(cuid())
+  coachId     String
+  coach       Coach      @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  priceCents  Int                     // preço em centavos
+  period      PlanPeriod @default(MENSAL)
+  features    String[]
+  active      Boolean    @default(true)
+  highlight   Boolean    @default(false) // destaque no plano mais popular
+  maxSlots    Int?                    // null = vagas ilimitadas
+  usedSlots   Int        @default(0)
+  sortOrder   Int        @default(0)
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("coach_plans")
 }
 
 // ────────────────────────────────────────────────────────────────────────────

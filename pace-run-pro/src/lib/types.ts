@@ -84,7 +84,7 @@ export interface ExerciseLibraryItem {
   name: string;
   category: string;
   muscles: string[];
-  imageUrl?: string;
+  imageUrl?: string | null;
   description: string;
   execution: string;
   mistakes: string;

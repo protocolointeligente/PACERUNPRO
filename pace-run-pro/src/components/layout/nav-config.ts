@@ -25,6 +25,8 @@ import {
   CheckSquare,
   ScrollText,
   Wallet,
+  PackagePlus,
+  Globe,
   type LucideIcon,
 } from "lucide-react";
 
@@ -60,8 +62,10 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/prescricao/corrida", label: "Referência VDOT", icon: Activity },
   { href: "/treinador/prescricao/forca", label: "Prescrição força", icon: Dumbbell },
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
-  { href: "/treinador/gestao",      label: "Gestão & vendas",          icon: DollarSign },
-  { href: "/treinador/financeiro",  label: "Config. financeiras",      icon: Wallet     },
+  { href: "/treinador/gestao",        label: "Gestão & vendas",        icon: DollarSign  },
+  { href: "/treinador/planos-venda", label: "Meus planos",            icon: PackagePlus },
+  { href: "/treinador/financeiro",   label: "Config. financeiras",    icon: Wallet      },
+  { href: "/treinador/minha-pagina", label: "Minha página pública",   icon: Globe       },
   { href: "/treinador/vouchers", label: "Vouchers", icon: Ticket },
   { href: "/treinador/crm", label: "CRM de leads", icon: Kanban },
   { href: "/treinador/white-label", label: "White-label", icon: Palette },

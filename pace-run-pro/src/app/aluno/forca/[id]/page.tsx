@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, Flame, PlayCircle, Repeat, Target, Timer } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, Dumbbell, Flame, PlayCircle, Repeat, Target, Timer } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,14 @@ export default async function ExerciseDetailPage({ params }: { params: Promise<{
       </Link>
       <Card className="overflow-hidden">
         <div className="relative h-56 sm:h-72">
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${exercise.imageUrl}')` }} />
+          {exercise.imageUrl ? (
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${exercise.imageUrl}')` }} />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-card-hover">
+              <Dumbbell className="h-10 w-10 text-text-muted/30" />
+              <p className="text-xs text-text-muted/50">Vídeo em produção</p>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-5">
             <div>

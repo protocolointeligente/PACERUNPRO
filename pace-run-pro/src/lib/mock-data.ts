@@ -469,7 +469,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Agachamento búlgaro",
     category: "Glúteos",
     muscles: ["Glúteo máximo", "Quadríceps", "Isquiotibiais"],
-    imageUrl: "/exercises/agachamento.gif",
+    imageUrl: null,
     description:
       "Exercício unilateral que fortalece glúteos e quadríceps, melhora estabilidade e corrige assimetrias entre as pernas — essencial para corredores.",
     execution:
@@ -486,7 +486,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Elevação de panturrilha unilateral",
     category: "Panturrilhas",
     muscles: ["Gastrocnêmio", "Sóleo"],
-    imageUrl: "/exercises/panturrilha.gif",
+    imageUrl: null,
     description:
       "Fortalece a musculatura da panturrilha, fundamental para a fase de propulsão da passada e prevenção de lesões no tendão de Aquiles.",
     execution:
@@ -503,7 +503,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Prancha com elevação de perna",
     category: "Core",
     muscles: ["Reto abdominal", "Transverso", "Glúteo médio"],
-    imageUrl: "/exercises/prancha.gif",
+    imageUrl: null,
     description:
       "Melhora a estabilidade lombo-pélvica e a transferência de força entre tronco e membros inferiores durante a corrida.",
     execution:
@@ -520,7 +520,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Skipping com elástico (pliometria)",
     category: "Pliometria",
     muscles: ["Flexores de quadril", "Quadríceps", "Panturrilhas"],
-    imageUrl: "/exercises/elastico.gif",
+    imageUrl: null,
     description:
       "Desenvolve potência e ritmo de passada, melhorando a economia de corrida em ritmos de prova.",
     execution:
@@ -537,7 +537,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Ponte de glúteo unilateral",
     category: "Prevenção",
     muscles: ["Glúteo máximo", "Isquiotibiais", "Core"],
-    imageUrl: "/exercises/ponte.gif",
+    imageUrl: null,
     description:
       "Ativa e fortalece a cadeia posterior, prevenindo dores lombares e desequilíbrios musculares comuns em corredores.",
     execution:
@@ -554,7 +554,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Mobilidade de tornozelo em parede",
     category: "Tornozelo",
     muscles: ["Tríceps sural", "Tibial anterior"],
-    imageUrl: "/exercises/mobilidade.gif",
+    imageUrl: null,
     description:
       "Melhora a amplitude de dorsiflexão do tornozelo, importante para a aterrissagem e propulsão eficiente da passada.",
     execution:
