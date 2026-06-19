@@ -47,29 +47,29 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative overflow-hidden py-24 sm:py-32">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_1000px_600px_at_50%_-10%,rgba(139,92,246,0.25),transparent_60%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_700px_500px_at_100%_30%,rgba(56,189,248,0.1),transparent_55%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_1000px_600px_at_50%_-10%,rgba(124,58,237,0.22),transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_700px_500px_at_100%_30%,rgba(255,107,53,0.08),transparent_55%)]" />
         </div>
         <div className="mx-auto max-w-7xl px-6 text-center">
           <Badge variant="primary" className="mb-6 text-xs">
             <Star className="h-3 w-3" fill="currentColor" />
-            Plataforma nº 1 para assessorias de corrida no Brasil
+            Sistema operacional para assessorias esportivas
           </Badge>
           <h1 className="font-display text-5xl font-extrabold leading-tight tracking-tight sm:text-6xl lg:text-7xl">
-            Treine com propósito.{" "}
-            <span className="gradient-text">Evolua todos os dias.</span>
+            A plataforma para assessorias{" "}
+            <span className="gradient-text">escalarem com menos trabalho.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-text-muted">
-            Prescrição inteligente de corrida e musculação, check-in com IA, periodização
-            profissional e gestão completa de atletas — em um único lugar, em português.
+            Crie treinos em minutos, monitore atletas automaticamente, detecte riscos antes das
+            lesões e controle alunos, cobrança e evolução em um único sistema.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/cadastro">
+            <Link href="/cadastro?perfil=treinador">
               <Button variant="primary" size="lg" className="gap-2">
-                Começar grátis <ArrowRight className="h-5 w-5" />
+                Testar como treinador <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/aluno/dashboard">
+            <Link href="/treinador/dashboard">
               <Button variant="outline" size="lg">
                 Ver demonstração
               </Button>
@@ -80,7 +80,7 @@ export default function LandingPage() {
           <div className="mx-auto mt-20 grid max-w-4xl grid-cols-2 gap-6 sm:grid-cols-4">
             {[
               { value: `${platformStats.coaches}+`, label: "Treinadores ativos" },
-              { value: `${(platformStats.athletes / 1000).toFixed(1)}k`, label: "Atletas na plataforma" },
+              { value: `${(platformStats.athletes / 1000).toFixed(1)}k`, label: "Atletas gerenciados" },
               { value: `${(platformStats.workoutsPrescribed / 1000).toFixed(0)}k+`, label: "Treinos prescritos" },
               { value: `${platformStats.countriesActive}`, label: "Países ativos" },
             ].map((stat) => (
@@ -102,12 +102,12 @@ export default function LandingPage() {
           <div className="mb-16 text-center">
             <Badge variant="info" className="mb-4">Funcionalidades</Badge>
             <h2 className="font-display text-4xl font-extrabold sm:text-5xl">
-              Para cada perfil,{" "}
-              <span className="gradient-text">o que precisa</span>
+              Tudo que sua assessoria{" "}
+              <span className="gradient-text">precisa em um lugar</span>
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-text-muted">
-              Do atleta iniciante à grande assessoria — o Pace Run Pro adapta cada recurso ao
-              seu contexto.
+              Do treinador solo à grande assessoria — cada módulo foi pensado para reduzir
+              trabalho repetitivo e aumentar a qualidade da prescrição.
             </p>
           </div>
 
@@ -149,12 +149,12 @@ export default function LandingPage() {
           <div className="mb-12 text-center">
             <Badge variant="default" className="mb-4">Integrações</Badge>
             <h2 className="font-display text-4xl font-extrabold sm:text-5xl">
-              Sincroniza com seus{" "}
+              Preparado para seus{" "}
               <span className="gradient-text">dispositivos</span>
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-text-muted">
-              Conecte seu relógio, app ou plataforma favorita. Os dados chegam automaticamente,
-              sem nenhuma ação manual.
+              Integração nativa com Strava já disponível. Suporte a Garmin, Polar, Coros e Apple
+              Watch em desenvolvimento — os dados chegarão automaticamente, sem ação manual.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-3">
@@ -232,22 +232,22 @@ export default function LandingPage() {
               />
             </div>
             <h2 className="font-display text-4xl font-extrabold sm:text-5xl">
-              Pronto para levar sua assessoria{" "}
-              <span className="gradient-text">ao próximo nível?</span>
+              Pare de perder tempo em planilhas.{" "}
+              <span className="gradient-text">Escale sua assessoria.</span>
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-text-muted">
-              Junte-se a {platformStats.coaches}+ treinadores que já transformaram sua gestão com o
-              Pace Run Pro. Comece grátis hoje.
+              {platformStats.coaches}+ treinadores já gerenciam seus atletas com o Pace Run Pro.
+              Comece grátis e veja a diferença na primeira semana.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/aluno/dashboard">
+              <Link href="/cadastro?perfil=treinador">
                 <Button variant="primary" size="lg" className="gap-2">
-                  Começar grátis agora <ArrowRight className="h-5 w-5" />
+                  Testar como treinador <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/treinador/dashboard">
                 <Button variant="outline" size="lg">
-                  Falar com consultor
+                  Agendar demonstração
                 </Button>
               </Link>
             </div>

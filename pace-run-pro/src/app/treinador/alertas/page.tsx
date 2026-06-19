@@ -10,6 +10,8 @@ import {
   CheckCheck,
   ChevronRight,
   Clock,
+  MessageSquare,
+  Zap,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -236,16 +238,40 @@ export default function AlertasPage() {
                             </span>
                           )}
 
-                          <div className="mt-3 flex items-center gap-2">
+                          {a.recommendation && (
+                            <div className={cn(
+                              "mt-3 rounded-xl border-l-2 bg-card-hover px-3 py-2.5",
+                              a.severity === "critico" && "border-danger",
+                              a.severity === "atencao" && "border-warning",
+                              a.severity === "info" && "border-info",
+                            )}>
+                              <p className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-0.5">
+                                Recomendação
+                              </p>
+                              <p className="text-xs text-text leading-relaxed">{a.recommendation}</p>
+                            </div>
+                          )}
+
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            {a.severity !== "info" && (
+                              <Button
+                                size="sm"
+                                variant="primary"
+                                onClick={() => markRead(a.id)}
+                                disabled={a.read}
+                                className="gap-1.5"
+                              >
+                                <Zap className="h-3.5 w-3.5" />
+                                Aplicar ajuste
+                              </Button>
+                            )}
                             <Button
                               size="sm"
                               variant="secondary"
-                              onClick={() => markRead(a.id)}
-                              className={a.read ? "opacity-50" : ""}
-                              disabled={a.read}
+                              className="gap-1.5"
                             >
-                              <CheckCheck className="h-3.5 w-3.5" />
-                              {a.read ? "Lido" : "Marcar como lido"}
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              Enviar mensagem
                             </Button>
                             <a
                               href={`/treinador/alunos/${a.athleteId}`}
@@ -256,6 +282,15 @@ export default function AlertasPage() {
                             >
                               Ver atleta <ChevronRight className="h-3.5 w-3.5" />
                             </a>
+                            {!a.read && (
+                              <button
+                                onClick={() => markRead(a.id)}
+                                className="ml-auto text-xs text-text-muted hover:text-text transition-colors"
+                              >
+                                <CheckCheck className="h-3.5 w-3.5 inline mr-1" />
+                                Lido
+                              </button>
+                            )}
                           </div>
                         </div>
                       </CardContent>

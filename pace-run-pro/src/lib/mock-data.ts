@@ -1215,7 +1215,7 @@ export const b2bPlans = [
       "Tudo do Pro",
       "Painel financeiro do roster",
       "Link de convite por treinador",
-      "Relatórios PDF estilo IronGuides",
+      "Relatórios PDF profissionais de performance",
       "API básica para integrações",
       "Gerente de conta",
     ],
@@ -1310,6 +1310,7 @@ export interface SmartAlert {
   title: string;
   description: string;
   metric?: string;
+  recommendation?: string;
   daysAgo: number;
   read: boolean;
 }
@@ -1319,12 +1320,39 @@ export const smartAlerts: SmartAlert[] = [
     id: "al-1",
     athleteId: "ath-1",
     athleteName: "Camila Andrade",
-    severity: "atencao",
+    severity: "critico",
     category: "fc",
-    title: "FC média em Z2 crescendo",
-    description: "A frequência cardíaca média nos treinos de zona 2 aumentou 12% nos últimos 10 dias, sugerindo fadiga acumulada ou necessidade de deload.",
-    metric: "FC Z2: +12% vs. média anterior",
-    daysAgo: 2,
+    title: "Risco moderado de fadiga",
+    description: "Sono caiu 18%, RPE subiu 22% e FC em Z2 aumentou 12% nos últimos 10 dias.",
+    metric: "Sono −18% · RPE +22% · FC Z2 +12%",
+    recommendation: "Reduzir volume em 15% por 7 dias e monitorar sono.",
+    daysAgo: 0,
+    read: false,
+  },
+  {
+    id: "al-2",
+    athleteId: "ath-1",
+    athleteName: "Camila Andrade",
+    severity: "atencao",
+    category: "adesao",
+    title: "Adesão semanal abaixo da meta",
+    description: "Completou apenas 2 dos 4 treinos prescritos na semana passada (50% de adesão).",
+    metric: "Adesão: 50% (meta: ≥ 80%)",
+    recommendation: "Verificar se há sobrecarga de agenda ou desmotivação. Considere reduzir para 3 treinos/sem.",
+    daysAgo: 1,
+    read: false,
+  },
+  {
+    id: "al-3",
+    athleteId: "ath-1",
+    athleteName: "Camila Andrade",
+    severity: "info",
+    category: "desempenho",
+    title: "Melhora expressiva no pace",
+    description: "Pace médio nos treinos de rodagem caiu 0:18/km em relação ao mês anterior.",
+    metric: "Pace: −0:18/km vs. média 30 dias",
+    recommendation: "Boa janela para avançar para fase de construção na próxima semana.",
+    daysAgo: 3,
     read: false,
   },
 ];
