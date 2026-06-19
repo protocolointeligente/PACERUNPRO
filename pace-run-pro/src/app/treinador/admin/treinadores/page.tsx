@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useCoachRole } from "@/context/coach-role-context";
+import { canAccess } from "@/lib/coach-permissions";
+import { AccessRestricted } from "@/components/shared/access-restricted";
 import { cn } from "@/lib/utils";
 
 const planFilters = ["Todos", "Starter", "Pro", "Assessoria"] as const;
@@ -31,8 +34,13 @@ function getInitials(name: string): string {
 }
 
 export default function AdminTreinadoresPage() {
+  const { role } = useCoachRole();
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState<PlanFilter>("Todos");
+
+  if (!canAccess(role, "admin")) {
+    return <AccessRestricted feature="Admin — Treinadores" currentRole={role} requiredRoles={["owner"]} />;
+  }
 
   const filtered = adminCoaches.filter((coach) => {
     const matchesSearch =

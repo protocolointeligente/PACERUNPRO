@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { useCoachRole } from "@/context/coach-role-context";
+import { canAccess } from "@/lib/coach-permissions";
+import { AccessRestricted } from "@/components/shared/access-restricted";
 
 const actionConfig: Record<
   string,
@@ -29,6 +32,11 @@ const totalRevenue = adminOverview.revenueByPlan.reduce(
 );
 
 export default function AdminAssinaturasPage() {
+  const { role } = useCoachRole();
+  if (!canAccess(role, "admin")) {
+    return <AccessRestricted feature="Admin — Assinaturas" currentRole={role} requiredRoles={["owner"]} />;
+  }
+
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
       {/* Header */}

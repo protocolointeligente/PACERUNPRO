@@ -5,6 +5,9 @@ import { BarTrend } from "@/components/charts/trend-chart";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useCoachRole } from "@/context/coach-role-context";
+import { canAccess } from "@/lib/coach-permissions";
+import { AccessRestricted } from "@/components/shared/access-restricted";
 
 const mrrSeriesForChart = adminOverview.mrrSeries.map((d) => ({ label: d.month, mrr: d.mrr }));
 
@@ -19,6 +22,11 @@ function formatCurrency(value: number) {
 }
 
 export default function AdminDashboardPage() {
+  const { role } = useCoachRole();
+  if (!canAccess(role, "admin")) {
+    return <AccessRestricted feature="Admin" currentRole={role} requiredRoles={["owner"]} />;
+  }
+
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
       {/* Header */}

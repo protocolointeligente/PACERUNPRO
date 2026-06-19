@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { BadgeCheck, Building2, CheckCircle2, CreditCard, ExternalLink, Landmark, Loader2, Wallet, Zap } from "lucide-react";
+import { useCoachRole } from "@/context/coach-role-context";
+import { canAccess } from "@/lib/coach-permissions";
+import { AccessRestricted } from "@/components/shared/access-restricted";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -94,7 +97,7 @@ function MethodCard({
   );
 }
 
-export default function FinanceiroPage() {
+function FinanceiroContent() {
   // Dados fiscais
   const [razaoSocial, setRazaoSocial] = useState("");
   const [cpfCnpj, setCpfCnpj] = useState("");
@@ -446,4 +449,12 @@ export default function FinanceiroPage() {
       </motion.div>
     </div>
   );
+}
+
+export default function FinanceiroPage() {
+  const { role } = useCoachRole();
+  if (!canAccess(role, "financeiro")) {
+    return <AccessRestricted feature="Config. Financeiras" currentRole={role} requiredRoles={["autonomo", "owner"]} />;
+  }
+  return <FinanceiroContent />;
 }

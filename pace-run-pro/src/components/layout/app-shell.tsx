@@ -22,6 +22,8 @@ interface AppShellProps {
   children: React.ReactNode;
   switchHref?: string;
   switchLabel?: string;
+  /** Extra content rendered above the user card in the sidebar */
+  sidebarFooterSlot?: React.ReactNode;
 }
 
 export function AppShell({
@@ -34,6 +36,7 @@ export function AppShell({
   children,
   switchHref,
   switchLabel,
+  sidebarFooterSlot,
 }: AppShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -95,6 +98,9 @@ export function AppShell({
         </nav>
 
         <div className="border-t border-border p-4">
+          {sidebarFooterSlot && (
+            <div className="mb-3">{sidebarFooterSlot}</div>
+          )}
           {switchHref && (
             <Link
               href={switchHref}

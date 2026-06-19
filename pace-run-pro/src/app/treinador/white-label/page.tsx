@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCoachRole } from "@/context/coach-role-context";
+import { canAccess } from "@/lib/coach-permissions";
+import { AccessRestricted } from "@/components/shared/access-restricted";
 import {
   Palette,
   Check,
@@ -84,7 +87,7 @@ function PreviewCard({ config }: { config: WhiteLabelConfig }) {
   );
 }
 
-export default function WhiteLabelPage() {
+function WhiteLabelContent() {
   const [config, setConfig] = useState<WhiteLabelConfig>({ ...whiteLabelConfig });
   const [dnsStatus, setDnsStatus] = useState<"idle" | "checking" | "active">("active");
   const [newDomain, setNewDomain] = useState("");
@@ -396,4 +399,12 @@ export default function WhiteLabelPage() {
       </div>
     </div>
   );
+}
+
+export default function WhiteLabelPage() {
+  const { role } = useCoachRole();
+  if (!canAccess(role, "white-label")) {
+    return <AccessRestricted feature="White-label" currentRole={role} requiredRoles={["owner"]} />;
+  }
+  return <WhiteLabelContent />;
 }

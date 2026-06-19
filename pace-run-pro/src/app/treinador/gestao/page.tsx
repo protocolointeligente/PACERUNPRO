@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { Copy, Link2, Users, TrendingUp, AlertTriangle, UserPlus } from "lucide-react";
+import { useCoachRole } from "@/context/coach-role-context";
+import { canAccess } from "@/lib/coach-permissions";
+import { AccessRestricted } from "@/components/shared/access-restricted";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { coachRosterStats, athleteRosterList, paymentHistory } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
-export default function GestaoPage() {
+function GestaoContent() {
   const [inviteEnabled, setInviteEnabled] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -370,4 +373,12 @@ function StatCard({ icon, label, value, color, bgColor }: StatCardProps) {
       </CardContent>
     </Card>
   );
+}
+
+export default function GestaoPage() {
+  const { role } = useCoachRole();
+  if (!canAccess(role, "gestao")) {
+    return <AccessRestricted feature="Gestão & Vendas" currentRole={role} requiredRoles={["autonomo", "owner"]} />;
+  }
+  return <GestaoContent />;
 }

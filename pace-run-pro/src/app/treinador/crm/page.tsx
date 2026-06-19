@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCoachRole } from "@/context/coach-role-context";
+import { canAccess } from "@/lib/coach-permissions";
+import { AccessRestricted } from "@/components/shared/access-restricted";
 import {
   Kanban,
   List,
@@ -234,7 +237,7 @@ function NewLeadForm({ onClose, onAdd }: { onClose: () => void; onAdd: (lead: Cr
   );
 }
 
-export default function CrmPage() {
+function CrmContent() {
   const [leads, setLeads] = useState<CrmLead[]>(crmLeads);
   const [view, setView] = useState<"kanban" | "lista">("kanban");
   const [showForm, setShowForm] = useState(false);
@@ -442,4 +445,12 @@ export default function CrmPage() {
       </AnimatePresence>
     </div>
   );
+}
+
+export default function CrmPage() {
+  const { role } = useCoachRole();
+  if (!canAccess(role, "crm")) {
+    return <AccessRestricted feature="CRM de Leads" currentRole={role} requiredRoles={["autonomo", "owner"]} />;
+  }
+  return <CrmContent />;
 }
