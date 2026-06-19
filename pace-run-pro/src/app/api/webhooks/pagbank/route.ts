@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { SubscriptionPlan } from "@prisma/client";
 
@@ -9,9 +10,22 @@ function planIdToEnum(planId: string): SubscriptionPlan {
 }
 
 export async function POST(req: NextRequest) {
+  const rawBody = await req.text();
+
+  // Verify PagBank HMAC-SHA256 signature when secret is configured
+  const webhookSecret = process.env.PAGBANK_WEBHOOK_SECRET;
+  if (webhookSecret) {
+    const receivedSig = req.headers.get("x-pagbank-signature") ?? "";
+    const expectedSig = createHmac("sha256", webhookSecret).update(rawBody).digest("hex");
+    if (receivedSig !== expectedSig) {
+      console.warn("[pagbank] invalid webhook signature");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
+    }
+  }
+
   let event: Record<string, unknown>;
   try {
-    event = (await req.json()) as Record<string, unknown>;
+    event = JSON.parse(rawBody) as Record<string, unknown>;
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }

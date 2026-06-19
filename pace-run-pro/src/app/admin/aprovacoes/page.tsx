@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { pendingApprovals } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },

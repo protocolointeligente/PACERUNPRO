@@ -299,34 +299,6 @@ function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string
   );
 }
 
-function IndicatorBar({
-  icon,
-  label,
-  value,
-  color,
-  hint,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  color: string;
-  hint: string;
-}) {
-  return (
-    <div>
-      <div className="mb-1.5 flex items-center justify-between text-sm">
-        <span className="flex items-center gap-1.5 font-medium text-text">
-          {icon}
-          {label}
-        </span>
-        <span className="font-display font-bold text-text">{Math.round(value * 100)}%</span>
-      </div>
-      <Progress value={value * 100} colorClassName={color} />
-      <p className="mt-1.5 text-xs text-text-muted">{hint}</p>
-    </div>
-  );
-}
-
 function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return "Bom dia";

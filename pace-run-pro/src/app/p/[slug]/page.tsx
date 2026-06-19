@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Check, MapPin, MessageCircle, ShieldCheck, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface PublicPlan {

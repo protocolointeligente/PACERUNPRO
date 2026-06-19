@@ -330,7 +330,7 @@ export default function PlanosVendaPage() {
                     <span className={cn("block h-4 w-4 rounded-full bg-white shadow transition-transform mx-0.5",
                       form.highlight ? "translate-x-4" : "translate-x-0")} />
                   </button>
-                  <span className="text-sm text-text-muted">Destacar como "Mais popular"</span>
+                  <span className="text-sm text-text-muted">Destacar como &quot;Mais popular&quot;</span>
                 </div>
               </div>
 

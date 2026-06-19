@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+async function getCoachOrFail(userId: string) {
+  const coach = await prisma.coach.findUnique({ where: { userId } });
+  return coach;
+}
+
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -9,6 +14,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const { id } = await params;
+  const coach = await getCoachOrFail(session.user.id);
+  if (!coach) {
+    return NextResponse.json({ error: "Perfil de treinador não encontrado" }, { status: 403 });
+  }
+
+  const existing = await prisma.coachPlan.findUnique({ where: { id } });
+  if (!existing || existing.coachId !== coach.id) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  }
+
   const body = (await req.json()) as {
     name?: string;
     description?: string;
@@ -46,7 +61,16 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   }
 
   const { id } = await params;
-  await prisma.coachPlan.delete({ where: { id } });
+  const coach = await getCoachOrFail(session.user.id);
+  if (!coach) {
+    return NextResponse.json({ error: "Perfil de treinador não encontrado" }, { status: 403 });
+  }
 
+  const existing = await prisma.coachPlan.findUnique({ where: { id } });
+  if (!existing || existing.coachId !== coach.id) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  }
+
+  await prisma.coachPlan.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }
