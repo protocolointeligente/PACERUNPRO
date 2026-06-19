@@ -8,6 +8,20 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log("🌱 Seeding database...");
 
+  // Super Admin
+  const adminHash = await bcrypt.hash("Mlm042119@", 12);
+  const adminUser = await prisma.user.upsert({
+    where: { email: "admin@pacerunpro.com.br" },
+    update: {},
+    create: {
+      email: "admin@pacerunpro.com.br",
+      name: "Super Admin",
+      passwordHash: adminHash,
+      role: "ADMIN",
+    },
+  });
+  console.log("✅ Admin criado:", adminUser.email);
+
   // SuperAdmin / Coach — Ricardo Pace
   const coachHash = await bcrypt.hash("PaceRunPro@2026", 12);
   const coachUser = await prisma.user.upsert({
