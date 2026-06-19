@@ -4,7 +4,7 @@ import { Activity, AlertTriangle, ArrowLeft, Calendar, ClipboardList, HeartPulse
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,6 +31,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
         <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
+              <AvatarImage src={athlete.avatarUrl} alt={athlete.name} />
               <AvatarFallback className="text-lg">{athlete.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}</AvatarFallback>
             </Avatar>
             <div>

@@ -742,7 +742,7 @@ export const coachOverview = {
 };
 
 export const athleteList: AthleteListItem[] = [
-  { id: "ath-1", name: "Camila Andrade", goal: "21 km", level: "Intermediário", status: "ativo", adherence: 0.92, lastCheckIn: "Hoje, 07:40", weeklyLoad: 312, raceDate: "16 ago 2026" },
+  { id: "ath-1", name: "Camila Andrade", avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=128&h=128&fit=crop&crop=faces", goal: "21 km", level: "Intermediário", status: "ativo", adherence: 0.92, lastCheckIn: "Hoje, 07:40", weeklyLoad: 312, raceDate: "16 ago 2026" },
 ];
 
 export const reportsList = [
@@ -932,12 +932,12 @@ export const adminOverview = {
 };
 
 export const adminCoaches = [
-  { id: "c1", name: "Ricardo Pace Júnior", credential: "CREF 014626-G/MG", plan: "Pro", athletes: 38, mrr: 397, status: "ativo", joinedAt: "Jan 2025" },
-  { id: "c2", name: "Fernando Queiroz", credential: "CREF 022140-G/SP", plan: "Assessoria", athletes: 62, mrr: 897, status: "ativo", joinedAt: "Fev 2025" },
-  { id: "c3", name: "Patrícia Melo", credential: "CREF 031822-G/RJ", plan: "Pro", athletes: 41, mrr: 397, status: "ativo", joinedAt: "Mar 2025" },
-  { id: "c4", name: "André Bastos", credential: "CREF 018903-G/MG", plan: "Starter", athletes: 12, mrr: 197, status: "ativo", joinedAt: "Abr 2025" },
-  { id: "c5", name: "Juliana Fonseca", credential: "CREF 027541-G/PR", plan: "Pro", athletes: 33, mrr: 397, status: "em risco", joinedAt: "Jan 2025" },
-  { id: "c6", name: "Run Tribe Assessoria", credential: "CNPJ 42.801.334/0001-99", plan: "Assessoria", athletes: 340, mrr: 897, status: "ativo", joinedAt: "Out 2024" },
+  { id: "c1", name: "Ricardo Pace Júnior", avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=128&h=128&fit=crop&crop=faces", credential: "CREF 014626-G/MG", plan: "Pro", athletes: 38, mrr: 397, status: "ativo", joinedAt: "Jan 2025" },
+  { id: "c2", name: "Fernando Queiroz", avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=128&h=128&fit=crop&crop=faces", credential: "CREF 022140-G/SP", plan: "Assessoria", athletes: 62, mrr: 897, status: "ativo", joinedAt: "Fev 2025" },
+  { id: "c3", name: "Patrícia Melo", avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=128&h=128&fit=crop&crop=faces", credential: "CREF 031822-G/RJ", plan: "Pro", athletes: 41, mrr: 397, status: "ativo", joinedAt: "Mar 2025" },
+  { id: "c4", name: "André Bastos", avatarUrl: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=128&h=128&fit=crop&crop=faces", credential: "CREF 018903-G/MG", plan: "Starter", athletes: 12, mrr: 197, status: "ativo", joinedAt: "Abr 2025" },
+  { id: "c5", name: "Juliana Fonseca", avatarUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=128&h=128&fit=crop&crop=faces", credential: "CREF 027541-G/PR", plan: "Pro", athletes: 33, mrr: 397, status: "em risco", joinedAt: "Jan 2025" },
+  { id: "c6", name: "Run Tribe Assessoria", avatarUrl: undefined, credential: "CNPJ 42.801.334/0001-99", plan: "Assessoria", athletes: 340, mrr: 897, status: "ativo", joinedAt: "Out 2024" },
 ];
 
 export const adminRecentSubscriptions = [
@@ -1305,12 +1305,12 @@ export const assessoriaList: AssessoriaItem[] = [
 ];
 
 export const b2cAthletesList = [
-  { id: "b2c-1", name: "Lucas Ferreira", city: "São Paulo, SP", plan: "anual", startDate: "Jan 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 127 },
-  { id: "b2c-2", name: "Priscila Nunes", city: "Belo Horizonte, MG", plan: "semestral", startDate: "Mar 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 147 },
-  { id: "b2c-3", name: "Gustavo Almeida", city: "Rio de Janeiro, RJ", plan: "mensal", startDate: "Mai 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 197 },
-  { id: "b2c-4", name: "Fernanda Costa", city: "Curitiba, PR", plan: "trimestral", startDate: "Abr 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 167 },
-  { id: "b2c-5", name: "Roberto Lima", city: "Porto Alegre, RS", plan: "anual", startDate: "Fev 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 127 },
-  { id: "b2c-6", name: "Tatiane Souza", city: "Salvador, BA", plan: "mensal", startDate: "Jun 2025", coachAssigned: "Ricardo Pace + Equipe", status: "pendente" as const, mrr: 197 },
+  { id: "b2c-1", name: "Lucas Ferreira", avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=128&h=128&fit=crop&crop=faces", city: "São Paulo, SP", plan: "anual", startDate: "Jan 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 127 },
+  { id: "b2c-2", name: "Priscila Nunes", avatarUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=128&h=128&fit=crop&crop=faces", city: "Belo Horizonte, MG", plan: "semestral", startDate: "Mar 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 147 },
+  { id: "b2c-3", name: "Gustavo Almeida", avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=128&h=128&fit=crop&crop=faces", city: "Rio de Janeiro, RJ", plan: "mensal", startDate: "Mai 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 197 },
+  { id: "b2c-4", name: "Fernanda Costa", avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=128&h=128&fit=crop&crop=faces", city: "Curitiba, PR", plan: "trimestral", startDate: "Abr 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 167 },
+  { id: "b2c-5", name: "Roberto Lima", avatarUrl: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=128&h=128&fit=crop&crop=faces", city: "Porto Alegre, RS", plan: "anual", startDate: "Fev 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 127 },
+  { id: "b2c-6", name: "Tatiane Souza", avatarUrl: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=128&h=128&fit=crop&crop=faces", city: "Salvador, BA", plan: "mensal", startDate: "Jun 2025", coachAssigned: "Ricardo Pace + Equipe", status: "pendente" as const, mrr: 197 },
 ];
 
 export const pendingApprovals = assessoriaList.filter((a) => a.status === "pendente");

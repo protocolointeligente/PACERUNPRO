@@ -6,7 +6,7 @@ import { CheckCircle2, Dumbbell, Pencil, Plus, Search, Send, Trash2 } from "luci
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { athleteList, exerciseCategories, exerciseLibrary, strengthDivisions } from "@/lib/mock-data";
 import type { ExerciseLibraryItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -146,6 +146,7 @@ export default function StrengthPrescriptionPage() {
                     )}
                   >
                     <Avatar className="h-8 w-8">
+                      <AvatarImage src={a.avatarUrl} alt={a.name} />
                       <AvatarFallback className="text-xs">{a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">

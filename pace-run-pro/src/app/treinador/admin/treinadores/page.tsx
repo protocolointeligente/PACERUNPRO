@@ -5,7 +5,7 @@ import { adminCoaches } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 const planFilters = ["Todos", "Starter", "Pro", "Assessoria"] as const;
@@ -113,6 +113,7 @@ export default function AdminTreinadoresPage() {
                   {/* Treinador */}
                   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9 flex-shrink-0">
+                      <AvatarImage src={coach.avatarUrl} alt={coach.name} />
                       <AvatarFallback>{getInitials(coach.name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">

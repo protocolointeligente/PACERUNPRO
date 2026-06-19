@@ -6,7 +6,7 @@ import { Search, SlidersHorizontal, ArrowUpDown, ArrowUpCircle } from "lucide-re
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { athleteList, b2bPlans, coachOverview, getRecommendedB2BPlan } from "@/lib/mock-data";
 import { cn, formatBRL } from "@/lib/utils";
@@ -116,6 +116,7 @@ export default function AthleteListPage() {
               <div className="grid grid-cols-1 gap-3 px-5 py-4 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr_0.8fr] lg:items-center">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
+                    <AvatarImage src={a.avatarUrl} alt={a.name} />
                     <AvatarFallback>{a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
