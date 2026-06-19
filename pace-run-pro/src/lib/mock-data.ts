@@ -1298,9 +1298,10 @@ export const assessoriaList: AssessoriaItem[] = [
   { id: "asc-3", name: "Runners BH",            city: "Belo Horizonte, MG",  plan: "assessoria",   coaches: 7,  athletes: 118, mrr: 397, status: "ativo",   approvedAt: "Fev 2025", contact: "suporte@runnersbh.com",           healthScore: 78, churnRisk: "baixo", lastLoginDays: 1,  prescribedLast7d: 31, activeAthletes: 94  },
   { id: "asc-4", name: "Ultra Training SP",     city: "São Paulo, SP",       plan: "pro",          coaches: 3,  athletes: 38,  mrr: 197, status: "ativo",   approvedAt: "Mar 2025", contact: "contato@ultratraining.com.br",   healthScore: 33, churnRisk: "alto",  lastLoginDays: 12, prescribedLast7d: 2,  activeAthletes: 5   },
   { id: "asc-5", name: "Maratonistas do Sul",   city: "Porto Alegre, RS",    plan: "starter",      coaches: 1,  athletes: 14,  mrr: 97,  status: "ativo",   approvedAt: "Abr 2025", contact: "admin@maratonistassul.com.br",   healthScore: 62, churnRisk: "medio", lastLoginDays: 3,  prescribedLast7d: 6,  activeAthletes: 10  },
-  { id: "asc-6", name: "Sport Life Corridas",   city: "Curitiba, PR",        plan: "starter",      coaches: 2,  athletes: 0,   mrr: 97,  status: "pendente", approvedAt: "—",        contact: "contato@sportlife.com.br",       healthScore: 0,  churnRisk: "baixo", lastLoginDays: 1,  prescribedLast7d: 0,  activeAthletes: 0   },
-  { id: "asc-7", name: "Run Fast Academy",      city: "Rio de Janeiro, RJ",  plan: "pro",          coaches: 4,  athletes: 0,   mrr: 197, status: "pendente", approvedAt: "—",        contact: "admin@runfast.com.br",           healthScore: 0,  churnRisk: "baixo", lastLoginDays: 0,  prescribedLast7d: 0,  activeAthletes: 0   },
-  { id: "asc-8", name: "Fortaleza Runners",     city: "Fortaleza, CE",       plan: "assessoria",   coaches: 6,  athletes: 0,   mrr: 397, status: "pendente", approvedAt: "—",        contact: "suporte@fortalezarunners.com.br", healthScore: 0,  churnRisk: "baixo", lastLoginDays: 0,  prescribedLast7d: 0,  activeAthletes: 0   },
+  { id: "asc-6", name: "Sport Life Corridas",   city: "Curitiba, PR",        plan: "starter",      coaches: 2,  athletes: 3,   mrr: 97,  status: "ativo",    approvedAt: "Jun 2026", contact: "contato@sportlife.com.br",        healthScore: 48, churnRisk: "medio", lastLoginDays: 2,  prescribedLast7d: 1,  activeAthletes: 3   },
+  { id: "asc-7", name: "Run Fast Academy",      city: "Rio de Janeiro, RJ",  plan: "pro",          coaches: 4,  athletes: 11,  mrr: 197, status: "ativo",    approvedAt: "Jun 2026", contact: "admin@runfast.com.br",            healthScore: 55, churnRisk: "medio", lastLoginDays: 1,  prescribedLast7d: 4,  activeAthletes: 11  },
+  { id: "asc-8", name: "Fortaleza Runners",     city: "Fortaleza, CE",       plan: "assessoria",   coaches: 6,  athletes: 22,  mrr: 397, status: "ativo",    approvedAt: "Jun 2026", contact: "suporte@fortalezarunners.com.br",  healthScore: 61, churnRisk: "medio", lastLoginDays: 0,  prescribedLast7d: 8,  activeAthletes: 22  },
+  { id: "asc-9", name: "Endurance Lab Brasil",  city: "Campinas, SP",        plan: "white-label",  coaches: 12, athletes: 0,   mrr: 997, status: "pendente", approvedAt: "—",        contact: "ceo@endurancelab.com.br",         healthScore: 0,  churnRisk: "baixo", lastLoginDays: 0,  prescribedLast7d: 0,  activeAthletes: 0   },
 ];
 
 export const b2cAthletesList = [
@@ -1313,6 +1314,52 @@ export const b2cAthletesList = [
 ];
 
 export const pendingApprovals = assessoriaList.filter((a) => a.status === "pendente");
+
+export type PendenciaType = "white-label-setup" | "cobranca-falha" | "pix-expirado" | "fraude";
+
+export interface PendenciaItem {
+  id: string;
+  type: PendenciaType;
+  title: string;
+  description: string;
+  assessoria: string;
+  contact: string;
+  value?: number;
+  createdAt: string;
+}
+
+export const pendencias: PendenciaItem[] = [
+  {
+    id: "p-1",
+    type: "white-label-setup",
+    title: "Setup White Label aguardando",
+    description: "Endurance Lab Brasil pagou o plano White Label. Configurar domínio próprio, enviar credenciais e agendar onboarding dedicado.",
+    assessoria: "Endurance Lab Brasil",
+    contact: "ceo@endurancelab.com.br",
+    value: 997,
+    createdAt: "19 jun 2026",
+  },
+  {
+    id: "p-2",
+    type: "cobranca-falha",
+    title: "Cobrança com falha — cartão recusado",
+    description: "Tentativa de renovação recusada pelo banco emissor. Aguarda nova tentativa automática em 3 dias ou ação manual.",
+    assessoria: "Ultra Training SP",
+    contact: "contato@ultratraining.com.br",
+    value: 197,
+    createdAt: "14 jun 2026",
+  },
+  {
+    id: "p-3",
+    type: "pix-expirado",
+    title: "PIX gerado — aguardando pagamento",
+    description: "PIX de nova assinatura Assessoria gerado há 18h. Expira em 6h. Considerar contato proativo se expirar.",
+    assessoria: "Nordeste Running Club",
+    contact: "admin@nordesternc.com.br",
+    value: 397,
+    createdAt: "19 jun 2026",
+  },
+];
 
 // ── Smart Alerts ─────────────────────────────────────────────────────────
 

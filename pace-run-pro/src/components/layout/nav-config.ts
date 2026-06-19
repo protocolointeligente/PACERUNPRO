@@ -72,7 +72,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/assessorias", label: "Assessorias",     icon: Building2       },
   { href: "/admin/planos",      label: "Planos & Módulos",icon: LayoutGrid      },
   { href: "/admin/financeiro",  label: "Financeiro",      icon: DollarSign      },
-  { href: "/admin/aprovacoes",  label: "Aprovações",      icon: CheckSquare     },
+  { href: "/admin/pendencias",  label: "Pendências",      icon: CheckSquare     },
   { href: "/admin/vouchers",    label: "Vouchers",        icon: Ticket          },
   { href: "/admin/logs",        label: "Logs e auditoria",icon: ScrollText      },
 ];

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { createPixOrder, createCreditCardOrder } from "@/lib/pagbank";
 
 export async function POST(req: NextRequest) {
+  const session = await auth();
+
   const body = (await req.json()) as {
     method: string;
     planId: string;
@@ -27,7 +30,11 @@ export async function POST(req: NextRequest) {
     process.env.NEXTAUTH_URL ??
     "https://www.pacerunpro.com.br";
   const notificationUrl = `${origin}/api/webhooks/pagbank`;
-  const referenceId = `${planId}_${Date.now()}`;
+
+  // Inclui userId no referenceId para ativação automática no webhook
+  // Formato: userId_planId_timestamp (ou "anon_planId_timestamp" se não autenticado)
+  const userId = session?.user?.id ?? "anon";
+  const referenceId = `${userId}_${planId}_${Date.now()}`;
 
   try {
     if (method === "pix") {
