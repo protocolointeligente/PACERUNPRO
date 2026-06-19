@@ -4,14 +4,15 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Activity,
-  BatteryCharging,
   CalendarCheck2,
   Clock,
   Flame,
   Gauge,
   MapPin,
   PlayCircle,
+  ShieldCheck,
   TrendingUp,
+  Zap,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,9 +40,19 @@ const fadeUp = {
   }),
 };
 
+// Score de prontidão baseado no último check-in (0–100)
+function calcReadiness(recovery: number, adherence: number): { score: number; label: string; color: string; hint: string } {
+  const score = Math.round(recovery * 70 + adherence * 30);
+  if (score >= 80) return { score, label: "Pronto para treinar", color: "text-success", hint: "Recuperação boa. Pode dar tudo hoje." };
+  if (score >= 55) return { score, label: "Moderado — treine com atenção", color: "text-warning", hint: "Recuperação parcial. Respeite os limites do corpo." };
+  return { score, label: "Recuperação baixa", color: "text-danger", hint: "Considere um treino leve ou descanso ativo." };
+}
+
 export default function AthleteDashboard() {
   const greeting = getGreeting();
   const cycleProgress = Math.round((macrocycle.currentWeek / macrocycle.totalWeeks) * 100);
+  const readiness = calcReadiness(weekSummary.recovery, weekSummary.adherence);
+  const weeksLeft = macrocycle.totalWeeks - macrocycle.currentWeek;
 
   return (
     <div className="mx-auto max-w-6xl space-y-7">
@@ -57,6 +68,53 @@ export default function AthleteDashboard() {
           <CalendarCheck2 className="h-3.5 w-3.5" />
           {weekSummary.weekLabel}
         </Badge>
+      </motion.div>
+
+      {/* Status do dia */}
+      <motion.div custom={0.5} variants={fadeUp} initial="hidden" animate="show">
+        <Card className="overflow-hidden border-border">
+          <CardContent className="p-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="relative flex h-16 w-16 items-center justify-center">
+                  <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 64 64">
+                    <circle cx="32" cy="32" r="28" fill="none" stroke="var(--color-border)" strokeWidth="5" />
+                    <circle
+                      cx="32" cy="32" r="28" fill="none"
+                      stroke={readiness.score >= 80 ? "var(--color-success)" : readiness.score >= 55 ? "var(--color-warning)" : "var(--color-danger)"}
+                      strokeWidth="5"
+                      strokeDasharray={`${(readiness.score / 100) * 175.9} 175.9`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="font-display text-lg font-extrabold text-text">{readiness.score}</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-text-muted" />
+                    <span className="text-xs uppercase tracking-widest text-text-muted">Status do dia</span>
+                  </div>
+                  <p className={`font-display text-lg font-bold ${readiness.color}`}>{readiness.label}</p>
+                  <p className="text-xs text-text-muted">{readiness.hint}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3 text-sm">
+                <div className="rounded-xl bg-card-hover px-3 py-2">
+                  <span className="text-xs text-text-muted">Adesão</span>
+                  <p className="font-display font-bold text-text">{Math.round(weekSummary.adherence * 100)}%</p>
+                </div>
+                <div className="rounded-xl bg-card-hover px-3 py-2">
+                  <span className="text-xs text-text-muted">Semanas p/ prova</span>
+                  <p className="font-display font-bold text-text">{weeksLeft}</p>
+                </div>
+                <div className="rounded-xl bg-card-hover px-3 py-2">
+                  <span className="text-xs text-text-muted">Progresso</span>
+                  <p className="font-display font-bold text-text">{cycleProgress}%</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* Treino do dia — destaque */}
@@ -143,55 +201,47 @@ export default function AthleteDashboard() {
       </motion.div>
 
       <div className="grid gap-5 lg:grid-cols-3">
-        {/* Indicadores + check-in */}
+        {/* Check-in + evolução rápida */}
         <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show" className="space-y-5 lg:col-span-1">
-          <Card>
-            <CardContent className="space-y-5 p-5">
-              <h3 className="font-display text-base font-semibold text-text">Seus indicadores</h3>
-
-              <IndicatorBar
-                icon={<CalendarCheck2 className="h-4 w-4" />}
-                label="Adesão ao plano"
-                value={weekSummary.adherence}
-                color="bg-success"
-                hint={`${Math.round(weekSummary.adherence * 100)}% dos treinos concluídos no prazo`}
-              />
-              <IndicatorBar
-                icon={<BatteryCharging className="h-4 w-4" />}
-                label="Recuperação"
-                value={weekSummary.recovery}
-                color="bg-info"
-                hint="Baseado em sono, dor e fadiga reportados"
-              />
-
-              <div className="rounded-xl border border-border bg-card-hover/50 p-3">
-                <p className="text-xs text-text-muted">
-                  Progresso do ciclo —{" "}
-                  <span className="font-semibold text-text">
-                    semana {macrocycle.currentWeek} de {macrocycle.totalWeeks}
-                  </span>
-                </p>
-                <Progress value={cycleProgress} className="mt-2" />
-              </div>
-            </CardContent>
-          </Card>
-
           <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-card">
             <CardContent className="space-y-3 p-5">
               <div className="flex items-center gap-2">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <Activity className="h-4.5 w-4.5" />
+                  <Activity className="h-4 w-4" />
                 </span>
                 <div>
-                  <h3 className="font-display text-base font-semibold text-text">Check-in rápido</h3>
-                  <p className="text-xs text-text-muted">Como você está se sentindo hoje?</p>
+                  <h3 className="font-display text-base font-semibold text-text">Check-in pós-treino</h3>
+                  <p className="text-xs text-text-muted">Leva menos de 1 minuto</p>
                 </div>
               </div>
               <p className="text-sm text-text-muted">
-                Leva menos de 1 minuto e ajuda seu treinador a ajustar a carga com segurança.
+                Suas respostas ajustam automaticamente a carga das próximas sessões e alertam seu treinador se houver risco.
               </p>
               <Link href="/aluno/checkin">
                 <Button className="w-full">Fazer check-in agora</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="space-y-3 p-5">
+              <h3 className="font-display text-sm font-semibold text-text flex items-center gap-2">
+                <Zap className="h-4 w-4 text-warning" /> Você está evoluindo
+              </h3>
+              {[
+                { label: "Pace médio", delta: "+8% mais rápido", positive: true },
+                { label: "Volume semanal", delta: "+12% nas últimas 4 semanas", positive: true },
+                { label: "Risco atual", delta: "Baixo", positive: true },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between text-xs">
+                  <span className="text-text-muted">{item.label}</span>
+                  <span className={item.positive ? "font-semibold text-success" : "font-semibold text-danger"}>
+                    {item.delta}
+                  </span>
+                </div>
+              ))}
+              <Link href="/aluno/evolucao" className="block pt-1">
+                <Button size="sm" variant="ghost" className="w-full text-xs">Ver evolução completa</Button>
               </Link>
             </CardContent>
           </Card>

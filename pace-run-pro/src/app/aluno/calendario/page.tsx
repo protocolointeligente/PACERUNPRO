@@ -64,7 +64,7 @@ export default function CalendarPage() {
         ))}
       </div>
 
-      <Tabs defaultValue="mes">
+      <Tabs defaultValue="semana">
         <TabsList>
           <TabsTrigger value="mes">Mensal</TabsTrigger>
           <TabsTrigger value="semana">Semanal</TabsTrigger>

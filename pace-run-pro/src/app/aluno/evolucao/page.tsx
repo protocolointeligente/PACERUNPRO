@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Award, Camera, Medal, TrendingDown, TrendingUp } from "lucide-react";
+import { Award, Camera, Medal, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
@@ -42,6 +42,26 @@ export default function EvolutionPage() {
         <Badge variant="primary" className="mb-2">Sua evolução</Badge>
         <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Acompanhe seu progresso</h1>
         <p className="mt-1.5 text-sm text-text-muted">Volume, intensidade, fisiologia e composição corporal — tudo em um só lugar.</p>
+      </div>
+
+      {/* Resumo interpretativo */}
+      <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/8 to-card p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <p className="text-sm font-semibold text-text">Resumo das últimas 4 semanas</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {[
+            { label: "Você está correndo 28s/km mais rápido do que há 7 semanas.", positive: true },
+            { label: "Sua carga subiu dentro da zona segura — sem picos de overtraining.", positive: true },
+            { label: "Risco atual baixo. Boa janela para avançar na periodização.", positive: true },
+          ].map((item, i) => (
+            <div key={i} className="flex items-start gap-2.5 rounded-xl bg-card-hover/60 p-3">
+              <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+              <p className="text-xs text-text-muted leading-relaxed">{item.label}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">

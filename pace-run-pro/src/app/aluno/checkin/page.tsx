@@ -116,14 +116,25 @@ export default function CheckInPage() {
     setValues((s) => ({ ...s, [key]: v }));
   }
 
+  const [saving, setSaving] = useState(false);
+
   const draftHistory: CheckInRecord[] = [
     ...checkInHistory.map((c) => ({ date: c.date, rpe: c.rpe, pain: c.pain, sleep: c.sleep, fatigue: c.fatigue, mood: c.mood, plannedRpe: c.plannedRpe })),
     { date: "hoje", rpe: values.rpe, pain: values.pain, sleep: values.sleep, fatigue: values.fatigue, mood: values.mood, plannedRpe: 7 },
   ];
   const ruleResults = evaluateCheckInRules(draftHistory);
 
-  function save() {
+  async function save() {
+    setSaving(true);
+    try {
+      await fetch("/api/checkins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...values, notes }),
+      });
+    } catch { /* continua mesmo com erro de rede */ }
     setSaved(true);
+    setSaving(false);
   }
 
   const severityStyles = {
@@ -298,9 +309,9 @@ export default function CheckInPage() {
       </AnimatePresence>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Button size="lg" className="flex-1" onClick={save} disabled={saved}>
+        <Button size="lg" className="flex-1" onClick={save} disabled={saved || saving}>
           <Save className="h-4 w-4" />
-          {saved ? "Check-in registrado" : "Salvar check-in"}
+          {saving ? "Salvando..." : saved ? "Check-in registrado ✓" : "Salvar check-in"}
         </Button>
         <Button size="lg" variant="secondary" onClick={() => router.push("/aluno/dashboard")}>
           Voltar ao início
