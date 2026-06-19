@@ -190,40 +190,37 @@ export default function AssessoriasPage() {
               a.status === "pendente" && approvedIds.has(a.id) ? "ativo" : a.status;
             return (
               <Card key={a.id}>
-                <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback>
-                        {a.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .slice(0, 2)
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-semibold text-text">
-                        {a.name}
-                      </p>
-                      <p className="text-xs text-text-muted">{a.city}</p>
+                <CardContent className="p-4 space-y-3">
+                  {/* Row 1: Identity + status */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarFallback>
+                          {a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-text">{a.name}</p>
+                        <p className="truncate text-xs text-text-muted">{a.city}</p>
+                      </div>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-2">
+                      <Badge variant={effectiveStatus === "ativo" ? "success" : "warning"}>
+                        {effectiveStatus === "ativo" ? "Ativo" : "Pendente"}
+                      </Badge>
+                      <HealthBadge score={a.healthScore} />
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Badge variant={planBadgeVariant(a.plan)}>
-                      {planLabel(a.plan)}
-                    </Badge>
-                    <div className="flex items-center gap-1 text-xs text-text-muted">
-                      <Users className="h-3.5 w-3.5" />
-                      <span>{a.coaches} trein. · {a.athletes} atletas</span>
-                    </div>
-                    <span className="text-sm font-semibold text-text">
-                      R${a.mrr}/mês
-                    </span>
-                    <HealthBadge score={a.healthScore} />
-                    <Badge variant={effectiveStatus === "ativo" ? "success" : "warning"}>
-                      {effectiveStatus === "ativo" ? "Ativo" : "Pendente"}
-                    </Badge>
+                  {/* Row 2: Plan + athletes + MRR */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
+                    <Badge variant={planBadgeVariant(a.plan)}>{planLabel(a.plan)}</Badge>
+                    <span className="flex items-center gap-1"><Users className="h-3 w-3" />{a.coaches} trein. · {a.athletes} atletas</span>
+                    <span className="font-semibold text-text ml-auto">R${a.mrr}/mês</span>
+                  </div>
+
+                  {/* Row 3: Actions */}
+                  <div className="flex gap-2 pt-1 border-t border-border/40">
                     <Button variant="secondary" size="sm">Detalhe</Button>
                     {effectiveStatus === "pendente" && (
                       <Button

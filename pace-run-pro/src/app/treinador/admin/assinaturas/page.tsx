@@ -148,23 +148,23 @@ export default function AdminAssinaturasPage() {
               return (
                 <div
                   key={sub.id}
-                  className="flex items-center justify-between rounded-xl border border-border bg-card-hover p-4"
+                  className="flex flex-wrap items-center justify-between gap-y-2 rounded-xl border border-border bg-card-hover p-4"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
                     <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full gradient-primary font-display text-xs font-bold text-white">
                       {sub.coachName.slice(0, 2).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-text">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-text">
                         {sub.coachName}
                       </p>
-                      <p className="text-xs text-text-muted">
+                      <p className="truncate text-xs text-text-muted">
                         Plano {sub.plan}
                         {sub.from ? ` (antes: ${sub.from})` : ""} · {sub.date}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex shrink-0 items-center gap-3">
                     <Badge variant={cfg.variant}>{cfg.label}</Badge>
                     <span
                       className={cn(

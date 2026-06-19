@@ -738,19 +738,23 @@ export default function PeriodizacaoPage() {
                                   PHASE_BG[topPhase]
                                 )}
                               >
-                                <div className="grid grid-cols-[3rem_7rem_5rem_6rem_6rem_4rem_4rem_1fr] gap-x-2 border-b border-border/50 px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
-                                  <span>Sem.</span>
-                                  <span>Fase</span>
-                                  <span>Volume</span>
-                                  <span>Inten. %</span>
-                                  <span>km/sem</span>
-                                  <span>Sessões</span>
-                                  <span>Descarga</span>
-                                  <span>Notas</span>
+                                <div className="overflow-x-auto">
+                                  <div className="min-w-[38rem]">
+                                    <div className="grid grid-cols-[3rem_7rem_5rem_6rem_6rem_4rem_4rem_1fr] gap-x-2 border-b border-border/50 px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+                                      <span>Sem.</span>
+                                      <span>Fase</span>
+                                      <span>Volume</span>
+                                      <span>Inten. %</span>
+                                      <span>km/sem</span>
+                                      <span>Sessões</span>
+                                      <span>Descarga</span>
+                                      <span>Notas</span>
+                                    </div>
+                                    {mesoWeeks.map((w) => (
+                                      <WeekRow key={w.week} week={w} onChange={handleWeekChange} />
+                                    ))}
+                                  </div>
                                 </div>
-                                {mesoWeeks.map((w) => (
-                                  <WeekRow key={w.week} week={w} onChange={handleWeekChange} />
-                                ))}
                               </div>
                             </div>
                           );

@@ -92,17 +92,17 @@ export default function AdminDashboardPage() {
             {adminRecentSubscriptions.map((sub) => {
               const cfg = actionConfig[sub.action] ?? { label: sub.action, variant: "default" as const };
               return (
-                <div key={sub.id} className="flex items-center justify-between rounded-xl border border-border bg-card-hover p-4">
-                  <div className="flex items-center gap-3">
+                <div key={sub.id} className="flex flex-wrap items-center justify-between gap-y-2 rounded-xl border border-border bg-card-hover p-4">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
                     <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full gradient-primary font-display text-xs font-bold text-white">
                       {sub.coachName.slice(0, 2).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-text">{sub.coachName}</p>
-                      <p className="text-xs text-text-muted">Plano {sub.plan} · {sub.date}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-text">{sub.coachName}</p>
+                      <p className="truncate text-xs text-text-muted">Plano {sub.plan} · {sub.date}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex shrink-0 items-center gap-3">
                     <Badge variant={cfg.variant}>{cfg.label}</Badge>
                     <span className={cn("text-sm font-semibold", sub.mrr > 0 ? "text-success" : "text-danger")}>
                       {sub.mrr > 0 ? "+" : ""}R$ {Math.abs(sub.mrr)}

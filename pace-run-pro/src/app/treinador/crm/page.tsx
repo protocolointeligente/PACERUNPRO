@@ -195,7 +195,7 @@ function NewLeadForm({ onClose, onAdd }: { onClose: () => void; onAdd: (lead: Cr
           <label className={labelCls}>Nome *</label>
           <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome completo" className={inputCls} />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className={labelCls}>E-mail</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@exemplo.com" className={inputCls} />
@@ -205,7 +205,7 @@ function NewLeadForm({ onClose, onAdd }: { onClose: () => void; onAdd: (lead: Cr
             <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(00) 00000-0000" className={inputCls} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className={labelCls}>Origem</label>
             <select value={source} onChange={(e) => setSource(e.target.value as CrmLead["source"])} className={inputCls}>

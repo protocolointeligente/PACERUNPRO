@@ -108,7 +108,7 @@ export default function AdminTreinadoresPage() {
               filtered.map((coach) => (
                 <div
                   key={coach.id}
-                  className="flex flex-col gap-4 px-4 py-4 sm:grid sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] sm:items-center sm:gap-4 sm:px-6"
+                  className="flex flex-col gap-2.5 px-4 py-4 sm:grid sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] sm:items-center sm:gap-4 sm:px-6"
                 >
                   {/* Treinador */}
                   <div className="flex items-center gap-3">
@@ -125,39 +125,42 @@ export default function AdminTreinadoresPage() {
                     </div>
                   </div>
 
-                  {/* Plano */}
-                  <div>
-                    <Badge variant={getPlanVariant(coach.plan)}>{coach.plan}</Badge>
-                  </div>
+                  {/* Meta row: inline on mobile, grid cells on sm+ */}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:[display:contents]">
+                    {/* Plano */}
+                    <div>
+                      <Badge variant={getPlanVariant(coach.plan)}>{coach.plan}</Badge>
+                    </div>
 
-                  {/* Atletas */}
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold text-text">
-                      {coach.athletes}
-                    </span>
-                    <span className="text-xs text-text-muted hidden sm:inline">atletas</span>
-                  </div>
+                    {/* Atletas */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold text-text">
+                        {coach.athletes}
+                      </span>
+                      <span className="text-xs text-text-muted">atletas</span>
+                    </div>
 
-                  {/* MRR */}
-                  <div>
-                    <span className="text-sm font-semibold text-success">
-                      R$ {coach.mrr}
-                    </span>
-                    <span className="text-xs text-text-muted">/mês</span>
-                  </div>
+                    {/* MRR */}
+                    <div>
+                      <span className="text-sm font-semibold text-success">
+                        R$ {coach.mrr}
+                      </span>
+                      <span className="text-xs text-text-muted">/mês</span>
+                    </div>
 
-                  {/* Status */}
-                  <div>
-                    <Badge variant={getStatusVariant(coach.status)}>
-                      {coach.status}
-                    </Badge>
-                  </div>
+                    {/* Status */}
+                    <div>
+                      <Badge variant={getStatusVariant(coach.status)}>
+                        {coach.status}
+                      </Badge>
+                    </div>
 
-                  {/* Ações */}
-                  <div>
-                    <Button variant="secondary" size="sm">
-                      Ver atletas
-                    </Button>
+                    {/* Ações */}
+                    <div>
+                      <Button variant="secondary" size="sm">
+                        Ver atletas
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))

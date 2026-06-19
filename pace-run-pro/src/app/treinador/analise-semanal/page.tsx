@@ -214,9 +214,9 @@ export default function AnaliseSemanalPage() {
           <BarChart2 className="h-3 w-3" />
           Análise Semanal
         </Badge>
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
+            <h1 className="font-display text-xl font-bold text-text sm:text-3xl">
               Análise Semanal
             </h1>
             <p className="mt-1 text-sm text-text-muted">
@@ -227,17 +227,17 @@ export default function AnaliseSemanalPage() {
             <button
               onClick={() => setWeekIndex((i) => Math.max(0, i - 1))}
               disabled={weekIndex === 0}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-card text-text-muted transition-all hover:border-primary/40 hover:text-text disabled:opacity-40"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-text-muted transition-all hover:border-primary/40 hover:text-text disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="min-w-[170px] text-center text-sm font-semibold text-text">
+            <span className="flex-1 text-center text-sm font-semibold text-text sm:min-w-[170px] sm:flex-none">
               {WEEKS[weekIndex]}
             </span>
             <button
               onClick={() => setWeekIndex((i) => Math.min(WEEKS.length - 1, i + 1))}
               disabled={weekIndex === WEEKS.length - 1}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-card text-text-muted transition-all hover:border-primary/40 hover:text-text disabled:opacity-40"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-text-muted transition-all hover:border-primary/40 hover:text-text disabled:opacity-40"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -293,7 +293,7 @@ export default function AnaliseSemanalPage() {
         ))}
       </motion.div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <AnimatePresence mode="popLayout">
           {filtered.length === 0 ? (
             <motion.div

@@ -134,17 +134,17 @@ export default function GestaoPage() {
                       </Badge>
                     </div>
 
-                    {/* Billing info */}
-                    <div className="hidden text-right sm:block">
+                    {/* Billing info — always visible */}
+                    <div className="text-right">
                       <p className="text-sm font-semibold text-text">
                         R$ {athlete.monthlyFee}/mês
                       </p>
-                      <p className="text-xs text-text-muted">
+                      <p className="hidden text-xs text-text-muted sm:block">
                         Próx. {athlete.nextBilling}
                       </p>
                     </div>
 
-                    {/* Joined */}
+                    {/* Joined — desktop only */}
                     <div className="hidden text-right sm:block">
                       <p className="text-xs text-text-muted">Desde {athlete.joinedAt}</p>
                     </div>
