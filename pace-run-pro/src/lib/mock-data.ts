@@ -999,7 +999,7 @@ export const pricingPlans = [
       "Painel administrativo completo",
       "White-label (domínio e logo próprios)",
       "API para integrações customizadas",
-      "Relatórios PDF premium estilo IronGuides",
+      "Relatórios PDF premium para atletas",
       "Gerente de conta dedicado",
     ],
     cta: "Falar com consultor",
@@ -1051,7 +1051,7 @@ export const landingFeatures = [
     items: [
       { icon: "🧠", title: "Prescrição inteligente com IA", description: "Sugestões de pace, volume e RPE baseadas no perfil de cada atleta." },
       { icon: "🚨", title: "Alertas de risco automáticos", description: "Saiba antes do atleta se algo vai sair dos trilhos." },
-      { icon: "📄", title: "Relatórios PDF estilo IronGuides", description: "Profissionais, prontos para enviar ao atleta em 1 clique." },
+      { icon: "📄", title: "Relatórios PDF profissionais", description: "Prontos para enviar ao atleta em 1 clique, com design premium." },
       { icon: "🔓", title: "Liberação semanal controlada", description: "O atleta só vê o que você liberar — você mantém o controle." },
     ],
   },
