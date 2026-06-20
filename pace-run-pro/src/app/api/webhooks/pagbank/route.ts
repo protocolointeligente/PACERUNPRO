@@ -14,8 +14,12 @@ function planIdToEnum(planId: string): SubscriptionPlan {
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
 
-  // Verify PagBank HMAC-SHA256 signature when secret is configured
+  // Verify PagBank HMAC-SHA256 signature (required in production)
   const webhookSecret = process.env.PAGBANK_WEBHOOK_SECRET;
+  if (!webhookSecret && process.env.NODE_ENV === "production") {
+    console.error("[pagbank] PAGBANK_WEBHOOK_SECRET não configurado em produção");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+  }
   if (webhookSecret) {
     const receivedSig = req.headers.get("x-pagbank-signature") ?? "";
     const expectedSig = createHmac("sha256", webhookSecret).update(rawBody).digest("hex");

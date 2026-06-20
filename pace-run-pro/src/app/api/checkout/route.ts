@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
     customerName: string;
     customerEmail: string;
     customerCpf: string;
+    userId?: string;
     cardNumber?: string;
     cardName?: string;
     cardExpiry?: string;
@@ -25,15 +26,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
   }
 
+  const userId = session?.user?.id ?? body.userId ?? null;
+  if (!userId) {
+    return NextResponse.json({ error: "Conta não encontrada. Recarregue e tente novamente." }, { status: 401 });
+  }
+
   const origin =
     req.headers.get("origin") ??
     process.env.NEXTAUTH_URL ??
     "https://www.pacerunpro.com.br";
   const notificationUrl = `${origin}/api/webhooks/pagbank`;
 
-  // Inclui userId no referenceId para ativação automática no webhook
-  // Formato: userId_planId_timestamp (ou "anon_planId_timestamp" se não autenticado)
-  const userId = session?.user?.id ?? "anon";
   const referenceId = `${userId}_${planId}_${Date.now()}`;
 
   try {

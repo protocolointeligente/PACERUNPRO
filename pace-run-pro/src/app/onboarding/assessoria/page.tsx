@@ -173,6 +173,11 @@ function AssessoriaContent() {
   const [cref, setCref] = useState("");
   const [emailCoach, setEmailCoach] = useState("");
   const [especialidade, setEspecialidade] = useState("");
+  const [senha, setSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [creatingAccount, setCreatingAccount] = useState(false);
+  const [createAccountError, setCreateAccountError] = useState<string | null>(null);
+  const [createdUserId, setCreatedUserId] = useState<string | null>(null);
 
   // Step 4
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cartao");
@@ -275,6 +280,44 @@ function AssessoriaContent() {
     );
   }
 
+  // ── Account creation (step 3 → 4) ────────────────────────────────────────
+  async function handleCreateAccount() {
+    setCreateAccountError(null);
+    if (senha.length < 8) {
+      setCreateAccountError("A senha deve ter no mínimo 8 caracteres.");
+      return;
+    }
+    if (senha !== confirmarSenha) {
+      setCreateAccountError("As senhas não conferem.");
+      return;
+    }
+    setCreatingAccount(true);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: nomeCoach,
+          email: emailCoach,
+          password: senha,
+          role: "COACH",
+          studentCount: Number(numAtletas) || 1,
+        }),
+      });
+      const data = await res.json() as { user?: { id: string }; error?: string };
+      if (!res.ok) {
+        setCreateAccountError(data.error ?? "Erro ao criar conta.");
+        return;
+      }
+      setCreatedUserId(data.user!.id);
+      setStep(4);
+    } catch {
+      setCreateAccountError("Erro de conexão. Verifique sua internet.");
+    } finally {
+      setCreatingAccount(false);
+    }
+  }
+
   // ── Submit handler ───────────────────────────────────────────────────────
   async function handleSubmit() {
     setSubmitError(null);
@@ -304,6 +347,7 @@ function AssessoriaContent() {
           customerName: nomeResponsavel,
           customerEmail: emailResponsavel,
           customerCpf: cnpj,
+          userId: createdUserId ?? undefined,
           cardNumber: paymentMethod === "cartao" ? cardNumber : undefined,
           cardName: paymentMethod === "cartao" ? cardName : undefined,
           cardExpiry: paymentMethod === "cartao" ? cardExpiry : undefined,
@@ -656,6 +700,41 @@ function AssessoriaContent() {
                   <option value="corrida-forca">Corrida + Força</option>
                 </select>
               </label>
+
+              <div className="border-t border-border pt-5">
+                <p className="mb-4 text-sm font-semibold text-text">Crie sua senha de acesso</p>
+                <div className="space-y-4">
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                      Senha
+                    </span>
+                    <input
+                      type="password"
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value)}
+                      placeholder="Mínimo 8 caracteres"
+                      className={inputClass}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                      Confirmar senha
+                    </span>
+                    <input
+                      type="password"
+                      value={confirmarSenha}
+                      onChange={(e) => setConfirmarSenha(e.target.value)}
+                      placeholder="Repita a senha"
+                      className={inputClass}
+                    />
+                  </label>
+                  {createAccountError && (
+                    <div className="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+                      {createAccountError}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="hidden lg:block">
@@ -674,11 +753,22 @@ function AssessoriaContent() {
             <Button
               variant="primary"
               size="lg"
-              className="flex-1"
-              onClick={() => setStep(4)}
-              disabled={!nomeCoach.trim() || !emailCoach.trim() || !especialidade}
+              className="flex-1 gap-2"
+              onClick={handleCreateAccount}
+              disabled={
+                !nomeCoach.trim() ||
+                !emailCoach.trim() ||
+                !especialidade ||
+                !senha ||
+                !confirmarSenha ||
+                creatingAccount
+              }
             >
-              Próximo →
+              {creatingAccount ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Criando conta…</>
+              ) : (
+                "Próximo →"
+              )}
             </Button>
           </div>
         </div>
