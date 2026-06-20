@@ -27,6 +27,7 @@ import {
   Wallet,
   PackagePlus,
   Globe,
+  UserPlus,
   type LucideIcon,
 } from "lucide-react";
 
@@ -81,4 +82,5 @@ export const adminNav: NavItem[] = [
   { href: "/admin/pendencias",  label: "Pendências",      icon: CheckSquare     },
   { href: "/admin/vouchers",    label: "Vouchers",        icon: Ticket          },
   { href: "/admin/logs",        label: "Logs e auditoria",icon: ScrollText      },
+  { href: "/admin/usuarios",    label: "Adicionar usuário",icon: UserPlus        },
 ];

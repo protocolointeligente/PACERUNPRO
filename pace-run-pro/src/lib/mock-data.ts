@@ -734,20 +734,15 @@ export const coachOverview = {
   credential: "CREF 014626-G/MG",
   currentPlanId: "b2b-free",
   athletesCount: 1,
-  prescribedThisWeek: 6,
+  prescribedThisWeek: 0,
   pendingCheckIns: 0,
   athletesAtRisk: 0,
-  teamLoad: 0.78,
-  alerts: [
-    { id: "al-1", severity: "warning" as const, text: "Camila Andrade com FC média em Z2 subindo 12% nos últimos 10 dias — possível fadiga acumulada." },
-  ],
+  teamLoad: 0,
+  alerts: [],
 };
 
 export const athleteList: AthleteListItem[] = [
   { id: "ath-1", name: "Camila Andrade", avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=128&h=128&fit=crop&crop=faces", goal: "21 km", level: "Intermediário", status: "ativo", adherence: 0.92, lastCheckIn: "Hoje, 07:40", weeklyLoad: 312, raceDate: "16 ago 2026", vdot: 43 },
-  { id: "ath-2", name: "Bruno Lacerda", avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=128&h=128&fit=crop&crop=faces", goal: "42 km — Maratona", level: "Avançado", status: "ativo", adherence: 0.88, lastCheckIn: "Ontem, 18:30", weeklyLoad: 420, raceDate: "15 nov 2026", vdot: 52 },
-  { id: "ath-3", name: "Fernanda Costa", avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=128&h=128&fit=crop&crop=faces", goal: "10 km", level: "Iniciante", status: "ativo", adherence: 0.75, lastCheckIn: "2 dias atrás", weeklyLoad: 185, raceDate: "20 jul 2026", vdot: 37 },
-  { id: "ath-4", name: "Lucas Oliveira", avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=128&h=128&fit=crop&crop=faces", goal: "21 km", level: "Intermediário", status: "risco", adherence: 0.60, lastCheckIn: "4 dias atrás", weeklyLoad: 248, raceDate: "14 set 2026", vdot: 39 },
 ];
 
 export const runWorkoutTemplates: RunWorkoutTemplate[] = [
@@ -1506,47 +1501,7 @@ export interface SmartAlert {
   read: boolean;
 }
 
-export const smartAlerts: SmartAlert[] = [
-  {
-    id: "al-1",
-    athleteId: "ath-1",
-    athleteName: "Camila Andrade",
-    severity: "critico",
-    category: "fc",
-    title: "Risco moderado de fadiga",
-    description: "Sono caiu 18%, RPE subiu 22% e FC em Z2 aumentou 12% nos últimos 10 dias.",
-    metric: "Sono −18% · RPE +22% · FC Z2 +12%",
-    recommendation: "Reduzir volume em 15% por 7 dias e monitorar sono.",
-    daysAgo: 0,
-    read: false,
-  },
-  {
-    id: "al-2",
-    athleteId: "ath-1",
-    athleteName: "Camila Andrade",
-    severity: "atencao",
-    category: "adesao",
-    title: "Adesão semanal abaixo da meta",
-    description: "Completou apenas 2 dos 4 treinos prescritos na semana passada (50% de adesão).",
-    metric: "Adesão: 50% (meta: ≥ 80%)",
-    recommendation: "Verificar se há sobrecarga de agenda ou desmotivação. Considere reduzir para 3 treinos/sem.",
-    daysAgo: 1,
-    read: false,
-  },
-  {
-    id: "al-3",
-    athleteId: "ath-1",
-    athleteName: "Camila Andrade",
-    severity: "info",
-    category: "desempenho",
-    title: "Melhora expressiva no pace",
-    description: "Pace médio nos treinos de rodagem caiu 0:18/km em relação ao mês anterior.",
-    metric: "Pace: −0:18/km vs. média 30 dias",
-    recommendation: "Boa janela para avançar para fase de construção na próxima semana.",
-    daysAgo: 3,
-    read: false,
-  },
-];
+export const smartAlerts: SmartAlert[] = [];
 
 // ── Tênis tracker ─────────────────────────────────────────────────────────────
 export interface Shoe {

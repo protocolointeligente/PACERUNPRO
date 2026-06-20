@@ -29,7 +29,7 @@ const TODAY_ACTIONS = [
   {
     id: "intervencao",
     label: "atletas precisam de intervenção",
-    value: 3,
+    value: 0,
     icon: ShieldAlert,
     color: "danger" as const,
     href: "/treinador/alertas",
@@ -38,7 +38,7 @@ const TODAY_ACTIONS = [
   {
     id: "checkins",
     label: "check-ins pendentes de revisão",
-    value: 9,
+    value: 0,
     icon: ClipboardCheck,
     color: "warning" as const,
     href: "/treinador/alunos",
@@ -47,7 +47,7 @@ const TODAY_ACTIONS = [
   {
     id: "liberacao",
     label: "treinos aguardam liberação",
-    value: 5,
+    value: 0,
     icon: Flame,
     color: "info" as const,
     href: "/treinador/alunos",
@@ -56,7 +56,7 @@ const TODAY_ACTIONS = [
   {
     id: "inadimplencia",
     label: "em inadimplência",
-    value: "R$ 290",
+    value: "R$ 0",
     icon: Wallet,
     color: "text-muted" as const,
     href: "/treinador/crm",
@@ -208,7 +208,7 @@ export default function CoachDashboard() {
             <CardContent className="p-5">
               <h3 className="font-display text-base font-semibold text-text">Liberação semanal</h3>
               <p className="mt-1.5 text-sm text-text-muted">
-                Camila Andrade aguarda liberação da próxima semana de treinos.
+                Nenhum treino aguarda liberação esta semana.
               </p>
               <Link href="/treinador/alunos">
                 <Button className="mt-3 w-full">Revisar liberações</Button>
