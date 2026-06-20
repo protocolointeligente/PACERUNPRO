@@ -3,28 +3,10 @@ const PAGBANK_BASE_URL =
     ? "https://api.pagseguro.com"
     : "https://sandbox.api.pagseguro.com";
 
-async function getAccessToken(): Promise<string> {
-  const credentials = Buffer.from(
-    `${process.env.PAGBANK_CLIENT_ID}:${process.env.PAGBANK_CLIENT_SECRET}`
-  ).toString("base64");
-
-  const res = await fetch(`${PAGBANK_BASE_URL}/oauth2/token`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${credentials}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: "grant_type=client_credentials&scope=accounts.read",
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`PagBank auth ${res.status}: ${text.slice(0, 200)}`);
-  }
-
-  const { access_token } = (await res.json()) as { access_token: string };
-  return access_token;
+function getToken(): string {
+  const token = process.env.PAGBANK_TOKEN;
+  if (!token) throw new Error("PAGBANK_TOKEN env var not set");
+  return token;
 }
 
 function brtExpiry(minutesFromNow: number): string {
@@ -48,12 +30,10 @@ export async function createPixOrder(params: {
   planName: string;
   notificationUrl: string;
 }): Promise<PixOrderResult> {
-  const token = await getAccessToken();
-
   const res = await fetch(`${PAGBANK_BASE_URL}/orders`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${getToken()}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -124,12 +104,10 @@ export async function createCreditCardOrder(params: {
   cardHolderName: string;
   notificationUrl: string;
 }): Promise<CardOrderResult> {
-  const token = await getAccessToken();
-
   const res = await fetch(`${PAGBANK_BASE_URL}/orders`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${getToken()}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
