@@ -14,11 +14,15 @@ export interface StravaActivity {
   id: number;
   name: string;
   type: string;
-  distance: number; // metros
-  moving_time: number; // segundos
+  distance: number;         // metros
+  moving_time: number;      // segundos (em movimento)
+  elapsed_time: number;     // segundos (total)
   start_date: string;
   average_heartrate?: number;
+  max_heartrate?: number;
   total_elevation_gain?: number;
+  average_cadence?: number; // passos/min (corrida)
+  calories?: number;
 }
 
 export class StravaApiError extends Error {
@@ -86,5 +90,13 @@ export async function fetchStravaActivities(accessToken: string, perPage = 5): P
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) throw new StravaApiError("Falha ao buscar atividades do Strava", res.status);
+  return res.json();
+}
+
+export async function fetchStravaActivity(activityId: string, accessToken: string): Promise<StravaActivity> {
+  const res = await fetch(`${STRAVA_API_BASE}/activities/${activityId}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new StravaApiError("Falha ao buscar atividade do Strava", res.status);
   return res.json();
 }
