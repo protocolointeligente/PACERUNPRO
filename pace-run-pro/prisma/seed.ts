@@ -5,34 +5,72 @@ import bcrypt from "bcryptjs";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL ?? "" });
 const prisma = new PrismaClient({ adapter });
 
-async function main() {
-  console.log("🌱 Seeding database...");
+async function reset() {
+  console.log("🗑️  Limpando banco de dados...");
 
-  // Super Admin
+  // Dependências mais profundas primeiro
+  await prisma.exerciseVideo.deleteMany();
+  await prisma.strengthBlock.deleteMany();
+  await prisma.strengthWorkout.deleteMany();
+  await prisma.workoutLog.deleteMany();
+  await prisma.workout.deleteMany();
+  await prisma.trainingWeek.deleteMany();
+  await prisma.trainingPlan.deleteMany();
+  await prisma.feedLike.deleteMany();
+  await prisma.feedComment.deleteMany();
+  await prisma.feedPost.deleteMany();
+  await prisma.achievement.deleteMany();
+  await prisma.race.deleteMany();
+  await prisma.performanceTest.deleteMany();
+  await prisma.metric.deleteMany();
+  await prisma.checkIn.deleteMany();
+  await prisma.teamMember.deleteMany();
+  await prisma.team.deleteMany();
+  await prisma.lead.deleteMany();
+  await prisma.expense.deleteMany();
+  await prisma.coachPlan.deleteMany();
+  await prisma.coachStrengthTemplate.deleteMany();
+  await prisma.coachRunTemplate.deleteMany();
+  await prisma.exercise.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.billingSettings.deleteMany();
+  await prisma.voucher.deleteMany();
+  await prisma.subscription.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.connectedDevice.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.session.deleteMany();
+  await prisma.verificationToken.deleteMany();
+  await prisma.athlete.deleteMany();
+  await prisma.coach.deleteMany();
+  await prisma.user.deleteMany();
+
+  console.log("✅ Banco limpo.");
+}
+
+async function seed() {
+  console.log("🌱 Criando usuários de teste...");
+
+  // ── 1. Super Admin ─────────────────────────────────────────────────────────
   const adminHash = await bcrypt.hash("Mlm042119@", 12);
-  const adminUser = await prisma.user.upsert({
-    where: { email: "admin@pacerunpro.com.br" },
-    update: {},
-    create: {
+  const adminUser = await prisma.user.create({
+    data: {
       email: "admin@pacerunpro.com.br",
       name: "Super Admin",
       passwordHash: adminHash,
       role: "ADMIN",
     },
   });
-  console.log("✅ Admin criado:", adminUser.email);
+  console.log("✅ Admin:", adminUser.email, "/ Mlm042119@");
 
-  // SuperAdmin / Coach — Ricardo Pace
+  // ── 2. Treinador — Ricardo Pace ────────────────────────────────────────────
   const coachHash = await bcrypt.hash("PaceRunPro@2026", 12);
-  const coachUser = await prisma.user.upsert({
-    where: { email: "ricardo@pacerunpro.com.br" },
-    update: {},
-    create: {
+  const coachUser = await prisma.user.create({
+    data: {
       email: "ricardo@pacerunpro.com.br",
       name: "Ricardo Luiz Pace Júnior",
       passwordHash: coachHash,
       role: "COACH",
-      phone: "",
       city: "Belo Horizonte",
       state: "MG",
       coach: {
@@ -40,18 +78,26 @@ async function main() {
           credential: "CREF 014626-G/MG",
           bio: "Treinador de corrida há mais de 10 anos. Especialista em provas de rua e triathlon.",
           specialties: ["Corrida de rua", "Meia maratona", "Maratona", "Triathlon"],
+          slug: "ricardo-pace",
+        },
+      },
+      // Assinatura em TRIAL para testar o fluxo de pagamento
+      subscriptions: {
+        create: {
+          plan: "COACH",
+          status: "TRIAL",
         },
       },
     },
   });
-  console.log("✅ Coach criado:", coachUser.email);
+  console.log("✅ Coach:", coachUser.email, "/ PaceRunPro@2026");
 
-  // Sample athlete — Camila Andrade
+  // ── 3. Atleta — Camila Andrade (vinculada ao Ricardo) ─────────────────────
   const athleteHash = await bcrypt.hash("Atleta@2026", 12);
-  const athleteUser = await prisma.user.upsert({
-    where: { email: "camila@exemplo.com" },
-    update: {},
-    create: {
+  const coachRecord = await prisma.coach.findUnique({ where: { userId: coachUser.id } });
+
+  const athleteUser = await prisma.user.create({
+    data: {
       email: "camila@exemplo.com",
       name: "Camila Andrade",
       passwordHash: athleteHash,
@@ -60,20 +106,26 @@ async function main() {
       state: "MG",
       athlete: {
         create: {
+          coachId: coachRecord!.id,
           goal: "VINTE_E_UM_KM",
           level: "INTERMEDIARIO",
           weeklyAvailability: 5,
           heightCm: 167,
           weightKg: 61.4,
           status: "ativo",
-          adherenceRate: 0.86,
+          adherenceRate: 0,
         },
       },
     },
   });
-  console.log("✅ Atleta criada:", athleteUser.email);
+  console.log("✅ Atleta:", athleteUser.email, "/ Atleta@2026");
 
-  console.log("✅ Seed concluído.");
+  console.log("\n🎉 Seed concluído. Sistema pronto para testes.");
+}
+
+async function main() {
+  await reset();
+  await seed();
 }
 
 main()
