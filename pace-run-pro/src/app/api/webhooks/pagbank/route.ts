@@ -8,7 +8,7 @@ function planIdToEnum(planId: string): SubscriptionPlan {
   if (planId === "b2b-free" || planId === "b2b-starter" || planId === "starter") {
     return SubscriptionPlan.COACH;
   }
-  return SubscriptionPlan.TEAM; // b2b-pro, b2b-premium, b2b-unlimited, pro, assessoria
+  return SubscriptionPlan.TEAM; // b2b-pro, b2b-assessoria, b2b-unlimited, pro, assessoria
 }
 
 export async function POST(req: NextRequest) {

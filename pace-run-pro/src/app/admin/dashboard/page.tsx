@@ -35,7 +35,7 @@ const fadeUp = {
 
 const PLAN_LABEL: Record<string, string> = {
   starter: "Starter", pro: "Pro", assessoria: "Assessoria", "white-label": "White Label",
-  "b2b-starter": "Starter", "b2b-pro": "Pro", "b2b-premium": "Assessoria", "b2b-unlimited": "White Label",
+  "b2b-starter": "Starter", "b2b-pro": "Pro", "b2b-assessoria": "Assessoria", "b2b-unlimited": "White Label",
 };
 const PLAN_VARIANT = (p: string) => {
   if (p.includes("white") || p.includes("unlimited")) return "danger" as const;

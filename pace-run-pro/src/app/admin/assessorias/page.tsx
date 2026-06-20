@@ -32,7 +32,7 @@ const planLabel = (plan: string) => {
   const map: Record<string, string> = {
     "starter": "Starter", "b2b-starter": "Starter",
     "pro": "Pro", "b2b-pro": "Pro",
-    "assessoria": "Assessoria", "b2b-premium": "Assessoria",
+    "assessoria": "Assessoria", "b2b-assessoria": "Assessoria",
     "white-label": "White Label", "b2b-unlimited": "White Label",
   };
   return map[plan] ?? plan;

@@ -6,7 +6,7 @@ import { formatBRL } from "@/lib/utils";
 
 const B2B_PLANS = [
   {
-    id: "starter",
+    id: "b2b-starter",
     name: "Starter",
     price: 97,
     maxAthletes: 20,
@@ -24,7 +24,7 @@ const B2B_PLANS = [
     ],
   },
   {
-    id: "pro",
+    id: "b2b-pro",
     name: "Pro",
     price: 197,
     maxAthletes: 80,
@@ -43,7 +43,7 @@ const B2B_PLANS = [
     ],
   },
   {
-    id: "assessoria",
+    id: "b2b-assessoria",
     name: "Assessoria",
     price: 397,
     maxAthletes: 250,
@@ -62,7 +62,7 @@ const B2B_PLANS = [
     ],
   },
   {
-    id: "white-label",
+    id: "b2b-unlimited",
     name: "White Label",
     price: 997,
     maxAthletes: null,
@@ -156,7 +156,7 @@ export function PricingSection() {
                   size="md"
                   className="w-full"
                 >
-                  {plan.id === "white-label" ? "Solicitar proposta" : "Começar agora"}
+                  {plan.id === "b2b-unlimited" ? "Solicitar proposta" : "Começar agora"}
                 </Button>
               </Link>
             </div>

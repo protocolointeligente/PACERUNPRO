@@ -30,13 +30,13 @@ const planPrice = (id: string) => b2bPlans.find((p) => p.id === id)?.price ?? 0;
 const b2bBreakdown = [
   { name: "Starter", count: 12, price: planPrice("b2b-starter") },
   { name: "Pro", count: 22, price: planPrice("b2b-pro") },
-  { name: "Premium", count: 8, price: planPrice("b2b-premium") },
-  { name: "Ilimitado", count: 6, price: planPrice("b2b-unlimited") },
+  { name: "Assessoria", count: 8, price: planPrice("b2b-assessoria") },
+  { name: "White Label", count: 6, price: planPrice("b2b-unlimited") },
 ].map((row) => ({ ...row, mrr: row.count * row.price }));
 
 const b2bBadgeVariant = (name: string) => {
-  if (name === "Ilimitado") return "danger" as const;
-  if (name === "Premium") return "warning" as const;
+  if (name === "White Label") return "danger" as const;
+  if (name === "Assessoria") return "warning" as const;
   if (name === "Pro") return "primary" as const;
   return "outline" as const;
 };
@@ -62,8 +62,8 @@ const upcomingCharges = [
   {
     id: "uc-3",
     name: "Runners BH",
-    plan: "Premium",
-    amount: planPrice("b2b-premium"),
+    plan: "Assessoria",
+    amount: planPrice("b2b-assessoria"),
     dueDate: "15 jun 2026",
     status: "agendado",
   },
