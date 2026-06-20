@@ -66,9 +66,9 @@ const atRiskAccounts = assessoriaList.filter(
 // MRR B2B total das ativas
 const b2bMrr = assessoriaList.filter((a) => a.status === "ativo").reduce((s, a) => s + a.mrr, 0);
 const b2bActive = assessoriaList.filter((a) => a.status === "ativo").length;
-const avgHealth = Math.round(
-  assessoriaList.filter((a) => a.status === "ativo").reduce((s, a) => s + a.healthScore, 0) / b2bActive
-);
+const avgHealth = b2bActive > 0
+  ? Math.round(assessoriaList.filter((a) => a.status === "ativo").reduce((s, a) => s + a.healthScore, 0) / b2bActive)
+  : 0;
 
 export default function AdminDashboard() {
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
@@ -92,7 +92,7 @@ export default function AdminDashboard() {
         <StatCard
           label="MRR B2B"
           value={`R$${b2bMrr.toLocaleString("pt-BR")}`}
-          unit="+13,8%"
+          unit=""
           icon={TrendingUp}
           accent="primary"
         />
@@ -124,7 +124,7 @@ export default function AdminDashboard() {
           {[
             { label: "Contas em risco de churn", value: atRiskAccounts.length, color: "border-danger/30 bg-danger/5 text-danger", href: "/admin/assessorias" },
             { label: "Aprovações pendentes", value: visibleApprovals.length, color: "border-warning/30 bg-warning/5 text-warning", href: "/admin/aprovacoes" },
-            { label: "Cobranças com falha", value: 2, color: "border-orange-500/30 bg-orange-500/5 text-orange-400", href: "/admin/financeiro" },
+            { label: "Cobranças com falha", value: 0, color: "border-orange-500/30 bg-orange-500/5 text-orange-400", href: "/admin/financeiro" },
             { label: "ARR estimado", value: `R$${(b2bMrr * 12).toLocaleString("pt-BR")}`, color: "border-primary/30 bg-primary/5 text-primary", href: "/admin/financeiro" },
           ].map((item) => (
             <Link key={item.label} href={item.href}>

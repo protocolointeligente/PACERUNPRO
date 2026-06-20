@@ -28,10 +28,10 @@ const fadeUp = {
 const planPrice = (id: string) => b2bPlans.find((p) => p.id === id)?.price ?? 0;
 
 const b2bBreakdown = [
-  { name: "Starter", count: 12, price: planPrice("b2b-starter") },
-  { name: "Pro", count: 22, price: planPrice("b2b-pro") },
-  { name: "Assessoria", count: 8, price: planPrice("b2b-assessoria") },
-  { name: "White Label", count: 6, price: planPrice("b2b-unlimited") },
+  { name: "Starter", count: 0, price: planPrice("b2b-starter") },
+  { name: "Pro", count: 0, price: planPrice("b2b-pro") },
+  { name: "Assessoria", count: 0, price: planPrice("b2b-assessoria") },
+  { name: "White Label", count: 0, price: planPrice("b2b-unlimited") },
 ].map((row) => ({ ...row, mrr: row.count * row.price }));
 
 const b2bBadgeVariant = (name: string) => {
@@ -41,55 +41,13 @@ const b2bBadgeVariant = (name: string) => {
   return "outline" as const;
 };
 
-// Mock upcoming charges
-const upcomingCharges = [
-  {
-    id: "uc-1",
-    name: "Run Tribe Assessoria",
-    plan: "Ilimitado",
-    amount: planPrice("b2b-unlimited"),
-    dueDate: "10 jun 2026",
-    status: "processando",
-  },
-  {
-    id: "uc-2",
-    name: "Pace & Cia Esportes",
-    plan: "Pro",
-    amount: planPrice("b2b-pro"),
-    dueDate: "12 jun 2026",
-    status: "agendado",
-  },
-  {
-    id: "uc-3",
-    name: "Runners BH",
-    plan: "Assessoria",
-    amount: planPrice("b2b-assessoria"),
-    dueDate: "15 jun 2026",
-    status: "agendado",
-  },
-  {
-    id: "uc-4",
-    name: "Ultra Training SP",
-    plan: "Pro",
-    amount: planPrice("b2b-pro"),
-    dueDate: "18 jun 2026",
-    status: "agendado",
-  },
-  {
-    id: "uc-5",
-    name: "Maratonistas do Sul",
-    plan: "Starter",
-    amount: planPrice("b2b-starter"),
-    dueDate: "22 jun 2026",
-    status: "agendado",
-  },
-];
+const upcomingCharges: { id: string; name: string; plan: string; amount: number; dueDate: string; status: string }[] = [];
 
 const totalMrr = superAdminStats.totalMrr;
 const b2cMrr = superAdminStats.b2cMrr;
 const b2bMrr = superAdminStats.b2bMrr;
-const b2cPct = Math.round((b2cMrr / totalMrr) * 100);
-const b2bPct = Math.round((b2bMrr / totalMrr) * 100);
+const b2cPct = totalMrr > 0 ? Math.round((b2cMrr / totalMrr) * 100) : 0;
+const b2bPct = totalMrr > 0 ? Math.round((b2bMrr / totalMrr) * 100) : 0;
 
 export default function FinanceiroPage() {
   return (
@@ -119,25 +77,25 @@ export default function FinanceiroPage() {
       >
         <StatCard
           label="Receita 12 meses"
-          value="R$689.040"
+          value="R$0"
           icon={TrendingUp}
           accent="primary"
         />
         <StatCard
           label="MRR atual"
-          value="R$63.480"
+          value="R$0"
           icon={DollarSign}
           accent="success"
         />
         <StatCard
           label="LTV médio estimado"
-          value="R$2.340"
+          value="R$0"
           icon={Users}
           accent="info"
         />
         <StatCard
           label="Churn 30d"
-          value="8"
+          value="0"
           unit="cancelamentos"
           icon={TrendingDown}
           accent="danger"
@@ -162,7 +120,7 @@ export default function FinanceiroPage() {
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <p className="text-sm font-semibold text-text">B2C — Atletas diretos</p>
-                    <p className="text-xs text-text-muted">312 atletas ativos</p>
+                    <p className="text-xs text-text-muted">0 atletas ativos</p>
                   </div>
                   <div className="text-right">
                     <p className="font-display text-xl font-bold text-text">
@@ -185,7 +143,7 @@ export default function FinanceiroPage() {
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <p className="text-sm font-semibold text-text">B2B — Assessorias</p>
-                    <p className="text-xs text-text-muted">48 assessorias ativas</p>
+                    <p className="text-xs text-text-muted">0 assessorias ativas</p>
                   </div>
                   <div className="text-right">
                     <p className="font-display text-xl font-bold text-text">
@@ -256,6 +214,13 @@ export default function FinanceiroPage() {
           subtitle="Cobranças previstas nos próximos dias"
         />
         <div className="space-y-3">
+          {upcomingCharges.length === 0 && (
+            <Card>
+              <CardContent className="py-8 text-center text-sm text-text-muted">
+                Nenhuma cobrança prevista.
+              </CardContent>
+            </Card>
+          )}
           {upcomingCharges.map((charge) => (
             <Card key={charge.id}>
               <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">

@@ -2,13 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollText } from "lucide-react";
 
-const MOCK_LOGS = [
-  { id: "l-1", action: "assessoria.aprovada",     actor: "Ricardo Pace Jr.",  target: "Run Tribe Assessoria",  at: "19 jun 2026, 14:32" },
-  { id: "l-2", action: "plano.upgrade",           actor: "Sistema",           target: "Runners BH → Assessoria", at: "18 jun 2026, 09:10" },
-  { id: "l-3", action: "voucher.criado",          actor: "Ricardo Pace Jr.",  target: "CORRIDA20 (20%)",       at: "17 jun 2026, 17:55" },
-  { id: "l-4", action: "assessoria.suspensa",     actor: "Ricardo Pace Jr.",  target: "Pace & Cia Esportes",   at: "15 jun 2026, 11:00" },
-  { id: "l-5", action: "cobranca.falha",          actor: "Sistema",           target: "Ultra Training SP",     at: "14 jun 2026, 08:22" },
-];
+const MOCK_LOGS: { id: string; action: string; actor: string; target: string; at: string }[] = [];
 
 const ACTION_VARIANT: Record<string, "success" | "danger" | "warning" | "info" | "primary"> = {
   "assessoria.aprovada": "success",
@@ -33,7 +27,11 @@ export default function LogsPage() {
 
       <Card>
         <CardContent className="p-0 divide-y divide-border/50">
-          {MOCK_LOGS.map((log) => (
+          {MOCK_LOGS.length === 0 ? (
+            <div className="px-5 py-8 text-center text-sm text-text-muted">
+              Nenhuma ação registrada ainda.
+            </div>
+          ) : MOCK_LOGS.map((log) => (
             <div key={log.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5">
               <div className="flex items-center gap-3">
                 <Badge variant={ACTION_VARIANT[log.action] ?? "default"} className="font-mono text-[11px]">
