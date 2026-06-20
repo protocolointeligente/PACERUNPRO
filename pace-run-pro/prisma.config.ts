@@ -30,7 +30,10 @@ loadEnvFile(resolve(root, ".env"));
 
 export default {
   datasource: {
-    url: process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL,
+    url:
+      process.env.POSTGRES_URL_NON_POOLING ??
+      process.env.DATABASE_URL_UNPOOLED ??
+      process.env.DATABASE_URL,
   },
   migrations: {
     seed: "tsx prisma/seed.ts",
