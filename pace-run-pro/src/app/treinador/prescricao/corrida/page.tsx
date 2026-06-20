@@ -20,7 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { athleteList, runWorkoutTemplates } from "@/lib/mock-data";
+import { runWorkoutTemplates } from "@/lib/mock-data";
 import { formatPace } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import {
@@ -69,6 +69,7 @@ function RunTemplateCard({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [applied, setApplied] = useState(false);
   const [navigating, setNavigating] = useState(false);
+  const [startDate, setStartDate] = useState<string>("");
 
   const zones = useMemo(
     () =>
@@ -88,13 +89,30 @@ function RunTemplateCard({
     );
   }
 
-  function handleApply() {
+  async function handleApply() {
+    if (selectedIds.length === 0 || !startDate) return;
     setApplied(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/coach/prescriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteIds: selectedIds,
+          sessions: template.sessions,
+          startDate,
+          templateName: template.name,
+        }),
+      });
+      if (!res.ok) throw new Error("Erro ao prescrever");
+      setTimeout(() => {
+        setApplied(false);
+        setExpanded(false);
+        setSelectedIds([]);
+        setStartDate("");
+      }, 2500);
+    } catch {
       setApplied(false);
-      setExpanded(false);
-      setSelectedIds([]);
-    }, 2500);
+    }
   }
 
   function handleNavigate() {
@@ -218,6 +236,18 @@ function RunTemplateCard({
                   Paces recalculados por VDOT
                 </p>
 
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    Semana de início (segunda-feira)
+                  </span>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text outline-none focus:border-primary/60"
+                  />
+                </label>
+
                 <div className="space-y-1.5">
                   {athletes
                     .filter((a) => a.vdot != null)
@@ -306,12 +336,14 @@ function RunTemplateCard({
                       <Button
                         size="sm"
                         className="w-full"
-                        disabled={selectedIds.length === 0}
+                        disabled={selectedIds.length === 0 || !startDate}
                         onClick={handleApply}
                       >
                         <Send className="h-3.5 w-3.5" />
                         {selectedIds.length === 0
                           ? "Selecione atletas…"
+                          : !startDate
+                          ? "Selecione a semana…"
                           : `Prescrever para ${selectedIds.length} ${selectedIds.length === 1 ? "atleta" : "atletas"}`}
                       </Button>
                     </motion.div>
@@ -328,14 +360,14 @@ function RunTemplateCard({
 
 // ── VDOT reference tab ────────────────────────────────────────────────────
 
-function VdotReferenceTab() {
-  const [athleteId, setAthleteId] = useState(athleteList[0].id);
+function VdotReferenceTab({ athletes }: { athletes: AthleteListItem[] }) {
+  const [athleteId, setAthleteId] = useState("");
   const [raceDistanceM, setRaceDistanceM] = useState<number>(RACE_DISTANCES[3].meters);
   const [raceTimeStr, setRaceTimeStr] = useState("");
 
   const athlete = useMemo(
-    () => athleteList.find((a) => a.id === athleteId) ?? athleteList[0],
-    [athleteId]
+    () => athletes.find((a) => a.id === athleteId) ?? athletes[0],
+    [athleteId, athletes]
   );
   const vdot = useMemo(
     () => calculateVDOT(raceDistanceM, parseRaceTime(raceTimeStr)),
@@ -366,7 +398,7 @@ function VdotReferenceTab() {
                 }}
                 className={inputClass}
               >
-                {athleteList.map((a) => (
+                {athletes.map((a) => (
                   <option key={a.id} value={a.id} className="bg-card text-text">
                     {a.name} — {a.level}{a.vdot ? ` (VDOT ${a.vdot})` : ""}
                   </option>
@@ -407,7 +439,7 @@ function VdotReferenceTab() {
                   {vdot.toFixed(1)}
                 </span>
                 <span className="text-sm text-text-muted">
-                  para {athlete.name.split(" ")[0]}
+                  para {athlete?.name?.split(" ")[0] ?? "atleta"}
                 </span>
               </div>
             )}
@@ -528,6 +560,7 @@ function VdotReferenceTab() {
 
 export default function CorridaPage() {
   const [activeTab, setActiveTab] = useState<"referencia" | "templates">("referencia");
+  const [realAthletes, setRealAthletes] = useState<AthleteListItem[]>([]);
   const [customRunTemplates, setCustomRunTemplates] = useState<RunWorkoutTemplate[]>([]);
   const [runTemplatesLoading, setRunTemplatesLoading] = useState(true);
   const [showNewRunTemplate, setShowNewRunTemplate] = useState(false);
@@ -537,6 +570,13 @@ export default function CorridaPage() {
   const [newRtKm, setNewRtKm] = useState("40");
   const [newRtFocus, setNewRtFocus] = useState("Base aeróbica");
   const [savingRunTemplate, setSavingRunTemplate] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/coach/athletes")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: AthleteListItem[]) => setRealAthletes(data))
+      .catch(() => null);
+  }, []);
 
   useEffect(() => {
     fetch("/api/coach/templates/corrida")
@@ -630,7 +670,7 @@ export default function CorridaPage() {
         </button>
       </div>
 
-      {activeTab === "referencia" && <VdotReferenceTab />}
+      {activeTab === "referencia" && <VdotReferenceTab athletes={realAthletes} />}
 
       {activeTab === "templates" && (
         <div className="space-y-4">
@@ -718,7 +758,7 @@ export default function CorridaPage() {
                 <RunTemplateCard
                   key={tpl.id}
                   template={tpl}
-                  athletes={athleteList}
+                  athletes={realAthletes}
                   onDelete={tpl.isCustom ? handleDeleteRunTemplate : undefined}
                 />
               ))

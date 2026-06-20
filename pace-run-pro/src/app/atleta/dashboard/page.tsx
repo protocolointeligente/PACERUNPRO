@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
@@ -30,10 +31,35 @@ function getGreeting() {
   return "Boa noite";
 }
 
+interface TodayWorkout {
+  id: string;
+  title: string;
+  type: string;
+  objective?: string;
+  targetPaceSecPerKm?: number;
+  targetDistanceKm?: number;
+  targetDurationMin?: number;
+  targetRpe?: number;
+}
+
 export default function AthleteDashboard() {
   const { data: session } = useSession();
   const firstName = session?.user?.name?.split(" ")[0] ?? "Atleta";
   const greeting = getGreeting();
+  const [todayWorkout, setTodayWorkout] = useState<TodayWorkout | null>(null);
+  const [workoutsLoading, setWorkoutsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/athlete/workouts")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: Array<{ id: string; date: string; title: string; type: string; objective?: string; targetPaceSecPerKm?: number; targetDistanceKm?: number; targetDurationMin?: number; targetRpe?: number }>) => {
+        const today = new Date().toDateString();
+        const todaysWorkout = data.find((w) => new Date(w.date).toDateString() === today);
+        setTodayWorkout(todaysWorkout ?? null);
+      })
+      .catch(() => null)
+      .finally(() => setWorkoutsLoading(false));
+  }, []);
 
   return (
     <div className="mx-auto max-w-6xl space-y-7">
@@ -51,25 +77,72 @@ export default function AthleteDashboard() {
         </Badge>
       </motion.div>
 
-      {/* Treino do dia — aguardando */}
+      {/* Treino do dia */}
       <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show">
-        <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/8 via-card to-card">
-          <CardContent className="flex flex-col items-center gap-5 p-10 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-              <CalendarClock className="h-8 w-8" />
-            </div>
-            <div>
-              <Badge variant="primary" className="mb-3">Treino de hoje</Badge>
-              <h2 className="font-display text-xl font-bold text-text">
-                Aguardando prescrição do treinador
-              </h2>
-              <p className="mt-2 max-w-md text-sm text-text-muted">
-                Seu treinador ainda está preparando seu plano de treinamento personalizado.
-                Fique de olho — você receberá uma notificação assim que os treinos forem liberados.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {workoutsLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : todayWorkout ? (
+          <Card className="overflow-hidden border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card">
+            <CardContent className="flex flex-col gap-5 p-6">
+              <div>
+                <Badge variant="primary">Treino de hoje</Badge>
+                <Badge variant="success" className="ml-2">Liberado</Badge>
+                <h2 className="mt-3 font-display text-xl font-bold text-text">{todayWorkout.title}</h2>
+                {todayWorkout.objective && (
+                  <p className="mt-1.5 text-sm text-text-muted">{todayWorkout.objective}</p>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-3 text-sm">
+                {todayWorkout.targetDistanceKm && (
+                  <div className="rounded-xl border border-border bg-background/40 px-3 py-2">
+                    <p className="text-[11px] uppercase tracking-wider text-text-muted">Distância</p>
+                    <p className="font-display font-bold text-text">{todayWorkout.targetDistanceKm} km</p>
+                  </div>
+                )}
+                {todayWorkout.targetDurationMin && (
+                  <div className="rounded-xl border border-border bg-background/40 px-3 py-2">
+                    <p className="text-[11px] uppercase tracking-wider text-text-muted">Duração</p>
+                    <p className="font-display font-bold text-text">{todayWorkout.targetDurationMin} min</p>
+                  </div>
+                )}
+                {todayWorkout.targetRpe && (
+                  <div className="rounded-xl border border-border bg-background/40 px-3 py-2">
+                    <p className="text-[11px] uppercase tracking-wider text-text-muted">RPE alvo</p>
+                    <p className="font-display font-bold text-text">{todayWorkout.targetRpe}/10</p>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <Link href={`/atleta/treino/${todayWorkout.id}`}>
+                  <Button size="lg">Ver detalhes do treino</Button>
+                </Link>
+                <Link href={`/atleta/treino/${todayWorkout.id}/executar`}>
+                  <Button size="lg" variant="secondary">Iniciar treino</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/8 via-card to-card">
+            <CardContent className="flex flex-col items-center gap-5 p-10 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+                <CalendarClock className="h-8 w-8" />
+              </div>
+              <div>
+                <Badge variant="primary" className="mb-3">Treino de hoje</Badge>
+                <h2 className="font-display text-xl font-bold text-text">
+                  Aguardando prescrição do treinador
+                </h2>
+                <p className="mt-2 max-w-md text-sm text-text-muted">
+                  Seu treinador ainda está preparando seu plano de treinamento personalizado.
+                  Fique de olho — você receberá uma notificação assim que os treinos forem liberados.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </motion.div>
 
       <div className="grid gap-5 lg:grid-cols-3">

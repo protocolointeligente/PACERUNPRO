@@ -18,7 +18,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { getWorkoutDetail } from "@/lib/mock-data";
 import { formatDuration, formatPace } from "@/lib/utils";
 import {
   buildRoutePath,
@@ -30,10 +29,27 @@ import {
 
 type GpsStatus = "idle" | "requesting" | "active" | "denied" | "unsupported" | "error";
 
+interface WorkoutData {
+  id: string;
+  title: string;
+  targetPaceSecPerKm?: number | null;
+  targetHrZone?: string | null;
+  targetDistanceKm?: number | null;
+  targetDurationMin?: number | null;
+  targetRpe?: number | null;
+}
+
 export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const workout = useMemo(() => getWorkoutDetail(id), [id]);
+  const [workout, setWorkout] = useState<WorkoutData | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/athlete/workouts/${id}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: WorkoutData | null) => setWorkout(data))
+      .catch(() => null);
+  }, [id]);
 
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -165,6 +181,17 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
         splits,
       }),
     );
+    // Save workout log to the database
+    fetch(`/api/athlete/workouts/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        distanceKm: distanceKm > 0.01 ? parseFloat(distanceKm.toFixed(3)) : null,
+        durationSec: elapsed > 0 ? elapsed : null,
+        rpe: null,
+        feeling: null,
+      }),
+    }).catch(() => null);
     router.push("/atleta/checkin");
   }
 
