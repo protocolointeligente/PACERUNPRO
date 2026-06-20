@@ -197,9 +197,9 @@ export default function AnaliseSemanalPage() {
       ? weeklyAnalyses
       : weeklyAnalyses.filter((a) => a.riskLevel === riskFilter);
 
-  const avgAdherence = Math.round(
-    weeklyAnalyses.reduce((acc, a) => acc + a.adherence, 0) / weeklyAnalyses.length
-  );
+  const avgAdherence = weeklyAnalyses.length > 0
+    ? Math.round(weeklyAnalyses.reduce((acc, a) => acc + a.adherence, 0) / weeklyAnalyses.length)
+    : 0;
   const highRiskCount = weeklyAnalyses.filter((a) => a.riskLevel === "high").length;
   const totalVolume = weeklyAnalyses.reduce((acc, a) => acc + a.metrics[0].value, 0);
 

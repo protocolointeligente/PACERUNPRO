@@ -1,19 +1,46 @@
-"use client";
-
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/layout/app-shell";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { athleteNav, athleteMoreNav } from "@/components/layout/nav-config";
-import { currentAthlete } from "@/lib/mock-data";
 
-export default function AtletaLayout({ children }: { children: React.ReactNode }) {
+const GOAL_LABELS: Record<string, string> = {
+  CINCO_KM: "5 km",
+  DEZ_KM: "10 km",
+  VINTE_E_UM_KM: "21 km — Meia Maratona",
+  QUARENTA_E_DOIS_KM: "42 km — Maratona",
+  ULTRAMARATONA: "Ultramaratona",
+  EMAGRECIMENTO: "Emagrecimento",
+  PERFORMANCE: "Performance",
+  RETORNO_AS_CORRIDAS: "Retorno às corridas",
+};
+
+export default async function AtletaLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  if (!session) redirect("/login");
+  if (session.user?.role === "ADMIN") redirect("/admin");
+  if (session.user?.role === "COACH") redirect("/treinador/dashboard");
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user!.id },
+    select: {
+      name: true,
+      avatarUrl: true,
+      athlete: { select: { goal: true } },
+    },
+  });
+
+  const goalLabel = GOAL_LABELS[user?.athlete?.goal ?? ""] ?? "Atleta";
+
   return (
     <AppShell
       nav={athleteNav}
       moreNav={athleteMoreNav}
       roleLabel="Atleta"
-      userName={currentAthlete.name}
-      userSubtitle={currentAthlete.goal}
-      avatarUrl={currentAthlete.avatarUrl}
+      userName={user?.name ?? session.user?.name ?? "Atleta"}
+      userSubtitle={goalLabel}
+      avatarUrl={user?.avatarUrl ?? undefined}
     >
       {children}
       <BottomNav items={athleteNav} />

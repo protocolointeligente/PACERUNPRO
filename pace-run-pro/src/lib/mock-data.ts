@@ -1623,27 +1623,7 @@ export interface WeeklyAthleteAnalysis {
   recommendation: string;
 }
 
-export const weeklyAnalyses: WeeklyAthleteAnalysis[] = [
-  {
-    athleteId: "ath-1",
-    athleteName: "Camila Andrade",
-    weekLabel: "02–08 Jun 2025",
-    metrics: [
-      { label: "Volume", value: 52, prev: 47, unit: "km", delta: 10.6 },
-      { label: "Sessões", value: 5, prev: 5, unit: "", delta: 0 },
-      { label: "Pace médio", value: 305, prev: 312, unit: "s/km", delta: -2.2 },
-      { label: "FC média", value: 148, prev: 151, unit: "bpm", delta: -2.0 },
-      { label: "Carga", value: 820, prev: 732, unit: "UA", delta: 12.0 },
-    ],
-    highlights: [
-      "Carga 12% acima da semana anterior — monitorar sinais de fadiga",
-      "Pace médio melhorou 7 s/km em relação às últimas 3 semanas",
-    ],
-    riskLevel: "low",
-    adherence: 100,
-    recommendation: "Manter volume. Inserir um dia de trote leve se FC de repouso subir.",
-  },
-];
+export const weeklyAnalyses: WeeklyAthleteAnalysis[] = [];
 
 // ── CRM ────────────────────────────────────────────────────────────────────
 export type LeadStage = "novo" | "contato" | "proposta" | "negociacao" | "ganho" | "perdido";
