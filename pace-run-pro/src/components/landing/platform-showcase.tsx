@@ -93,8 +93,16 @@ function MiniStat({
 }
 
 export function PlatformShowcase() {
-  const alert = smartAlerts[0];
-  const athlete = athleteList[0];
+  const alert = smartAlerts[0] ?? {
+    title: "Risco moderado de fadiga",
+    description: "FC em Z2 subiu 12% nos últimos 10 dias. Recomendado reduzir volume em 15% por 7 dias.",
+  };
+  const athlete = athleteList[0] ?? {
+    name: "Camila Andrade",
+    goal: "21 km",
+    lastCheckIn: "Hoje, 07:40",
+    adherence: 0.92,
+  };
 
   return (
     <section id="plataforma" className="py-24 sm:py-32">
