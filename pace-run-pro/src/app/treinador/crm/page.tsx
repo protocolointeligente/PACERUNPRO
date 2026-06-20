@@ -251,7 +251,8 @@ function CrmContent() {
       .catch(() => null);
   }, []);
 
-  const quizUrl = slug ? `https://pacerunpro.com.br/quiz/${slug}` : null;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.pacerunpro.com.br";
+  const quizUrl = slug ? `${appUrl}/quiz/${slug}` : null;
 
   function copyQuizUrl() {
     if (!quizUrl) return;

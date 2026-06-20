@@ -200,7 +200,7 @@ export default async function PublicAssessoriaPage({ params }: { params: Promise
                     ))}
                   </ul>
 
-                  <Link href={`/onboarding/assessoria?plano=${slug}-${plan.id}`}>
+                  <Link href={`/cadastro?ref=${slug}`}>
                     <Button
                       variant={plan.highlight ? "primary" : "outline"}
                       className="w-full"

@@ -19,10 +19,12 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === "approve") {
-    // Busca assinatura TRIAL do coach/assessoria e ativa
     await prisma.subscription.updateMany({
       where: {
-        user: { role: "COACH" },
+        user: {
+          role: "COACH",
+          coach: { id: assessoriaId },
+        },
         status: "TRIAL",
       },
       data: { status: "ACTIVE" },

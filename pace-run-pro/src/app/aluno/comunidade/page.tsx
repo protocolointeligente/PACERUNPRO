@@ -9,6 +9,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { activityFeed, monthlyChallenges, clubs, ranking, type ActivityPost } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
+function drawRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
 async function sharePost(post: ActivityPost) {
   const canvas = document.createElement("canvas");
   canvas.width = 1080;
@@ -20,7 +34,7 @@ async function sharePost(post: ActivityPost) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 1080, 1920);
   ctx.fillStyle = "rgba(255,255,255,0.05)";
-  ctx.roundRect(80, 600, 920, 600, 32);
+  drawRoundRect(ctx, 80, 600, 920, 600, 32);
   ctx.fill();
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 180px sans-serif";

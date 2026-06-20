@@ -282,23 +282,9 @@ export default function LandingPage() {
 
             <div>
               <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-text-muted">
-                Empresa
+                Legal
               </h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Sobre nós</a></li>
-                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Blog</a></li>
-                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Carreiras</a></li>
-                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Parceiros</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-text-muted">
-                Suporte
-              </h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Central de ajuda</a></li>
-                <li><a href="#" className="text-text-muted hover:text-text transition-colors">Contato</a></li>
                 <li><Link href="/termos" className="text-text-muted hover:text-text transition-colors">Termos de uso</Link></li>
                 <li><Link href="/privacidade" className="text-text-muted hover:text-text transition-colors">Privacidade</Link></li>
               </ul>
