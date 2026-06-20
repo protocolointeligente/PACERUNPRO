@@ -9,13 +9,13 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get("error");
 
   if (error || !code) {
-    return NextResponse.redirect(new URL("/aluno/perfil?tab=dispositivos&error=strava_denied", request.url));
+    return NextResponse.redirect(new URL("/atleta/perfil?tab=dispositivos&error=strava_denied", request.url));
   }
 
   const session = await auth();
   if (!session?.user) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", "/aluno/perfil?tab=dispositivos");
+    loginUrl.searchParams.set("callbackUrl", "/atleta/perfil?tab=dispositivos");
     return NextResponse.redirect(loginUrl);
   }
 
@@ -40,8 +40,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error("[strava callback]", err);
-    return NextResponse.redirect(new URL("/aluno/perfil?tab=dispositivos&error=strava_token", request.url));
+    return NextResponse.redirect(new URL("/atleta/perfil?tab=dispositivos&error=strava_token", request.url));
   }
 
-  return NextResponse.redirect(new URL("/aluno/perfil?tab=dispositivos&connected=strava", request.url));
+  return NextResponse.redirect(new URL("/atleta/perfil?tab=dispositivos&connected=strava", request.url));
 }

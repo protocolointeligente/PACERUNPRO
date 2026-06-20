@@ -139,10 +139,10 @@ export default function AthleteDashboard() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Link href={`/aluno/treino/${todayWorkout.id}`}>
+                <Link href={`/atleta/treino/${todayWorkout.id}`}>
                   <Button size="lg">Ver detalhes do treino</Button>
                 </Link>
-                <Link href={`/aluno/treino/${todayWorkout.id}/executar`}>
+                <Link href={`/atleta/treino/${todayWorkout.id}/executar`}>
                   <Button size="lg" variant="secondary">
                     <PlayCircle className="h-4 w-4" />
                     Iniciar treino
@@ -217,7 +217,7 @@ export default function AthleteDashboard() {
               <p className="text-sm text-text-muted">
                 Suas respostas ajustam automaticamente a carga das próximas sessões e alertam seu treinador se houver risco.
               </p>
-              <Link href="/aluno/checkin">
+              <Link href="/atleta/checkin">
                 <Button className="w-full">Fazer check-in agora</Button>
               </Link>
             </CardContent>
@@ -240,7 +240,7 @@ export default function AthleteDashboard() {
                   </span>
                 </div>
               ))}
-              <Link href="/aluno/evolucao" className="block pt-1">
+              <Link href="/atleta/evolucao" className="block pt-1">
                 <Button size="sm" variant="ghost" className="w-full text-xs">Ver evolução completa</Button>
               </Link>
             </CardContent>
@@ -250,16 +250,16 @@ export default function AthleteDashboard() {
         {/* Próximas sessões + últimos treinos */}
         <motion.div custom={4} variants={fadeUp} initial="hidden" animate="show" className="space-y-6 lg:col-span-2">
           <div>
-            <SectionHeader title="Próximas sessões" href="/aluno/calendario" />
+            <SectionHeader title="Próximas sessões" href="/atleta/calendario" />
             <div className="space-y-3">
               {upcomingSessions.slice(0, 3).map((w) => (
-                <WorkoutCard key={w.id} workout={w} href={`/aluno/treino/${w.id}`} />
+                <WorkoutCard key={w.id} workout={w} href={`/atleta/treino/${w.id}`} />
               ))}
             </div>
           </div>
 
           <div>
-            <SectionHeader title="Últimos treinos" subtitle="Seu histórico recente de sessões concluídas" href="/aluno/evolucao" />
+            <SectionHeader title="Últimos treinos" subtitle="Seu histórico recente de sessões concluídas" href="/atleta/evolucao" />
             <div className="grid gap-3 sm:grid-cols-3">
               {recentSessions.map((s) => (
                 <Card key={s.id} className="p-4">

@@ -41,7 +41,7 @@ const TODAY_ACTIONS = [
     value: 0,
     icon: ClipboardCheck,
     color: "warning" as const,
-    href: "/treinador/alunos",
+    href: "/treinador/atletas",
     cta: "Revisar check-ins",
   },
   {
@@ -50,7 +50,7 @@ const TODAY_ACTIONS = [
     value: 0,
     icon: Flame,
     color: "info" as const,
-    href: "/treinador/alunos",
+    href: "/treinador/atletas",
     cta: "Liberar treinos",
   },
   {
@@ -148,10 +148,10 @@ export default function CoachDashboard() {
       <div className="grid gap-5 lg:grid-cols-3">
         {/* Atletas em risco */}
         <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show" className="lg:col-span-2 space-y-5">
-          <SectionHeader title="Atletas que precisam de atenção" href="/treinador/alunos" />
+          <SectionHeader title="Atletas que precisam de atenção" href="/treinador/atletas" />
           <div className="space-y-3">
             {athletesAtRisk.map((a) => (
-              <Link key={a.id} href={`/treinador/alunos/${a.id}`}>
+              <Link key={a.id} href={`/treinador/atletas/${a.id}`}>
                 <Card hover className="p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -210,7 +210,7 @@ export default function CoachDashboard() {
               <p className="mt-1.5 text-sm text-text-muted">
                 Nenhum treino aguarda liberação esta semana.
               </p>
-              <Link href="/treinador/alunos">
+              <Link href="/treinador/atletas">
                 <Button className="mt-3 w-full">Revisar liberações</Button>
               </Link>
             </CardContent>

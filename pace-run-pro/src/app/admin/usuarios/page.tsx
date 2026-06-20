@@ -365,7 +365,7 @@ export default function UsuariosPage() {
                 <CardDescription>
                   {mode === "coach"
                     ? "Cria uma conta com papel COACH e acesso à área do treinador."
-                    : "Cria uma conta com papel ATHLETE e acesso à área do aluno."}
+                    : "Cria uma conta com papel ATHLETE e acesso à área do atleta."}
                 </CardDescription>
               </div>
             </div>

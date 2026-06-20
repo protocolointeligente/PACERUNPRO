@@ -97,7 +97,7 @@ export default function TermosPage() {
               correspondente até que a assinatura seja cancelada. Caso o número de alunos/atletas
               vinculados a uma conta de treinador ou assessoria exceda o limite do plano contratado, a
               Plataforma poderá migrar automaticamente a assinatura para o plano imediatamente superior
-              compatível com o número de alunos cadastrados, com ajuste proporcional da cobrança.
+              compatível com o número de atletas cadastrados, com ajuste proporcional da cobrança.
             </p>
             <p>
               Cupons e vouchers de desconto, quando emitidos pela Pace Run Pro ou por treinadores e

@@ -252,7 +252,7 @@ export default function AnamnesePage() {
             </ul>
           </div>
 
-          <Link href="/aluno/dashboard" className="mt-8 block">
+          <Link href="/atleta/dashboard" className="mt-8 block">
             <Button variant="primary" size="lg" className="w-full gap-2">
               Acessar meu painel →
             </Button>

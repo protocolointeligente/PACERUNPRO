@@ -282,7 +282,7 @@ function AssinarContent() {
           {coupon?.type === "FREE_MONTHS" &&
             ` · +${coupon.value} ${coupon.value === 1 ? "mês" : "meses"} grátis`}
         </div>
-        <Link href="/aluno/dashboard">
+        <Link href="/atleta/dashboard">
           <Button variant="primary" size="lg" className="gap-2">
             Acessar minha conta →
           </Button>

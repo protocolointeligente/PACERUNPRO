@@ -1031,7 +1031,7 @@ export const testimonials = [
 
 export const landingFeatures = [
   {
-    persona: "Aluno",
+    persona: "Atleta",
     color: "#38bdf8",
     items: [
       { icon: "📅", title: "Plano liberado semana a semana", description: "Sem ansiedade de ver o ciclo todo — só o que importa agora." },
@@ -1329,7 +1329,7 @@ export const b2bPlans = [
       "1 treinador",
       "Prescrição de treino básica",
       "Check-in semanal",
-      "Acesso ao app do aluno",
+      "Acesso ao app do atleta",
       "Suporte por e-mail",
     ],
   },

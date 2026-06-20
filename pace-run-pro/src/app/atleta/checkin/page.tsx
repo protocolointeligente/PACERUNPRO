@@ -313,7 +313,7 @@ export default function CheckInPage() {
           <Save className="h-4 w-4" />
           {saving ? "Salvando..." : saved ? "Check-in registrado ✓" : "Salvar check-in"}
         </Button>
-        <Button size="lg" variant="secondary" onClick={() => router.push("/aluno/dashboard")}>
+        <Button size="lg" variant="secondary" onClick={() => router.push("/atleta/dashboard")}>
           Voltar ao início
         </Button>
       </div>

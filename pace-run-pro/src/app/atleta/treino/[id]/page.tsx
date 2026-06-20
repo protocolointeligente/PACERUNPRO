@@ -36,7 +36,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <Link href="/aluno/calendario" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors">
+      <Link href="/atleta/calendario" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors">
         <ArrowLeft className="h-4 w-4" />
         Voltar
       </Link>
@@ -114,7 +114,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
 
       {/* CTA */}
       <div className="sticky bottom-20 z-10 flex justify-center lg:bottom-6">
-        <Link href={`/aluno/treino/${workout.id}/executar`} className="w-full sm:w-auto">
+        <Link href={`/atleta/treino/${workout.id}/executar`} className="w-full sm:w-auto">
           <Button size="lg" className="w-full px-10 shadow-2xl shadow-primary/40 sm:w-auto">
             <PlayCircle className="h-5 w-5" />
             INICIAR TREINO

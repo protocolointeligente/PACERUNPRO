@@ -112,7 +112,7 @@ export default function AthleteListPage() {
         </div>
         <div className="divide-y divide-border">
           {filtered.map((a) => (
-            <Link key={a.id} href={`/treinador/alunos/${a.id}`} className="block transition-colors hover:bg-card-hover/40">
+            <Link key={a.id} href={`/treinador/atletas/${a.id}`} className="block transition-colors hover:bg-card-hover/40">
               <div className="grid grid-cols-1 gap-3 px-5 py-4 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr_0.8fr] lg:items-center">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">

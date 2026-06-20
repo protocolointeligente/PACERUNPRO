@@ -96,7 +96,7 @@ export default function TimelinePage() {
       {/* Header */}
       <div className="space-y-3">
         <Link
-          href="/aluno/dashboard"
+          href="/atleta/dashboard"
           className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

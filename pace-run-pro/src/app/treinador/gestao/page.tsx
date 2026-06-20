@@ -250,7 +250,7 @@ function GestaoContent() {
                         size="sm"
                         variant="secondary"
                         onClick={() => {
-                          window.location.href = `/treinador/alunos/${athlete.id}`;
+                          window.location.href = `/treinador/atletas/${athlete.id}`;
                         }}
                       >
                         Ver

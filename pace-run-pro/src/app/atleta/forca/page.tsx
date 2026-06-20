@@ -42,7 +42,7 @@ export default function StrengthPage() {
 
           <div className="mt-5 space-y-2.5">
             {strengthSessionExample.exercises.map((ex, i) => (
-              <Link key={ex.id} href={`/aluno/forca/${ex.id}`}>
+              <Link key={ex.id} href={`/atleta/forca/${ex.id}`}>
                 <div className="flex items-center gap-3 rounded-xl border border-border bg-card-hover/40 p-3 transition-colors hover:border-primary/40">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-card text-sm font-bold text-text-muted">
                     {i + 1}
@@ -71,7 +71,7 @@ export default function StrengthPage() {
             ))}
           </div>
 
-          <Link href="/aluno/forca/executar">
+          <Link href="/atleta/forca/executar">
             <Button size="lg" className="mt-5 w-full sm:w-auto">
               <ListChecks className="h-4 w-4" />
               Iniciar sessão de força
@@ -109,7 +109,7 @@ export default function StrengthPage() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((ex) => (
-            <Link key={ex.id} href={`/aluno/forca/${ex.id}`}>
+            <Link key={ex.id} href={`/atleta/forca/${ex.id}`}>
               <Card hover className="overflow-hidden">
                 <div className="h-36 bg-cover bg-center" style={{ backgroundImage: `url('${ex.imageUrl}')` }} />
                 <CardContent className="p-4">

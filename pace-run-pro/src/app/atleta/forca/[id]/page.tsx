@@ -13,7 +13,7 @@ export default async function ExerciseDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <Link href="/aluno/forca" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors">
+      <Link href="/atleta/forca" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors">
         <ArrowLeft className="h-4 w-4" />
         Voltar
       </Link>

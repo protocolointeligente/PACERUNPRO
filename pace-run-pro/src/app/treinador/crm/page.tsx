@@ -290,7 +290,7 @@ function CrmContent() {
             CRM de Leads
           </Badge>
           <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">CRM de Leads</h1>
-          <p className="text-sm text-text-muted">Gerencie o pipeline de novos alunos da sua assessoria.</p>
+          <p className="text-sm text-text-muted">Gerencie o pipeline de novos atletas da sua assessoria.</p>
         </div>
         <button
           onClick={() => setShowForm((v) => !v)}

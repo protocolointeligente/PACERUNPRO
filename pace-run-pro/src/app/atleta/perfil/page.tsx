@@ -75,7 +75,7 @@ export default function ProfilePage() {
     setAvatarUploading(true);
     try {
       const dataUrl = await resizeImage(file, 400, 400);
-      const res = await fetch("/api/aluno/avatar", {
+      const res = await fetch("/api/atleta/avatar", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dataUrl }),
@@ -98,7 +98,7 @@ export default function ProfilePage() {
     setBannerUploading(true);
     try {
       const dataUrl = await resizeImage(file, 1200, 300, 0.78);
-      const res = await fetch("/api/aluno/banner", {
+      const res = await fetch("/api/atleta/banner", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dataUrl }),
@@ -129,7 +129,7 @@ export default function ProfilePage() {
   async function handleEditSave() {
     setEditSaving(true);
     try {
-      const res = await fetch("/api/aluno/perfil", {
+      const res = await fetch("/api/atleta/perfil", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -157,7 +157,7 @@ export default function ProfilePage() {
   }
 
   useEffect(() => {
-    fetch("/api/aluno/perfil")
+    fetch("/api/atleta/perfil")
       .then((r) => (r.ok ? r.json() : null))
       .then((data: { avatarUrl?: string | null; bannerUrl?: string | null } | null) => {
         if (data?.avatarUrl) setAvatarSrc(data.avatarUrl);
@@ -187,7 +187,7 @@ export default function ProfilePage() {
     }
 
     if (connected || error || params.get("tab")) {
-      window.history.replaceState({}, "", "/aluno/perfil");
+      window.history.replaceState({}, "", "/atleta/perfil");
     }
 
     fetch("/api/integrations/status")

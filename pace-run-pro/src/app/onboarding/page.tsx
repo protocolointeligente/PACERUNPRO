@@ -270,7 +270,7 @@ export default function OnboardingPage() {
   function next() {
     if (!current.valid) return;
     if (isLast) {
-      router.push("/aluno/dashboard");
+      router.push("/atleta/dashboard");
       return;
     }
     setDirection(1);

@@ -314,7 +314,7 @@ export default function CalendarPage() {
         <TabsContent value="semana">
           <div className="space-y-3">
             {weekWorkouts.map((w) => (
-              <WorkoutCard key={w.id} workout={w} href={`/aluno/treino/${w.id}`} />
+              <WorkoutCard key={w.id} workout={w} href={`/atleta/treino/${w.id}`} />
             ))}
           </div>
         </TabsContent>

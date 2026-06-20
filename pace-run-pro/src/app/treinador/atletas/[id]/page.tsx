@@ -22,7 +22,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <Link href="/treinador/alunos" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors">
+      <Link href="/treinador/atletas" className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors">
         <ArrowLeft className="h-4 w-4" />
         Voltar
       </Link>

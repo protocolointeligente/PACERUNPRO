@@ -165,7 +165,7 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
         splits,
       }),
     );
-    router.push("/aluno/checkin");
+    router.push("/atleta/checkin");
   }
 
   const gpsBadge = (() => {

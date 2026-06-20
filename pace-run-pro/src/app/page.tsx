@@ -57,11 +57,11 @@ export default function LandingPage() {
           </Badge>
           <h1 className="font-display text-5xl font-extrabold leading-tight tracking-tight sm:text-6xl lg:text-7xl">
             A plataforma para assessorias{" "}
-            <span className="gradient-text">escalarem com menos trabalho.</span>
+            <span className="gradient-text">escalarem com maior performance.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-text-muted">
             Crie treinos em minutos, monitore atletas automaticamente, detecte riscos antes das
-            lesões e controle alunos, cobrança e evolução em um único sistema.
+            lesões e controle atletas, cobrança e evolução em um único sistema.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link href="/cadastro?perfil=treinador">

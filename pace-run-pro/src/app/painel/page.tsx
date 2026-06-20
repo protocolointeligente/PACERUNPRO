@@ -11,5 +11,5 @@ export default async function PainelRedirect() {
 
   if (role === "ADMIN") redirect("/admin/dashboard");
   if (role === "COACH") redirect("/treinador/dashboard");
-  redirect("/aluno/dashboard");
+  redirect("/atleta/dashboard");
 }

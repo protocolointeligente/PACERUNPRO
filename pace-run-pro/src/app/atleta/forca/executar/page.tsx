@@ -153,7 +153,7 @@ export default function StrengthExecutarPage() {
   }, []);
 
   const finish = useCallback(() => {
-    router.push("/aluno/checkin");
+    router.push("/atleta/checkin");
   }, [router]);
 
   if (phase === "done") {
@@ -186,7 +186,7 @@ export default function StrengthExecutarPage() {
             <CheckCircle2 className="h-5 w-5" />
             Fazer check-in pós-treino
           </Button>
-          <Link href="/aluno/forca" className="mt-4 block text-sm text-text-muted hover:text-text">
+          <Link href="/atleta/forca" className="mt-4 block text-sm text-text-muted hover:text-text">
             Voltar para força
           </Link>
         </div>
@@ -218,7 +218,7 @@ export default function StrengthExecutarPage() {
       {/* Back link */}
       <div className="flex items-center gap-2">
         <Link
-          href="/aluno/forca"
+          href="/atleta/forca"
           className="flex items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-text"
         >
           <ArrowLeft className="h-4 w-4" />

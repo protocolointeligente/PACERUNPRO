@@ -87,7 +87,7 @@ export default function ConhecaOSistemaPage() {
                   <Step
                     number={1}
                     title="Cadastre seus atletas"
-                    description="Compartilhe o link ou QR code de convite, disponível em Gestão & vendas — o aluno entra automaticamente vinculado à sua conta."
+                    description="Compartilhe o link ou QR code de convite, disponível em Gestão & vendas — o atleta entra automaticamente vinculado à sua conta."
                   />
                   <Step
                     number={2}
@@ -132,7 +132,7 @@ export default function ConhecaOSistemaPage() {
               <h2 className="mb-3 font-display text-base font-semibold text-text">Atalhos rápidos</h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <FeatureLink href="/treinador/dashboard" icon={LayoutDashboard} title="Dashboard" description="Visão geral da equipe, alertas e carga semanal." />
-                <FeatureLink href="/treinador/alunos" icon={Users} title="Atletas" description="Lista completa com adesão, carga e status de cada aluno." />
+                <FeatureLink href="/treinador/atletas" icon={Users} title="Atletas" description="Lista completa com adesão, carga e status de cada atleta." />
                 <FeatureLink href="/treinador/prescricao/corrida" icon={Activity} title="Prescrição de corrida" description="Motor inteligente baseado em VDOT e zonas de Daniels." />
                 <FeatureLink href="/treinador/prescricao/forca" icon={Dumbbell} title="Prescrição de força" description="Monte sessões de força com a biblioteca de exercícios." />
                 <FeatureLink href="/treinador/prescricao/periodizacao" icon={CalendarDays} title="Periodização" description="Gere macrociclos, mesociclos e microciclos automaticamente." />
@@ -143,7 +143,7 @@ export default function ConhecaOSistemaPage() {
                 <FeatureLink href="/treinador/crm" icon={Kanban} title="CRM + isca digital" description="Funil de vendas, taxa de conversão e link de captação automática." />
                 <FeatureLink href="/treinador/white-label" icon={Palette} title="White-label" description="Marca, cores e módulos da sua assessoria." />
                 <FeatureLink href="/treinador/admin" icon={Settings} title="Admin" description="Visão consolidada da plataforma e assinaturas." />
-                <FeatureLink href="/aluno/calendario" icon={Trophy} title="Calendário de provas" description="Atletas cadastram suas provas e distâncias; treinador planeja em torno delas." />
+                <FeatureLink href="/atleta/calendario" icon={Trophy} title="Calendário de provas" description="Atletas cadastram suas provas e distâncias; treinador planeja em torno delas." />
                 <FeatureLink href="/treinador/minha-pagina" icon={Share2} title="Página pública" description="Link + QR code para atrair novos atletas; foto e banner do treinador." />
               </div>
             </div>
@@ -408,7 +408,7 @@ export default function ConhecaOSistemaPage() {
                 description="Página profissional com seus planos, foto, banner e QR code. O link de isca e o link de convite usam o seu slug (ex: pacerunpro.com.br/p/seu-nome) configurado aqui."
               />
               <FeatureLink
-                href="/aluno/calendario"
+                href="/atleta/calendario"
                 icon={Trophy}
                 title="Calendário de provas"
                 description="O atleta cadastra as provas que vai correr (data, distância, local, meta de tempo). Os eventos aparecem no calendário em laranja e ficam visíveis para o treinador planejar o taper."

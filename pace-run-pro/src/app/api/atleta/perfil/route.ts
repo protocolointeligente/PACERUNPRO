@@ -66,7 +66,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[aluno/perfil PATCH]", err);
+    console.error("[atleta/perfil PATCH]", err);
     return NextResponse.json({ error: "Erro ao salvar perfil." }, { status: 500 });
   }
 }

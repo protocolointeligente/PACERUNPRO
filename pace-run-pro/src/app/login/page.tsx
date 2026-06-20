@@ -47,7 +47,7 @@ function LoginContent() {
 
     if (role === "ADMIN") router.push("/admin/dashboard");
     else if (role === "COACH") router.push("/treinador/dashboard");
-    else router.push(callbackUrl || "/aluno/dashboard");
+    else router.push(callbackUrl || "/atleta/dashboard");
   }
 
   function handleGoogle() {
