@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   Award,
   Bell,
+  Camera,
   CheckCircle2,
   CreditCard,
   Globe,
@@ -45,6 +46,75 @@ export default function ProfilePage() {
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [comingSoonId, setComingSoonId] = useState<string | null>(null);
 
+  // Avatar & banner upload
+  const [avatarSrc, setAvatarSrc] = useState("");
+  const [bannerSrc, setBannerSrc] = useState("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [bannerUploading, setBannerUploading] = useState(false);
+
+  async function resizeImage(file: File, maxW: number, maxH: number, quality = 0.82): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const objUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(objUrl);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = objUrl;
+    });
+  }
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const dataUrl = await resizeImage(file, 400, 400);
+      const res = await fetch("/api/aluno/avatar", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataUrl }),
+      });
+      if (res.ok) {
+        setAvatarSrc(dataUrl);
+        setBanner({ type: "success", text: "Foto atualizada!" });
+      }
+    } catch {
+      setBanner({ type: "error", text: "Erro ao salvar foto." });
+    } finally {
+      setAvatarUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  async function handleBannerChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBannerUploading(true);
+    try {
+      const dataUrl = await resizeImage(file, 1200, 300, 0.78);
+      const res = await fetch("/api/aluno/banner", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataUrl }),
+      });
+      if (res.ok) {
+        setBannerSrc(dataUrl);
+        setBanner({ type: "success", text: "Banner atualizado!" });
+      }
+    } catch {
+      setBanner({ type: "error", text: "Erro ao salvar banner." });
+    } finally {
+      setBannerUploading(false);
+      e.target.value = "";
+    }
+  }
+
   // Edit profile modal state
   const [editOpen, setEditOpen] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
@@ -85,6 +155,16 @@ export default function ProfilePage() {
       setEditSaving(false);
     }
   }
+
+  useEffect(() => {
+    fetch("/api/aluno/perfil")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { avatarUrl?: string | null; bannerUrl?: string | null } | null) => {
+        if (data?.avatarUrl) setAvatarSrc(data.avatarUrl);
+        if (data?.bannerUrl) setBannerSrc(data.bannerUrl);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -164,13 +244,34 @@ export default function ProfilePage() {
     <div className="mx-auto max-w-4xl space-y-6">
       {/* Header */}
       <Card className="overflow-hidden">
-        <div className="h-28 bg-gradient-to-r from-primary/40 via-secondary/30 to-info/30" />
+        {/* Banner */}
+        <div className="relative h-28">
+          {bannerSrc
+            ? <img src={bannerSrc} alt="" className="h-full w-full object-cover" />
+            : <div className="h-full w-full bg-gradient-to-r from-primary/40 via-secondary/30 to-info/30" />
+          }
+          <label className="absolute right-3 top-3 cursor-pointer">
+            <input type="file" accept="image/*" className="sr-only" onChange={handleBannerChange} disabled={bannerUploading} />
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-background/80 text-text shadow backdrop-blur-sm transition-colors hover:bg-background">
+              {bannerUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+            </span>
+          </label>
+        </div>
         <CardContent className="-mt-12 flex flex-wrap items-end justify-between gap-4 p-5 sm:p-6">
           <div className="flex items-end gap-4">
-            <Avatar className="h-24 w-24 border-4 border-card">
-              <AvatarImage src={currentAthlete.avatarUrl} alt={currentAthlete.name} />
-              <AvatarFallback className="text-2xl">{currentAthlete.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
+            {/* Avatar with camera overlay */}
+            <div className="relative">
+              <Avatar className="h-24 w-24 border-4 border-card">
+                <AvatarImage src={avatarSrc || currentAthlete.avatarUrl} alt={currentAthlete.name} />
+                <AvatarFallback className="text-2xl">{currentAthlete.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <label className="absolute -bottom-1 -right-1 cursor-pointer">
+                <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarChange} disabled={avatarUploading} />
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white shadow transition-colors hover:bg-primary/90">
+                  {avatarUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                </span>
+              </label>
+            </div>
             <div>
               <h1 className="font-display text-xl font-bold text-text sm:text-2xl">{currentAthlete.name}</h1>
               <p className="text-sm text-text-muted">{currentAthlete.city}</p>

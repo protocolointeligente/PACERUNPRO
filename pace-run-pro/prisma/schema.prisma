@@ -51,6 +51,7 @@ model User {
   passwordHash  String?
   name          String
   avatarUrl     String?
+  bannerUrl     String?
   image         String?
   role          UserRole @default(ATHLETE)
   phone         String?
