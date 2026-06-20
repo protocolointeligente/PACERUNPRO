@@ -5,7 +5,7 @@ import { getRecommendedB2BPlan } from "@/lib/mock-data";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, phone, city, goal, role, studentCount } = await req.json();
+    const { name, email, password, phone, city, goal, role, studentCount, coachId } = await req.json();
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Campos obrigatórios faltando." }, { status: 400 });
     }
@@ -15,6 +15,15 @@ export async function POST(req: NextRequest) {
     }
     const passwordHash = await bcrypt.hash(password, 12);
     const isCoach = role === "COACH";
+
+    // Look up coach record when coachId (user ID) is provided for athlete registration
+    let coachRecord: { id: string } | null = null;
+    if (!isCoach && coachId) {
+      coachRecord = await prisma.coach.findUnique({
+        where: { userId: coachId },
+        select: { id: true },
+      });
+    }
 
     const user = await prisma.user.create({
       data: {
@@ -26,7 +35,7 @@ export async function POST(req: NextRequest) {
         role: isCoach ? "COACH" : "ATHLETE",
         ...(isCoach
           ? { coach: { create: { specialties: [] } } }
-          : { athlete: { create: { goal: goal ?? null } } }),
+          : { athlete: { create: { goal: goal ?? null, ...(coachRecord ? { coachId: coachRecord.id } : {}) } } }),
       },
       select: { id: true, email: true, name: true, role: true },
     });

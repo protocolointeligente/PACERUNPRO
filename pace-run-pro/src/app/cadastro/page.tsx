@@ -46,6 +46,7 @@ function CadastroContent() {
   const searchParams = useSearchParams();
 
   const perfilParam = searchParams.get("perfil");
+  const coachId = searchParams.get("coach");
   const initialProfile: ProfileType | null =
     perfilParam === "treinador" || perfilParam === "assessoria" || perfilParam === "atleta"
       ? perfilParam
@@ -93,6 +94,7 @@ function CadastroContent() {
           password: senha,
           role,
           studentCount: role === "COACH" ? studentCount : undefined,
+          coachId: role === "ATHLETE" ? coachId : undefined,
         }),
       });
       const data = await res.json();

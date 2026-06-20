@@ -2,7 +2,6 @@
 
 import { AppShell } from "@/components/layout/app-shell";
 import { BottomNav } from "@/components/layout/bottom-nav";
-import { coachOverview } from "@/lib/mock-data";
 import { CoachRoleProvider, useCoachRole } from "@/context/coach-role-context";
 import { getCoachNav, ROLE_LABELS, ROLE_DESCRIPTIONS, type CoachRole } from "@/lib/coach-permissions";
 import { cn } from "@/lib/utils";
@@ -49,18 +48,26 @@ function RoleSwitcher() {
   );
 }
 
-function TreinadorLayoutInner({ children }: { children: React.ReactNode }) {
+interface TreinadorLayoutClientProps {
+  children: React.ReactNode;
+  userName: string;
+  userCredential: string;
+  userAvatarUrl?: string;
+}
+
+function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUrl }: TreinadorLayoutClientProps) {
   const { role } = useCoachRole();
-  const { main, more } = getCoachNav(role, coachOverview.currentPlanId);
+  const { main, more } = getCoachNav(role, "b2b-free");
 
   return (
     <AppShell
       nav={main}
       moreNav={more}
       roleLabel={ROLE_LABELS[role]}
-      userName={coachOverview.name}
-      userSubtitle={coachOverview.credential}
-sidebarFooterSlot={process.env.NODE_ENV !== "production" ? <RoleSwitcher /> : undefined}
+      userName={userName}
+      userSubtitle={userCredential || "Treinador"}
+      avatarUrl={userAvatarUrl}
+      sidebarFooterSlot={process.env.NODE_ENV !== "production" ? <RoleSwitcher /> : undefined}
     >
       {children}
       <BottomNav items={main.slice(0, 5)} />
@@ -68,10 +75,12 @@ sidebarFooterSlot={process.env.NODE_ENV !== "production" ? <RoleSwitcher /> : un
   );
 }
 
-export default function TreinadorLayoutClient({ children }: { children: React.ReactNode }) {
+export default function TreinadorLayoutClient({ children, userName, userCredential, userAvatarUrl }: TreinadorLayoutClientProps) {
   return (
     <CoachRoleProvider initialRole="owner">
-      <TreinadorLayoutInner>{children}</TreinadorLayoutInner>
+      <TreinadorLayoutInner userName={userName} userCredential={userCredential} userAvatarUrl={userAvatarUrl}>
+        {children}
+      </TreinadorLayoutInner>
     </CoachRoleProvider>
   );
 }
