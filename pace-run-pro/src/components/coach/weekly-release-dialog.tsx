@@ -124,25 +124,27 @@ export function WeeklyReleaseDialog({ athleteName }: { athleteName: string }) {
           </div>
         )}
 
-        <div className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-4">
-          <p className="text-xs text-text-muted">
-            <span className="font-semibold text-text">{releasedCount}</span> {releasedCount === 1 ? "treino será liberado" : "treinos serão liberados"}
-          </p>
-          <div className="flex gap-2">
-            <DialogClose asChild>
-              <Button variant="ghost">Cancelar</Button>
-            </DialogClose>
-            <Button onClick={() => setConfirmed(true)}>Confirmar liberação</Button>
-          </div>
+        <div className="mt-5 border-t border-border pt-4">
+          {confirmed ? (
+            <div className="flex items-center gap-2.5 rounded-xl border border-success/30 bg-success/5 p-3.5 text-sm text-text-muted">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+              Liberação confirmada para <span className="font-semibold text-text">{athleteName}</span>. O restante do
+              ciclo continua bloqueado até a próxima liberação.
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-text-muted">
+                <span className="font-semibold text-text">{releasedCount}</span> {releasedCount === 1 ? "treino será liberado" : "treinos serão liberados"}
+              </p>
+              <div className="flex gap-2">
+                <DialogClose asChild>
+                  <Button variant="ghost">Cancelar</Button>
+                </DialogClose>
+                <Button onClick={() => setConfirmed(true)}>Confirmar liberação</Button>
+              </div>
+            </div>
+          )}
         </div>
-
-        {confirmed && (
-          <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-success/30 bg-success/5 p-3.5 text-sm text-text-muted">
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
-            Liberação confirmada para <span className="font-semibold text-text">{athleteName}</span>. O restante do
-            ciclo continua bloqueado até a próxima liberação.
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );

@@ -143,9 +143,16 @@ export default function PlanosVendaPage() {
   const [form, setForm] = useState<PlanFormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [showPublicQr, setShowPublicQr] = useState(false);
+  const [slug, setSlug] = useState<string | null>(null);
 
-  const slug = "minha-assessoria";
-  const publicUrl = `https://pacerunpro.com.br/p/${slug}`;
+  const publicUrl = slug ? `https://pacerunpro.com.br/p/${slug}` : "";
+
+  useEffect(() => {
+    fetch("/api/coach/profile")
+      .then((r) => r.json())
+      .then((d: { slug?: string | null }) => { if (d.slug) setSlug(d.slug); })
+      .catch(() => null);
+  }, []);
 
   useEffect(() => {
     fetch("/api/coach/plans")
