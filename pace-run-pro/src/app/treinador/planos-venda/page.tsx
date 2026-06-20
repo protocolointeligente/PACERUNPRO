@@ -357,9 +357,9 @@ export default function PlanosVendaPage() {
                 </label>
                 <div className="flex items-center gap-3 pt-5">
                   <button type="button" onClick={() => setForm((f) => ({ ...f, highlight: !f.highlight }))}
-                    className={cn("h-5 w-9 rounded-full transition-colors", form.highlight ? "bg-accent" : "bg-border")}>
-                    <span className={cn("block h-4 w-4 rounded-full bg-white shadow transition-transform mx-0.5",
-                      form.highlight ? "translate-x-4" : "translate-x-0")} />
+                    className={cn("h-6 w-11 rounded-full transition-colors", form.highlight ? "bg-accent" : "bg-border")}>
+                    <span className={cn("block h-5 w-5 rounded-full bg-white shadow transition-transform mx-0.5",
+                      form.highlight ? "translate-x-5" : "translate-x-0")} />
                   </button>
                   <span className="text-sm text-text-muted">Destacar como &quot;Mais popular&quot;</span>
                 </div>

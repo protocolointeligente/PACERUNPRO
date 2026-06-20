@@ -165,7 +165,7 @@ export default function CoachDashboard() {
                     </div>
                     <Badge variant="danger">Em risco</Badge>
                   </div>
-                  <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-text-muted sm:grid-cols-3">
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-text-muted sm:grid-cols-3 sm:gap-3">
                     <span>Adesão: <span className="font-semibold text-text">{Math.round(a.adherence * 100)}%</span></span>
                     <span>Carga: <span className="font-semibold text-text">{a.weeklyLoad} UA</span></span>
                     <span>Último check-in: <span className="font-semibold text-text">{a.lastCheckIn}</span></span>

@@ -109,47 +109,43 @@ function GestaoContent() {
             <div className="space-y-2">
               {athleteRosterList.map((athlete) => (
                 <Card key={athlete.id}>
-                  <CardContent className="flex flex-wrap items-center gap-3 p-4">
+                  <CardContent className="flex items-center gap-3 p-3 sm:p-4">
                     {/* Name + plan */}
                     <div className="min-w-0 flex-1 space-y-0.5">
                       <p className="truncate font-display text-sm font-semibold text-text">
                         {athlete.name}
                       </p>
-                      <p className="truncate text-xs text-text-muted">{athlete.plan}</p>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <p className="text-xs text-text-muted">{athlete.plan}</p>
+                        <Badge
+                          variant={
+                            athlete.status === "ativo"
+                              ? "success"
+                              : athlete.status === "risco"
+                              ? "danger"
+                              : "default"
+                          }
+                          className="text-[10px]"
+                        >
+                          {athlete.status}
+                        </Badge>
+                        <Badge
+                          variant={athlete.billingStatus === "em dia" ? "success" : "danger"}
+                          className="text-[10px]"
+                        >
+                          {athlete.billingStatus}
+                        </Badge>
+                      </div>
                     </div>
 
-                    {/* Badges */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge
-                        variant={
-                          athlete.status === "ativo"
-                            ? "success"
-                            : athlete.status === "risco"
-                            ? "danger"
-                            : "default"
-                        }
-                      >
-                        {athlete.status}
-                      </Badge>
-                      <Badge
-                        variant={athlete.billingStatus === "em dia" ? "success" : "danger"}
-                      >
-                        {athlete.billingStatus}
-                      </Badge>
-                    </div>
-
-                    {/* Billing info — always visible */}
-                    <div className="text-right">
+                    {/* Billing info + joined — visible based on screen size */}
+                    <div className="hidden text-right sm:block">
                       <p className="text-sm font-semibold text-text">
                         R$ {athlete.monthlyFee}/mês
                       </p>
-                      <p className="hidden text-xs text-text-muted sm:block">
-                        Próx. {athlete.nextBilling}
-                      </p>
+                      <p className="text-xs text-text-muted">Próx. {athlete.nextBilling}</p>
                     </div>
-
-                    {/* Joined — desktop only */}
-                    <div className="hidden text-right sm:block">
+                    <div className="hidden text-right lg:block">
                       <p className="text-xs text-text-muted">Desde {athlete.joinedAt}</p>
                     </div>
 

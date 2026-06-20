@@ -818,7 +818,7 @@ export default function StrengthPrescriptionPage() {
                   ))}
                 </div>
 
-                <div className="max-h-[34rem] space-y-2.5 overflow-y-auto pr-1">
+                <div className="max-h-[24rem] space-y-2.5 overflow-y-auto pr-1 sm:max-h-[34rem]">
                   {filteredLibrary.map((ex) => (
                     <div
                       key={ex.id}

@@ -514,7 +514,7 @@ export default function ProfilePage() {
                 <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Nome completo</span>
                 <input value={editName} onChange={(e) => setEditName(e.target.value)} className={inputClass} placeholder="Seu nome" />
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Cidade</span>
                   <input value={editCity} onChange={(e) => setEditCity(e.target.value)} className={inputClass} placeholder="São Paulo" />
@@ -528,7 +528,7 @@ export default function ProfilePage() {
                 <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">WhatsApp</span>
                 <input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className={inputClass} placeholder="(11) 99999-9999" type="tel" />
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Peso (kg)</span>
                   <input type="number" value={editWeightKg} onChange={(e) => setEditWeightKg(e.target.value)} className={inputClass} placeholder="70" />
