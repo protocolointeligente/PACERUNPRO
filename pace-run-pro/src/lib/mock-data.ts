@@ -1432,24 +1432,17 @@ export function getRecommendedB2BPlan(athleteCount: number) {
 // ── Super Admin ──────────────────────────────────────────────────────────
 
 export const superAdminStats = {
-  totalMrr: 63_480,
-  mrrGrowth: 0.138,
-  b2cAthletes: 312,
-  b2cMrr: 51_264,
-  b2bAssessorias: 48,
-  b2bMrr: 12_216,
-  pendingApproval: 3,
-  churned30d: 8,
-  newSignups30d: 34,
-  totalRevenue12m: 689_040,
-  mrrSeries: [
-    { month: "Jan", b2c: 34_100, b2b: 6_800 },
-    { month: "Fev", b2c: 37_500, b2b: 7_400 },
-    { month: "Mar", b2c: 39_800, b2b: 8_100 },
-    { month: "Abr", b2c: 42_600, b2b: 9_200 },
-    { month: "Mai", b2c: 47_400, b2b: 10_800 },
-    { month: "Jun", b2c: 51_264, b2b: 12_216 },
-  ],
+  totalMrr: 0,
+  mrrGrowth: 0,
+  b2cAthletes: 0,
+  b2cMrr: 0,
+  b2bAssessorias: 0,
+  b2bMrr: 0,
+  pendingApproval: 0,
+  churned30d: 0,
+  newSignups30d: 0,
+  totalRevenue12m: 0,
+  mrrSeries: [] as { month: string; b2c: number; b2b: number }[],
 };
 
 export interface AssessoriaItem {
@@ -1470,26 +1463,12 @@ export interface AssessoriaItem {
   activeAthletes: number;   // atletas com check-in na última semana
 }
 
-export const assessoriaList: AssessoriaItem[] = [
-  { id: "asc-1", name: "Run Tribe Assessoria",  city: "São Paulo, SP",       plan: "white-label",  coaches: 8,  athletes: 340, mrr: 997, status: "ativo",   approvedAt: "Out 2024", contact: "contato@runtribe.com.br",         healthScore: 91, churnRisk: "baixo", lastLoginDays: 0,  prescribedLast7d: 68, activeAthletes: 298 },
-  { id: "asc-2", name: "Pace & Cia Esportes",   city: "Belo Horizonte, MG",  plan: "pro",          coaches: 4,  athletes: 47,  mrr: 197, status: "ativo",   approvedAt: "Jan 2025", contact: "admin@paceecia.com.br",           healthScore: 54, churnRisk: "medio", lastLoginDays: 5,  prescribedLast7d: 8,  activeAthletes: 22  },
-  { id: "asc-3", name: "Runners BH",            city: "Belo Horizonte, MG",  plan: "assessoria",   coaches: 7,  athletes: 118, mrr: 397, status: "ativo",   approvedAt: "Fev 2025", contact: "suporte@runnersbh.com",           healthScore: 78, churnRisk: "baixo", lastLoginDays: 1,  prescribedLast7d: 31, activeAthletes: 94  },
-  { id: "asc-4", name: "Ultra Training SP",     city: "São Paulo, SP",       plan: "pro",          coaches: 3,  athletes: 38,  mrr: 197, status: "ativo",   approvedAt: "Mar 2025", contact: "contato@ultratraining.com.br",   healthScore: 33, churnRisk: "alto",  lastLoginDays: 12, prescribedLast7d: 2,  activeAthletes: 5   },
-  { id: "asc-5", name: "Maratonistas do Sul",   city: "Porto Alegre, RS",    plan: "starter",      coaches: 1,  athletes: 14,  mrr: 97,  status: "ativo",   approvedAt: "Abr 2025", contact: "admin@maratonistassul.com.br",   healthScore: 62, churnRisk: "medio", lastLoginDays: 3,  prescribedLast7d: 6,  activeAthletes: 10  },
-  { id: "asc-6", name: "Sport Life Corridas",   city: "Curitiba, PR",        plan: "starter",      coaches: 2,  athletes: 3,   mrr: 97,  status: "ativo",    approvedAt: "Jun 2026", contact: "contato@sportlife.com.br",        healthScore: 48, churnRisk: "medio", lastLoginDays: 2,  prescribedLast7d: 1,  activeAthletes: 3   },
-  { id: "asc-7", name: "Run Fast Academy",      city: "Rio de Janeiro, RJ",  plan: "pro",          coaches: 4,  athletes: 11,  mrr: 197, status: "ativo",    approvedAt: "Jun 2026", contact: "admin@runfast.com.br",            healthScore: 55, churnRisk: "medio", lastLoginDays: 1,  prescribedLast7d: 4,  activeAthletes: 11  },
-  { id: "asc-8", name: "Fortaleza Runners",     city: "Fortaleza, CE",       plan: "assessoria",   coaches: 6,  athletes: 22,  mrr: 397, status: "ativo",    approvedAt: "Jun 2026", contact: "suporte@fortalezarunners.com.br",  healthScore: 61, churnRisk: "medio", lastLoginDays: 0,  prescribedLast7d: 8,  activeAthletes: 22  },
-  { id: "asc-9", name: "Endurance Lab Brasil",  city: "Campinas, SP",        plan: "white-label",  coaches: 12, athletes: 0,   mrr: 997, status: "pendente", approvedAt: "—",        contact: "ceo@endurancelab.com.br",         healthScore: 0,  churnRisk: "baixo", lastLoginDays: 0,  prescribedLast7d: 0,  activeAthletes: 0   },
-];
+export const assessoriaList: AssessoriaItem[] = [];
 
-export const b2cAthletesList = [
-  { id: "b2c-1", name: "Lucas Ferreira", avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=128&h=128&fit=crop&crop=faces", city: "São Paulo, SP", plan: "anual", startDate: "Jan 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 127 },
-  { id: "b2c-2", name: "Priscila Nunes", avatarUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=128&h=128&fit=crop&crop=faces", city: "Belo Horizonte, MG", plan: "semestral", startDate: "Mar 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 147 },
-  { id: "b2c-3", name: "Gustavo Almeida", avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=128&h=128&fit=crop&crop=faces", city: "Rio de Janeiro, RJ", plan: "mensal", startDate: "Mai 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 197 },
-  { id: "b2c-4", name: "Fernanda Costa", avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=128&h=128&fit=crop&crop=faces", city: "Curitiba, PR", plan: "trimestral", startDate: "Abr 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 167 },
-  { id: "b2c-5", name: "Roberto Lima", avatarUrl: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=128&h=128&fit=crop&crop=faces", city: "Porto Alegre, RS", plan: "anual", startDate: "Fev 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 127 },
-  { id: "b2c-6", name: "Tatiane Souza", avatarUrl: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=128&h=128&fit=crop&crop=faces", city: "Salvador, BA", plan: "mensal", startDate: "Jun 2025", coachAssigned: "Ricardo Pace + Equipe", status: "pendente" as const, mrr: 197 },
-];
+export const b2cAthletesList: {
+  id: string; name: string; avatarUrl: string; city: string; plan: string;
+  startDate: string; coachAssigned: string; status: "ativo" | "pendente"; mrr: number;
+}[] = [];
 
 export const pendingApprovals = assessoriaList.filter((a) => a.status === "pendente");
 
@@ -1506,38 +1485,7 @@ export interface PendenciaItem {
   createdAt: string;
 }
 
-export const pendencias: PendenciaItem[] = [
-  {
-    id: "p-1",
-    type: "white-label-setup",
-    title: "Setup White Label aguardando",
-    description: "Endurance Lab Brasil pagou o plano White Label. Configurar domínio próprio, enviar credenciais e agendar onboarding dedicado.",
-    assessoria: "Endurance Lab Brasil",
-    contact: "ceo@endurancelab.com.br",
-    value: 997,
-    createdAt: "19 jun 2026",
-  },
-  {
-    id: "p-2",
-    type: "cobranca-falha",
-    title: "Cobrança com falha — cartão recusado",
-    description: "Tentativa de renovação recusada pelo banco emissor. Aguarda nova tentativa automática em 3 dias ou ação manual.",
-    assessoria: "Ultra Training SP",
-    contact: "contato@ultratraining.com.br",
-    value: 197,
-    createdAt: "14 jun 2026",
-  },
-  {
-    id: "p-3",
-    type: "pix-expirado",
-    title: "PIX gerado — aguardando pagamento",
-    description: "PIX de nova assinatura Assessoria gerado há 18h. Expira em 6h. Considerar contato proativo se expirar.",
-    assessoria: "Nordeste Running Club",
-    contact: "admin@nordesternc.com.br",
-    value: 397,
-    createdAt: "19 jun 2026",
-  },
-];
+export const pendencias: PendenciaItem[] = [];
 
 // ── Smart Alerts ─────────────────────────────────────────────────────────
 
