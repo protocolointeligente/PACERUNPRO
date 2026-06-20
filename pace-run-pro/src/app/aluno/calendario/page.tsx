@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Clock } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Clock, Loader2, MapPin, Plus, Trophy, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorkoutCard } from "@/components/dashboard/workout-card";
 import { calendarLegend, getMonthEvents, weekWorkouts, type CalendarEvent } from "@/lib/mock-data";
@@ -12,8 +13,39 @@ import { cn } from "@/lib/utils";
 
 const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
+const DISTANCES = [
+  { label: "5K", value: 5 },
+  { label: "10K", value: 10 },
+  { label: "21K (meia)", value: 21.1 },
+  { label: "42K (maratona)", value: 42.2 },
+  { label: "Outro", value: 0 },
+];
+
+const inputClass =
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 transition-colors";
+
+interface RaceRow {
+  id: string;
+  name: string;
+  date: string;
+  distanceKm: number;
+  goalTime?: string | null;
+  location?: string | null;
+}
+
 export default function CalendarPage() {
   const [monthOffset, setMonthOffset] = useState(0);
+  const [races, setRaces] = useState<RaceRow[]>([]);
+  const [loadingRaces, setLoadingRaces] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [raceName, setRaceName] = useState("");
+  const [raceDate, setRaceDate] = useState("");
+  const [raceDist, setRaceDist] = useState(10);
+  const [raceDistCustom, setRaceDistCustom] = useState("");
+  const [raceGoalTime, setRaceGoalTime] = useState("");
+  const [raceLocation, setRaceLocation] = useState("");
+  const [savingRace, setSavingRace] = useState(false);
+
   const reference = useMemo(() => {
     const d = new Date();
     d.setMonth(d.getMonth() + monthOffset);
@@ -21,18 +53,68 @@ export default function CalendarPage() {
   }, [monthOffset]);
 
   const events = useMemo(() => getMonthEvents(reference), [reference]);
+
+  const raceEvents = useMemo((): CalendarEvent[] =>
+    races.map((r) => ({
+      date: r.date.slice(0, 10),
+      type: "prova" as const,
+      title: `🏅 ${r.name}`,
+      subtype: `${r.distanceKm}K`,
+    })),
+    [races]
+  );
+
+  const allEvents = useMemo(() => [...events, ...raceEvents], [events, raceEvents]);
+
   const eventsByDate = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
-    for (const e of events) {
+    for (const e of allEvents) {
       const list = map.get(e.date) ?? [];
       list.push(e);
       map.set(e.date, list);
     }
     return map;
-  }, [events]);
+  }, [allEvents]);
 
   const monthLabel = reference.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   const grid = useMemo(() => buildMonthGrid(reference), [reference]);
+
+  useEffect(() => {
+    fetch("/api/athlete/races")
+      .then((r) => r.json())
+      .then((d: RaceRow[]) => setRaces(Array.isArray(d) ? d : []))
+      .catch(() => [])
+      .finally(() => setLoadingRaces(false));
+  }, []);
+
+  async function addRace() {
+    if (!raceName || !raceDate) return;
+    const distKm = raceDist === 0 ? parseFloat(raceDistCustom.replace(",", ".")) || 0 : raceDist;
+    if (!distKm) return;
+    setSavingRace(true);
+    try {
+      const res = await fetch("/api/athlete/races", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: raceName, date: raceDate, distanceKm: distKm, goalTime: raceGoalTime || undefined, location: raceLocation || undefined }),
+      });
+      if (res.ok) {
+        const created = await res.json() as RaceRow;
+        setRaces((prev) => [...prev, created].sort((a, b) => a.date.localeCompare(b.date)));
+        setRaceName(""); setRaceDate(""); setRaceDist(10); setRaceDistCustom(""); setRaceGoalTime(""); setRaceLocation("");
+        setShowModal(false);
+      }
+    } finally {
+      setSavingRace(false);
+    }
+  }
+
+  async function deleteRace(id: string) {
+    await fetch(`/api/athlete/races/${id}`, { method: "DELETE" });
+    setRaces((prev) => prev.filter((r) => r.id !== id));
+  }
+
+  const upcomingRaces = races.filter((r) => new Date(r.date) >= new Date());
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -41,7 +123,15 @@ export default function CalendarPage() {
           <Badge variant="primary" className="mb-2">Calendário de treinos</Badge>
           <h1 className="font-display text-2xl font-bold capitalize text-text sm:text-3xl">{monthLabel}</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowModal(true)}>
+            <Trophy className="h-3.5 w-3.5 text-orange-400" /> Minhas provas
+            {upcomingRaces.length > 0 && (
+              <span className="ml-1 rounded-full bg-orange-500/20 px-1.5 py-0.5 text-[10px] font-bold text-orange-400">
+                {upcomingRaces.length}
+              </span>
+            )}
+          </Button>
           <button onClick={() => setMonthOffset((m) => m - 1)} className="rounded-lg border border-border p-2 text-text-muted hover:border-primary/40 hover:text-text">
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -62,7 +152,100 @@ export default function CalendarPage() {
             {l.label}
           </span>
         ))}
+        <span className="flex items-center gap-1.5 rounded-full border border-orange-500/40 bg-orange-500/10 px-3 py-1 text-xs text-orange-400">
+          <span className="h-2 w-2 rounded-full bg-orange-400" />
+          Prova
+        </span>
       </div>
+
+      {/* Race modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4" onClick={() => setShowModal(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-md rounded-2xl border border-border bg-[#0d1528] p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-orange-400" />
+                <h2 className="font-display text-sm font-bold text-text">Minhas provas</h2>
+              </div>
+              <button onClick={() => setShowModal(false)} className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover hover:text-text">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Upcoming races list */}
+            {loadingRaces ? (
+              <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-text-muted" /></div>
+            ) : races.length === 0 ? (
+              <p className="text-center text-sm text-text-muted py-2">Nenhuma prova cadastrada.</p>
+            ) : (
+              <div className="space-y-2 max-h-52 overflow-y-auto">
+                {[...races].sort((a, b) => a.date.localeCompare(b.date)).map((r) => {
+                  const isPast = new Date(r.date) < new Date();
+                  return (
+                    <div key={r.id} className={cn("flex items-start gap-3 rounded-xl border px-3 py-2.5", isPast ? "border-border/40 opacity-50" : "border-orange-500/30 bg-orange-500/5")}>
+                      <Trophy className="h-4 w-4 shrink-0 mt-0.5 text-orange-400" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-text truncate">{r.name}</p>
+                        <p className="text-xs text-text-muted">
+                          {new Date(r.date + "T12:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+                          {" · "}{r.distanceKm}km
+                          {r.location && ` · ${r.location}`}
+                        </p>
+                        {r.goalTime && <p className="text-xs text-primary">Meta: {r.goalTime}</p>}
+                      </div>
+                      <button onClick={() => deleteRace(r.id)} className="shrink-0 rounded p-1 text-text-muted hover:text-danger transition-colors">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Add race form */}
+            <div className="border-t border-border pt-3 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Cadastrar nova prova</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs text-text-muted">Nome da prova *</label>
+                  <input className={inputClass} value={raceName} onChange={(e) => setRaceName(e.target.value)} placeholder="Ex.: Maratona SP" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-text-muted">Data *</label>
+                  <input type="date" className={inputClass} value={raceDate} onChange={(e) => setRaceDate(e.target.value)} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-text-muted">Distância *</label>
+                  <select className={inputClass} value={raceDist} onChange={(e) => setRaceDist(Number(e.target.value))}>
+                    {DISTANCES.map((d) => <option key={d.label} value={d.value}>{d.label}</option>)}
+                  </select>
+                </div>
+                {raceDist === 0 && (
+                  <div>
+                    <label className="mb-1 block text-xs text-text-muted">Distância em km *</label>
+                    <input className={inputClass} value={raceDistCustom} onChange={(e) => setRaceDistCustom(e.target.value)} placeholder="Ex.: 15" />
+                  </div>
+                )}
+                <div>
+                  <label className="mb-1 block text-xs text-text-muted">Meta de tempo</label>
+                  <input className={inputClass} value={raceGoalTime} onChange={(e) => setRaceGoalTime(e.target.value)} placeholder="Ex.: 4h30m" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-text-muted">Local</label>
+                  <input className={inputClass} value={raceLocation} onChange={(e) => setRaceLocation(e.target.value)} placeholder="Cidade / evento" />
+                </div>
+              </div>
+              <Button variant="primary" size="sm" className="w-full" disabled={savingRace || !raceName || !raceDate} onClick={addRace}>
+                {savingRace ? <><Loader2 className="h-4 w-4 animate-spin" /> Salvando…</> : <><Plus className="h-4 w-4" /> Cadastrar prova</>}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue="semana">
         <TabsList>
@@ -101,7 +284,8 @@ export default function CalendarPage() {
                           </span>
                           <div className="flex flex-1 flex-col gap-1 overflow-hidden">
                             {dayEvents.slice(0, 2).map((e, idx) => {
-                              const color = getSubtypeColor(e.type, e.subtype);
+                              const isRace = e.type === "prova" && e.title.startsWith("🏅");
+                              const color = isRace ? "#f97316" : getSubtypeColor(e.type, e.subtype);
                               return (
                                 <span
                                   key={idx}
@@ -147,23 +331,24 @@ export default function CalendarPage() {
                   </p>
                   <div className="space-y-2">
                     {items.map((e, idx) => {
-                      const color = getSubtypeColor(e.type, e.subtype);
+                      const isRace = e.type === "prova" && e.title.startsWith("🏅");
+                      const color = isRace ? "#f97316" : getSubtypeColor(e.type, e.subtype);
                       return (
                         <Card key={idx}>
                           <CardContent className="flex items-center gap-3 p-3.5">
                             <span className="h-9 w-9 shrink-0 rounded-lg" style={{ backgroundColor: `${color}22` }}>
                               <span className="flex h-full w-full items-center justify-center">
-                                <MapPin className="h-4 w-4" style={{ color }} />
+                                {isRace ? <Trophy className="h-4 w-4" style={{ color }} /> : <MapPin className="h-4 w-4" style={{ color }} />}
                               </span>
                             </span>
                             <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-text">{e.title}</p>
+                              <p className="truncate text-sm font-semibold text-text">{e.title.replace("🏅 ", "")}</p>
                               <span className="flex items-center gap-1 text-xs text-text-muted">
-                                <Clock className="h-3 w-3" /> {TYPE_LABELS[e.type]}
+                                <Clock className="h-3 w-3" /> {isRace ? "Prova" : TYPE_LABELS[e.type]}
                               </span>
                             </div>
                             <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="border">
-                              {e.subtype ?? TYPE_LABELS[e.type]}
+                              {e.subtype ?? (isRace ? "Prova" : TYPE_LABELS[e.type])}
                             </Badge>
                           </CardContent>
                         </Card>

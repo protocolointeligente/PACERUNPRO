@@ -1602,12 +1602,13 @@ export interface Shoe {
   name: string;
   brand: string;
   model: string;
+  imageUrl?: string;   // base64 or URL
   kmAccumulated: number;
   maxKm: number;
   dateAdded: string;   // ISO date
   color: string;       // for the accent dot
   active: boolean;
-  imageEmoji: string;  // shoe emoji
+  imageEmoji: string;  // shoe emoji fallback
 }
 
 export const shoesList: Shoe[] = [

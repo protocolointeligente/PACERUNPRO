@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Bell, LogOut, Menu, Search } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, LogOut, Menu, Search } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -40,37 +40,52 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("sidebar-collapsed") === "true";
+  });
+
+  function toggleCollapsed() {
+    const next = !collapsed;
+    setCollapsed(next);
+    if (typeof window !== "undefined") localStorage.setItem("sidebar-collapsed", String(next));
+  }
 
   function handleLogout() {
     signOut({ callbackUrl: "/login" });
   }
 
-  function renderNavLink(item: NavItem, onClick?: () => void) {
+  function renderNavLink(item: NavItem, onClick?: () => void, forceExpanded = false) {
+    const isCollapsed = collapsed && !forceExpanded;
     const active = pathname?.startsWith(item.href);
     return (
       <Link
         key={item.href}
         href={item.href}
         onClick={onClick}
+        title={item.label}
         className={cn(
-          "group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-text-muted transition-colors",
-          active
-            ? "bg-primary/15 text-primary"
-            : "hover:bg-card-hover hover:text-text"
+          "group flex items-center rounded-xl py-2.5 text-sm font-medium text-text-muted transition-colors",
+          isCollapsed ? "justify-center px-2.5" : "gap-3 px-3.5",
+          active ? "bg-primary/15 text-primary" : "hover:bg-card-hover hover:text-text"
         )}
       >
         <item.icon
           className={cn(
-            "h-[18px] w-[18px] transition-colors",
+            "h-[18px] w-[18px] shrink-0 transition-colors",
             active ? "text-primary" : "text-text-muted group-hover:text-text"
           )}
         />
-        {item.label}
-        {active && (
-          <motion.span
-            layoutId="active-pill"
-            className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
-          />
+        {!isCollapsed && (
+          <>
+            {item.label}
+            {active && (
+              <motion.span
+                layoutId="active-pill"
+                className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
+              />
+            )}
+          </>
         )}
       </Link>
     );
@@ -79,29 +94,59 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh w-full">
       {/* Sidebar — desktop */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-card/60 backdrop-blur-xl lg:flex print:hidden">
-        <div className="px-5 py-5">
-          <Logo size={32} />
-          <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-text-muted/70 pl-0.5">{roleLabel}</p>
+      <aside
+        className={cn(
+          "sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-border bg-card/60 backdrop-blur-xl lg:flex print:hidden transition-all duration-200",
+          collapsed ? "w-16" : "w-64"
+        )}
+      >
+        <div className={cn("py-5", collapsed ? "flex justify-center px-3" : "px-5")}>
+          {collapsed ? (
+            <Logo size={26} />
+          ) : (
+            <>
+              <Logo size={32} />
+              <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-text-muted/70 pl-0.5">{roleLabel}</p>
+            </>
+          )}
         </div>
 
         <nav className="flex-1 overflow-y-auto space-y-1 px-3 pb-2">
           {nav.map((item) => renderNavLink(item))}
           {moreNav.length > 0 && (
             <>
-              <p className="px-3.5 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted/50">
-                Mais
-              </p>
+              {!collapsed && (
+                <p className="px-3.5 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted/50">
+                  Mais
+                </p>
+              )}
               {moreNav.map((item) => renderNavLink(item))}
             </>
           )}
+          <button
+            onClick={toggleCollapsed}
+            title={collapsed ? "Expandir sidebar" : "Recolher sidebar"}
+            className={cn(
+              "mt-2 flex w-full items-center rounded-xl py-2.5 text-text-muted transition-colors hover:bg-card-hover hover:text-text",
+              collapsed ? "justify-center px-2.5" : "gap-3 px-3.5"
+            )}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-[18px] w-[18px] shrink-0" />
+            ) : (
+              <>
+                <ChevronLeft className="h-[18px] w-[18px] shrink-0" />
+                <span className="text-sm font-medium">Recolher</span>
+              </>
+            )}
+          </button>
         </nav>
 
         <div className="border-t border-border p-4">
-          {sidebarFooterSlot && (
+          {!collapsed && sidebarFooterSlot && (
             <div className="mb-3">{sidebarFooterSlot}</div>
           )}
-          {switchHref && (
+          {!collapsed && switchHref && (
             <Link
               href={switchHref}
               className="mb-3 flex items-center justify-center rounded-xl border border-border px-3 py-2 text-xs font-semibold text-text-muted transition-colors hover:border-primary/50 hover:text-text"
@@ -109,15 +154,17 @@ export function AppShell({
               {switchLabel}
             </Link>
           )}
-          <div className="flex items-center gap-3 rounded-xl bg-card-hover/60 p-3">
-            <Avatar className="h-10 w-10">
+          <div className={cn("flex items-center gap-3 rounded-xl bg-card-hover/60 p-3", collapsed && "justify-center p-2")}>
+            <Avatar className={collapsed ? "h-8 w-8" : "h-10 w-10"}>
               <AvatarImage src={avatarUrl} alt={userName} />
               <AvatarFallback>{userName.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-text">{userName}</p>
-              <p className="truncate text-xs text-text-muted">{userSubtitle}</p>
-            </div>
+            {!collapsed && (
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-text">{userName}</p>
+                <p className="truncate text-xs text-text-muted">{userSubtitle}</p>
+              </div>
+            )}
             <button
               onClick={handleLogout}
               aria-label="Sair"
@@ -152,13 +199,13 @@ export function AppShell({
                 <Logo size={30} />
               </div>
               <nav className="space-y-1">
-                {nav.map((item) => renderNavLink(item, () => setMobileOpen(false)))}
+                {nav.map((item) => renderNavLink(item, () => setMobileOpen(false), true))}
                 {moreNav.length > 0 && (
                   <>
                     <p className="px-3.5 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted/50">
                       Mais
                     </p>
-                    {moreNav.map((item) => renderNavLink(item, () => setMobileOpen(false)))}
+                    {moreNav.map((item) => renderNavLink(item, () => setMobileOpen(false), true))}
                   </>
                 )}
                 {switchHref && (

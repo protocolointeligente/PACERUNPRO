@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCoachRole } from "@/context/coach-role-context";
 import { canAccess } from "@/lib/coach-permissions";
@@ -241,6 +241,25 @@ function CrmContent() {
   const [leads, setLeads] = useState<CrmLead[]>(crmLeads);
   const [view, setView] = useState<"kanban" | "lista">("kanban");
   const [showForm, setShowForm] = useState(false);
+  const [slug, setSlug] = useState<string | null>(null);
+  const [quizCopied, setQuizCopied] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/coach/profile")
+      .then((r) => r.json())
+      .then((d: { slug?: string | null }) => { if (d.slug) setSlug(d.slug); })
+      .catch(() => null);
+  }, []);
+
+  const quizUrl = slug ? `https://pacerunpro.com.br/quiz/${slug}` : null;
+
+  function copyQuizUrl() {
+    if (!quizUrl) return;
+    void navigator.clipboard.writeText(quizUrl).then(() => {
+      setQuizCopied(true);
+      setTimeout(() => setQuizCopied(false), 2000);
+    });
+  }
 
   function advanceLead(id: string) {
     setLeads((prev) => prev.map((l) => l.id === id ? { ...l, stage: nextStage(l.stage) } : l));
@@ -313,7 +332,36 @@ function CrmContent() {
         ))}
       </motion.div>
 
-      <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show" className="flex items-center gap-2">
+      {/* Isca digital / Quiz */}
+      <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show">
+        <Card className="border-primary/20">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                <Share2 className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-text">Isca digital para Instagram</p>
+                <p className="text-xs text-text-muted">Compartilhe o link abaixo. Quem preencher o formulário entra automaticamente no seu CRM como lead.</p>
+              </div>
+            </div>
+            {quizUrl ? (
+              <div className="flex gap-2">
+                <input readOnly value={quizUrl} className="min-w-0 flex-1 rounded-xl border border-border bg-card-hover px-3 py-2 text-sm font-mono text-primary focus:outline-none" />
+                <Button size="sm" variant="secondary" onClick={copyQuizUrl} className="shrink-0 gap-1.5">
+                  {quizCopied ? "Copiado!" : "Copiar"}
+                </Button>
+              </div>
+            ) : (
+              <p className="rounded-xl border border-border bg-card-hover/40 px-3 py-2 text-xs text-text-muted">
+                Configure um slug em <a href="/treinador/minha-pagina" className="text-primary hover:underline">Minha página pública</a> para ativar seu link de isca.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show" className="flex items-center gap-2">
         <button
           onClick={() => setView("kanban")}
           className={cn("inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors", view === "kanban" ? "border-primary bg-primary/10 text-primary" : "border-border text-text-muted hover:text-primary")}

@@ -22,10 +22,14 @@ import {
   Layers,
   Moon,
   Palette,
+  Receipt,
   Settings,
+  Share2,
   ShieldAlert,
   Smile,
+  Trophy,
   Users,
+  Zap,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -110,6 +114,16 @@ export default function ConhecaOSistemaPage() {
                     title="Analise e gere relatórios"
                     description="Use Análise semanal e Alertas para agir rápido, e exporte relatórios em PDF, Excel ou CSV para seus atletas."
                   />
+                  <Step
+                    number={7}
+                    title="Conecte o Strava para sincronização automática"
+                    description="Em Perfil → Integrações, conecte a conta Strava do atleta. Toda atividade registrada automaticamente vira WorkoutLog e atualiza a taxa de adesão em tempo real."
+                  />
+                  <Step
+                    number={8}
+                    title="Capture leads com a isca digital"
+                    description="No CRM de leads, copie o link de isca e divulgue no Instagram. Quem preencher o formulário entra automaticamente no seu funil de vendas."
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -125,10 +139,12 @@ export default function ConhecaOSistemaPage() {
                 <FeatureLink href="/treinador/alertas" icon={Bell} title="Alertas" description="Sinais automáticos de risco — fadiga, dor, queda de adesão." />
                 <FeatureLink href="/treinador/analise-semanal" icon={BarChart2} title="Análise semanal" description="Volume, pace, aderência e recomendações por atleta." />
                 <FeatureLink href="/treinador/relatorios" icon={FileBarChart} title="Relatórios" description="Exporte PDFs, planilhas e dados brutos." />
-                <FeatureLink href="/treinador/gestao" icon={DollarSign} title="Gestão & vendas" description="MRR, slots, status de pagamento e convites." />
-                <FeatureLink href="/treinador/crm" icon={Kanban} title="CRM de leads" description="Funil de vendas e taxa de conversão." />
+                <FeatureLink href="/treinador/gestao" icon={DollarSign} title="Gestão & vendas" description="MRR, slots, despesas, resultado líquido e convites." />
+                <FeatureLink href="/treinador/crm" icon={Kanban} title="CRM + isca digital" description="Funil de vendas, taxa de conversão e link de captação automática." />
                 <FeatureLink href="/treinador/white-label" icon={Palette} title="White-label" description="Marca, cores e módulos da sua assessoria." />
                 <FeatureLink href="/treinador/admin" icon={Settings} title="Admin" description="Visão consolidada da plataforma e assinaturas." />
+                <FeatureLink href="/aluno/calendario" icon={Trophy} title="Calendário de provas" description="Atletas cadastram suas provas e distâncias; treinador planeja em torno delas." />
+                <FeatureLink href="/treinador/minha-pagina" icon={Share2} title="Página pública" description="Link + QR code para atrair novos atletas; foto e banner do treinador." />
               </div>
             </div>
           </TabsContent>
@@ -377,13 +393,25 @@ export default function ConhecaOSistemaPage() {
                 href="/treinador/gestao"
                 icon={DollarSign}
                 title="Gestão & vendas"
-                description="Acompanhe sua receita recorrente (MRR), slots de atletas disponíveis e status de pagamento (ativos/inadimplentes). Gere o link e o QR code de convite para novos alunos se cadastrarem já vinculados a você, e veja o histórico de repasses."
+                description="Receita recorrente (MRR), slots disponíveis, status de pagamento, link de convite e QR code. Aba Despesas: cadastre custos fixos e variáveis (software, marketing, pessoal) e acompanhe o resultado líquido em tempo real."
               />
               <FeatureLink
                 href="/treinador/crm"
                 icon={Kanban}
-                title="CRM de leads"
-                description="Gerencie seu funil de vendas em Kanban ou lista: Novo → Contato → Proposta → Negociação → Ganho/Perdido. Acompanhe a origem de cada lead, o valor mensal estimado e a taxa de conversão do funil."
+                title="CRM + isca digital"
+                description="Funil de vendas Kanban: Novo → Contato → Proposta → Ganho. Copie o link de isca e divulgue no Instagram — quem preencher o formulário entra automaticamente no funil sem você precisar cadastrar manualmente."
+              />
+              <FeatureLink
+                href="/treinador/minha-pagina"
+                icon={Share2}
+                title="Minha página pública"
+                description="Página profissional com seus planos, foto, banner e QR code. O link de isca e o link de convite usam o seu slug (ex: pacerunpro.com.br/p/seu-nome) configurado aqui."
+              />
+              <FeatureLink
+                href="/aluno/calendario"
+                icon={Trophy}
+                title="Calendário de provas"
+                description="O atleta cadastra as provas que vai correr (data, distância, local, meta de tempo). Os eventos aparecem no calendário em laranja e ficam visíveis para o treinador planejar o taper."
               />
               <FeatureLink
                 href="/treinador/white-label"

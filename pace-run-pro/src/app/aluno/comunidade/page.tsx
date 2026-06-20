@@ -330,6 +330,7 @@ function ChallengeCard({
 export default function CommunityPage() {
   const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null);
   const [posts, setPosts] = useState<ActivityPost[]>(activityFeed);
+  const [joinedClubs, setJoinedClubs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const pending = localStorage.getItem("newActivityPost");
@@ -339,6 +340,15 @@ export default function CommunityPage() {
       localStorage.removeItem("newActivityPost");
     }
   }, []);
+
+  function toggleClub(id: string) {
+    setJoinedClubs((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   return (
     <div className="mx-auto max-w-6xl space-y-7">
@@ -350,13 +360,38 @@ export default function CommunityPage() {
         </p>
       </div>
 
+      {/* Quick join banner */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {monthlyChallenges.slice(0, 2).map((c) => {
+          const progressPct = Math.round((c.currentProgress / c.target) * 100);
+          return (
+            <div key={c.id} className={cn("rounded-2xl border-l-4 border border-border bg-card p-4 flex items-start gap-3", colorBorder(c.color))}>
+              <span className="text-2xl shrink-0">{c.emoji}</span>
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <p className="text-sm font-semibold text-text leading-tight">{c.title}</p>
+                <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                  <div className={cn("h-full rounded-full", colorProgress(c.color))} style={{ width: `${Math.min(progressPct, 100)}%` }} />
+                </div>
+                <p className="text-[11px] text-text-muted">{progressPct}% · {c.endsInDays} dias restantes · {c.participants.toLocaleString()} participantes</p>
+              </div>
+              <button
+                onClick={() => setExpandedChallenge(c.id === expandedChallenge ? null : c.id)}
+                className={cn("shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors", colorProgress(c.color), "text-white hover:opacity-90")}
+              >
+                Participar
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         <div className="space-y-4">
           <Tabs defaultValue="feed">
             <TabsList>
               <TabsTrigger value="feed">Feed</TabsTrigger>
               <TabsTrigger value="ranking">Ranking</TabsTrigger>
-              <TabsTrigger value="clubes">Clubes</TabsTrigger>
+              <TabsTrigger value="clubes">Grupos</TabsTrigger>
             </TabsList>
 
             <TabsContent value="feed">
@@ -415,25 +450,32 @@ export default function CommunityPage() {
             </TabsContent>
 
             <TabsContent value="clubes">
-              <div className="grid gap-3 sm:grid-cols-2">
-                {clubs.map((c) => (
-                  <Card key={c.id}>
-                    <CardContent className="flex items-center gap-3 p-4">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/15 text-secondary">
-                        <Users className="h-5 w-5" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-text">{c.name}</p>
-                        <p className="text-xs text-text-muted">
-                          {c.members} membros · {c.location}
-                        </p>
-                      </div>
-                      <Button size="sm" variant="secondary">
-                        Entrar
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="space-y-3">
+                <p className="text-sm text-text-muted">Entre em grupos de corrida e conecte-se com atletas que compartilham seus objetivos.</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {clubs.map((c) => {
+                    const joined = joinedClubs.has(c.id);
+                    return (
+                      <Card key={c.id} className={cn(joined && "border-primary/40")}>
+                        <CardContent className="flex items-center gap-3 p-4">
+                          <span className={cn("flex h-11 w-11 items-center justify-center rounded-xl", joined ? "bg-primary/20 text-primary" : "bg-secondary/15 text-secondary")}>
+                            <Users className="h-5 w-5" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-text">{c.name}</p>
+                            <p className="text-xs text-text-muted">
+                              {c.members + (joined ? 1 : 0)} membros · {c.location}
+                            </p>
+                            {joined && <p className="text-xs text-primary font-semibold mt-0.5">✓ Participando</p>}
+                          </div>
+                          <Button size="sm" variant={joined ? "secondary" : "primary"} onClick={() => toggleClub(c.id)}>
+                            {joined ? "Sair" : "Entrar"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
               </div>
             </TabsContent>
           </Tabs>

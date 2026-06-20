@@ -7,7 +7,7 @@ import { CoachRoleProvider, useCoachRole } from "@/context/coach-role-context";
 import { getCoachNav, ROLE_LABELS, ROLE_DESCRIPTIONS, type CoachRole } from "@/lib/coach-permissions";
 import { cn } from "@/lib/utils";
 
-const ROLES: CoachRole[] = ["autonomo", "owner", "hired"];
+const ROLES: CoachRole[] = ["owner", "hired"];
 
 function RoleSwitcher() {
   const { role, setRole } = useCoachRole();

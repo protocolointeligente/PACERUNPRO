@@ -22,7 +22,7 @@ import type { NavItem } from "@/components/layout/nav-config";
 export type CoachRole = "autonomo" | "owner" | "hired";
 
 export const ROLE_LABELS: Record<CoachRole, string> = {
-  autonomo: "Treinador Autônomo",
+  autonomo: "CEO da Assessoria",
   owner: "CEO da Assessoria",
   hired: "Treinador Contratado",
 };
@@ -65,9 +65,8 @@ const helpNav: NavItem[] = [
 export function getCoachNav(role: CoachRole): { main: NavItem[]; more: NavItem[] } {
   switch (role) {
     case "owner":
-      return { main: coreNav, more: [...businessNav, ...ownerOnlyNav, ...helpNav] };
     case "autonomo":
-      return { main: coreNav, more: [...businessNav, ...helpNav] };
+      return { main: coreNav, more: [...businessNav, ...ownerOnlyNav, ...helpNav] };
     case "hired":
       return { main: coreNav, more: helpNav };
   }
@@ -84,8 +83,8 @@ const FEATURE_ALLOWED: Record<CoachFeature, CoachRole[]> = {
   "minha-pagina":  ["autonomo", "owner"],
   "vouchers":      ["autonomo", "owner"],
   "crm":           ["autonomo", "owner"],
-  "white-label":   ["owner"],
-  "admin":         ["owner"],
+  "white-label":   ["autonomo", "owner"],
+  "admin":         ["autonomo", "owner"],
 };
 
 export function canAccess(role: CoachRole, feature: CoachFeature): boolean {

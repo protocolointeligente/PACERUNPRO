@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
   ArrowLeft,
+  Camera,
   ChevronDown,
   ChevronUp,
   Plus,
@@ -20,6 +21,27 @@ import Link from "next/link";
 const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
+function resizeShoeImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const size = Math.min(img.width, img.height, 600);
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d")!;
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+      resolve(canvas.toDataURL("image/jpeg", 0.8));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
 export default function TenisPage() {
   const [shoes, setShoes] = useState(shoesList);
   const [showAdd, setShowAdd] = useState(false);
@@ -28,6 +50,16 @@ export default function TenisPage() {
   const [newBrand, setNewBrand] = useState("");
   const [newModel, setNewModel] = useState("");
   const [newMaxKm, setNewMaxKm] = useState("700");
+  const [newImageUrl, setNewImageUrl] = useState<string | undefined>(undefined);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleShoeImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await resizeShoeImage(file);
+    setNewImageUrl(url);
+    e.target.value = "";
+  }
 
   function addShoe() {
     if (!newBrand || !newModel) return;
@@ -36,6 +68,7 @@ export default function TenisPage() {
       name: newName || "Novo tênis",
       brand: newBrand,
       model: newModel,
+      imageUrl: newImageUrl,
       kmAccumulated: 0,
       maxKm: parseInt(newMaxKm) || 700,
       dateAdded: new Date().toISOString().slice(0, 10),
@@ -44,10 +77,7 @@ export default function TenisPage() {
       imageEmoji: "👟",
     };
     setShoes((prev) => [shoe, ...prev]);
-    setNewName("");
-    setNewBrand("");
-    setNewModel("");
-    setNewMaxKm("700");
+    setNewName(""); setNewBrand(""); setNewModel(""); setNewMaxKm("700"); setNewImageUrl(undefined);
     setShowAdd(false);
   }
 
@@ -174,6 +204,30 @@ export default function TenisPage() {
                     />
                   </div>
                 </div>
+                {/* Photo upload */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-text-muted">Foto do tênis (opcional)</label>
+                  <div className="flex items-center gap-3">
+                    {newImageUrl ? (
+                      <img src={newImageUrl} alt="Preview" className="h-14 w-14 rounded-xl object-cover border border-border" />
+                    ) : (
+                      <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-dashed border-border bg-card-hover/40 text-text-muted text-2xl">
+                        👟
+                      </div>
+                    )}
+                    <div>
+                      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => imageInputRef.current?.click()}>
+                        <Camera className="h-3.5 w-3.5" /> {newImageUrl ? "Trocar foto" : "Adicionar foto"}
+                      </Button>
+                      {newImageUrl && (
+                        <button onClick={() => setNewImageUrl(undefined)} className="ml-2 text-xs text-text-muted hover:text-danger transition-colors">Remover</button>
+                      )}
+                      <p className="mt-1 text-[10px] text-text-muted">Tire uma foto do seu tênis para identificar facilmente.</p>
+                    </div>
+                  </div>
+                  <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleShoeImage} />
+                </div>
+
                 <div className="flex gap-2">
                   <Button
                     variant="primary"
@@ -252,10 +306,14 @@ export default function TenisPage() {
                     {/* Top row */}
                     <div className="flex items-start gap-3">
                       <div
-                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl"
+                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl overflow-hidden"
                         style={{ backgroundColor: `${shoe.color}20`, border: `1.5px solid ${shoe.color}40` }}
                       >
-                        {shoe.imageEmoji}
+                        {shoe.imageUrl ? (
+                          <img src={shoe.imageUrl} alt={`${shoe.brand} ${shoe.model}`} className="h-full w-full object-cover" />
+                        ) : (
+                          shoe.imageEmoji
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-text">

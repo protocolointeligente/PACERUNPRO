@@ -177,6 +177,8 @@ model Coach {
   exercises         Exercise[]
   strengthTemplates CoachStrengthTemplate[]
   runTemplates      CoachRunTemplate[]
+  leads             Lead[]
+  expenses          Expense[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -847,4 +849,45 @@ model CoachRunTemplate {
   updatedAt       DateTime @updatedAt
 
   @@map("coach_run_templates")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// CRM de leads
+// ────────────────────────────────────────────────────────────────────────────
+
+model Lead {
+  id              String   @id @default(cuid())
+  coachId         String
+  coach           Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  name            String
+  email           String?
+  phone           String?
+  source          String   @default("quiz") // quiz | instagram | indicacao | site | evento | whatsapp
+  stage           String   @default("novo") // novo | contato | proposta | negociacao | ganho | perdido
+  notes           String?
+  monthlyFeeCents Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("leads")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Despesas da assessoria
+// ────────────────────────────────────────────────────────────────────────────
+
+model Expense {
+  id          String   @id @default(cuid())
+  coachId     String
+  coach       Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  description String
+  amountCents Int
+  category    String   @default("outros") // software | marketing | pessoal | equipamento | fornecedor | outros
+  supplier    String?
+  date        DateTime @default(now())
+  recurring   Boolean  @default(false)
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@map("expenses")
 }
