@@ -85,7 +85,7 @@ export function AppShell({
           <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-text-muted/70 pl-0.5">{roleLabel}</p>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3">
+        <nav className="flex-1 overflow-y-auto space-y-1 px-3 pb-2">
           {nav.map((item) => renderNavLink(item))}
           {moreNav.length > 0 && (
             <>

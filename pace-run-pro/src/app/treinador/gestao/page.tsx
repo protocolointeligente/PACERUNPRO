@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import QRCode from "react-qr-code";
 import { Copy, Link2, Users, TrendingUp, AlertTriangle, UserPlus } from "lucide-react";
 import { useCoachRole } from "@/context/coach-role-context";
 import { canAccess } from "@/lib/coach-permissions";
@@ -332,16 +333,37 @@ function GestaoContent() {
               </Card>
             </div>
 
-            {/* QR Code placeholder */}
+            {/* QR Code */}
             <Card>
               <CardContent className="flex flex-col items-center gap-4 p-6">
-                <h3 className="font-display text-sm font-semibold text-text">QR Code</h3>
-                <div className="flex h-40 w-40 items-center justify-center rounded-xl border-2 border-dashed border-border text-sm text-text-muted">
-                  QR Code
+                <h3 className="font-display text-sm font-semibold text-text">QR Code do link de convite</h3>
+                <div className="rounded-xl border border-border bg-white p-3">
+                  <QRCode value={inviteUrl} size={160} />
                 </div>
-                <p className="text-xs text-text-muted">
-                  Imprima ou compartilhe o QR code para divulgar seu link de convite
+                <p className="text-center text-xs text-text-muted">
+                  Imprima ou compartilhe para novos atletas se cadastrarem diretamente na sua conta
                 </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={() => {
+                    const svg = document.querySelector("#invite-qr svg") as SVGElement | null;
+                    if (!svg) return;
+                    const blob = new Blob([svg.outerHTML], { type: "image/svg+xml" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "qrcode-convite.svg";
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  <Download className="h-3.5 w-3.5" /> Baixar SVG
+                </Button>
+                <div id="invite-qr" className="sr-only" aria-hidden>
+                  <QRCode value={inviteUrl} size={400} />
+                </div>
               </CardContent>
             </Card>
           </div>

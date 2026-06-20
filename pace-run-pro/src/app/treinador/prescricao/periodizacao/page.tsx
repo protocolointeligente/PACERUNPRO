@@ -155,7 +155,7 @@ const smallInput =
 
 export default function PeriodizacaoPage() {
   // Macro state
-  const [selectedAthlete, setSelectedAthlete] = useState("");
+  const [selectedAthletes, setSelectedAthletes] = useState<string[]>([]);
   const [goal, setGoal] = useState<Goal>("Meia-maratona");
   const [level, setLevel] = useState<Level>("Intermediário");
   const [totalWeeks, setTotalWeeks] = useState(16);
@@ -240,30 +240,38 @@ export default function PeriodizacaoPage() {
     setWorkoutsMap(buildWorkoutsMap());
   }
 
+  function toggleAthlete(id: string) {
+    setSelectedAthletes((prev) =>
+      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
+    );
+  }
+
   async function handleLiberar() {
-    if (!selectedAthlete || totalWorkouts === 0) return;
+    if (selectedAthletes.length === 0 || totalWorkouts === 0) return;
     setLiberating(true);
     try {
-      const res = await fetch("/api/planos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          athleteId: selectedAthlete,
-          goal,
-          level,
-          totalWeeks,
-          trainingDays,
-          liberar: true,
-          weeks,
-          workoutsMap: Object.fromEntries(
-            Object.entries(workoutsMap).map(([k, v]) => [k, v])
-          ),
-        }),
-      });
-      if (res.ok) {
-        setLiberated(true);
-        setTimeout(() => setLiberated(false), 4000);
-      }
+      await Promise.all(
+        selectedAthletes.map((athleteId) =>
+          fetch("/api/planos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              athleteId,
+              goal,
+              level,
+              totalWeeks,
+              trainingDays,
+              liberar: true,
+              weeks,
+              workoutsMap: Object.fromEntries(
+                Object.entries(workoutsMap).map(([k, v]) => [k, v])
+              ),
+            }),
+          })
+        )
+      );
+      setLiberated(true);
+      setTimeout(() => setLiberated(false), 4000);
     } finally {
       setLiberating(false);
     }
@@ -370,21 +378,35 @@ export default function PeriodizacaoPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Athlete */}
+                {/* Athletes — multi-select */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-text-muted">Atleta</label>
-                  <div className="relative">
-                    <select
-                      className={selectClass}
-                      value={selectedAthlete}
-                      onChange={(e) => setSelectedAthlete(e.target.value)}
-                    >
-                      <option value="">Selecionar atleta…</option>
-                      {athleteList.map((a) => (
-                        <option key={a.id} value={a.id}>{a.name}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-text-muted">Atletas</label>
+                    {selectedAthletes.length > 0 && (
+                      <span className="text-[11px] text-primary">{selectedAthletes.length} selecionado{selectedAthletes.length > 1 ? "s" : ""}</span>
+                    )}
+                  </div>
+                  <div className="space-y-1 rounded-xl border border-border bg-background/60 p-2">
+                    {athleteList.map((a) => {
+                      const selected = selectedAthletes.includes(a.id);
+                      return (
+                        <label
+                          key={a.id}
+                          className={cn(
+                            "flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 transition-colors",
+                            selected ? "bg-primary/10 text-primary" : "hover:bg-card-hover text-text"
+                          )}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selected}
+                            onChange={() => toggleAthlete(a.id)}
+                            className="accent-primary h-3.5 w-3.5"
+                          />
+                          <span className="text-xs font-medium">{a.name}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -662,8 +684,8 @@ export default function PeriodizacaoPage() {
                       </h2>
                       <p className="text-sm text-text-muted mt-0.5">
                         {goal} · {level} · {trainingDays.length}×/semana
-                        {selectedAthlete
-                          ? ` · ${athleteList.find((a) => a.id === selectedAthlete)?.name ?? ""}`
+                        {selectedAthletes.length > 0
+                          ? ` · ${selectedAthletes.map((id) => athleteList.find((a) => a.id === id)?.name ?? "").filter(Boolean).join(", ")}`
                           : ""}
                         {vdotNum ? ` · VDOT ${vdotNum}` : ""}
                       </p>
@@ -687,14 +709,14 @@ export default function PeriodizacaoPage() {
                         <Button
                           variant={liberated ? "success" : "primary"}
                           size="sm"
-                          disabled={!selectedAthlete || liberating}
+                          disabled={selectedAthletes.length === 0 || liberating}
                           onClick={handleLiberar}
-                          title={!selectedAthlete ? "Selecione um atleta primeiro" : ""}
+                          title={selectedAthletes.length === 0 ? "Selecione pelo menos um atleta" : ""}
                         >
                           {liberated ? (
                             <><CheckCircle2 className="h-4 w-4" /> Liberado!</>
                           ) : (
-                            <><Send className="h-4 w-4" /> {liberating ? "Liberando…" : "Liberar para atleta"}</>
+                            <><Send className="h-4 w-4" /> {liberating ? "Liberando…" : `Liberar para ${selectedAthletes.length > 1 ? `${selectedAthletes.length} atletas` : "atleta"}`}</>
                           )}
                         </Button>
                       )}
@@ -709,7 +731,7 @@ export default function PeriodizacaoPage() {
                         goal={goal}
                         level={level}
                         totalWeeks={totalWeeks}
-                        athleteName={athleteList.find((a) => a.id === selectedAthlete)?.name}
+                        athleteName={selectedAthletes.length === 1 ? (athleteList.find((a) => a.id === selectedAthletes[0])?.name) : selectedAthletes.length > 1 ? `${selectedAthletes.length} atletas` : undefined}
                       />
                       <div className="space-y-4 print:hidden">
                         {Object.entries(mesocycles).map(([meso, mesoWeeks]) => {

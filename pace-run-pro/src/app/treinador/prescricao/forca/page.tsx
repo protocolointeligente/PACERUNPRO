@@ -144,6 +144,33 @@ function TemplateCard({
           {template.sessions.length === 1 ? "sessão" : "sessões"} &middot; {totalExercises} exercícios
         </p>
 
+        {/* Exercise detail per session */}
+        <div className="space-y-3">
+          {template.sessions.map((session) => (
+            <div key={session.label} className="rounded-xl border border-border bg-background/40 p-3">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">{session.label}</p>
+              {session.exercises.length === 0 ? (
+                <p className="text-xs text-text-muted">Nenhum exercício</p>
+              ) : (
+                <div className="space-y-1">
+                  {session.exercises.map((ex, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs">
+                      <span className="font-medium text-text min-w-0 flex-1 truncate">{ex.name}</span>
+                      <span className="shrink-0 rounded bg-card px-1.5 py-0.5 text-text-muted">
+                        {ex.sets}×{ex.reps}
+                      </span>
+                      <span className="shrink-0 text-text-muted">{ex.rest}</span>
+                      <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">
+                        {ex.rpe * 10}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={() => onLoad(template)}>
             <LayoutTemplate className="h-3.5 w-3.5" />
@@ -252,6 +279,42 @@ export default function StrengthPrescriptionPage() {
   const [category, setCategory] = useState<string>("Todas");
   const [sent, setSent] = useState(false);
   const [savedAsTemplate, setSavedAsTemplate] = useState(false);
+  const [customTemplates, setCustomTemplates] = useState<WorkoutTemplate[]>([]);
+  const [showNewTemplate, setShowNewTemplate] = useState(false);
+  const [newTplName, setNewTplName] = useState("");
+  const [newTplDesc, setNewTplDesc] = useState("");
+  const [newTplLevel, setNewTplLevel] = useState("Intermediário");
+  const [newTplFocus, setNewTplFocus] = useState("Hipertrofia");
+
+  function handleCreateTemplate() {
+    if (!newTplName.trim()) return;
+    const t: WorkoutTemplate = {
+      id: `custom-${Date.now()}`,
+      name: newTplName.trim(),
+      description: newTplDesc.trim(),
+      division,
+      targetLevel: newTplLevel,
+      focus: newTplFocus,
+      sessions: sessions.map((s) => ({
+        label: s.label,
+        exercises: s.exercises.map((e) => ({
+          libraryId: e.libraryId,
+          name: e.name,
+          sets: e.sets,
+          reps: e.reps,
+          rest: e.rest,
+          rpe: e.rpe,
+        })),
+      })),
+      createdAt: new Date().toISOString(),
+      isCustom: true,
+    };
+    setCustomTemplates((prev) => [t, ...prev]);
+    setNewTplName("");
+    setNewTplDesc("");
+    setShowNewTemplate(false);
+    setActiveTab("templates");
+  }
 
   const skipDivisionEffect = useRef(false);
 
@@ -338,6 +401,30 @@ export default function StrengthPrescriptionPage() {
   }
 
   function handleSaveAsTemplate() {
+    const totalExercises = sessions.reduce((acc, s) => acc + s.exercises.length, 0);
+    if (totalExercises === 0) return;
+    const t: WorkoutTemplate = {
+      id: `custom-${Date.now()}`,
+      name: `Template ${athlete.name} — ${division}`,
+      description: `Gerado em ${new Date().toLocaleDateString("pt-BR")}`,
+      division,
+      targetLevel: "Intermediário",
+      focus: "Hipertrofia",
+      sessions: sessions.map((s) => ({
+        label: s.label,
+        exercises: s.exercises.map((e) => ({
+          libraryId: e.libraryId,
+          name: e.name,
+          sets: e.sets,
+          reps: e.reps,
+          rest: e.rest,
+          rpe: e.rpe,
+        })),
+      })),
+      createdAt: new Date().toISOString(),
+      isCustom: true,
+    };
+    setCustomTemplates((prev) => [t, ...prev]);
     setSavedAsTemplate(true);
     setTimeout(() => setSavedAsTemplate(false), 2500);
   }
@@ -421,11 +508,72 @@ export default function StrengthPrescriptionPage() {
       {/* ── Templates tab ─────────────────────────────────────────────────── */}
       {activeTab === "templates" && (
         <div className="space-y-4">
-          <p className="text-sm text-text-muted">
-            Selecione um template para carregar no prescritor ou aplique diretamente para múltiplos atletas.
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-text-muted">
+              Selecione um template para carregar no prescritor ou aplique diretamente para múltiplos atletas.
+            </p>
+            <Button size="sm" variant="secondary" className="shrink-0 gap-1.5" onClick={() => setShowNewTemplate((v) => !v)}>
+              <Plus className="h-3.5 w-3.5" />
+              Novo template
+            </Button>
+          </div>
+
+          {showNewTemplate && (
+            <Card className="border-primary/30">
+              <CardContent className="space-y-4 p-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display text-sm font-bold text-text">Criar novo template</h3>
+                  <button onClick={() => setShowNewTemplate(false)} className="text-text-muted hover:text-text">
+                    <BookOpen className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-text-muted">
+                  O template será criado com os exercícios da prescrição atual (divisão {division}).
+                  Certifique-se de ter adicionado os exercícios no prescritor antes de salvar.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Nome do template *</span>
+                    <input value={newTplName} onChange={(e) => setNewTplName(e.target.value)}
+                      placeholder="Ex.: Full Body Iniciante" className={inputClass} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Foco</span>
+                    <select value={newTplFocus} onChange={(e) => setNewTplFocus(e.target.value)} className={inputClass}>
+                      <option>Hipertrofia</option>
+                      <option>Força</option>
+                      <option>Potência</option>
+                      <option>Resistência</option>
+                      <option>Funcional</option>
+                    </select>
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Descrição</span>
+                  <input value={newTplDesc} onChange={(e) => setNewTplDesc(e.target.value)}
+                    placeholder="Descreva o objetivo deste template" className={inputClass} />
+                </label>
+                <div className="flex gap-2">
+                  {["Iniciante", "Intermediário", "Avançado"].map((l) => (
+                    <button key={l} type="button" onClick={() => setNewTplLevel(l)}
+                      className={cn("flex-1 rounded-lg border py-2 text-xs font-medium transition-all",
+                        newTplLevel === l ? "border-primary/50 bg-primary/10 text-primary" : "border-border text-text-muted hover:border-primary/30")}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-3">
+                  <Button size="sm" onClick={handleCreateTemplate} disabled={!newTplName.trim()} className="gap-1.5">
+                    <Bookmark className="h-3.5 w-3.5" /> Salvar template
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setShowNewTemplate(false)}>Cancelar</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2">
-            {workoutTemplates.map((tpl) => (
+            {[...customTemplates, ...workoutTemplates].map((tpl) => (
               <TemplateCard
                 key={tpl.id}
                 template={tpl}

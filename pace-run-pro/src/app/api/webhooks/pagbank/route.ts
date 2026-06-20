@@ -3,10 +3,12 @@ import { createHmac } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { SubscriptionPlan } from "@prisma/client";
 
-// Maps plan IDs from checkout to SubscriptionPlan enum
+// Maps b2b plan IDs from checkout to SubscriptionPlan enum
 function planIdToEnum(planId: string): SubscriptionPlan {
-  if (planId === "starter") return SubscriptionPlan.COACH;
-  return SubscriptionPlan.TEAM; // pro, assessoria, white-label
+  if (planId === "b2b-free" || planId === "b2b-starter" || planId === "starter") {
+    return SubscriptionPlan.COACH;
+  }
+  return SubscriptionPlan.TEAM; // b2b-pro, b2b-premium, b2b-unlimited, pro, assessoria
 }
 
 export async function POST(req: NextRequest) {

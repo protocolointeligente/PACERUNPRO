@@ -10,8 +10,10 @@ import {
   CheckCircle2,
   LayoutTemplate,
   Loader2,
+  Plus,
   Send,
   Users,
+  X,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -510,8 +512,38 @@ function VdotReferenceTab() {
 
 // ── Main page ─────────────────────────────────────────────────────────────
 
+const inputClass =
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+
 export default function CorridaPage() {
   const [activeTab, setActiveTab] = useState<"referencia" | "templates">("referencia");
+  const [customRunTemplates, setCustomRunTemplates] = useState<RunWorkoutTemplate[]>([]);
+  const [showNewRunTemplate, setShowNewRunTemplate] = useState(false);
+  const [newRtName, setNewRtName] = useState("");
+  const [newRtDesc, setNewRtDesc] = useState("");
+  const [newRtLevel, setNewRtLevel] = useState("Intermediário");
+  const [newRtKm, setNewRtKm] = useState("40");
+  const [newRtFocus, setNewRtFocus] = useState("Base aeróbica");
+
+  function handleCreateRunTemplate() {
+    if (!newRtName.trim()) return;
+    const t: RunWorkoutTemplate = {
+      id: `run-custom-${Date.now()}`,
+      name: newRtName.trim(),
+      description: newRtDesc.trim(),
+      targetLevel: newRtLevel,
+      weeklyKm: parseFloat(newRtKm) || 40,
+      sessionsPerWeek: 3,
+      focus: newRtFocus,
+      sessions: [],
+      createdAt: new Date().toISOString(),
+      isCustom: true,
+    };
+    setCustomRunTemplates((prev) => [t, ...prev]);
+    setNewRtName("");
+    setNewRtDesc("");
+    setShowNewRunTemplate(false);
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -562,13 +594,81 @@ export default function CorridaPage() {
 
       {activeTab === "templates" && (
         <div className="space-y-4">
-          <p className="text-sm text-text-muted">
-            Selecione um template e clique em{" "}
-            <span className="font-semibold text-text">Aplicar para atletas</span> — os paces são
-            recalculados automaticamente para o VDOT de cada atleta.
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-text-muted">
+              Selecione um template e clique em{" "}
+              <span className="font-semibold text-text">Aplicar para atletas</span> — os paces são
+              recalculados automaticamente para o VDOT de cada atleta.
+            </p>
+            <Button size="sm" variant="secondary" className="shrink-0 gap-1.5" onClick={() => setShowNewRunTemplate((v) => !v)}>
+              <Plus className="h-3.5 w-3.5" />
+              Novo template
+            </Button>
+          </div>
+
+          {showNewRunTemplate && (
+            <Card className="border-primary/30">
+              <CardContent className="space-y-4 p-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display text-sm font-bold text-text">Criar template de corrida</h3>
+                  <button onClick={() => setShowNewRunTemplate(false)} className="text-text-muted hover:text-text">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Nome *</span>
+                    <input value={newRtName} onChange={(e) => setNewRtName(e.target.value)}
+                      placeholder="Ex.: Bloco de Velocidade 8 semanas" className={inputClass} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Volume semanal (km)</span>
+                    <input type="number" value={newRtKm} onChange={(e) => setNewRtKm(e.target.value)}
+                      placeholder="40" className={inputClass} />
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Descrição</span>
+                  <input value={newRtDesc} onChange={(e) => setNewRtDesc(e.target.value)}
+                    placeholder="Descreva o objetivo e estrutura do template" className={inputClass} />
+                </label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Foco</span>
+                    <select value={newRtFocus} onChange={(e) => setNewRtFocus(e.target.value)} className={inputClass}>
+                      <option>Base aeróbica</option>
+                      <option>Limiar anaeróbico</option>
+                      <option>VO₂máx</option>
+                      <option>Velocidade</option>
+                      <option>Pré-prova</option>
+                      <option>Recuperação</option>
+                    </select>
+                  </label>
+                  <div>
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Nível</span>
+                    <div className="flex gap-2">
+                      {["Iniciante", "Intermediário", "Avançado"].map((l) => (
+                        <button key={l} type="button" onClick={() => setNewRtLevel(l)}
+                          className={cn("flex-1 rounded-lg border py-2 text-xs font-medium transition-all",
+                            newRtLevel === l ? "border-primary/50 bg-primary/10 text-primary" : "border-border text-text-muted hover:border-primary/30")}>
+                          {l === "Intermediário" ? "Inter." : l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button size="sm" onClick={handleCreateRunTemplate} disabled={!newRtName.trim()} className="gap-1.5">
+                    <Bookmark className="h-3.5 w-3.5" /> Salvar template
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setShowNewRunTemplate(false)}>Cancelar</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2">
-            {runWorkoutTemplates.map((tpl) => (
+            {[...customRunTemplates, ...runWorkoutTemplates].map((tpl) => (
               <RunTemplateCard key={tpl.id} template={tpl} athletes={athleteList} />
             ))}
           </div>

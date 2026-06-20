@@ -23,7 +23,7 @@ export type CoachRole = "autonomo" | "owner" | "hired";
 
 export const ROLE_LABELS: Record<CoachRole, string> = {
   autonomo: "Treinador Autônomo",
-  owner: "Dono da Assessoria",
+  owner: "CEO da Assessoria",
   hired: "Treinador Contratado",
 };
 

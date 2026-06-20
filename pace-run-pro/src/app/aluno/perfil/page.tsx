@@ -33,6 +33,9 @@ import {
 import { normalizeActivity } from "@/lib/integrations/normalize-activity";
 import { cn } from "@/lib/utils";
 
+const inputClass =
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+
 export default function ProfilePage() {
   const [notifs, setNotifs] = useState({ workouts: true, community: false, coach: true });
   const [activeTab, setActiveTab] = useState("dados");
@@ -41,6 +44,47 @@ export default function ProfilePage() {
   const [stravaLoading, setStravaLoading] = useState<"sync" | "disconnect" | null>(null);
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [comingSoonId, setComingSoonId] = useState<string | null>(null);
+
+  // Edit profile modal state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editName, setEditName] = useState(currentAthlete.name);
+  const [editCity, setEditCity] = useState(currentAthlete.city ?? "");
+  const [editState, setEditState] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editWeightKg, setEditWeightKg] = useState(String(currentAthlete.weightKg ?? ""));
+  const [editHeightCm, setEditHeightCm] = useState(String(currentAthlete.heightCm ?? ""));
+  const [editRaceDate, setEditRaceDate] = useState(currentAthlete.raceDate ?? "");
+
+  async function handleEditSave() {
+    setEditSaving(true);
+    try {
+      const res = await fetch("/api/aluno/perfil", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName,
+          city: editCity,
+          state: editState,
+          phone: editPhone,
+          weightKg: editWeightKg ? parseFloat(editWeightKg) : null,
+          heightCm: editHeightCm ? parseFloat(editHeightCm) : null,
+          raceDate: editRaceDate || null,
+        }),
+      });
+      if (res.ok) {
+        setEditOpen(false);
+        setBanner({ type: "success", text: "Perfil atualizado com sucesso!" });
+        setActiveTab("dados");
+      } else {
+        setBanner({ type: "error", text: "Não foi possível salvar. Tente novamente." });
+      }
+    } catch {
+      setBanner({ type: "error", text: "Erro de conexão. Tente novamente." });
+    } finally {
+      setEditSaving(false);
+    }
+  }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -136,7 +180,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
             <Pencil className="h-3.5 w-3.5" />
             Editar perfil
           </Button>
@@ -453,6 +497,66 @@ export default function ProfilePage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Edit profile modal */}
+      {editOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setEditOpen(false)} />
+          <div className="relative w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+              <h2 className="font-display text-base font-bold text-text">Editar perfil</h2>
+              <button onClick={() => setEditOpen(false)} className="text-text-muted hover:text-text">
+                <XCircle className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-4 p-5">
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Nome completo</span>
+                <input value={editName} onChange={(e) => setEditName(e.target.value)} className={inputClass} placeholder="Seu nome" />
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Cidade</span>
+                  <input value={editCity} onChange={(e) => setEditCity(e.target.value)} className={inputClass} placeholder="São Paulo" />
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Estado</span>
+                  <input value={editState} onChange={(e) => setEditState(e.target.value)} className={inputClass} placeholder="SP" maxLength={2} />
+                </label>
+              </div>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">WhatsApp</span>
+                <input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className={inputClass} placeholder="(11) 99999-9999" type="tel" />
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Peso (kg)</span>
+                  <input type="number" value={editWeightKg} onChange={(e) => setEditWeightKg(e.target.value)} className={inputClass} placeholder="70" />
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Altura (cm)</span>
+                  <input type="number" value={editHeightCm} onChange={(e) => setEditHeightCm(e.target.value)} className={inputClass} placeholder="175" />
+                </label>
+              </div>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Data da prova</span>
+                <input type="date" value={editRaceDate} onChange={(e) => setEditRaceDate(e.target.value)} className={inputClass} />
+              </label>
+            </div>
+            <div className="flex gap-3 border-t border-border px-5 py-4">
+              <Button
+                variant="primary"
+                className="flex-1 gap-2"
+                onClick={handleEditSave}
+                disabled={editSaving}
+              >
+                {editSaving ? <><Loader2 className="h-4 w-4 animate-spin" /> Salvando…</> : <><CheckCircle2 className="h-4 w-4" /> Salvar</>}
+              </Button>
+              <Button variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

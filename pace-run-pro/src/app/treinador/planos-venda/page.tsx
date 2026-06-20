@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, CheckCircle2, ExternalLink, Loader2, Pencil, Plus, QrCode, Star, Trash2, X } from "lucide-react";
+import { Check, CheckCircle2, ExternalLink, Loader2, Pencil, Plus, Star, Trash2, X } from "lucide-react";
+import QRCode from "react-qr-code";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,52 +37,19 @@ interface LocalPlan {
   active: boolean;
 }
 
-const DEFAULT_PLANS: LocalPlan[] = [
-  {
-    id: "demo-1",
-    name: "Corrida Iniciante",
-    description: "Perfeito para quem está começando a correr ou voltando após longa pausa.",
-    priceCents: 14900,
-    period: "MENSAL",
-    features: ["Planilha personalizada semanal", "Check-in quinzenal", "1 ajuste de treino/mês", "Suporte via WhatsApp"],
-    highlight: false,
-    maxSlots: 20,
-    active: true,
-  },
-  {
-    id: "demo-2",
-    name: "Performance 10K / Meia",
-    description: "Para corredores que já têm base e buscam melhorar o tempo.",
-    priceCents: 19900,
-    period: "MENSAL",
-    features: ["Prescrição avançada com VDOT", "Check-in semanal com análise", "Treino de força integrado", "Relatório mensal PDF", "Suporte prioritário"],
-    highlight: true,
-    maxSlots: null,
-    active: true,
-  },
-  {
-    id: "demo-3",
-    name: "Assessoria Premium",
-    description: "Acompanhamento completo para maratonistas e atletas de alta performance.",
-    priceCents: 29900,
-    period: "MENSAL",
-    features: ["Tudo do plano Performance", "Análise de GPS pós-treino", "Videochamada mensal", "Preparação para provas", "CRM de nutrição básica"],
-    highlight: false,
-    maxSlots: 10,
-    active: true,
-  },
-];
-
 function formatBRL(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function PlanCard({ plan, onEdit, onToggle, onDelete }: {
+function PlanCard({ plan, onEdit, onToggle, onDelete, publicUrl }: {
   plan: LocalPlan;
   onEdit: () => void;
   onToggle: () => void;
   onDelete: () => void;
+  publicUrl: string;
 }) {
+  const [showQr, setShowQr] = useState(false);
+
   return (
     <Card className={cn(
       "relative transition-all",
@@ -123,6 +91,14 @@ function PlanCard({ plan, onEdit, onToggle, onDelete }: {
           </p>
         )}
 
+        {showQr && (
+          <div className="mt-4 flex flex-col items-center gap-3 rounded-xl border border-border bg-background p-4">
+            <QRCode value={publicUrl} size={140} />
+            <p className="text-center text-[10px] text-text-muted">QR Code para este plano</p>
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => setShowQr(false)}>Fechar</Button>
+          </div>
+        )}
+
         <div className="mt-4 flex flex-wrap gap-2 border-t border-border/50 pt-4">
           <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={onEdit}>
             <Pencil className="h-3 w-3" /> Editar
@@ -134,8 +110,8 @@ function PlanCard({ plan, onEdit, onToggle, onDelete }: {
           <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-danger hover:text-danger" onClick={onDelete}>
             <Trash2 className="h-3 w-3" /> Excluir
           </Button>
-          <Button variant="ghost" size="sm" className="gap-1.5 text-xs ml-auto" disabled>
-            <QrCode className="h-3 w-3" /> QR Code
+          <Button variant="ghost" size="sm" className="gap-1.5 text-xs ml-auto" onClick={() => setShowQr((v) => !v)}>
+            QR Code
           </Button>
         </div>
       </CardContent>
@@ -159,14 +135,28 @@ const EMPTY_FORM: PlanFormState = {
 };
 
 export default function PlanosVendaPage() {
-  const [plans, setPlans] = useState<LocalPlan[]>(DEFAULT_PLANS);
+  const [plans, setPlans] = useState<LocalPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PlanFormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [showPublicQr, setShowPublicQr] = useState(false);
 
-  const slug = "minha-assessoria"; // will come from coach profile
+  const slug = "minha-assessoria";
   const publicUrl = `https://pacerunpro.com.br/p/${slug}`;
+
+  useEffect(() => {
+    fetch("/api/coach/plans")
+      .then((res) => {
+        if (!res.ok) throw new Error("not ok");
+        return res.json() as Promise<LocalPlan[]>;
+      })
+      .then((data) => setPlans(data))
+      .catch(() => setLoadError(true))
+      .finally(() => setLoading(false));
+  }, []);
 
   function openNew() {
     setForm(EMPTY_FORM);
@@ -196,26 +186,40 @@ export default function PlanosVendaPage() {
     const features = form.features.split("\n").map((f) => f.trim()).filter(Boolean);
     const maxSlots = form.maxSlots ? parseInt(form.maxSlots) : null;
 
-    await new Promise((r) => setTimeout(r, 400)); // API call stub
+    const body = {
+      name: form.name,
+      description: form.description,
+      priceCents,
+      period: form.period,
+      features,
+      highlight: form.highlight,
+      maxSlots,
+    };
 
-    if (editingId) {
-      setPlans((prev) => prev.map((p) =>
-        p.id === editingId
-          ? { ...p, name: form.name, description: form.description, priceCents, period: form.period, features, highlight: form.highlight, maxSlots }
-          : p
-      ));
-    } else {
-      setPlans((prev) => [...prev, {
-        id: `plan-${Date.now()}`,
-        name: form.name,
-        description: form.description,
-        priceCents,
-        period: form.period,
-        features,
-        highlight: form.highlight,
-        maxSlots,
-        active: true,
-      }]);
+    try {
+      if (editingId) {
+        const res = await fetch(`/api/coach/plans/${editingId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (res.ok) {
+          const updated = await res.json() as LocalPlan;
+          setPlans((prev) => prev.map((p) => p.id === editingId ? { ...p, ...updated } : p));
+        }
+      } else {
+        const res = await fetch("/api/coach/plans", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (res.ok) {
+          const created = await res.json() as LocalPlan;
+          setPlans((prev) => [...prev, created]);
+        }
+      }
+    } catch {
+      // silently keep local state consistent
     }
 
     setSaving(false);
@@ -223,12 +227,30 @@ export default function PlanosVendaPage() {
     setEditingId(null);
   }
 
-  function togglePlan(id: string) {
-    setPlans((prev) => prev.map((p) => p.id === id ? { ...p, active: !p.active } : p));
+  async function togglePlan(id: string) {
+    const plan = plans.find((p) => p.id === id);
+    if (!plan) return;
+    const newActive = !plan.active;
+    setPlans((prev) => prev.map((p) => p.id === id ? { ...p, active: newActive } : p));
+    try {
+      await fetch(`/api/coach/plans/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: newActive }),
+      });
+    } catch {
+      // revert on failure
+      setPlans((prev) => prev.map((p) => p.id === id ? { ...p, active: plan.active } : p));
+    }
   }
 
-  function deletePlan(id: string) {
+  async function deletePlan(id: string) {
     setPlans((prev) => prev.filter((p) => p.id !== id));
+    try {
+      await fetch(`/api/coach/plans/${id}`, { method: "DELETE" });
+    } catch {
+      // deletion already reflected in UI; ignore
+    }
   }
 
   return (
@@ -251,19 +273,28 @@ export default function PlanosVendaPage() {
       {/* Public page link */}
       <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show">
         <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <div>
-              <p className="text-xs font-semibold text-primary">Sua página pública</p>
-              <p className="mt-0.5 text-sm text-text-muted font-mono">{publicUrl}</p>
+          <CardContent className="p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-primary">Sua página pública</p>
+                <p className="mt-0.5 text-sm text-text-muted font-mono">{publicUrl}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => setShowPublicQr((v) => !v)}>
+                  QR Code
+                </Button>
+                <a href={publicUrl} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-text-muted hover:border-primary/30 hover:text-text transition-colors">
+                  <ExternalLink className="h-3.5 w-3.5" /> Visualizar
+                </a>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-                <QrCode className="h-3.5 w-3.5" /> QR Code
-              </Button>
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-                <ExternalLink className="h-3.5 w-3.5" /> Visualizar
-              </Button>
-            </div>
+            {showPublicQr && (
+              <div className="mt-4 flex flex-col items-center gap-3 rounded-xl border border-border bg-white p-4">
+                <QRCode value={publicUrl} size={160} />
+                <p className="text-xs text-text-muted">QR Code da sua página pública — imprima ou compartilhe</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -348,18 +379,37 @@ export default function PlanosVendaPage() {
       {/* Plans grid */}
       <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show"
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {plans.map((plan) => (
+        {loading && (
+          <>
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="animate-pulse border-border">
+                <CardContent className="p-5 space-y-3">
+                  <div className="h-4 w-3/4 rounded bg-border" />
+                  <div className="h-3 w-full rounded bg-border" />
+                  <div className="h-8 w-1/2 rounded bg-border" />
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        )}
+        {!loading && loadError && (
+          <div className="col-span-3 rounded-2xl border border-danger/20 bg-danger/5 p-6 text-center text-sm text-danger">
+            Não foi possível carregar os planos. Verifique se o seu perfil de treinador está configurado.
+          </div>
+        )}
+        {!loading && !loadError && plans.map((plan) => (
           <PlanCard
             key={plan.id}
             plan={plan}
+            publicUrl={`${publicUrl}?plano=${plan.id}`}
             onEdit={() => openEdit(plan)}
             onToggle={() => togglePlan(plan.id)}
             onDelete={() => deletePlan(plan.id)}
           />
         ))}
-        {plans.length === 0 && (
+        {!loading && !loadError && plans.length === 0 && (
           <div className="col-span-3 rounded-2xl border border-dashed border-border p-10 text-center">
-            <p className="text-sm text-text-muted">Nenhum plano cadastrado.</p>
+            <p className="text-sm text-text-muted">Nenhum plano cadastrado ainda.</p>
             <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={openNew}>
               <Plus className="h-3.5 w-3.5" /> Criar primeiro plano
             </Button>
