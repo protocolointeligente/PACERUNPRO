@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Bell, ChevronLeft, ChevronRight, LogOut, Menu, Search } from "lucide-react";
+import { Bell, LogOut, Menu, Search } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,8 +20,6 @@ interface AppShellProps {
   userSubtitle: string;
   avatarUrl?: string;
   children: React.ReactNode;
-  switchHref?: string;
-  switchLabel?: string;
   /** Extra content rendered above the user card in the sidebar */
   sidebarFooterSlot?: React.ReactNode;
 }
@@ -34,8 +32,6 @@ export function AppShell({
   userSubtitle,
   avatarUrl,
   children,
-  switchHref,
-  switchLabel,
   sidebarFooterSlot,
 }: AppShellProps) {
   const pathname = usePathname();
@@ -100,18 +96,22 @@ export function AppShell({
           collapsed ? "w-16" : "w-64"
         )}
       >
-        <div className={cn("py-5", collapsed ? "flex justify-center px-3" : "px-5")}>
-          {collapsed ? (
-            <Logo size={26} />
-          ) : (
-            <>
-              <Logo size={32} />
-              <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-text-muted/70 pl-0.5">{roleLabel}</p>
-            </>
-          )}
+        <div className={cn("flex items-center py-4 border-b border-border/40", collapsed ? "justify-center px-3 gap-0" : "justify-between px-4")}>
+          {!collapsed && <Logo size={32} />}
+          {collapsed && <Logo size={26} />}
+          <button
+            onClick={toggleCollapsed}
+            title={collapsed ? "Expandir sidebar" : "Recolher sidebar"}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-card-hover hover:text-text"
+          >
+            <Menu className="h-[18px] w-[18px]" />
+          </button>
         </div>
+        {!collapsed && (
+          <p className="px-5 pt-3 pb-1 text-[10px] uppercase tracking-[0.16em] text-text-muted/70">{roleLabel}</p>
+        )}
 
-        <nav className="flex-1 overflow-y-auto space-y-1 px-3 pb-2">
+        <nav className="flex-1 overflow-y-auto space-y-1 px-3 pb-2 pt-1">
           {nav.map((item) => renderNavLink(item))}
           {moreNav.length > 0 && (
             <>
@@ -123,36 +123,11 @@ export function AppShell({
               {moreNav.map((item) => renderNavLink(item))}
             </>
           )}
-          <button
-            onClick={toggleCollapsed}
-            title={collapsed ? "Expandir sidebar" : "Recolher sidebar"}
-            className={cn(
-              "mt-2 flex w-full items-center rounded-xl py-2.5 text-text-muted transition-colors hover:bg-card-hover hover:text-text",
-              collapsed ? "justify-center px-2.5" : "gap-3 px-3.5"
-            )}
-          >
-            {collapsed ? (
-              <ChevronRight className="h-[18px] w-[18px] shrink-0" />
-            ) : (
-              <>
-                <ChevronLeft className="h-[18px] w-[18px] shrink-0" />
-                <span className="text-sm font-medium">Recolher</span>
-              </>
-            )}
-          </button>
         </nav>
 
         <div className="border-t border-border p-4">
           {!collapsed && sidebarFooterSlot && (
             <div className="mb-3">{sidebarFooterSlot}</div>
-          )}
-          {!collapsed && switchHref && (
-            <Link
-              href={switchHref}
-              className="mb-3 flex items-center justify-center rounded-xl border border-border px-3 py-2 text-xs font-semibold text-text-muted transition-colors hover:border-primary/50 hover:text-text"
-            >
-              {switchLabel}
-            </Link>
           )}
           <div className={cn("flex items-center gap-3 rounded-xl bg-card-hover/60 p-3", collapsed && "justify-center p-2")}>
             <Avatar className={collapsed ? "h-8 w-8" : "h-10 w-10"}>
@@ -207,15 +182,6 @@ export function AppShell({
                     </p>
                     {moreNav.map((item) => renderNavLink(item, () => setMobileOpen(false), true))}
                   </>
-                )}
-                {switchHref && (
-                  <Link
-                    href={switchHref}
-                    onClick={() => setMobileOpen(false)}
-                    className="mt-4 flex items-center justify-center rounded-xl border border-border px-3 py-2.5 text-xs font-semibold text-text-muted"
-                  >
-                    {switchLabel}
-                  </Link>
                 )}
                 <button
                   onClick={() => {

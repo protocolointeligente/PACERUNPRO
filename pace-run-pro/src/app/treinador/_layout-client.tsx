@@ -60,9 +60,7 @@ function TreinadorLayoutInner({ children }: { children: React.ReactNode }) {
       roleLabel={ROLE_LABELS[role]}
       userName={coachOverview.name}
       userSubtitle={coachOverview.credential}
-      switchHref="/aluno/dashboard"
-      switchLabel="Acessar área do atleta"
-      sidebarFooterSlot={process.env.NODE_ENV !== "production" ? <RoleSwitcher /> : undefined}
+sidebarFooterSlot={process.env.NODE_ENV !== "production" ? <RoleSwitcher /> : undefined}
     >
       {children}
       <BottomNav items={main.slice(0, 5)} />

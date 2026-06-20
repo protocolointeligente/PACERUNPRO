@@ -38,27 +38,27 @@ export interface NavItem {
 }
 
 export const athleteNav: NavItem[] = [
-  { href: "/aluno/dashboard", label: "Início", icon: LayoutDashboard },
-  { href: "/aluno/calendario", label: "Calendário", icon: CalendarDays },
-  { href: "/aluno/evolucao", label: "Evolução", icon: TrendingUp },
-  { href: "/aluno/forca", label: "Força", icon: Dumbbell },
-  { href: "/aluno/comunidade", label: "Comunidade", icon: Trophy },
+  { href: "/atleta/dashboard", label: "Início", icon: LayoutDashboard },
+  { href: "/atleta/calendario", label: "Calendário", icon: CalendarDays },
+  { href: "/atleta/evolucao", label: "Evolução", icon: TrendingUp },
+  { href: "/atleta/forca", label: "Força", icon: Dumbbell },
+  { href: "/atleta/comunidade", label: "Comunidade", icon: Trophy },
 ];
 
 export const athleteMoreNav: NavItem[] = [
-  { href: "/aluno/testes", label: "Testes de performance", icon: Activity },
-  { href: "/aluno/planos", label: "Planos & periodização", icon: ClipboardList },
-  { href: "/aluno/previsao", label: "Previsão & estratégia", icon: Target },
-  { href: "/aluno/ia-treinadora", label: "IA Treinadora", icon: Bot },
-  { href: "/aluno/tenis", label: "Tênis tracker", icon: Shirt },
-  { href: "/aluno/perfil", label: "Perfil", icon: User },
+  { href: "/atleta/testes", label: "Testes de performance", icon: Activity },
+  { href: "/atleta/planos", label: "Planos & periodização", icon: ClipboardList },
+  { href: "/atleta/previsao", label: "Previsão & estratégia", icon: Target },
+  { href: "/atleta/ia-treinadora", label: "IA Treinadora", icon: Bot },
+  { href: "/atleta/tenis", label: "Tênis tracker", icon: Shirt },
+  { href: "/atleta/perfil", label: "Perfil", icon: User },
 ];
 
 export const coachNav: NavItem[] = [
   { href: "/treinador/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/treinador/alertas", label: "Alertas", icon: Bell },
   { href: "/treinador/analise-semanal", label: "Análise semanal", icon: BarChart2 },
-  { href: "/treinador/alunos", label: "Atletas", icon: Users },
+  { href: "/treinador/atletas", label: "Atletas", icon: Users },
   { href: "/treinador/prescricao/periodizacao", label: "Periodização", icon: CalendarDays },
   { href: "/treinador/prescricao/corrida", label: "Referência VDOT", icon: Activity },
   { href: "/treinador/prescricao/forca", label: "Prescrição força", icon: Dumbbell },

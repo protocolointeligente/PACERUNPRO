@@ -11,7 +11,7 @@ export default auth((req) => {
 
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
   const isCoachRoute = nextUrl.pathname.startsWith("/treinador");
-  const isAthleteRoute = nextUrl.pathname.startsWith("/aluno");
+  const isAthleteRoute = nextUrl.pathname.startsWith("/atleta");
   const isProtected = isAdminRoute || isCoachRoute || isAthleteRoute;
 
   if (!isLoggedIn && isProtected) {
@@ -23,16 +23,16 @@ export default auth((req) => {
   const role = (session?.user as { role?: string } | undefined)?.role;
 
   if (isLoggedIn && isAdminRoute && role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/aluno/dashboard", nextUrl));
+    return NextResponse.redirect(new URL("/atleta/dashboard", nextUrl));
   }
 
   if (isLoggedIn && isCoachRoute && !["COACH", "ADMIN"].includes(role ?? "")) {
-    return NextResponse.redirect(new URL("/aluno/dashboard", nextUrl));
+    return NextResponse.redirect(new URL("/atleta/dashboard", nextUrl));
   }
 
   return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/aluno/:path*", "/treinador/:path*", "/admin/:path*"],
+  matcher: ["/atleta/:path*", "/treinador/:path*", "/admin/:path*"],
 };

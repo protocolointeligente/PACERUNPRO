@@ -14,8 +14,6 @@ export default function AlunoLayout({ children }: { children: React.ReactNode })
       userName={currentAthlete.name}
       userSubtitle={currentAthlete.goal}
       avatarUrl={currentAthlete.avatarUrl}
-      switchHref="/treinador/dashboard"
-      switchLabel="Acessar área do treinador"
     >
       {children}
       <BottomNav items={athleteNav} />

@@ -10,8 +10,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       roleLabel="Super Admin"
       userName="Ricardo Pace Júnior"
       userSubtitle="CREF 014626-G/MG"
-      switchHref="/treinador/dashboard"
-      switchLabel="Acessar área do treinador"
     >
       {children}
       <BottomNav items={adminNav} />
