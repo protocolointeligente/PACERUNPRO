@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
   AlertTriangle,
   Bell,
   BellOff,
+  CalendarClock,
   CheckCheck,
   ChevronRight,
   Clock,
@@ -18,6 +19,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { smartAlerts, type SmartAlert, type AlertSeverity } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+
+interface ExpiringPlan {
+  planId: string;
+  athleteId: string;
+  athleteName: string;
+  endDate: string;
+  daysLeft: number;
+}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -54,6 +63,16 @@ function SeverityIcon({ severity }: { severity: SmartAlert["severity"] }) {
 export default function AlertasPage() {
   const [alerts, setAlerts] = useState(smartAlerts);
   const [filter, setFilter] = useState<AlertSeverity | "todos">("todos");
+  const [expiringPlans, setExpiringPlans] = useState<ExpiringPlan[]>([]);
+
+  useEffect(() => {
+    fetch("/api/treinador/alertas")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.expiringPlans) setExpiringPlans(data.expiringPlans);
+      })
+      .catch(() => null);
+  }, []);
 
   const unread = alerts.filter((a) => !a.read).length;
   const criticos = alerts.filter((a) => a.severity === "critico" && !a.read).length;
@@ -109,9 +128,56 @@ export default function AlertasPage() {
         </div>
       </motion.div>
 
+      {/* Expiring periodizations banner */}
+      {expiringPlans.length > 0 && (
+        <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show">
+          <Card className="border-warning/40 bg-warning/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <CalendarClock className="h-4 w-4 text-warning" />
+                <h3 className="text-sm font-semibold text-text">
+                  Periodizações próximas do vencimento
+                </h3>
+                <Badge variant="warning" className="ml-auto">{expiringPlans.length}</Badge>
+              </div>
+              <div className="space-y-2">
+                {expiringPlans.map((p) => (
+                  <div key={p.planId} className="flex items-center justify-between gap-3 rounded-xl bg-card-hover px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={cn(
+                        "h-2 w-2 shrink-0 rounded-full",
+                        p.daysLeft <= 2 ? "bg-danger" : "bg-warning"
+                      )} />
+                      <span className="text-sm font-medium text-text truncate">{p.athleteName}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={cn(
+                        "text-xs font-semibold",
+                        p.daysLeft <= 2 ? "text-danger" : "text-warning"
+                      )}>
+                        {p.daysLeft === 0 ? "Vence hoje" : p.daysLeft === 1 ? "Vence amanhã" : `${p.daysLeft} dias`}
+                      </span>
+                      <a
+                        href={`/treinador/prescricao/periodizacao`}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Renovar →
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-text-muted">
+                Gere uma nova periodização para estes atletas para continuar a prescrição automaticamente.
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Main layout */}
       <motion.div
-        custom={2}
+        custom={3}
         variants={fadeUp}
         initial="hidden"
         animate="show"

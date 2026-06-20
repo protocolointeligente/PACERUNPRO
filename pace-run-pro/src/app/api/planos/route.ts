@@ -89,6 +89,7 @@ export async function POST(req: NextRequest) {
   endDate.setDate(endDate.getDate() + body.totalWeeks * 7);
 
   const goalEnum = GOAL_MAP[goal] ?? "PERFORMANCE";
+  const now = new Date();
 
   const plan = await prisma.trainingPlan.create({
     data: {
@@ -106,6 +107,9 @@ export async function POST(req: NextRequest) {
           const weekEnd = new Date(weekStart);
           weekEnd.setDate(weekEnd.getDate() + 6);
 
+          // Auto-release: release week if its start date has already arrived
+          const weekReleased = liberar && weekStart <= now;
+
           const sessionList = workoutsMap[String(w.week)] ?? [];
 
           return {
@@ -115,16 +119,18 @@ export async function POST(req: NextRequest) {
             startDate: weekStart,
             endDate: weekEnd,
             targetVolumeKm: w.km,
-            released: liberar,
-            releasedAt: liberar ? new Date() : undefined,
+            released: weekReleased,
+            releasedAt: weekReleased ? now : undefined,
             workouts: {
-              create: sessionList.map((s) => {
+              create: sessionList.map((s, idx) => {
+                // Spread workouts across training days within the week
                 const workoutDate = new Date(weekStart);
+                workoutDate.setDate(workoutDate.getDate() + idx);
                 return {
                   date: workoutDate,
                   type: SUBTYPE_MAP[s.subtype] ?? "RODAGEM_LEVE",
                   title: s.title,
-                  status: liberar ? ("LIBERADO" as const) : ("AGENDADO" as const),
+                  status: weekReleased ? ("LIBERADO" as const) : ("AGENDADO" as const),
                   objective: s.objective,
                   warmup: s.warmup,
                   mainSet: s.mainSet,
@@ -142,5 +148,5 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ planId: plan.id, liberated: liberar });
+  return NextResponse.json({ planId: plan.id, liberated: liberar, autoReleaseEnabled: true });
 }
