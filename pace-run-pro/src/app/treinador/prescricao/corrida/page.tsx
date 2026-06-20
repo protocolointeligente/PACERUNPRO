@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -12,6 +12,7 @@ import {
   Loader2,
   Plus,
   Send,
+  Trash2,
   Users,
   X,
 } from "lucide-react";
@@ -57,9 +58,11 @@ function initials(name: string) {
 function RunTemplateCard({
   template,
   athletes,
+  onDelete,
 }: {
   template: RunWorkoutTemplate;
   athletes: AthleteListItem[];
+  onDelete?: (id: string) => void;
 }) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
@@ -115,12 +118,23 @@ function RunTemplateCard({
             <p className="font-display text-sm font-semibold text-text">{template.name}</p>
             <p className="text-xs leading-relaxed text-text-muted">{template.description}</p>
           </div>
-          {template.isCustom && (
-            <Badge variant="primary" className="shrink-0">
-              <Bookmark className="h-3 w-3" />
-              Meu template
-            </Badge>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {template.isCustom && (
+              <Badge variant="primary">
+                <Bookmark className="h-3 w-3" />
+                Meu template
+              </Badge>
+            )}
+            {template.isCustom && onDelete && (
+              <button
+                onClick={() => onDelete(template.id)}
+                className="rounded-lg p-1 text-text-muted hover:bg-danger/10 hover:text-danger transition-colors"
+                title="Excluir template"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Badges */}
@@ -512,23 +526,34 @@ function VdotReferenceTab() {
 
 // ── Main page ─────────────────────────────────────────────────────────────
 
-const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
-
 export default function CorridaPage() {
   const [activeTab, setActiveTab] = useState<"referencia" | "templates">("referencia");
   const [customRunTemplates, setCustomRunTemplates] = useState<RunWorkoutTemplate[]>([]);
+  const [runTemplatesLoading, setRunTemplatesLoading] = useState(true);
   const [showNewRunTemplate, setShowNewRunTemplate] = useState(false);
   const [newRtName, setNewRtName] = useState("");
   const [newRtDesc, setNewRtDesc] = useState("");
   const [newRtLevel, setNewRtLevel] = useState("Intermediário");
   const [newRtKm, setNewRtKm] = useState("40");
   const [newRtFocus, setNewRtFocus] = useState("Base aeróbica");
+  const [savingRunTemplate, setSavingRunTemplate] = useState(false);
 
-  function handleCreateRunTemplate() {
-    if (!newRtName.trim()) return;
-    const t: RunWorkoutTemplate = {
-      id: `run-custom-${Date.now()}`,
+  useEffect(() => {
+    fetch("/api/coach/templates/corrida")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: Array<{ id: string; name: string; description?: string; targetLevel: string; weeklyKm: number; sessionsPerWeek: number; focus: string; sessions: RunWorkoutTemplate["sessions"]; createdAt: string }>) => {
+        setCustomRunTemplates(
+          data.map((t) => ({ ...t, description: t.description ?? "", isCustom: true }))
+        );
+      })
+      .catch(() => null)
+      .finally(() => setRunTemplatesLoading(false));
+  }, []);
+
+  async function handleCreateRunTemplate() {
+    if (!newRtName.trim() || savingRunTemplate) return;
+    setSavingRunTemplate(true);
+    const payload = {
       name: newRtName.trim(),
       description: newRtDesc.trim(),
       targetLevel: newRtLevel,
@@ -536,13 +561,28 @@ export default function CorridaPage() {
       sessionsPerWeek: 3,
       focus: newRtFocus,
       sessions: [],
-      createdAt: new Date().toISOString(),
-      isCustom: true,
     };
-    setCustomRunTemplates((prev) => [t, ...prev]);
-    setNewRtName("");
-    setNewRtDesc("");
-    setShowNewRunTemplate(false);
+    try {
+      const res = await fetch("/api/coach/templates/corrida", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setCustomRunTemplates((prev) => [{ ...saved, description: saved.description ?? "", isCustom: true }, ...prev]);
+        setNewRtName("");
+        setNewRtDesc("");
+        setShowNewRunTemplate(false);
+      }
+    } finally {
+      setSavingRunTemplate(false);
+    }
+  }
+
+  async function handleDeleteRunTemplate(id: string) {
+    setCustomRunTemplates((prev) => prev.filter((t) => t.id !== id));
+    await fetch(`/api/coach/templates/corrida/${id}`, { method: "DELETE" });
   }
 
   return (
@@ -658,8 +698,9 @@ export default function CorridaPage() {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <Button size="sm" onClick={handleCreateRunTemplate} disabled={!newRtName.trim()} className="gap-1.5">
-                    <Bookmark className="h-3.5 w-3.5" /> Salvar template
+                  <Button size="sm" onClick={handleCreateRunTemplate} disabled={!newRtName.trim() || savingRunTemplate} className="gap-1.5">
+                    <Bookmark className="h-3.5 w-3.5" />
+                    {savingRunTemplate ? "Salvando…" : "Salvar template"}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setShowNewRunTemplate(false)}>Cancelar</Button>
                 </div>
@@ -668,9 +709,20 @@ export default function CorridaPage() {
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            {[...customRunTemplates, ...runWorkoutTemplates].map((tpl) => (
-              <RunTemplateCard key={tpl.id} template={tpl} athletes={athleteList} />
-            ))}
+            {runTemplatesLoading ? (
+              [1, 2].map((i) => (
+                <div key={i} className="h-40 animate-pulse rounded-2xl bg-card-hover/60" />
+              ))
+            ) : (
+              [...customRunTemplates, ...runWorkoutTemplates].map((tpl) => (
+                <RunTemplateCard
+                  key={tpl.id}
+                  template={tpl}
+                  athletes={athleteList}
+                  onDelete={tpl.isCustom ? handleDeleteRunTemplate : undefined}
+                />
+              ))
+            )}
           </div>
         </div>
       )}

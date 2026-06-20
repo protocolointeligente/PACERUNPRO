@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import QRCode from "react-qr-code";
-import { Copy, Link2, Users, TrendingUp, AlertTriangle, UserPlus } from "lucide-react";
+import { Copy, Download, Link2, Users, TrendingUp, AlertTriangle, UserPlus } from "lucide-react";
 import { useCoachRole } from "@/context/coach-role-context";
 import { canAccess } from "@/lib/coach-permissions";
 import { AccessRestricted } from "@/components/shared/access-restricted";

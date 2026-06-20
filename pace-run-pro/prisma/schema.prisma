@@ -169,11 +169,13 @@ model Coach {
   logoUrl      String?
   whatsapp     String?
 
-  plans        CoachPlan[]
-  athletes     Athlete[]
-  teams        Team[]
-  trainingPlans TrainingPlan[]
-  exercises    Exercise[]
+  plans             CoachPlan[]
+  athletes          Athlete[]
+  teams             Team[]
+  trainingPlans     TrainingPlan[]
+  exercises         Exercise[]
+  strengthTemplates CoachStrengthTemplate[]
+  runTemplates      CoachRunTemplate[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -803,4 +805,45 @@ model BillingSettings {
   updatedAt DateTime @updatedAt
 
   @@map("billing_settings")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Templates customizados dos treinadores
+// ────────────────────────────────────────────────────────────────────────────
+
+model CoachStrengthTemplate {
+  id          String   @id @default(cuid())
+  coachId     String
+  coach       Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  division    String?
+  targetLevel String   @default("Iniciante")
+  focus       String   @default("forca")
+  sessions    Json     // WorkoutTemplateSession[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("coach_strength_templates")
+}
+
+model CoachRunTemplate {
+  id              String   @id @default(cuid())
+  coachId         String
+  coach           Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  name            String
+  description     String?
+  targetLevel     String   @default("Iniciante")
+  weeklyKm        Float    @default(0)
+  sessionsPerWeek Int      @default(3)
+  focus           String   @default("aerobico")
+  sessions        Json     // RunTemplateSession[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("coach_run_templates")
 }

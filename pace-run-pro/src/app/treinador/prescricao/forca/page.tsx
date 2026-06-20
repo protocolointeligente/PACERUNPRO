@@ -77,10 +77,12 @@ function TemplateCard({
   template,
   athletes,
   onLoad,
+  onDelete,
 }: {
   template: WorkoutTemplate;
   athletes: AthleteListItem[];
   onLoad: (t: WorkoutTemplate) => void;
+  onDelete?: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -118,12 +120,23 @@ function TemplateCard({
             <p className="font-display text-sm font-semibold text-text">{template.name}</p>
             <p className="text-xs leading-relaxed text-text-muted">{template.description}</p>
           </div>
-          {template.isCustom && (
-            <Badge variant="primary" className="shrink-0">
-              <Bookmark className="h-3 w-3" />
-              Meu template
-            </Badge>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {template.isCustom && (
+              <Badge variant="primary">
+                <Bookmark className="h-3 w-3" />
+                Meu template
+              </Badge>
+            )}
+            {template.isCustom && onDelete && (
+              <button
+                onClick={() => onDelete(template.id)}
+                className="rounded-lg p-1 text-text-muted hover:bg-danger/10 hover:text-danger transition-colors"
+                title="Excluir template"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
@@ -280,16 +293,30 @@ export default function StrengthPrescriptionPage() {
   const [sent, setSent] = useState(false);
   const [savedAsTemplate, setSavedAsTemplate] = useState(false);
   const [customTemplates, setCustomTemplates] = useState<WorkoutTemplate[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
   const [showNewTemplate, setShowNewTemplate] = useState(false);
   const [newTplName, setNewTplName] = useState("");
   const [newTplDesc, setNewTplDesc] = useState("");
   const [newTplLevel, setNewTplLevel] = useState("Intermediário");
   const [newTplFocus, setNewTplFocus] = useState("Hipertrofia");
+  const [savingTemplate, setSavingTemplate] = useState(false);
 
-  function handleCreateTemplate() {
-    if (!newTplName.trim()) return;
-    const t: WorkoutTemplate = {
-      id: `custom-${Date.now()}`,
+  useEffect(() => {
+    fetch("/api/coach/templates/forca")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: Array<{ id: string; name: string; description?: string; division?: string; targetLevel: string; focus: string; sessions: WorkoutTemplate["sessions"]; createdAt: string }>) => {
+        setCustomTemplates(
+          data.map((t) => ({ ...t, description: t.description ?? "", division: t.division ?? "", isCustom: true }))
+        );
+      })
+      .catch(() => null)
+      .finally(() => setTemplatesLoading(false));
+  }, []);
+
+  async function handleCreateTemplate() {
+    if (!newTplName.trim() || savingTemplate) return;
+    setSavingTemplate(true);
+    const payload = {
       name: newTplName.trim(),
       description: newTplDesc.trim(),
       division,
@@ -306,14 +333,29 @@ export default function StrengthPrescriptionPage() {
           rpe: e.rpe,
         })),
       })),
-      createdAt: new Date().toISOString(),
-      isCustom: true,
     };
-    setCustomTemplates((prev) => [t, ...prev]);
-    setNewTplName("");
-    setNewTplDesc("");
-    setShowNewTemplate(false);
-    setActiveTab("templates");
+    try {
+      const res = await fetch("/api/coach/templates/forca", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setCustomTemplates((prev) => [{ ...saved, description: saved.description ?? "", division: saved.division ?? "", isCustom: true }, ...prev]);
+        setNewTplName("");
+        setNewTplDesc("");
+        setShowNewTemplate(false);
+        setActiveTab("templates");
+      }
+    } finally {
+      setSavingTemplate(false);
+    }
+  }
+
+  async function handleDeleteCustomTemplate(id: string) {
+    setCustomTemplates((prev) => prev.filter((t) => t.id !== id));
+    await fetch(`/api/coach/templates/forca/${id}`, { method: "DELETE" });
   }
 
   const skipDivisionEffect = useRef(false);
@@ -400,11 +442,10 @@ export default function StrengthPrescriptionPage() {
     setSent(true);
   }
 
-  function handleSaveAsTemplate() {
+  async function handleSaveAsTemplate() {
     const totalExercises = sessions.reduce((acc, s) => acc + s.exercises.length, 0);
     if (totalExercises === 0) return;
-    const t: WorkoutTemplate = {
-      id: `custom-${Date.now()}`,
+    const payload = {
       name: `Template ${athlete.name} — ${division}`,
       description: `Gerado em ${new Date().toLocaleDateString("pt-BR")}`,
       division,
@@ -421,10 +462,20 @@ export default function StrengthPrescriptionPage() {
           rpe: e.rpe,
         })),
       })),
-      createdAt: new Date().toISOString(),
-      isCustom: true,
     };
-    setCustomTemplates((prev) => [t, ...prev]);
+    try {
+      const res = await fetch("/api/coach/templates/forca", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setCustomTemplates((prev) => [{ ...saved, description: saved.description ?? "", division: saved.division ?? "", isCustom: true }, ...prev]);
+      }
+    } catch {
+      // silently ignore — not critical path
+    }
     setSavedAsTemplate(true);
     setTimeout(() => setSavedAsTemplate(false), 2500);
   }
@@ -563,8 +614,9 @@ export default function StrengthPrescriptionPage() {
                   ))}
                 </div>
                 <div className="flex gap-3">
-                  <Button size="sm" onClick={handleCreateTemplate} disabled={!newTplName.trim()} className="gap-1.5">
-                    <Bookmark className="h-3.5 w-3.5" /> Salvar template
+                  <Button size="sm" onClick={handleCreateTemplate} disabled={!newTplName.trim() || savingTemplate} className="gap-1.5">
+                    <Bookmark className="h-3.5 w-3.5" />
+                    {savingTemplate ? "Salvando…" : "Salvar template"}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setShowNewTemplate(false)}>Cancelar</Button>
                 </div>
@@ -573,14 +625,21 @@ export default function StrengthPrescriptionPage() {
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            {[...customTemplates, ...workoutTemplates].map((tpl) => (
-              <TemplateCard
-                key={tpl.id}
-                template={tpl}
-                athletes={athleteList}
-                onLoad={loadTemplate}
-              />
-            ))}
+            {templatesLoading ? (
+              [1, 2].map((i) => (
+                <div key={i} className="h-48 animate-pulse rounded-2xl bg-card-hover/60" />
+              ))
+            ) : (
+              [...customTemplates, ...workoutTemplates].map((tpl) => (
+                <TemplateCard
+                  key={tpl.id}
+                  template={tpl}
+                  athletes={athleteList}
+                  onLoad={loadTemplate}
+                  onDelete={tpl.isCustom ? handleDeleteCustomTemplate : undefined}
+                />
+              ))
+            )}
           </div>
         </div>
       )}
