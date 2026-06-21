@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     const safeName = user.name
       ? user.name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
       : null;
-    await sendEmail({
+    const emailResult = await sendEmail({
       to: normalizedEmail,
       subject: "Redefinir senha — Pace Run Pro",
       html: `
@@ -50,6 +50,9 @@ export async function POST(request: NextRequest) {
         <p>Este link expira em 1 hora. Se você não pediu essa alteração, pode ignorar este e-mail.</p>
       `,
     });
+    if (!emailResult.ok && !emailResult.skipped) {
+      console.error(`[forgot-password] Failed to deliver reset email to ${normalizedEmail}`);
+    }
 
     return genericResponse;
   } catch (err) {

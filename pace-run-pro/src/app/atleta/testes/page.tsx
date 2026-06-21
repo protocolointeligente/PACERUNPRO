@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Activity, Calculator, History, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { performanceTests } from "@/lib/mock-data";
 import {
   calculateRast,
   paceFromKmh,
@@ -60,21 +59,12 @@ export default function PerformanceTestsPage() {
           <History className="h-4 w-4 text-text-muted" />
           Histórico de testes
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {performanceTests.map((t) => (
-            <Card key={t.id}>
-              <CardContent className="flex items-start gap-3 p-4">
-                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-info/15 text-info">
-                  <Activity className="h-4 w-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-text">{t.type}</p>
-                  <p className="text-xs text-text-muted">{t.description}</p>
-                  <p className="mt-1.5 text-xs text-text-muted">Última realização: <span className="text-text">{t.date}</span></p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-12 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-info/10 text-info">
+            <Activity className="h-6 w-6" />
+          </span>
+          <p className="text-sm font-semibold text-text">Nenhum teste registrado ainda</p>
+          <p className="text-sm text-text-muted">Use os calculadores acima para realizar seus testes de performance.</p>
         </div>
       </div>
     </div>

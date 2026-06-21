@@ -6,8 +6,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { activityFeed, monthlyChallenges, clubs, ranking, type ActivityPost } from "@/lib/mock-data";
+import { type ActivityPost, type MonthlyChallenge } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+
+interface Club { id: string; name: string; members: number; location: string }
+interface RankingEntry { position: number; name: string; value: string; trend: string; highlight?: boolean }
+
+const CHALLENGES: MonthlyChallenge[] = [];
+const CLUBS: Club[] = [];
+const RANKING: RankingEntry[] = [];
 
 function drawRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
@@ -236,7 +243,7 @@ function ChallengeCard({
   expanded,
   onToggle,
 }: {
-  challenge: (typeof monthlyChallenges)[number];
+  challenge: MonthlyChallenge;
   expanded: boolean;
   onToggle: () => void;
 }) {
@@ -343,7 +350,7 @@ function ChallengeCard({
 
 export default function CommunityPage() {
   const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null);
-  const [posts, setPosts] = useState<ActivityPost[]>(activityFeed);
+  const [posts, setPosts] = useState<ActivityPost[]>([]);
   const [joinedClubs, setJoinedClubs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -375,29 +382,31 @@ export default function CommunityPage() {
       </div>
 
       {/* Quick join banner */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {monthlyChallenges.slice(0, 2).map((c) => {
-          const progressPct = Math.round((c.currentProgress / c.target) * 100);
-          return (
-            <div key={c.id} className={cn("rounded-2xl border-l-4 border border-border bg-card p-4 flex items-start gap-3", colorBorder(c.color))}>
-              <span className="text-2xl shrink-0">{c.emoji}</span>
-              <div className="min-w-0 flex-1 space-y-1.5">
-                <p className="text-sm font-semibold text-text leading-tight">{c.title}</p>
-                <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
-                  <div className={cn("h-full rounded-full", colorProgress(c.color))} style={{ width: `${Math.min(progressPct, 100)}%` }} />
+      {CHALLENGES.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {CHALLENGES.slice(0, 2).map((c) => {
+            const progressPct = Math.round((c.currentProgress / c.target) * 100);
+            return (
+              <div key={c.id} className={cn("rounded-2xl border-l-4 border border-border bg-card p-4 flex items-start gap-3", colorBorder(c.color))}>
+                <span className="text-2xl shrink-0">{c.emoji}</span>
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <p className="text-sm font-semibold text-text leading-tight">{c.title}</p>
+                  <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                    <div className={cn("h-full rounded-full", colorProgress(c.color))} style={{ width: `${Math.min(progressPct, 100)}%` }} />
+                  </div>
+                  <p className="text-[11px] text-text-muted">{progressPct}% · {c.endsInDays} dias restantes · {c.participants.toLocaleString()} participantes</p>
                 </div>
-                <p className="text-[11px] text-text-muted">{progressPct}% · {c.endsInDays} dias restantes · {c.participants.toLocaleString()} participantes</p>
+                <button
+                  onClick={() => setExpandedChallenge(c.id === expandedChallenge ? null : c.id)}
+                  className={cn("shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors", colorProgress(c.color), "text-white hover:opacity-90")}
+                >
+                  Participar
+                </button>
               </div>
-              <button
-                onClick={() => setExpandedChallenge(c.id === expandedChallenge ? null : c.id)}
-                className={cn("shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors", colorProgress(c.color), "text-white hover:opacity-90")}
-              >
-                Participar
-              </button>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         <div className="space-y-4">
@@ -410,9 +419,17 @@ export default function CommunityPage() {
 
             <TabsContent value="feed">
               <div className="space-y-5">
-                {posts.map((post) => (
-                  <ActivityCard key={post.id} post={post} />
-                ))}
+                {posts.length === 0 ? (
+                  <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-12 text-center">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      <Users className="h-6 w-6" />
+                    </span>
+                    <p className="text-sm font-semibold text-text">Feed em breve</p>
+                    <p className="text-sm text-text-muted">Quando você completar treinos, eles aparecerão aqui para compartilhar com a comunidade.</p>
+                  </div>
+                ) : (
+                  posts.map((post) => <ActivityCard key={post.id} post={post} />)
+                )}
               </div>
             </TabsContent>
 
@@ -423,42 +440,42 @@ export default function CommunityPage() {
                     <Medal className="h-4 w-4 text-warning" />
                     Ranking do mês
                   </h3>
-                  <div className="space-y-2">
-                    {ranking.map((r) => {
-                      const TrendIcon = r.trend === "up" ? ChevronUp : r.trend === "down" ? ChevronDown : Minus;
-                      const trendColor =
-                        r.trend === "up"
-                          ? "text-success"
-                          : r.trend === "down"
-                          ? "text-danger"
-                          : "text-text-muted";
-                      return (
-                        <div
-                          key={r.position}
-                          className={cn(
-                            "flex items-center gap-3 rounded-xl border p-2.5",
-                            r.highlight
-                              ? "border-primary/50 bg-primary/10"
-                              : "border-border bg-card-hover/30"
-                          )}
-                        >
-                          <span
+                  {RANKING.length > 0 ? (
+                    <div className="space-y-2">
+                      {RANKING.map((r) => {
+                        const TrendIcon = r.trend === "up" ? ChevronUp : r.trend === "down" ? ChevronDown : Minus;
+                        const trendColor =
+                          r.trend === "up"
+                            ? "text-success"
+                            : r.trend === "down"
+                            ? "text-danger"
+                            : "text-text-muted";
+                        return (
+                          <div
+                            key={r.position}
                             className={cn(
-                              "font-display text-sm font-bold",
-                              r.position <= 3 ? "text-warning" : "text-text-muted"
+                              "flex items-center gap-3 rounded-xl border p-2.5",
+                              r.highlight
+                                ? "border-primary/50 bg-primary/10"
+                                : "border-border bg-card-hover/30"
                             )}
                           >
-                            #{r.position}
-                          </span>
-                          <span className="flex-1 truncate text-sm font-medium text-text">
-                            {r.name}
-                          </span>
-                          <span className="text-xs text-text-muted">{r.value}</span>
-                          <TrendIcon className={cn("h-4 w-4", trendColor)} />
-                        </div>
-                      );
-                    })}
-                  </div>
+                            <span className={cn("font-display text-sm font-bold", r.position <= 3 ? "text-warning" : "text-text-muted")}>
+                              #{r.position}
+                            </span>
+                            <span className="flex-1 truncate text-sm font-medium text-text">{r.name}</span>
+                            <span className="text-xs text-text-muted">{r.value}</span>
+                            <TrendIcon className={cn("h-4 w-4", trendColor)} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 py-8 text-center">
+                      <Medal className="h-10 w-10 text-text-muted/30" />
+                      <p className="text-sm text-text-muted">Ranking disponível em breve.</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -466,30 +483,34 @@ export default function CommunityPage() {
             <TabsContent value="clubes">
               <div className="space-y-3">
                 <p className="text-sm text-text-muted">Entre em grupos de corrida e conecte-se com atletas que compartilham seus objetivos.</p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {clubs.map((c) => {
-                    const joined = joinedClubs.has(c.id);
-                    return (
-                      <Card key={c.id} className={cn(joined && "border-primary/40")}>
-                        <CardContent className="flex items-center gap-3 p-4">
-                          <span className={cn("flex h-11 w-11 items-center justify-center rounded-xl", joined ? "bg-primary/20 text-primary" : "bg-secondary/15 text-secondary")}>
-                            <Users className="h-5 w-5" />
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-text">{c.name}</p>
-                            <p className="text-xs text-text-muted">
-                              {c.members + (joined ? 1 : 0)} membros · {c.location}
-                            </p>
-                            {joined && <p className="text-xs text-primary font-semibold mt-0.5">✓ Participando</p>}
-                          </div>
-                          <Button size="sm" variant={joined ? "secondary" : "primary"} onClick={() => toggleClub(c.id)}>
-                            {joined ? "Sair" : "Entrar"}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
+                {CLUBS.length > 0 ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {CLUBS.map((c) => {
+                      const joined = joinedClubs.has(c.id);
+                      return (
+                        <Card key={c.id} className={cn(joined && "border-primary/40")}>
+                          <CardContent className="flex items-center gap-3 p-4">
+                            <span className={cn("flex h-11 w-11 items-center justify-center rounded-xl", joined ? "bg-primary/20 text-primary" : "bg-secondary/15 text-secondary")}>
+                              <Users className="h-5 w-5" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-text">{c.name}</p>
+                              <p className="text-xs text-text-muted">
+                                {c.members + (joined ? 1 : 0)} membros · {c.location}
+                              </p>
+                              {joined && <p className="text-xs text-primary font-semibold mt-0.5">✓ Participando</p>}
+                            </div>
+                            <Button size="sm" variant={joined ? "secondary" : "primary"} onClick={() => toggleClub(c.id)}>
+                              {joined ? "Sair" : "Entrar"}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="rounded-2xl border border-dashed border-border py-8 text-center text-sm text-text-muted">Grupos disponíveis em breve.</p>
+                )}
               </div>
             </TabsContent>
           </Tabs>
@@ -503,18 +524,22 @@ export default function CommunityPage() {
             </div>
 
             <div className="space-y-3">
-              {monthlyChallenges.map((challenge) => (
-                <ChallengeCard
-                  key={challenge.id}
-                  challenge={challenge}
-                  expanded={expandedChallenge === challenge.id}
-                  onToggle={() =>
-                    setExpandedChallenge((prev) =>
-                      prev === challenge.id ? null : challenge.id
-                    )
-                  }
-                />
-              ))}
+              {CHALLENGES.length > 0 ? (
+                CHALLENGES.map((challenge) => (
+                  <ChallengeCard
+                    key={challenge.id}
+                    challenge={challenge}
+                    expanded={expandedChallenge === challenge.id}
+                    onToggle={() =>
+                      setExpandedChallenge((prev) =>
+                        prev === challenge.id ? null : challenge.id
+                      )
+                    }
+                  />
+                ))
+              ) : (
+                <p className="rounded-xl border border-dashed border-border py-6 text-center text-sm text-text-muted">Desafios disponíveis em breve.</p>
+              )}
             </div>
 
             <Card className="mt-4">

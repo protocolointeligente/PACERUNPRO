@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { SectionHeader } from "@/components/shared/section-header";
 import { AreaTrend, BarTrend, LineTrend } from "@/components/charts/trend-chart";
-import { achievements, personalRecords } from "@/lib/mock-data";
 import { formatPace } from "@/lib/utils";
 
 const BODY_PHOTO_LABELS = ["Jan 2026", "Mar 2026", "Jun 2026"];
@@ -206,26 +205,12 @@ export default function EvolutionPage() {
 
         <div>
           <SectionHeader title="Conquistas" subtitle="Medalhas desbloqueadas pela sua consistência" />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {achievements.map((a) => (
-              <Card key={a.id} className={`p-4 text-center ${!a.earned ? "opacity-40 grayscale" : ""}`}>
-                <div
-                  className={`mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-card-hover text-2xl ${
-                    a.earned ? "animate-glow-pulse" : ""
-                  }`}
-                >
-                  {a.icon}
-                </div>
-                <p className="mt-2 text-sm font-semibold text-text">{a.title}</p>
-                <p className="mt-0.5 text-[11px] leading-snug text-text-muted">{a.description}</p>
-                {a.earned && (
-                  <Badge variant="success" className="mt-2">
-                    <Award className="h-3 w-3" />
-                    Conquistado
-                  </Badge>
-                )}
-              </Card>
-            ))}
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-10 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Award className="h-6 w-6" />
+            </span>
+            <p className="text-sm font-semibold text-text">Nenhuma conquista ainda</p>
+            <p className="text-sm text-text-muted">Complete treinos e mantenha sua sequência para desbloquear medalhas.</p>
           </div>
         </div>
       </div>

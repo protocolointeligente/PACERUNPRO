@@ -21,7 +21,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { crmLeads, type CrmLead, type LeadStage } from "@/lib/mock-data";
+import { type CrmLead, type LeadStage } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const fadeUp = {
@@ -95,6 +95,41 @@ const SOURCE_CONFIG: Record<CrmLead["source"], { label: string; icon: React.Reac
 function formatDate(iso: string) {
   const d = new Date(iso);
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+}
+
+interface ApiLead {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  source: string;
+  stage: string;
+  notes: string | null;
+  monthlyFeeCents: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const VALID_SOURCES = new Set(["instagram", "indicacao", "site", "evento", "whatsapp"]);
+
+function toInitials(name: string) {
+  return name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+}
+
+function apiLeadToCrmLead(l: ApiLead): CrmLead {
+  return {
+    id: l.id,
+    name: l.name,
+    email: l.email ?? "",
+    phone: l.phone ?? "",
+    source: VALID_SOURCES.has(l.source) ? (l.source as CrmLead["source"]) : "instagram",
+    stage: (STAGE_ORDER as string[]).includes(l.stage) ? (l.stage as LeadStage) : "novo",
+    value: l.monthlyFeeCents ? Math.round(l.monthlyFeeCents / 100) : 0,
+    notes: l.notes ?? "",
+    createdAt: l.createdAt.slice(0, 10),
+    lastContact: l.updatedAt.slice(0, 10),
+    avatar: toInitials(l.name) || "??",
+  };
 }
 
 function nextStage(stage: LeadStage): LeadStage {
@@ -238,7 +273,7 @@ function NewLeadForm({ onClose, onAdd }: { onClose: () => void; onAdd: (lead: Cr
 }
 
 function CrmContent() {
-  const [leads, setLeads] = useState<CrmLead[]>(crmLeads);
+  const [leads, setLeads] = useState<CrmLead[]>([]);
   const [view, setView] = useState<"kanban" | "lista">("kanban");
   const [showForm, setShowForm] = useState(false);
   const [slug, setSlug] = useState<string | null>(null);
@@ -248,6 +283,13 @@ function CrmContent() {
     fetch("/api/coach/profile")
       .then((r) => r.json())
       .then((d: { slug?: string | null }) => { if (d.slug) setSlug(d.slug); })
+      .catch(() => null);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/coach/leads")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: ApiLead[]) => { setLeads(data.map(apiLeadToCrmLead)); })
       .catch(() => null);
   }, []);
 
@@ -263,7 +305,24 @@ function CrmContent() {
   }
 
   function advanceLead(id: string) {
-    setLeads((prev) => prev.map((l) => l.id === id ? { ...l, stage: nextStage(l.stage) } : l));
+    const lead = leads.find((l) => l.id === id);
+    if (!lead) return;
+    const newStage = nextStage(lead.stage);
+    setLeads((prev) => prev.map((l) => l.id === id ? { ...l, stage: newStage } : l));
+    void fetch("/api/coach/leads", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, stage: newStage }),
+    }).catch(() => null);
+  }
+
+  function updateLeadStage(id: string, stage: LeadStage) {
+    setLeads((prev) => prev.map((l) => l.id === id ? { ...l, stage } : l));
+    void fetch("/api/coach/leads", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, stage }),
+    }).catch(() => null);
   }
 
   function addLead(lead: CrmLead) {
@@ -460,13 +519,7 @@ function CrmContent() {
                             <td className="px-4 py-3">
                               <select
                                 value={lead.stage}
-                                onChange={(e) =>
-                                  setLeads((prev) =>
-                                    prev.map((l) =>
-                                      l.id === lead.id ? { ...l, stage: e.target.value as LeadStage } : l
-                                    )
-                                  )
-                                }
+                                onChange={(e) => updateLeadStage(lead.id, e.target.value as LeadStage)}
                                 className="rounded-lg border border-border bg-background px-2 py-1 text-xs text-text focus:border-primary focus:outline-none"
                               >
                                 {STAGE_ORDER.map((s) => (

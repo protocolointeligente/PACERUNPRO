@@ -17,7 +17,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { smartAlerts, type SmartAlert, type AlertSeverity } from "@/lib/mock-data";
+import { type SmartAlert, type AlertSeverity } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 interface ExpiringPlan {
@@ -61,7 +61,7 @@ function SeverityIcon({ severity }: { severity: SmartAlert["severity"] }) {
 }
 
 export default function AlertasPage() {
-  const [alerts, setAlerts] = useState(smartAlerts);
+  const [alerts, setAlerts] = useState<SmartAlert[]>([]);
   const [filter, setFilter] = useState<AlertSeverity | "todos">("todos");
   const [expiringPlans, setExpiringPlans] = useState<ExpiringPlan[]>([]);
 
