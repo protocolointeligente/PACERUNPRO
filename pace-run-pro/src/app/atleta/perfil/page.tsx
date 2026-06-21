@@ -567,7 +567,7 @@ export default function ProfilePage() {
                     <span className="text-sm text-text">{n.label}</span>
                     <button
                       type="button"
-                      onClick={() => setNotifs((s) => ({ ...s, [n.key]: !s[n.key] }))}
+                      onClick={() => setNotifs({ ...notifs, [n.key]: !notifs[n.key] })}
                       className={cn("relative h-6 w-11 rounded-full transition-colors", notifs[n.key] ? "bg-primary" : "bg-card-hover")}
                     >
                       <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform", notifs[n.key] ? "translate-x-5" : "translate-x-0.5")} />
