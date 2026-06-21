@@ -1,9 +1,7 @@
 import { getSession } from "@/lib/auth-guard";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { AppShell } from "@/components/layout/app-shell";
-import { BottomNav } from "@/components/layout/bottom-nav";
-import { athleteNav, athleteMoreNav } from "@/components/layout/nav-config";
+import AtletaLayoutClient from "./_layout-client";
 
 const GOAL_LABELS: Record<string, string> = {
   CINCO_KM: "5 km",
@@ -34,16 +32,12 @@ export default async function AtletaLayout({ children }: { children: React.React
   const goalLabel = GOAL_LABELS[user?.athlete?.goal ?? ""] ?? "Atleta";
 
   return (
-    <AppShell
-      nav={athleteNav}
-      moreNav={athleteMoreNav}
-      roleLabel="Atleta"
+    <AtletaLayoutClient
       userName={user?.name ?? session.user?.name ?? "Atleta"}
       userSubtitle={goalLabel}
       avatarUrl={user?.avatarUrl ?? undefined}
     >
       {children}
-      <BottomNav items={athleteNav} />
-    </AppShell>
+    </AtletaLayoutClient>
   );
 }

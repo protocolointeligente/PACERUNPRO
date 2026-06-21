@@ -11,10 +11,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const { name, email } = await req.json();
-    if (!name || !email) {
+    const { name, email: rawEmail } = await req.json();
+    if (!name || !rawEmail) {
       return NextResponse.json({ error: "Nome e email são obrigatórios" }, { status: 400 });
     }
+    const email = rawEmail.trim().toLowerCase();
 
     const coach = await prisma.coach.upsert({
       where: { userId: session.user.id },
