@@ -28,6 +28,9 @@ export async function PATCH(req: NextRequest) {
     heightCm?: number | null;
     weightKg?: number | null;
     goal?: string | null;
+    level?: string | null;
+    sex?: string | null;
+    injuryHistory?: string | null;
     weeklyAvailability?: number | null;
     availableMinutes?: number | null;
     raceDate?: string | null;
@@ -43,6 +46,10 @@ export async function PATCH(req: NextRequest) {
   const athleteUpdate: Record<string, unknown> = {};
   if (body.heightCm !== undefined) athleteUpdate.heightCm = body.heightCm;
   if (body.weightKg !== undefined) athleteUpdate.weightKg = body.weightKg;
+  if (body.goal !== undefined) athleteUpdate.goal = body.goal ?? null;
+  if (body.level !== undefined) athleteUpdate.level = body.level ?? undefined;
+  if (body.sex !== undefined) athleteUpdate.sex = body.sex ?? null;
+  if (body.injuryHistory !== undefined) athleteUpdate.injuryHistory = body.injuryHistory ?? null;
   if (body.weeklyAvailability !== undefined) athleteUpdate.weeklyAvailability = body.weeklyAvailability;
   if (body.availableMinutes !== undefined) athleteUpdate.availableMinutes = body.availableMinutes;
   if (body.raceDate !== undefined) athleteUpdate.raceDate = body.raceDate ? new Date(body.raceDate) : null;

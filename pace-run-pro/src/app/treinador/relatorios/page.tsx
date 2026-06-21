@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Download, FileSpreadsheet, FileText, FileType2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { athleteList, coachOverview, reportsList } from "@/lib/mock-data";
+import type { AthleteListItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const inputClass =
@@ -35,13 +35,21 @@ type FormatId = (typeof formats)[number]["id"];
 const formatBadge: Record<string, "danger" | "success" | "info"> = { PDF: "danger", Excel: "success", CSV: "info" };
 
 export default function ReportsPage() {
+  const [athletes, setAthletes] = useState<AthleteListItem[]>([]);
+  useEffect(() => {
+    fetch("/api/coach/athletes")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: AthleteListItem[]) => setAthletes(data))
+      .catch(() => null);
+  }, []);
+
   const [scope, setScope] = useState<string>("equipe");
   const [reportType, setReportType] = useState<ReportTypeId>("individual");
   const [period, setPeriod] = useState(periods[1]);
   const [format, setFormat] = useState<FormatId>("PDF");
   const [generated, setGenerated] = useState(false);
 
-  const athlete = useMemo(() => athleteList.find((a) => a.id === scope), [scope]);
+  const athlete = useMemo(() => athletes.find((a) => a.id === scope), [athletes, scope]);
   const needsAthlete = reportType === "individual" || reportType === "avaliacao-fisica";
 
   function generate() {
@@ -237,7 +245,7 @@ export default function ReportsPage() {
                   className={inputClass}
                 >
                   <option value="equipe" className="bg-card text-text">Selecione um atleta…</option>
-                  {athleteList.map((a) => (
+                  {athletes.map((a) => (
                     <option key={a.id} value={a.id} className="bg-card text-text">
                       {a.name} — {a.goal}
                     </option>
@@ -336,15 +344,15 @@ export default function ReportsPage() {
             <CardContent className="space-y-3 p-5 text-xs text-text-muted">
               <div className="flex items-center justify-between">
                 <span>Atletas monitorados</span>
-                <span className="font-semibold text-text">{coachOverview.athletesCount}</span>
+                <span className="font-semibold text-text">{athletes.length}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Treinos prescritos / semana</span>
-                <span className="font-semibold text-text">{coachOverview.prescribedThisWeek}</span>
+                <span className="font-semibold text-text">—</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Carga atual da equipe</span>
-                <span className="font-semibold text-text">{Math.round(coachOverview.teamLoad * 100)}%</span>
+                <span className="font-semibold text-text">—</span>
               </div>
             </CardContent>
           </Card>
@@ -355,27 +363,7 @@ export default function ReportsPage() {
       <div>
         <h3 className="mb-3 font-display text-sm font-semibold text-text">Relatórios recentes</h3>
         <div className="space-y-2.5">
-          {reportsList.map((r) => (
-            <Card key={r.id}>
-              <CardContent className="flex items-center justify-between gap-3 p-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-card-hover text-text-muted">
-                    <FileText className="h-4.5 w-4.5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-text">{r.name}</p>
-                    <p className="text-xs text-text-muted">{r.period}</p>
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-3">
-                  <Badge variant={formatBadge[r.type]}>{r.type}</Badge>
-                  <Button size="sm" variant="secondary">
-                    <Download className="h-3.5 w-3.5" /> Baixar
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          <p className="py-4 text-center text-sm text-text-muted">Nenhum relatório gerado ainda.</p>
         </div>
       </div>
     </div>

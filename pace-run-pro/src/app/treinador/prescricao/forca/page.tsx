@@ -20,7 +20,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  athleteList,
   exerciseCategories,
   exerciseLibrary,
   strengthDivisions,
@@ -281,8 +280,19 @@ function TemplateCard({
 // ── Main page ─────────────────────────────────────────────────────────────
 
 export default function StrengthPrescriptionPage() {
+  const [athletes, setAthletes] = useState<AthleteListItem[]>([]);
+  const [athleteId, setAthleteId] = useState("");
+  useEffect(() => {
+    fetch("/api/coach/athletes")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: AthleteListItem[]) => {
+        setAthletes(data);
+        if (data.length > 0) setAthleteId(data[0].id);
+      })
+      .catch(() => null);
+  }, []);
+
   const [activeTab, setActiveTab] = useState<"prescrever" | "templates">("prescrever");
-  const [athleteId, setAthleteId] = useState(athleteList[0].id);
   const [division, setDivision] = useState(strengthDivisions[1]);
   const [sessions, setSessions] = useState<SessionBlock[]>(() =>
     buildSessions(strengthDivisions[1])
@@ -361,8 +371,8 @@ export default function StrengthPrescriptionPage() {
   const skipDivisionEffect = useRef(false);
 
   const athlete = useMemo(
-    () => athleteList.find((a) => a.id === athleteId) ?? athleteList[0],
-    [athleteId]
+    () => athletes.find((a) => a.id === athleteId) ?? athletes[0],
+    [athleteId, athletes]
   );
   const activeSession = sessions[activeIndex];
 
@@ -634,7 +644,7 @@ export default function StrengthPrescriptionPage() {
                 <TemplateCard
                   key={tpl.id}
                   template={tpl}
-                  athletes={athleteList}
+                  athletes={athletes}
                   onLoad={loadTemplate}
                   onDelete={tpl.isCustom ? handleDeleteCustomTemplate : undefined}
                 />
@@ -653,7 +663,7 @@ export default function StrengthPrescriptionPage() {
               <CardContent className="p-5">
                 <h3 className="mb-3 font-display text-sm font-semibold text-text">Atleta</h3>
                 <div className="flex flex-wrap gap-2">
-                  {athleteList.map((a) => (
+                  {athletes.map((a) => (
                     <button
                       key={a.id}
                       onClick={() => {

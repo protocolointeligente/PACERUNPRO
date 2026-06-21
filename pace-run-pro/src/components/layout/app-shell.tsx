@@ -96,9 +96,8 @@ export function AppShell({
           collapsed ? "w-16" : "w-64"
         )}
       >
-        <div className={cn("flex items-center py-4 border-b border-border/40", collapsed ? "justify-center px-3 gap-0" : "justify-between px-4")}>
+        <div className={cn("flex items-center py-4 border-b border-border/40", collapsed ? "justify-center px-3" : "justify-between px-4")}>
           {!collapsed && <Logo size={32} />}
-          {collapsed && <Logo size={26} />}
           <button
             onClick={toggleCollapsed}
             title={collapsed ? "Expandir sidebar" : "Recolher sidebar"}

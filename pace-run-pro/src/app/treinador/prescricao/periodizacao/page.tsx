@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
@@ -24,7 +24,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { athleteList } from "@/lib/mock-data";
+import type { AthleteListItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
   generateWorkoutsForWeek,
@@ -154,6 +154,14 @@ const smallInput =
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PeriodizacaoPage() {
+  const [athletes, setAthletes] = useState<AthleteListItem[]>([]);
+  useEffect(() => {
+    fetch("/api/coach/athletes")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: AthleteListItem[]) => setAthletes(data))
+      .catch(() => null);
+  }, []);
+
   // Macro state
   const [selectedAthletes, setSelectedAthletes] = useState<string[]>([]);
   const [goal, setGoal] = useState<Goal>("Meia-maratona");
@@ -387,7 +395,7 @@ export default function PeriodizacaoPage() {
                     )}
                   </div>
                   <div className="space-y-1 rounded-xl border border-border bg-background/60 p-2">
-                    {athleteList.map((a) => {
+                    {athletes.map((a) => {
                       const selected = selectedAthletes.includes(a.id);
                       return (
                         <label
@@ -685,7 +693,7 @@ export default function PeriodizacaoPage() {
                       <p className="text-sm text-text-muted mt-0.5">
                         {goal} · {level} · {trainingDays.length}×/semana
                         {selectedAthletes.length > 0
-                          ? ` · ${selectedAthletes.map((id) => athleteList.find((a) => a.id === id)?.name ?? "").filter(Boolean).join(", ")}`
+                          ? ` · ${selectedAthletes.map((id) => athletes.find((a) => a.id === id)?.name ?? "").filter(Boolean).join(", ")}`
                           : ""}
                         {vdotNum ? ` · VDOT ${vdotNum}` : ""}
                       </p>
@@ -731,7 +739,7 @@ export default function PeriodizacaoPage() {
                         goal={goal}
                         level={level}
                         totalWeeks={totalWeeks}
-                        athleteName={selectedAthletes.length === 1 ? (athleteList.find((a) => a.id === selectedAthletes[0])?.name) : selectedAthletes.length > 1 ? `${selectedAthletes.length} atletas` : undefined}
+                        athleteName={selectedAthletes.length === 1 ? (athletes.find((a) => a.id === selectedAthletes[0])?.name) : selectedAthletes.length > 1 ? `${selectedAthletes.length} atletas` : undefined}
                       />
                       <div className="space-y-4 print:hidden">
                         {Object.entries(mesocycles).map(([meso, mesoWeeks]) => {

@@ -16,6 +16,7 @@ import {
   Palette,
   Settings,
   GraduationCap,
+  User,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -82,6 +83,7 @@ const businessNavUnlimited: NavItem[] = [
 ];
 
 const helpNav: NavItem[] = [
+  { href: "/treinador/perfil",            label: "Meu Perfil",       icon: User           },
   { href: "/treinador/conheca-o-sistema", label: "Conheça o sistema", icon: GraduationCap },
 ];
 

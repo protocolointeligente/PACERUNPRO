@@ -18,18 +18,23 @@ const GOAL_LABELS: Record<string, string> = {
 
 export default async function AtletaLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  if (!session) redirect("/login");
+  if (!session?.user?.id) redirect("/login");
   if (session.user?.role === "ADMIN") redirect("/admin");
   if (session.user?.role === "COACH") redirect("/treinador/dashboard");
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user!.id },
-    select: {
-      name: true,
-      avatarUrl: true,
-      athlete: { select: { goal: true } },
-    },
-  });
+  let user: { name: string; avatarUrl: string | null; athlete: { goal: string | null } | null } | null = null;
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        name: true,
+        avatarUrl: true,
+        athlete: { select: { goal: true } },
+      },
+    });
+  } catch {
+    redirect("/login");
+  }
 
   const goalLabel = GOAL_LABELS[user?.athlete?.goal ?? ""] ?? "Atleta";
 

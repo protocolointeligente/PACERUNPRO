@@ -266,10 +266,59 @@ export default function OnboardingPage() {
   const current = steps[step];
   const progress = ((step + 1) / total) * 100;
   const isLast = step === total - 1;
+  const [saving, setSaving] = useState(false);
 
-  function next() {
+  const GOAL_MAP: Record<string, string> = {
+    "5km": "CINCO_KM",
+    "10km": "DEZ_KM",
+    "21km": "VINTE_E_UM_KM",
+    "42km": "QUARENTA_E_DOIS_KM",
+    "ultra": "ULTRAMARATONA",
+    "emagrecimento": "EMAGRECIMENTO",
+    "performance": "PERFORMANCE",
+    "retorno": "RETORNO_AS_CORRIDAS",
+  };
+
+  const LEVEL_MAP: Record<string, string> = {
+    "iniciante": "INICIANTE",
+    "intermediario": "INTERMEDIARIO",
+    "avancado": "AVANCADO",
+    "pro": "PRO",
+  };
+
+  const SEX_MAP: Record<string, string> = {
+    "feminino": "FEMININO",
+    "masculino": "MASCULINO",
+    "outro": "OUTRO",
+  };
+
+  async function next() {
     if (!current.valid) return;
     if (isLast) {
+      setSaving(true);
+      try {
+        await fetch("/api/atleta/perfil", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...(form.name.trim() && { name: form.name.trim() }),
+            ...(form.weight && { weightKg: parseFloat(form.weight) }),
+            ...(form.height && { heightCm: parseFloat(form.height) }),
+            ...(form.goal[0] && { goal: GOAL_MAP[form.goal[0]] ?? null }),
+            ...(form.level[0] && { level: LEVEL_MAP[form.level[0]] ?? null }),
+            ...(form.sex[0] && { sex: SEX_MAP[form.sex[0]] ?? null }),
+            weeklyAvailability: form.weekdaysAvailable.length || null,
+            ...(form.sessionTime[0] && { availableMinutes: parseInt(form.sessionTime[0]) }),
+            ...(form.injuryHistory && { injuryHistory: form.injuryHistory }),
+            ...(form.raceDate && { raceDate: form.raceDate }),
+            ...(form.recentTime && { recentBestTime: form.recentTime }),
+          }),
+        });
+      } catch {
+        // Non-fatal: proceed to dashboard even if save fails
+      } finally {
+        setSaving(false);
+      }
       router.push("/atleta/dashboard");
       return;
     }
@@ -320,12 +369,19 @@ export default function OnboardingPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
         )}
-        <Button size="lg" className="flex-1" onClick={next} disabled={!current.valid}>
+        <Button size="lg" className="flex-1" onClick={next} disabled={!current.valid || saving}>
           {isLast ? (
-            <>
-              <Timer className="h-4 w-4" />
-              Concluir e ver meu plano
-            </>
+            saving ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Salvando…
+              </>
+            ) : (
+              <>
+                <Timer className="h-4 w-4" />
+                Concluir e ver meu plano
+              </>
+            )
           ) : (
             <>
               Continuar
