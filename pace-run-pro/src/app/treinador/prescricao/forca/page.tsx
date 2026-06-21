@@ -20,8 +20,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  exerciseCategories,
-  exerciseLibrary,
   strengthDivisions,
   workoutTemplates,
 } from "@/lib/mock-data";
@@ -292,6 +290,34 @@ export default function StrengthPrescriptionPage() {
       .catch(() => null);
   }, []);
 
+  const [exerciseDb, setExerciseDb] = useState<ExerciseLibraryItem[]>([]);
+  const [exerciseCategories, setExerciseCategories] = useState<string[]>([]);
+  useEffect(() => {
+    fetch("/exercises.json")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: Array<{ id: string; name: string; category: string; gifUrl?: string; imageUrl?: string; description: string }>) => {
+        const items: ExerciseLibraryItem[] = data.map((d) => ({
+          id: d.id,
+          name: d.name,
+          category: d.category,
+          muscles: [],
+          gifUrl: d.gifUrl,
+          imageUrl: d.imageUrl,
+          description: d.description,
+          execution: "",
+          mistakes: "",
+          sets: 3,
+          reps: "10-12",
+          rest: "60s",
+          rpe: 7,
+        }));
+        setExerciseDb(items);
+        const cats = Array.from(new Set(items.map((e) => e.category))).sort();
+        setExerciseCategories(cats);
+      })
+      .catch(() => null);
+  }, []);
+
   const [activeTab, setActiveTab] = useState<"prescrever" | "templates">("prescrever");
   const [division, setDivision] = useState(strengthDivisions[1]);
   const [sessions, setSessions] = useState<SessionBlock[]>(() =>
@@ -300,6 +326,7 @@ export default function StrengthPrescriptionPage() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("Todas");
+  const [expandedExId, setExpandedExId] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [savedAsTemplate, setSavedAsTemplate] = useState(false);
   const [customTemplates, setCustomTemplates] = useState<WorkoutTemplate[]>([]);
@@ -387,14 +414,12 @@ export default function StrengthPrescriptionPage() {
   }, [division]);
 
   const filteredLibrary = useMemo(() => {
-    return exerciseLibrary.filter((ex) => {
-      const matchesQuery =
-        ex.name.toLowerCase().includes(query.toLowerCase()) ||
-        ex.muscles.some((m) => m.toLowerCase().includes(query.toLowerCase()));
+    return exerciseDb.filter((ex) => {
+      const matchesQuery = ex.name.toLowerCase().includes(query.toLowerCase());
       const matchesCategory = category === "Todas" || ex.category === category;
       return matchesQuery && matchesCategory;
     });
-  }, [query, category]);
+  }, [exerciseDb, query, category]);
 
   function updateSessions(fn: (s: SessionBlock) => SessionBlock) {
     setSessions((prev) => prev.map((s, i) => (i === activeIndex ? fn(s) : s)));
@@ -887,34 +912,77 @@ export default function StrengthPrescriptionPage() {
                   ))}
                 </div>
 
+                {exerciseDb.length === 0 && (
+                  <div className="flex items-center justify-center py-6 text-sm text-text-muted">
+                    <span className="animate-pulse">Carregando exercícios…</span>
+                  </div>
+                )}
                 <div className="max-h-[24rem] space-y-2.5 overflow-y-auto pr-1 sm:max-h-[34rem]">
-                  {filteredLibrary.map((ex) => (
-                    <div
-                      key={ex.id}
-                      className="rounded-xl border border-border bg-card-hover/30 p-3.5"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-text">{ex.name}</p>
-                          <p className="truncate text-[11px] text-text-muted">
-                            {ex.category} · {ex.muscles.slice(0, 2).join(", ")}
-                          </p>
+                  {filteredLibrary.map((ex) => {
+                    const isExpanded = expandedExId === ex.id;
+                    return (
+                      <div
+                        key={ex.id}
+                        className="rounded-xl border border-border bg-card-hover/30 p-3"
+                      >
+                        {/* GIF preview when expanded */}
+                        {isExpanded && ex.gifUrl && (
+                          <div className="mb-2.5 overflow-hidden rounded-lg bg-black/5">
+                            <img
+                              src={ex.gifUrl}
+                              alt={ex.name}
+                              className="mx-auto block max-h-40 object-contain"
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex items-start gap-2">
+                          {/* Thumbnail — click to toggle GIF */}
+                          {ex.imageUrl && !isExpanded && (
+                            <button
+                              title="Ver demonstração"
+                              onClick={() => setExpandedExId(ex.id)}
+                              className="mt-0.5 h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-border bg-card"
+                            >
+                              <img
+                                src={ex.imageUrl}
+                                alt=""
+                                className="h-full w-full object-cover"
+                              />
+                            </button>
+                          )}
+                          {isExpanded && (
+                            <button
+                              title="Fechar"
+                              onClick={() => setExpandedExId(null)}
+                              className="mt-0.5 h-10 w-10 shrink-0 rounded-lg border border-primary/40 bg-primary/10 text-xs font-bold text-primary"
+                            >
+                              ✕
+                            </button>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-text">{ex.name}</p>
+                            <p className="truncate text-[11px] text-text-muted">{ex.category}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => addExercise(ex)}
+                            className="shrink-0"
+                          >
+                            <Plus className="h-3.5 w-3.5" /> Adicionar
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => addExercise(ex)}
-                          className="shrink-0"
-                        >
-                          <Plus className="h-3.5 w-3.5" /> Adicionar
-                        </Button>
+
+                        {isExpanded && ex.description && (
+                          <p className="mt-2 text-[11px] leading-relaxed text-text-muted line-clamp-4">
+                            {ex.description}
+                          </p>
+                        )}
                       </div>
-                      <p className="mt-1.5 text-[11px] text-text-muted">
-                        {ex.sets}x {ex.reps} · descanso {ex.rest} · RPE {ex.rpe}
-                      </p>
-                    </div>
-                  ))}
-                  {filteredLibrary.length === 0 && (
+                    );
+                  })}
+                  {exerciseDb.length > 0 && filteredLibrary.length === 0 && (
                     <div className="px-4 py-8 text-center text-sm text-text-muted">
                       Nenhum exercício encontrado.
                     </div>

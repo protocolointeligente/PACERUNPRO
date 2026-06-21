@@ -85,10 +85,11 @@ export interface ExerciseLibraryItem {
   name: string;
   category: string;
   muscles: string[];
+  gifUrl?: string | null;
   imageUrl?: string | null;
   description: string;
-  execution: string;
-  mistakes: string;
+  execution?: string;
+  mistakes?: string;
   sets: number;
   reps: string;
   rest: string;

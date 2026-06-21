@@ -50,8 +50,8 @@ export default async function ExerciseDetailPage({ params }: { params: Promise<{
       <Card>
         <CardContent className="space-y-4 p-5">
           <Block icon={Target} color="text-primary" title="Descrição" text={exercise.description} />
-          <Block icon={CheckCircle2} color="text-success" title="Execução correta" text={exercise.execution} />
-          <Block icon={AlertTriangle} color="text-danger" title="Erros comuns" text={exercise.mistakes} />
+          <Block icon={CheckCircle2} color="text-success" title="Execução correta" text={exercise.execution ?? ""} />
+          <Block icon={AlertTriangle} color="text-danger" title="Erros comuns" text={exercise.mistakes ?? ""} />
         </CardContent>
       </Card>
 
