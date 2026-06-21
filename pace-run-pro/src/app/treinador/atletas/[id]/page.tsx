@@ -10,7 +10,7 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaTrend, LineTrend } from "@/components/charts/trend-chart";
 import { WeeklyReleaseDialog } from "@/components/coach/weekly-release-dialog";
-import { DeleteWorkoutButton, DeletePlanButton } from "@/components/coach/delete-buttons";
+import { DeleteWorkoutButton, DeletePlanButton, EditWorkoutButton } from "@/components/coach/delete-buttons";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-guard";
 
@@ -399,7 +399,14 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
                                       {wo.status === "LIBERADO" ? "Liberado" : wo.status === "CONCLUIDO" ? "Concluído" : wo.status === "PERDIDO" ? "Perdido" : "Agendado"}
                                     </Badge>
                                     {wo.status !== "CONCLUIDO" && (
-                                      <DeleteWorkoutButton workoutId={wo.id} />
+                                      <>
+                                        <EditWorkoutButton
+                                          workoutId={wo.id}
+                                          currentDate={new Date(wo.date).toISOString().split("T")[0]}
+                                          currentTitle={wo.title ?? ""}
+                                        />
+                                        <DeleteWorkoutButton workoutId={wo.id} />
+                                      </>
                                     )}
                                   </div>
                                 </CardContent>

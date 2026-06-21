@@ -546,13 +546,6 @@ export default function StrengthPrescriptionPage() {
     setSent(false);
   }
 
-  function setSessionDay(dayLabel: string) {
-    setSessions((prev) =>
-      prev.map((s, i) => (i === activeIndex ? { ...s, dayLabel } : s))
-    );
-    setSent(false);
-  }
-
   function addCustomSession() {
     setSessions((prev) => [
       ...prev,
@@ -893,54 +886,41 @@ export default function StrengthPrescriptionPage() {
                   )}
                 </div>
 
-                <div className="mb-4 flex flex-wrap gap-2">
+                {/* All-sessions day assignment grid */}
+                <div className="mb-4 space-y-2 rounded-xl border border-border bg-background/50 p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">Distribuição semanal — selecione o dia de cada sessão</p>
                   {sessions.map((s, i) => (
-                    <button
-                      key={s.id}
-                      onClick={() => setActiveIndex(i)}
-                      className={cn(
-                        "rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                        activeIndex === i
-                          ? "border-primary/60 bg-primary/15 text-primary"
-                          : "border-border bg-card-hover/30 text-text-muted hover:border-primary/30"
-                      )}
-                    >
-                      {s.label}
-                      <span className="ml-1 text-[10px] font-normal text-text-muted">
-                        {s.dayLabel} ({s.exercises.length})
-                      </span>
-                    </button>
-                  ))}
-                </div>
-
-                {activeSession && (
-                  <div className="space-y-3">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <label className="block">
-                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
-                          Nome da sessão
+                    <div key={s.id} className={cn(
+                      "rounded-lg border p-2.5 transition-colors cursor-pointer",
+                      activeIndex === i
+                        ? "border-primary/40 bg-primary/5"
+                        : "border-border hover:border-primary/20"
+                    )} onClick={() => setActiveIndex(i)}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={cn(
+                          "min-w-[5rem] text-xs font-semibold",
+                          activeIndex === i ? "text-primary" : "text-text"
+                        )}>
+                          {s.label}
+                          <span className="ml-1 font-normal text-text-muted">({s.exercises.length})</span>
                         </span>
-                        <input
-                          value={activeSession.label}
-                          onChange={(e) => renameSession(e.target.value)}
-                          className={inputClass}
-                        />
-                      </label>
-                      <div>
-                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
-                          Dia da semana
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-1">
                           {WEEK_DAYS.map((d) => (
                             <button
                               key={d}
                               type="button"
-                              onClick={() => setSessionDay(d)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSessions((prev) =>
+                                  prev.map((sess, idx) => idx === i ? { ...sess, dayLabel: d } : sess)
+                                );
+                                setSent(false);
+                              }}
                               className={cn(
-                                "rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors",
-                                activeSession.dayLabel === d
-                                  ? "border-primary/60 bg-primary/15 text-primary"
-                                  : "border-border bg-card text-text-muted hover:border-primary/30"
+                                "rounded border px-2 py-0.5 text-[11px] font-medium transition-colors",
+                                s.dayLabel === d
+                                  ? "border-primary/60 bg-primary/20 text-primary"
+                                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text"
                               )}
                             >
                               {d}
@@ -949,6 +929,21 @@ export default function StrengthPrescriptionPage() {
                         </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+
+                {activeSession && (
+                  <div className="space-y-3">
+                    <label className="block max-w-xs">
+                      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                        Nome da sessão ativa
+                      </span>
+                      <input
+                        value={activeSession.label}
+                        onChange={(e) => renameSession(e.target.value)}
+                        className={inputClass}
+                      />
+                    </label>
 
                     {activeSession.exercises.length === 0 && (
                       <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-text-muted">

@@ -30,6 +30,28 @@ const SUBTYPE_MAP: Record<string, WorkoutType> = {
   "Regenerativo": "REGENERATIVO",
 };
 
+// Maps full Portuguese day names → 0 (Sun) … 6 (Sat)
+const FULL_DAY_MAP: Record<string, number> = {
+  "Domingo": 0,
+  "Segunda-feira": 1,
+  "Terça-feira": 2,
+  "Quarta-feira": 3,
+  "Quinta-feira": 4,
+  "Sexta-feira": 5,
+  "Sábado": 6,
+};
+
+function nextMonday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  // getDay(): 0=Sun, 1=Mon, ...
+  const dow = d.getDay();
+  // Days to add to reach Monday (0 if already Monday)
+  const add = dow === 1 ? 0 : dow === 0 ? 1 : 8 - dow;
+  d.setDate(d.getDate() + add);
+  return d;
+}
+
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session?.user?.id) {
@@ -84,7 +106,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Atleta não encontrado" }, { status: 404 });
   }
 
-  const startDate = new Date();
+  const startDate = nextMonday();
   const endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + body.totalWeeks * 7);
 
@@ -122,10 +144,11 @@ export async function POST(req: NextRequest) {
             released: weekReleased,
             releasedAt: weekReleased ? now : undefined,
             workouts: {
-              create: sessionList.map((s, idx) => {
-                // Spread workouts across training days within the week
-                const workoutDate = new Date(weekStart);
-                workoutDate.setDate(workoutDate.getDate() + idx);
+              create: sessionList.map((s) => {
+                // Map dayLabel to its correct weekday offset from Monday
+                const dayNum = FULL_DAY_MAP[s.dayLabel] ?? 1; // default Mon
+                const offsetFromMonday = dayNum === 0 ? 6 : dayNum - 1;
+                const workoutDate = new Date(weekStart.getTime() + offsetFromMonday * 24 * 60 * 60 * 1000);
                 return {
                   date: workoutDate,
                   type: SUBTYPE_MAP[s.subtype] ?? "RODAGEM_LEVE",
