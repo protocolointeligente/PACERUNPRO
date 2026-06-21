@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Activity, AlertTriangle, ArrowLeft, Calendar, ClipboardList, HeartPulse, Moon, Ruler, Target, TrendingUp, Weight } from "lucide-react";
+import { Activity, AlertTriangle, ArrowLeft, Calendar, CalendarDays, CheckCircle2, ClipboardList, Clock, Dumbbell, HeartPulse, Moon, Ruler, Target, TrendingUp, Weight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,43 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
       : "—",
     rpe: log.rpe ?? null,
   }));
+
+  // Active training plan with upcoming workouts
+  const activePlan = await prisma.trainingPlan.findFirst({
+    where: { athleteId: id },
+    orderBy: { startDate: "desc" },
+    select: {
+      id: true,
+      name: true,
+      goal: true,
+      startDate: true,
+      endDate: true,
+      weeks: {
+        orderBy: { weekNumber: "asc" },
+        select: {
+          id: true,
+          weekNumber: true,
+          phase: true,
+          released: true,
+          targetVolumeKm: true,
+          workouts: {
+            orderBy: { date: "asc" },
+            select: {
+              id: true,
+              date: true,
+              title: true,
+              type: true,
+              status: true,
+              targetDistanceKm: true,
+              targetDurationMin: true,
+              targetPaceSecPerKm: true,
+              targetRpe: true,
+            },
+          },
+        },
+      },
+    },
+  });
 
   // Weekly volume series (last 8 weeks)
   const eightWeeksAgo = new Date(Date.now() - 8 * 7 * 24 * 60 * 60 * 1000);
@@ -247,35 +284,121 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
 
         {/* Workouts & history */}
         <TabsContent value="treinos">
-          {recentSessions.length === 0 ? (
-            <Card>
-              <CardContent className="p-5">
-                <p className="py-8 text-center text-sm text-text-muted">Nenhum treino registrado ainda.</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-2.5">
-              {recentSessions.map((s) => (
-                <Card key={s.id}>
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-card-hover text-text-muted">
-                        <ClipboardList className="h-4 w-4" />
-                      </span>
+          <div className="space-y-4">
+            {/* Active training plan */}
+            {activePlan ? (
+              <>
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-text">{s.title}</p>
-                        <p className="text-xs text-text-muted">{s.date}</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Plano ativo</p>
+                        <h3 className="mt-1 font-display text-base font-bold text-text">{activePlan.name}</h3>
+                        <p className="mt-0.5 text-xs text-text-muted">
+                          {new Date(activePlan.startDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                          {" – "}
+                          {new Date(activePlan.endDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                          {" · "}{activePlan.weeks.length} semanas
+                        </p>
                       </div>
-                    </div>
-                    <div className="text-right text-xs text-text-muted">
-                      <p className="font-semibold text-text">{s.pace}</p>
-                      <p>RPE {s.rpe ?? "—"}</p>
+                      <Badge variant="primary">{activePlan.weeks.filter((w) => w.released).length}/{activePlan.weeks.length} sem. liberadas</Badge>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          )}
+
+                {/* Workouts per week */}
+                {activePlan.weeks.map((week) => {
+                  const phaseLabels: Record<string, string> = { BASE: "Base", CONSTRUCAO: "Construção", ESPECIFICO: "Específico", POLIMENTO: "Taper" };
+                  const phaseBadge: Record<string, "info" | "primary" | "warning" | "success"> = { BASE: "info", CONSTRUCAO: "primary", ESPECIFICO: "warning", POLIMENTO: "success" };
+                  return (
+                    <div key={week.id}>
+                      <div className="mb-1.5 flex items-center gap-2 px-1">
+                        <span className="text-xs font-semibold text-text-muted">Semana {week.weekNumber}</span>
+                        <Badge variant={phaseBadge[week.phase] ?? "outline"} className="text-[10px]">{phaseLabels[week.phase] ?? week.phase}</Badge>
+                        {week.released
+                          ? <Badge variant="success" className="text-[10px]"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Liberada</Badge>
+                          : <Badge variant="outline" className="text-[10px] text-text-muted">Não liberada</Badge>}
+                        <span className="text-[10px] text-text-muted">{week.targetVolumeKm} km/sem</span>
+                      </div>
+                      {week.workouts.length === 0 ? (
+                        <Card><CardContent className="px-4 py-3 text-xs text-text-muted">Nenhuma sessão gerada.</CardContent></Card>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {week.workouts.map((wo) => {
+                            const pace = wo.targetPaceSecPerKm
+                              ? `${Math.floor(wo.targetPaceSecPerKm / 60)}:${String(wo.targetPaceSecPerKm % 60).padStart(2, "0")}/km`
+                              : null;
+                            return (
+                              <Card key={wo.id} className={wo.status === "LIBERADO" ? "border-success/20 bg-success/5" : ""}>
+                                <CardContent className="flex items-center justify-between gap-3 px-4 py-3">
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-card-hover text-text-muted">
+                                      <Dumbbell className="h-3.5 w-3.5" />
+                                    </span>
+                                    <div className="min-w-0">
+                                      <p className="truncate text-sm font-semibold text-text">{wo.title}</p>
+                                      <p className="text-[11px] text-text-muted">
+                                        {new Date(wo.date).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex shrink-0 items-center gap-3 text-right text-xs text-text-muted">
+                                    {wo.targetDistanceKm && (
+                                      <span className="hidden sm:flex items-center gap-1"><CalendarDays className="h-3 w-3" />{wo.targetDistanceKm} km</span>
+                                    )}
+                                    {pace && (
+                                      <span className="hidden md:flex items-center gap-1 font-mono font-semibold text-text"><Clock className="h-3 w-3" />{pace}</span>
+                                    )}
+                                    <Badge variant={wo.status === "LIBERADO" ? "success" : wo.status === "CONCLUIDO" ? "primary" : "outline"} className="text-[10px]">
+                                      {wo.status === "LIBERADO" ? "Liberado" : wo.status === "CONCLUIDO" ? "Concluído" : wo.status === "PERDIDO" ? "Perdido" : "Agendado"}
+                                    </Badge>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <Card>
+                <CardContent className="p-5">
+                  <p className="py-8 text-center text-sm text-text-muted">Nenhum plano de treino criado ainda.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Completed sessions */}
+            {recentSessions.length > 0 && (
+              <div>
+                <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-text-muted">Sessões concluídas</p>
+                <div className="space-y-1.5">
+                  {recentSessions.map((s) => (
+                    <Card key={s.id}>
+                      <CardContent className="flex items-center justify-between p-4">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-success/10 text-success">
+                            <ClipboardList className="h-3.5 w-3.5" />
+                          </span>
+                          <div>
+                            <p className="text-sm font-semibold text-text">{s.title}</p>
+                            <p className="text-xs text-text-muted">{s.date}</p>
+                          </div>
+                        </div>
+                        <div className="text-right text-xs text-text-muted">
+                          <p className="font-semibold text-text">{s.pace}</p>
+                          <p>RPE {s.rpe ?? "—"}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         {/* Check-ins & load */}
