@@ -398,7 +398,7 @@ export default function StrengthPrescriptionPage() {
   const skipDivisionEffect = useRef(false);
 
   const athlete = useMemo(
-    () => athletes.find((a) => a.id === athleteId) ?? athletes[0],
+    () => athletes.find((a) => a.id === athleteId) ?? athletes[0] ?? null,
     [athleteId, athletes]
   );
   const activeSession = sessions[activeIndex];
@@ -481,7 +481,7 @@ export default function StrengthPrescriptionPage() {
     const totalExercises = sessions.reduce((acc, s) => acc + s.exercises.length, 0);
     if (totalExercises === 0) return;
     const payload = {
-      name: `Template ${athlete.name} — ${division}`,
+      name: `Template ${athlete?.name ?? "Atleta"} — ${division}`,
       description: `Gerado em ${new Date().toLocaleDateString("pt-BR")}`,
       division,
       targetLevel: "Intermediário",
@@ -1002,9 +1002,9 @@ export default function StrengthPrescriptionPage() {
                     <span>Exercícios prescritos</span>
                     <span className="font-semibold text-text">{totalExercises}</span>
                   </div>
-                  <Button onClick={submit} size="lg" className="w-full">
+                  <Button onClick={submit} size="lg" className="w-full" disabled={!athlete}>
                     <Send className="h-4 w-4" /> Enviar para{" "}
-                    {athlete.name.split(" ")[0]}
+                    {athlete?.name.split(" ")[0] ?? "atleta"}
                   </Button>
                   <AnimatePresence mode="wait">
                     {savedAsTemplate ? (
@@ -1044,7 +1044,7 @@ export default function StrengthPrescriptionPage() {
                     <CardContent className="flex items-center gap-2.5 p-3.5 text-sm text-text-muted">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
                       Treino prescrito para{" "}
-                      <span className="font-semibold text-text">{athlete.name}</span> — divisão{" "}
+                      <span className="font-semibold text-text">{athlete?.name ?? "atleta"}</span> — divisão{" "}
                       <span className="font-semibold text-text">{division}</span>.
                     </CardContent>
                   </Card>

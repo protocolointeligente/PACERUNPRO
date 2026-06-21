@@ -10,7 +10,6 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaTrend, LineTrend } from "@/components/charts/trend-chart";
 import { WeeklyReleaseDialog } from "@/components/coach/weekly-release-dialog";
-import { checkInHistory, recentSessions, weeklyVolumeSeries, weightSeries } from "@/lib/mock-data";
 import { prisma } from "@/lib/prisma";
 
 const GOAL_LABELS: Record<string, string> = {
@@ -53,6 +52,67 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
   });
 
   if (!dbAthlete) notFound();
+
+  // Fetch real check-in history (last 10)
+  const rawCheckins = await prisma.checkIn.findMany({
+    where: { athleteId: id },
+    orderBy: { date: "desc" },
+    take: 10,
+    select: { date: true, rpe: true, pain: true, sleep: true, fatigue: true, mood: true },
+  });
+  const checkInHistory = rawCheckins.map((c) => ({
+    date: c.date.toISOString().split("T")[0],
+    rpe: c.rpe ?? 0,
+    pain: c.pain ?? 0,
+    sleep: c.sleep ?? 0,
+    fatigue: c.fatigue ?? 0,
+    mood: c.mood ?? 0,
+  }));
+
+  // Fetch recent workout sessions (last 5 completed)
+  const rawLogs = await prisma.workoutLog.findMany({
+    where: { athleteId: id },
+    include: { workout: { select: { date: true, title: true } } },
+    orderBy: { workout: { date: "desc" } },
+    take: 5,
+  });
+  const recentSessions = rawLogs.map((log) => ({
+    id: log.id,
+    title: log.workout.title,
+    date: new Date(log.workout.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+    pace: log.avgPaceSecPerKm
+      ? `${Math.floor(log.avgPaceSecPerKm / 60)}:${String(log.avgPaceSecPerKm % 60).padStart(2, "0")}/km`
+      : "—",
+    rpe: log.rpe ?? null,
+  }));
+
+  // Weekly volume series (last 8 weeks)
+  const eightWeeksAgo = new Date(Date.now() - 8 * 7 * 24 * 60 * 60 * 1000);
+  const volumeLogs = await prisma.workoutLog.findMany({
+    where: { athleteId: id, workout: { date: { gte: eightWeeksAgo } } },
+    include: { workout: { select: { date: true } } },
+    orderBy: { workout: { date: "asc" } },
+  });
+  const weekMap = new Map<string, number>();
+  for (const log of volumeLogs) {
+    const d = new Date(log.workout.date);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const label = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+    weekMap.set(label, (weekMap.get(label) ?? 0) + (log.distanceKm ?? 0));
+  }
+  const weeklyVolumeSeries = [...weekMap.entries()].map(([label, km]) => ({ label, km: Math.round(km * 10) / 10 }));
+
+  // Weight series from Metric
+  const metricRows = await prisma.metric.findMany({
+    where: { athleteId: id, weightKg: { not: null } },
+    orderBy: { date: "asc" },
+    take: 12,
+    select: { date: true, weightKg: true },
+  });
+  const weightSeries = metricRows.map((m) => ({
+    label: new Date(m.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+    kg: m.weightKg!,
+  }));
 
   const rawStatus = dbAthlete.status ?? "ativo";
   const status = (rawStatus === "ativo" || rawStatus === "risco" || rawStatus === "inativo"
@@ -141,13 +201,17 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
             <Card>
               <CardContent className="p-5">
                 <h3 className="mb-3 font-display text-sm font-semibold text-text">Volume semanal (km)</h3>
-                <AreaTrend data={weeklyVolumeSeries} dataKey="km" color="#38bdf8" unit=" km" />
+                {weeklyVolumeSeries.length > 0
+                  ? <AreaTrend data={weeklyVolumeSeries} dataKey="km" color="#38bdf8" unit=" km" />
+                  : <p className="py-8 text-center text-sm text-text-muted">Nenhum dado de volume ainda.</p>}
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-5">
                 <h3 className="mb-3 font-display text-sm font-semibold text-text">Evolução do peso (kg)</h3>
-                <AreaTrend data={weightSeries} dataKey="kg" color="#a855f7" unit=" kg" />
+                {weightSeries.length > 0
+                  ? <AreaTrend data={weightSeries} dataKey="kg" color="#a855f7" unit=" kg" />
+                  : <p className="py-8 text-center text-sm text-text-muted">Nenhum dado de peso ainda.</p>}
               </CardContent>
             </Card>
           </div>
@@ -183,75 +247,93 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
 
         {/* Workouts & history */}
         <TabsContent value="treinos">
-          <div className="space-y-2.5">
-            {recentSessions.map((s) => (
-              <Card key={s.id}>
-                <CardContent className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-card-hover text-text-muted">
-                      <ClipboardList className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-text">{s.title}</p>
-                      <p className="text-xs text-text-muted">{s.date}</p>
+          {recentSessions.length === 0 ? (
+            <Card>
+              <CardContent className="p-5">
+                <p className="py-8 text-center text-sm text-text-muted">Nenhum treino registrado ainda.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2.5">
+              {recentSessions.map((s) => (
+                <Card key={s.id}>
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-card-hover text-text-muted">
+                        <ClipboardList className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold text-text">{s.title}</p>
+                        <p className="text-xs text-text-muted">{s.date}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right text-xs text-text-muted">
-                    <p className="font-semibold text-text">{s.pace}</p>
-                    <p>RPE {s.rpe}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <div className="text-right text-xs text-text-muted">
+                      <p className="font-semibold text-text">{s.pace}</p>
+                      <p>RPE {s.rpe ?? "—"}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* Check-ins & load */}
         <TabsContent value="checkins">
-          <div className="grid gap-4 lg:grid-cols-2">
+          {checkInHistory.length === 0 ? (
             <Card>
               <CardContent className="p-5">
-                <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-text">
-                  <Moon className="h-4 w-4 text-info" /> Sono x Fadiga (últimos check-ins)
-                </h3>
-                <LineTrend
-                  data={checkInHistory.map((c) => ({ label: new Date(c.date + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }), sleep: c.sleep, fatigue: c.fatigue }))}
-                  dataKey="sleep"
-                  color="#38bdf8"
-                />
+                <p className="py-8 text-center text-sm text-text-muted">Nenhum check-in registrado ainda.</p>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="p-5">
-                <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-text">
-                  <Activity className="h-4 w-4 text-danger" /> Dor reportada
-                </h3>
-                <LineTrend
-                  data={checkInHistory.map((c) => ({ label: new Date(c.date + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }), pain: c.pain }))}
-                  dataKey="pain"
-                  color="#ef4444"
-                />
-              </CardContent>
-            </Card>
-          </div>
+          ) : (
+            <>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Card>
+                  <CardContent className="p-5">
+                    <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-text">
+                      <Moon className="h-4 w-4 text-info" /> Sono x Fadiga (últimos check-ins)
+                    </h3>
+                    <LineTrend
+                      data={checkInHistory.map((c) => ({ label: new Date(c.date + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }), sleep: c.sleep, fatigue: c.fatigue }))}
+                      dataKey="sleep"
+                      color="#38bdf8"
+                    />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-5">
+                    <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-text">
+                      <Activity className="h-4 w-4 text-danger" /> Dor reportada
+                    </h3>
+                    <LineTrend
+                      data={checkInHistory.map((c) => ({ label: new Date(c.date + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }), pain: c.pain }))}
+                      dataKey="pain"
+                      color="#ef4444"
+                    />
+                  </CardContent>
+                </Card>
+              </div>
 
-          <div className="mt-5 space-y-2">
-            {checkInHistory.slice().reverse().map((c) => (
-              <Card key={c.date}>
-                <CardContent className="flex flex-wrap items-center gap-x-5 gap-y-2 p-4 text-xs text-text-muted">
-                  <span className="font-medium text-text">
-                    {new Date(c.date + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", weekday: "short" })}
-                  </span>
-                  <span>RPE {c.rpe}</span>
-                  <span>Dor {c.pain}</span>
-                  <span>Sono {c.sleep}</span>
-                  <span>Fadiga {c.fatigue}</span>
-                  <span>Humor {c.mood}</span>
-                  <Progress value={(c.rpe / 10) * 100} className="h-1.5 max-w-[120px]" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+              <div className="mt-5 space-y-2">
+                {checkInHistory.slice().reverse().map((c) => (
+                  <Card key={c.date}>
+                    <CardContent className="flex flex-wrap items-center gap-x-5 gap-y-2 p-4 text-xs text-text-muted">
+                      <span className="font-medium text-text">
+                        {new Date(c.date + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", weekday: "short" })}
+                      </span>
+                      <span>RPE {c.rpe}</span>
+                      <span>Dor {c.pain}</span>
+                      <span>Sono {c.sleep}</span>
+                      <span>Fadiga {c.fatigue}</span>
+                      <span>Humor {c.mood}</span>
+                      <Progress value={(c.rpe / 10) * 100} className="h-1.5 max-w-[120px]" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </>
+          )}
         </TabsContent>
       </Tabs>
     </div>

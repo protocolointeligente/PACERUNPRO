@@ -1,30 +1,52 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Award, Camera, Medal, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { SectionHeader } from "@/components/shared/section-header";
 import { AreaTrend, BarTrend, LineTrend } from "@/components/charts/trend-chart";
-import {
-  achievements,
-  avgHrSeries,
-  avgPaceSeries,
-  monthlyVolumeSeries,
-  personalRecords,
-  trainingLoadSeries,
-  vo2Series,
-  weeklyVolumeSeries,
-  weightSeries,
-} from "@/lib/mock-data";
+import { achievements, personalRecords } from "@/lib/mock-data";
 import { formatPace } from "@/lib/utils";
 
 const BODY_PHOTO_LABELS = ["Jan 2026", "Mar 2026", "Jun 2026"];
 
+function EmptyChart() {
+  return (
+    <div className="flex h-[140px] items-center justify-center text-center text-sm text-text-muted">
+      Nenhum dado ainda —<br />registre treinos para ver o gráfico.
+    </div>
+  );
+}
+
 export default function EvolutionPage() {
   const [bodyPhotos, setBodyPhotos] = useState<(string | null)[]>([null, null, null]);
   const fileRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+
+  const [evolucao, setEvolucao] = useState<{
+    weeklyVolume: { label: string; km: number }[];
+    monthlyVolume: { label: string; km: number }[];
+    avgPace: { label: string; paceSec: number }[];
+    avgHr: { label: string; hr: number }[];
+    trainingLoad: { label: string; load: number }[];
+    weightHistory: { label: string; kg: number }[];
+    vo2History: { label: string; vo2: number }[];
+    races: { distance: string; date: string; time: string; pace: string }[];
+    hasData: boolean;
+  }>({
+    weeklyVolume: [], monthlyVolume: [], avgPace: [], avgHr: [],
+    trainingLoad: [], weightHistory: [], vo2History: [], races: [], hasData: false,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/atleta/evolucao")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data) setEvolucao(data); })
+      .catch(() => null)
+      .finally(() => setLoading(false));
+  }, []);
 
   function handlePhotoChange(idx: number, file: File | undefined) {
     if (!file) return;
@@ -66,15 +88,21 @@ export default function EvolutionPage() {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <ChartCard title="Volume semanal" description="Quilômetros percorridos por semana" trend="up" trendLabel="+8% nas últimas 4 semanas">
-          <AreaTrend data={weeklyVolumeSeries} dataKey="km" color="#38bdf8" unit=" km" />
+          {evolucao.weeklyVolume.length > 0
+            ? <AreaTrend data={evolucao.weeklyVolume} dataKey="km" color="#38bdf8" unit=" km" />
+            : <EmptyChart />}
         </ChartCard>
 
         <ChartCard title="Volume mensal" description="Total de quilômetros por mês" trend="up" trendLabel="Recorde em maio: 168 km">
-          <BarTrend data={monthlyVolumeSeries} dataKey="km" color="#8b5cf6" unit=" km" />
+          {evolucao.monthlyVolume.length > 0
+            ? <BarTrend data={evolucao.monthlyVolume} dataKey="km" color="#8b5cf6" unit=" km" />
+            : <EmptyChart />}
         </ChartCard>
 
         <ChartCard title="Pace médio" description="Evolução do ritmo médio semanal (min/km)" trend="up" trendLabel="28s/km mais rápido em 7 semanas">
-          <LineTrend data={avgPaceSeries} dataKey="paceSec" color="#84cc16" reverse formatValue={(v) => formatPace(v)} />
+          {evolucao.avgPace.length > 0
+            ? <LineTrend data={evolucao.avgPace} dataKey="paceSec" color="#84cc16" reverse formatValue={(v) => formatPace(v)} />
+            : <EmptyChart />}
         </ChartCard>
 
         <ChartCard
@@ -84,19 +112,27 @@ export default function EvolutionPage() {
           trendLabel="Dentro da faixa segura de progressão"
           tooltip="UA = Unidades Arbitrárias. Mede a carga de treino combinando duração (min) e percepção de esforço (RPE de 1 a 10) de cada sessão, somadas na semana — quanto maior, mais intenso foi o estímulo total."
         >
-          <AreaTrend data={trainingLoadSeries} dataKey="load" color="#facc15" unit=" UA" />
+          {evolucao.trainingLoad.length > 0
+            ? <AreaTrend data={evolucao.trainingLoad} dataKey="load" color="#facc15" unit=" UA" />
+            : <EmptyChart />}
         </ChartCard>
 
         <ChartCard title="FC média" description="Frequência cardíaca média durante os treinos" trend="down" trendLabel="-7 bpm — sinal de melhora aeróbica">
-          <LineTrend data={avgHrSeries} dataKey="hr" color="#ef4444" unit=" bpm" />
+          {evolucao.avgHr.length > 0
+            ? <LineTrend data={evolucao.avgHr} dataKey="hr" color="#ef4444" unit=" bpm" />
+            : <EmptyChart />}
         </ChartCard>
 
         <ChartCard title="VO2 estimado" description="Estimativa de consumo máximo de oxigênio (ml/kg/min)" trend="up" trendLabel="+3.5 pontos em 6 meses">
-          <LineTrend data={vo2Series} dataKey="vo2" color="#38bdf8" unit=" ml/kg/min" />
+          {evolucao.vo2History.length > 0
+            ? <LineTrend data={evolucao.vo2History} dataKey="vo2" color="#38bdf8" unit=" ml/kg/min" />
+            : <EmptyChart />}
         </ChartCard>
 
         <ChartCard title="Evolução do peso" description="Peso corporal ao longo dos meses (kg)" trend="down" trendLabel="-2.8 kg desde janeiro">
-          <AreaTrend data={weightSeries} dataKey="kg" color="#a855f7" unit=" kg" />
+          {evolucao.weightHistory.length > 0
+            ? <AreaTrend data={evolucao.weightHistory} dataKey="kg" color="#a855f7" unit=" kg" />
+            : <EmptyChart />}
         </ChartCard>
 
         <Card>
@@ -143,25 +179,28 @@ export default function EvolutionPage() {
         <div>
           <SectionHeader title="Recordes pessoais" subtitle="Seus melhores tempos por distância" />
           <div className="space-y-2.5">
-            {personalRecords.map((r) => (
-              <Card key={r.distance}>
-                <CardContent className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                      <Medal className="h-5 w-5" />
-                    </span>
-                    <div>
-                      <p className="font-display text-base font-bold text-text">{r.distance}</p>
-                      <p className="text-xs text-text-muted">{r.date}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-stat text-lg font-bold text-text">{r.time}</p>
-                    <p className="text-xs text-text-muted">{r.pace}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {evolucao.races.length > 0
+              ? evolucao.races.map((r, i) => (
+                  <Card key={i}>
+                    <CardContent className="flex items-center justify-between p-4">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                          <Medal className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <p className="font-display text-base font-bold text-text">{r.distance}</p>
+                          <p className="text-xs text-text-muted">{r.date}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-stat text-lg font-bold text-text">{r.time}</p>
+                        <p className="text-xs text-text-muted">{r.pace}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              : <p className="text-sm text-text-muted">Nenhuma prova registrada ainda.</p>
+            }
           </div>
         </div>
 
