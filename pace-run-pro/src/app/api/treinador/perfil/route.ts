@@ -57,9 +57,10 @@ export async function PATCH(req: NextRequest) {
     if (body.specialties !== undefined) coachUpdate.specialties = body.specialties;
 
     if (Object.keys(coachUpdate).length > 0) {
-      await prisma.coach.update({
+      await prisma.coach.upsert({
         where: { userId: session.user.id },
-        data: coachUpdate,
+        update: coachUpdate,
+        create: { userId: session.user.id, ...coachUpdate },
       });
     }
 
