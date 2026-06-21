@@ -24,7 +24,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  currentAthlete,
   integrationsList,
   personalRecords,
   syncedActivities,
@@ -38,6 +37,15 @@ const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 export default function ProfilePage() {
+  // Profile data loaded from API
+  const [profile, setProfile] = useState<{
+    name?: string; city?: string; state?: string; phone?: string;
+    avatarUrl?: string | null; bannerUrl?: string | null;
+    weightKg?: number | null; heightCm?: number | null;
+    raceDate?: string | null; goal?: string | null;
+    level?: string | null; coachName?: string | null;
+  }>({});
+
   const [notifs, setNotifs] = useState({ workouts: true, community: false, coach: true });
   const [activeTab, setActiveTab] = useState("dados");
   const [stravaConnected, setStravaConnected] = useState(false);
@@ -118,13 +126,13 @@ export default function ProfilePage() {
   // Edit profile modal state
   const [editOpen, setEditOpen] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
-  const [editName, setEditName] = useState(currentAthlete.name);
-  const [editCity, setEditCity] = useState(currentAthlete.city ?? "");
+  const [editName, setEditName] = useState("");
+  const [editCity, setEditCity] = useState("");
   const [editState, setEditState] = useState("");
   const [editPhone, setEditPhone] = useState("");
-  const [editWeightKg, setEditWeightKg] = useState(String(currentAthlete.weightKg ?? ""));
-  const [editHeightCm, setEditHeightCm] = useState(String(currentAthlete.heightCm ?? ""));
-  const [editRaceDate, setEditRaceDate] = useState(currentAthlete.raceDate ?? "");
+  const [editWeightKg, setEditWeightKg] = useState("");
+  const [editHeightCm, setEditHeightCm] = useState("");
+  const [editRaceDate, setEditRaceDate] = useState("");
 
   async function handleEditSave() {
     setEditSaving(true);
@@ -159,9 +167,18 @@ export default function ProfilePage() {
   useEffect(() => {
     fetch("/api/atleta/perfil")
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: { avatarUrl?: string | null; bannerUrl?: string | null } | null) => {
-        if (data?.avatarUrl) setAvatarSrc(data.avatarUrl);
-        if (data?.bannerUrl) setBannerSrc(data.bannerUrl);
+      .then((data: typeof profile | null) => {
+        if (!data) return;
+        setProfile(data);
+        if (data.avatarUrl) setAvatarSrc(data.avatarUrl);
+        if (data.bannerUrl) setBannerSrc(data.bannerUrl);
+        setEditName(data.name ?? "");
+        setEditCity(data.city ?? "");
+        setEditState(data.state ?? "");
+        setEditPhone(data.phone ?? "");
+        setEditWeightKg(String(data.weightKg ?? ""));
+        setEditHeightCm(String(data.heightCm ?? ""));
+        setEditRaceDate(data.raceDate ?? "");
       })
       .catch(() => {});
   }, []);
@@ -262,8 +279,8 @@ export default function ProfilePage() {
             {/* Avatar with camera overlay */}
             <div className="relative">
               <Avatar className="h-24 w-24 border-4 border-card">
-                <AvatarImage src={avatarSrc || currentAthlete.avatarUrl} alt={currentAthlete.name} />
-                <AvatarFallback className="text-2xl">{currentAthlete.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarImage src={avatarSrc || profile.avatarUrl || ""} alt={profile.name ?? ""} />
+                <AvatarFallback className="text-2xl">{(profile.name ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <label className="absolute -bottom-1 -right-1 cursor-pointer">
                 <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarChange} disabled={avatarUploading} />
@@ -273,11 +290,10 @@ export default function ProfilePage() {
               </label>
             </div>
             <div>
-              <h1 className="font-display text-xl font-bold text-text sm:text-2xl">{currentAthlete.name}</h1>
-              <p className="text-sm text-text-muted">{currentAthlete.city}</p>
+              <h1 className="font-display text-xl font-bold text-text sm:text-2xl">{profile.name ?? "—"}</h1>
+              <p className="text-sm text-text-muted">{profile.city ?? ""}</p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
-                <Badge variant="primary">{currentAthlete.level}</Badge>
-                <Badge variant="outline">{currentAthlete.plan}</Badge>
+                {profile.level && <Badge variant="primary">{profile.level}</Badge>}
               </div>
             </div>
           </div>
@@ -300,10 +316,10 @@ export default function ProfilePage() {
         <TabsContent value="dados">
           <Card>
             <CardContent className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
-              <InfoField label="Idade" value={`${currentAthlete.age} anos`} />
-              <InfoField label="Peso" value={`${currentAthlete.weightKg} kg`} />
-              <InfoField label="Altura" value={`${currentAthlete.heightCm} cm`} />
-              <InfoField label="Treinador" value={currentAthlete.coach} />
+              <InfoField label="Peso" value={profile.weightKg ? `${profile.weightKg} kg` : "—"} />
+              <InfoField label="Altura" value={profile.heightCm ? `${profile.heightCm} cm` : "—"} />
+              <InfoField label="Treinador" value={profile.coachName ?? "—"} />
+              <InfoField label="Nível" value={profile.level ?? "—"} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -318,10 +334,15 @@ export default function ProfilePage() {
                 </span>
                 <div>
                   <h3 className="font-display text-sm font-semibold text-text">Objetivo atual</h3>
-                  <p className="mt-1 text-sm text-text-muted">{currentAthlete.goal}</p>
-                  <p className="mt-1 text-xs text-text-muted">
-                    Data da prova: <span className="text-text">{new Date(currentAthlete.raceDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}</span>
-                  </p>
+                  <p className="mt-1 text-sm text-text-muted">{profile.goal ?? "—"}</p>
+                  {profile.raceDate && (
+                    <p className="mt-1 text-xs text-text-muted">
+                      Data da prova:{" "}
+                      <span className="text-text">
+                        {new Date(profile.raceDate + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+                      </span>
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -581,7 +602,7 @@ export default function ProfilePage() {
                 </h3>
                 <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
                   <div>
-                    <p className="text-sm font-semibold text-text">{currentAthlete.plan}</p>
+                    <p className="text-sm font-semibold text-text">Plano Ativo</p>
                     <p className="text-xs text-text-muted">Renovação automática · próxima cobrança em 12/07/2026</p>
                   </div>
                   <Button size="sm" variant="secondary">Gerenciar</Button>

@@ -10,15 +10,67 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaTrend, LineTrend } from "@/components/charts/trend-chart";
 import { WeeklyReleaseDialog } from "@/components/coach/weekly-release-dialog";
-import { athleteList, checkInHistory, recentSessions, weeklyVolumeSeries, weightSeries } from "@/lib/mock-data";
+import { checkInHistory, recentSessions, weeklyVolumeSeries, weightSeries } from "@/lib/mock-data";
+import { prisma } from "@/lib/prisma";
+
+const GOAL_LABELS: Record<string, string> = {
+  CINCO_KM: "5 km",
+  DEZ_KM: "10 km",
+  VINTE_E_UM_KM: "21 km",
+  QUARENTA_E_DOIS_KM: "42 km",
+  ULTRAMARATONA: "Ultra",
+  EMAGRECIMENTO: "Emagrecimento",
+  PERFORMANCE: "Performance",
+  RETORNO_AS_CORRIDAS: "Retorno às corridas",
+};
+
+const LEVEL_LABELS: Record<string, string> = {
+  INICIANTE: "Iniciante",
+  INTERMEDIARIO: "Intermediário",
+  AVANCADO: "Avançado",
+  PRO: "Pro",
+};
 
 const statusVariants = { ativo: "success", risco: "danger", inativo: "default" } as const;
 const statusLabels = { ativo: "Ativo", risco: "Em risco", inativo: "Inativo" } as const;
 
 export default async function AthleteFullViewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const athlete = athleteList.find((a) => a.id === id);
-  if (!athlete) notFound();
+
+  const dbAthlete = await prisma.athlete.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      status: true,
+      adherenceRate: true,
+      goal: true,
+      level: true,
+      raceDate: true,
+      weightKg: true,
+      heightCm: true,
+      user: { select: { name: true, avatarUrl: true } },
+    },
+  });
+
+  if (!dbAthlete) notFound();
+
+  const rawStatus = dbAthlete.status ?? "ativo";
+  const status = (rawStatus === "ativo" || rawStatus === "risco" || rawStatus === "inativo"
+    ? rawStatus : "ativo") as "ativo" | "risco" | "inativo";
+
+  const athlete = {
+    id: dbAthlete.id,
+    name: dbAthlete.user.name ?? "—",
+    avatarUrl: dbAthlete.user.avatarUrl ?? undefined,
+    status,
+    adherence: dbAthlete.adherenceRate,
+    goal: dbAthlete.goal ? (GOAL_LABELS[dbAthlete.goal] ?? dbAthlete.goal) : "—",
+    level: LEVEL_LABELS[dbAthlete.level] ?? dbAthlete.level,
+    raceDate: dbAthlete.raceDate ? dbAthlete.raceDate.toISOString().split("T")[0] : null,
+    weeklyLoad: null as number | null,
+    weightKg: dbAthlete.weightKg,
+    heightCm: dbAthlete.heightCm,
+  };
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -80,8 +132,8 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
             <Metric
               icon={Activity}
               label="Carga semanal"
-              value={`${athlete.weeklyLoad} UA`}
-              tooltip="UA = Unidades Arbitrárias. Mede a carga de treino combinando duração (min) e percepção de esforço (RPE de 1 a 10) de cada sessão, somadas na semana."
+              value="—"
+              tooltip="UA = Unidades Arbitrárias. Será calculada automaticamente a partir dos check-ins."
             />
           </div>
 
@@ -104,9 +156,9 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
         {/* Physical data & tests */}
         <TabsContent value="fisico">
           <div className="grid gap-4 sm:grid-cols-3">
-            <Metric icon={Weight} label="Peso" value="61.4 kg" />
-            <Metric icon={Ruler} label="Altura" value="167 cm" />
-            <Metric icon={HeartPulse} label="FC máxima" value="188 bpm" />
+            <Metric icon={Weight} label="Peso" value={athlete.weightKg ? `${athlete.weightKg} kg` : "—"} />
+            <Metric icon={Ruler} label="Altura" value={athlete.heightCm ? `${athlete.heightCm} cm` : "—"} />
+            <Metric icon={HeartPulse} label="FC máxima" value="—" />
           </div>
           <div className="mt-5">
             <h3 className="mb-3 font-display text-sm font-semibold text-text">Avaliações &amp; testes recentes</h3>

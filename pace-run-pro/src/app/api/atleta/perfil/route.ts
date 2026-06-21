@@ -2,16 +2,66 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+const GOAL_LABELS: Record<string, string> = {
+  CINCO_KM: "5 km",
+  DEZ_KM: "10 km",
+  VINTE_E_UM_KM: "21 km",
+  QUARENTA_E_DOIS_KM: "42 km",
+  ULTRAMARATONA: "Ultra",
+  EMAGRECIMENTO: "Emagrecimento",
+  PERFORMANCE: "Performance",
+  RETORNO_AS_CORRIDAS: "Retorno às corridas",
+};
+
+const LEVEL_LABELS: Record<string, string> = {
+  INICIANTE: "Iniciante",
+  INTERMEDIARIO: "Intermediário",
+  AVANCADO: "Avançado",
+  PRO: "Pro",
+};
+
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { avatarUrl: true, bannerUrl: true, name: true, city: true, state: true, phone: true },
+    select: {
+      name: true,
+      avatarUrl: true,
+      bannerUrl: true,
+      city: true,
+      state: true,
+      phone: true,
+      athlete: {
+        select: {
+          weightKg: true,
+          heightCm: true,
+          raceDate: true,
+          goal: true,
+          level: true,
+          coach: { select: { user: { select: { name: true } } } },
+        },
+      },
+    },
   });
 
-  return NextResponse.json(user ?? {});
+  if (!user) return NextResponse.json({});
+
+  return NextResponse.json({
+    name: user.name,
+    avatarUrl: user.avatarUrl,
+    bannerUrl: user.bannerUrl,
+    city: user.city,
+    state: user.state,
+    phone: user.phone,
+    weightKg: user.athlete?.weightKg ?? null,
+    heightCm: user.athlete?.heightCm ?? null,
+    raceDate: user.athlete?.raceDate ? user.athlete.raceDate.toISOString().split("T")[0] : null,
+    goal: user.athlete?.goal ? (GOAL_LABELS[user.athlete.goal] ?? user.athlete.goal) : null,
+    level: user.athlete?.level ? (LEVEL_LABELS[user.athlete.level] ?? user.athlete.level) : null,
+    coachName: user.athlete?.coach?.user?.name ?? null,
+  });
 }
 
 export async function PATCH(req: NextRequest) {
