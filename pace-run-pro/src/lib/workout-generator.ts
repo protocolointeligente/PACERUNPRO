@@ -132,8 +132,11 @@ function getPaceInfo(
 function getQualitySubtype(
   phase: PhaseType,
   goal: GoalType,
-  role: "quality" | "quality2"
+  role: "quality" | "quality2",
+  level: LevelType,
 ): WorkoutSubtype {
+  // Beginners build aerobic base before adding intensity
+  if (level === "Iniciante" && phase === "Base") return "Rodagem leve";
   const isShortGoal = goal === "5k" || goal === "10k";
   if (phase === "Base") return role === "quality2" ? "Progressivo" : "Fartlek";
   if (phase === "Construção") return role === "quality2" ? "Progressivo" : "Tempo Run";
@@ -264,7 +267,7 @@ export function generateWorkoutsForWeek(params: WorkoutGeneratorParams): Generat
           ? "Rodagem leve"
           : "Regenerativo";
     } else if (role === "quality" || role === "quality2") {
-      subtype = getQualitySubtype(phase, goal, role);
+      subtype = getQualitySubtype(phase, goal, role, level);
     } else if (role === "long") {
       subtype = "Longão";
     } else if (role === "recovery") {

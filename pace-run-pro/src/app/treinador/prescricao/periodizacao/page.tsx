@@ -83,10 +83,20 @@ const DAY_ABBR: Record<string, string> = {
 
 // ── Periodization generator ───────────────────────────────────────────────────
 
-function generatePeriodization(totalWeeks: number, defaultSessions: number): Week[] {
+// km-per-session at week 1, weekly growth, and peak cap — tuned per level
+const LEVEL_KM_CONFIG: Record<Level, { startPerSession: number; weeklyGrowth: number; maxKm: number }> = {
+  Iniciante:     { startPerSession: 2.5, weeklyGrowth: 0.8, maxKm: 30  },
+  Intermediário: { startPerSession: 5.0, weeklyGrowth: 2.0, maxKm: 70  },
+  Avançado:      { startPerSession: 8.0, weeklyGrowth: 3.5, maxKm: 115 },
+};
+
+function generatePeriodization(totalWeeks: number, sessions: number, level: Level): Week[] {
   const baseEnd = Math.round(totalWeeks * 0.35);
   const construcaoEnd = baseEnd + Math.round(totalWeeks * 0.3);
   const especificoEnd = construcaoEnd + Math.round(totalWeeks * 0.25);
+
+  const cfg = LEVEL_KM_CONFIG[level];
+  const baseWeekKm = cfg.startPerSession * Math.max(1, sessions);
 
   return Array.from({ length: totalWeeks }, (_, i) => {
     const week = i + 1;
@@ -97,6 +107,9 @@ function generatePeriodization(totalWeeks: number, defaultSessions: number): Wee
     else if (week <= construcaoEnd) phase = "Construção";
     else if (week <= especificoEnd) phase = "Específico";
     else phase = "Taper";
+
+    const peakKm = Math.min(baseWeekKm + (week - 1) * cfg.weeklyGrowth, cfg.maxKm);
+    const km = Math.round(isDeload ? Math.max(baseWeekKm * 0.6, peakKm * 0.6) : peakKm);
 
     const baseVolume = isDeload ? 60 : 70 + Math.min(week * 1.5, 25);
     const volume = Math.round(Math.min(baseVolume, 100));
@@ -110,8 +123,8 @@ function generatePeriodization(totalWeeks: number, defaultSessions: number): Wee
       volume,
       intensity: Math.min(intensity, 95),
       notes: "",
-      km: Math.round(20 + week * 1.8),
-      sessions: isDeload ? Math.max(2, defaultSessions - 1) : defaultSessions,
+      km,
+      sessions: isDeload ? Math.max(1, sessions - 1) : sessions,
     };
   });
 }
@@ -150,6 +163,18 @@ const selectClass =
 
 const smallInput =
   "rounded-lg border border-border bg-background/60 px-2.5 py-1.5 text-xs text-text outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-colors";
+
+function parsePaceStr(str: string): number {
+  const parts = str.trim().split(":");
+  if (parts.length === 2) {
+    const min = parseInt(parts[0], 10);
+    const sec = parseInt(parts[1], 10);
+    if (!isNaN(min) && !isNaN(sec) && sec >= 0 && sec < 60 && min >= 2) {
+      return min * 60 + sec;
+    }
+  }
+  return 0;
+}
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
@@ -202,7 +227,7 @@ export default function PeriodizacaoPage() {
   }
 
   function handleGenerate() {
-    const result = generatePeriodization(totalWeeks, trainingDays.length || 3);
+    const result = generatePeriodization(totalWeeks, trainingDays.length || 3, level);
     setWeeks(result);
     setGenerated(true);
     setSaved(false);
@@ -1155,6 +1180,21 @@ function WorkoutSessionRow({
   onChange: (field: keyof GeneratedWorkout, value: string | number) => void;
   isLast: boolean;
 }) {
+  const [paceStr, setPaceStr] = useState(() => formatPaceSec(workout.targetPaceSecPerKm));
+
+  useEffect(() => {
+    setPaceStr(formatPaceSec(workout.targetPaceSecPerKm));
+  }, [workout.targetPaceSecPerKm]);
+
+  function commitPace() {
+    const sec = parsePaceStr(paceStr);
+    if (sec > 0) {
+      onChange("targetPaceSecPerKm", sec);
+    } else {
+      setPaceStr(formatPaceSec(workout.targetPaceSecPerKm));
+    }
+  }
+
   const zoneColor = ZONE_COLORS[workout.zone];
   const dayAbbr =
     DAY_ABBR[workout.dayLabel] ?? workout.dayLabel.slice(0, 3).toUpperCase();
@@ -1258,15 +1298,16 @@ function WorkoutSessionRow({
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-                    Pace (s/km) = {formatPaceSec(workout.targetPaceSecPerKm)}/km
+                    Pace (min:seg/km)
                   </label>
                   <input
-                    type="number"
-                    min={150}
-                    max={600}
-                    value={workout.targetPaceSecPerKm}
-                    onChange={(e) => onChange("targetPaceSecPerKm", Number(e.target.value))}
-                    className={cn(smallInput, "w-full text-center")}
+                    type="text"
+                    value={paceStr}
+                    onChange={(e) => setPaceStr(e.target.value)}
+                    onBlur={commitPace}
+                    onKeyDown={(e) => { if (e.key === "Enter") commitPace(); }}
+                    placeholder="6:50"
+                    className={cn(smallInput, "w-full text-center font-mono")}
                   />
                 </div>
                 <div className="space-y-1">
