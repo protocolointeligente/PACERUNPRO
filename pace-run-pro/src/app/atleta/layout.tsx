@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import type { Session } from "next-auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/layout/app-shell";
@@ -17,7 +18,12 @@ const GOAL_LABELS: Record<string, string> = {
 };
 
 export default async function AtletaLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+  let session: Session | null = null;
+  try {
+    session = await auth();
+  } catch {
+    redirect("/login");
+  }
   if (!session?.user?.id) redirect("/login");
   if (session.user?.role === "ADMIN") redirect("/admin");
   if (session.user?.role === "COACH") redirect("/treinador/dashboard");

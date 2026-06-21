@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Camera,
@@ -61,6 +62,7 @@ export default function CoachProfileClient({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -92,7 +94,10 @@ export default function CoachProfileClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dataUrl }),
       });
-      if (res.ok) setAvatarUrl(dataUrl);
+      if (res.ok) {
+        setAvatarUrl(dataUrl);
+        router.refresh();
+      }
     } catch {
       setError("Erro ao salvar foto.");
     } finally {
@@ -131,6 +136,7 @@ export default function CoachProfileClient({
       }
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+      router.refresh();
     } catch {
       setError("Erro ao salvar perfil.");
     } finally {
