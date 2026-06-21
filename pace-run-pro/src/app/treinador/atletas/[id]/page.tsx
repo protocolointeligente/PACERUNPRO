@@ -10,6 +10,7 @@ import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaTrend, LineTrend } from "@/components/charts/trend-chart";
 import { WeeklyReleaseDialog } from "@/components/coach/weekly-release-dialog";
+import { DeleteWorkoutButton, DeletePlanButton } from "@/components/coach/delete-buttons";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-guard";
 
@@ -133,6 +134,37 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
         },
       },
     },
+  });
+
+  // Performance tests (most recent per type)
+  const TEST_LABELS: Record<string, string> = {
+    COOPER: "Cooper",
+    CINCO_MINUTOS: "Teste 5 min",
+    TRES_KM: "3 km",
+    DOIS_MIL_E_QUATROCENTOS_M: "2.400 m",
+    VAM: "VAM",
+    RAST: "RAST",
+    LIMIAR: "Limiar",
+  };
+  const rawTests = await prisma.performanceTest.findMany({
+    where: { athleteId: dbAthlete.id },
+    orderBy: { date: "desc" },
+    take: 6,
+    select: { type: true, date: true, vo2max: true, vamKmh: true, thresholdPaceSecPerKm: true, notes: true },
+  });
+  const performanceTests = rawTests.map((t) => {
+    const result = [
+      t.vo2max != null && `VO2máx ≈ ${t.vo2max.toFixed(1)} ml/kg/min`,
+      t.vamKmh != null && `VAM ≈ ${t.vamKmh.toFixed(1)} km/h`,
+      t.thresholdPaceSecPerKm != null &&
+        `Pace limiar ≈ ${Math.floor(t.thresholdPaceSecPerKm / 60)}:${String(t.thresholdPaceSecPerKm % 60).padStart(2, "0")}/km`,
+      t.notes,
+    ].filter(Boolean).join(" · ");
+    return {
+      name: TEST_LABELS[t.type] ?? t.type,
+      date: new Date(t.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }),
+      result: result || "—",
+    };
   });
 
   // Weekly volume series (last 8 weeks)
@@ -275,22 +307,21 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
           </div>
           <div className="mt-5">
             <h3 className="mb-3 font-display text-sm font-semibold text-text">Avaliações &amp; testes recentes</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                { name: "Cooper — 2.600 m", date: "18 mai 2026", result: "VO2máx ≈ 46.8 ml/kg/min" },
-                { name: "VAM — 2.000 m em 8:00", date: "18 mai 2026", result: "VAM ≈ 15.0 km/h · pace 4:00/km" },
-                { name: "Limiar — teste de 25 min", date: "12 mar 2026", result: "Pace de limiar ≈ 5:00/km" },
-                { name: "Avaliação física completa", date: "02 fev 2026", result: "% gordura: 19.4% · IMC: 22.0" },
-              ].map((t) => (
-                <Card key={t.name}>
-                  <CardContent className="p-4">
-                    <p className="text-sm font-semibold text-text">{t.name}</p>
-                    <p className="text-xs text-text-muted">{t.date}</p>
-                    <p className="mt-1.5 text-sm text-text-muted">{t.result}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {performanceTests.length === 0 ? (
+              <p className="text-sm text-text-muted">Nenhum teste de performance registrado.</p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {performanceTests.map((t) => (
+                  <Card key={t.name + t.date}>
+                    <CardContent className="p-4">
+                      <p className="text-sm font-semibold text-text">{t.name}</p>
+                      <p className="text-xs text-text-muted">{t.date}</p>
+                      <p className="mt-1.5 text-sm text-text-muted">{t.result}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -313,7 +344,10 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
                           {" · "}{activePlan.weeks.length} semanas
                         </p>
                       </div>
-                      <Badge variant="primary">{activePlan.weeks.filter((w) => w.released).length}/{activePlan.weeks.length} sem. liberadas</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="primary">{activePlan.weeks.filter((w) => w.released).length}/{activePlan.weeks.length} sem. liberadas</Badge>
+                        <DeletePlanButton planId={activePlan.id} planName={activePlan.name} />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -364,6 +398,9 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
                                     <Badge variant={wo.status === "LIBERADO" ? "success" : wo.status === "CONCLUIDO" ? "primary" : "outline"} className="text-[10px]">
                                       {wo.status === "LIBERADO" ? "Liberado" : wo.status === "CONCLUIDO" ? "Concluído" : wo.status === "PERDIDO" ? "Perdido" : "Agendado"}
                                     </Badge>
+                                    {wo.status !== "CONCLUIDO" && (
+                                      <DeleteWorkoutButton workoutId={wo.id} />
+                                    )}
                                   </div>
                                 </CardContent>
                               </Card>

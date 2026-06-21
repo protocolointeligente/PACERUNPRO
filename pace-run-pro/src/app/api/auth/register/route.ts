@@ -16,6 +16,9 @@ export async function POST(req: NextRequest) {
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Campos obrigatórios faltando." }, { status: 400 });
     }
+    if (typeof password !== "string" || password.length < 8) {
+      return NextResponse.json({ error: "A senha deve ter pelo menos 8 caracteres." }, { status: 400 });
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Formato de e-mail inválido." }, { status: 400 });
     }

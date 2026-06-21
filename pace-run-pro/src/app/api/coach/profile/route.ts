@@ -34,6 +34,9 @@ export async function PATCH(req: NextRequest) {
     if (!body.avatarUrl.startsWith("data:image/")) {
       return NextResponse.json({ error: "Imagem inválida" }, { status: 400 });
     }
+    if (body.avatarUrl.length > 2_800_000) {
+      return NextResponse.json({ error: "Imagem muito grande (máx 2 MB)" }, { status: 413 });
+    }
     await prisma.user.update({
       where: { id: session.user.id },
       data: { avatarUrl: body.avatarUrl },
@@ -43,6 +46,9 @@ export async function PATCH(req: NextRequest) {
   if (body.bannerUrl !== undefined) {
     if (!body.bannerUrl.startsWith("data:image/")) {
       return NextResponse.json({ error: "Imagem inválida" }, { status: 400 });
+    }
+    if (body.bannerUrl.length > 2_800_000) {
+      return NextResponse.json({ error: "Imagem muito grande (máx 2 MB)" }, { status: 413 });
     }
     await prisma.user.update({
       where: { id: session.user.id },

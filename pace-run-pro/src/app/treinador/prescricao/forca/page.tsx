@@ -44,6 +44,7 @@ interface PrescribedExercise {
 interface SessionBlock {
   id: string;
   label: string;
+  dayLabel: string;
   exercises: PrescribedExercise[];
 }
 
@@ -57,6 +58,18 @@ const sessionLabelsByDivision: Record<string, string[]> = {
   Personalizada: ["Treino 1"],
 };
 
+const defaultDayLabelsByDivision: Record<string, string[]> = {
+  AB: ["Seg", "Qui"],
+  ABC: ["Seg", "Qua", "Sex"],
+  ABCD: ["Seg", "Ter", "Qui", "Sex"],
+  ABCDE: ["Seg", "Ter", "Qua", "Qui", "Sex"],
+  "Full Body": ["Seg", "Qua", "Sex"],
+  "Upper/Lower": ["Seg", "Qui"],
+  Personalizada: ["Seg"],
+};
+
+const WEEK_DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"] as const;
+
 let uidCounter = 0;
 function nextUid() {
   uidCounter += 1;
@@ -65,7 +78,13 @@ function nextUid() {
 
 function buildSessions(division: string): SessionBlock[] {
   const labels = sessionLabelsByDivision[division] ?? ["Treino A"];
-  return labels.map((label, i) => ({ id: `s-${division}-${i}`, label, exercises: [] }));
+  const days = defaultDayLabelsByDivision[division] ?? ["Seg"];
+  return labels.map((label, i) => ({
+    id: `s-${division}-${i}`,
+    label,
+    dayLabel: days[i] ?? "Seg",
+    exercises: [],
+  }));
 }
 
 // ── Template card (self-contained state) ──────────────────────────────────
@@ -86,6 +105,8 @@ function TemplateCard({
   const [expanded, setExpanded] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [applied, setApplied] = useState(false);
+  const [tplStartDate, setTplStartDate] = useState("");
+  const [applyError, setApplyError] = useState("");
 
   const totalExercises = template.sessions.reduce((acc, s) => acc + s.exercises.length, 0);
 
@@ -95,13 +116,42 @@ function TemplateCard({
     );
   }
 
-  function handleApply() {
+  async function handleApply() {
+    if (selectedIds.length === 0 || !tplStartDate) {
+      setApplyError("Selecione atletas e a data de início.");
+      return;
+    }
+    setApplyError("");
     setApplied(true);
-    setTimeout(() => {
+    try {
+      await Promise.all(
+        selectedIds.map((athleteId) =>
+          fetch("/api/coach/prescriptions/forca", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              athleteId,
+              sessions: template.sessions.map((s, i) => ({
+                label: s.label,
+                dayLabel: defaultDayLabelsByDivision[template.division]?.[i] ?? "Seg",
+                exercises: s.exercises,
+              })),
+              startDate: tplStartDate,
+              division: template.division,
+            }),
+          })
+        )
+      );
+      setTimeout(() => {
+        setApplied(false);
+        setExpanded(false);
+        setSelectedIds([]);
+        setTplStartDate("");
+      }, 2500);
+    } catch {
       setApplied(false);
-      setExpanded(false);
-      setSelectedIds([]);
-    }, 2500);
+      setApplyError("Erro ao prescrever. Tente novamente.");
+    }
   }
 
   const levelVariant =
@@ -223,6 +273,17 @@ function TemplateCard({
                 <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">
                   Selecione os atletas
                 </p>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    Semana de início (segunda-feira)
+                  </span>
+                  <input
+                    type="date"
+                    value={tplStartDate}
+                    onChange={(e) => setTplStartDate(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text outline-none focus:border-primary/60"
+                  />
+                </label>
                 <div className="space-y-1">
                   {athletes.map((a) => (
                     <label
@@ -251,6 +312,9 @@ function TemplateCard({
                   ))}
                 </div>
 
+                {applyError && (
+                  <p className="text-xs text-danger">{applyError}</p>
+                )}
                 <AnimatePresence mode="wait">
                   {applied ? (
                     <motion.div
@@ -269,7 +333,7 @@ function TemplateCard({
                       <Button
                         size="sm"
                         className="w-full"
-                        disabled={selectedIds.length === 0}
+                        disabled={selectedIds.length === 0 || !tplStartDate}
                         onClick={handleApply}
                       >
                         <Send className="h-3.5 w-3.5" />
@@ -341,7 +405,10 @@ export default function StrengthPrescriptionPage() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("Todas");
   const [expandedExId, setExpandedExId] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<string>("");
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
   const [savedAsTemplate, setSavedAsTemplate] = useState(false);
   const [customTemplates, setCustomTemplates] = useState<WorkoutTemplate[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
@@ -479,16 +546,66 @@ export default function StrengthPrescriptionPage() {
     setSent(false);
   }
 
+  function setSessionDay(dayLabel: string) {
+    setSessions((prev) =>
+      prev.map((s, i) => (i === activeIndex ? { ...s, dayLabel } : s))
+    );
+    setSent(false);
+  }
+
   function addCustomSession() {
     setSessions((prev) => [
       ...prev,
-      { id: `s-custom-${prev.length}`, label: `Treino ${prev.length + 1}`, exercises: [] },
+      { id: `s-custom-${prev.length}`, label: `Treino ${prev.length + 1}`, dayLabel: "Seg", exercises: [] },
     ]);
     setActiveIndex(sessions.length);
   }
 
-  function submit() {
-    setSent(true);
+  async function submit() {
+    if (!athlete || !startDate) {
+      setSendError("Selecione um atleta e a data de início.");
+      return;
+    }
+    const sessionsWithExercises = sessions.filter((s) => s.exercises.length > 0);
+    if (sessionsWithExercises.length === 0) {
+      setSendError("Adicione ao menos um exercício antes de enviar.");
+      return;
+    }
+    setSending(true);
+    setSendError("");
+    try {
+      const res = await fetch("/api/coach/prescriptions/forca", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: athlete.id,
+          sessions: sessions.map((s) => ({
+            label: s.label,
+            dayLabel: s.dayLabel,
+            exercises: s.exercises.map((e) => ({
+              libraryId: e.libraryId,
+              name: e.name,
+              sets: e.sets,
+              reps: e.reps,
+              rest: e.rest,
+              rpe: e.rpe,
+            })),
+          })),
+          startDate,
+          division,
+        }),
+      });
+      if (res.ok) {
+        setSent(true);
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setSendError(body.error ?? "Erro ao prescrever treino.");
+      }
+    } catch {
+      setSendError("Erro de rede. Tente novamente.");
+    } finally {
+      setSending(false);
+    }
   }
 
   async function handleSaveAsTemplate() {
@@ -534,9 +651,11 @@ export default function StrengthPrescriptionPage() {
       ? template.division
       : "Personalizada";
 
+    const defaultDays = defaultDayLabelsByDivision[matchDivision] ?? ["Seg"];
     const newSessions: SessionBlock[] = template.sessions.map((s, i) => ({
       id: `tpl-${template.id}-${i}`,
       label: s.label,
+      dayLabel: defaultDays[i] ?? "Seg",
       exercises: s.exercises.map((e) => ({
         uid: nextUid(),
         libraryId: e.libraryId,
@@ -786,9 +905,9 @@ export default function StrengthPrescriptionPage() {
                           : "border-border bg-card-hover/30 text-text-muted hover:border-primary/30"
                       )}
                     >
-                      {s.label}{" "}
+                      {s.label}
                       <span className="ml-1 text-[10px] font-normal text-text-muted">
-                        ({s.exercises.length})
+                        {s.dayLabel} ({s.exercises.length})
                       </span>
                     </button>
                   ))}
@@ -796,16 +915,40 @@ export default function StrengthPrescriptionPage() {
 
                 {activeSession && (
                   <div className="space-y-3">
-                    <label className="block max-w-xs">
-                      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
-                        Nome da sessão
-                      </span>
-                      <input
-                        value={activeSession.label}
-                        onChange={(e) => renameSession(e.target.value)}
-                        className={inputClass}
-                      />
-                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block">
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                          Nome da sessão
+                        </span>
+                        <input
+                          value={activeSession.label}
+                          onChange={(e) => renameSession(e.target.value)}
+                          className={inputClass}
+                        />
+                      </label>
+                      <div>
+                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                          Dia da semana
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {WEEK_DAYS.map((d) => (
+                            <button
+                              key={d}
+                              type="button"
+                              onClick={() => setSessionDay(d)}
+                              className={cn(
+                                "rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors",
+                                activeSession.dayLabel === d
+                                  ? "border-primary/60 bg-primary/15 text-primary"
+                                  : "border-border bg-card text-text-muted hover:border-primary/30"
+                              )}
+                            >
+                              {d}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
 
                     {activeSession.exercises.length === 0 && (
                       <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-text-muted">
@@ -1017,9 +1160,23 @@ export default function StrengthPrescriptionPage() {
                     <span>Exercícios prescritos</span>
                     <span className="font-semibold text-text">{totalExercises}</span>
                   </div>
-                  <Button onClick={submit} size="lg" className="w-full" disabled={!athlete}>
-                    <Send className="h-4 w-4" /> Enviar para{" "}
-                    {athlete?.name.split(" ")[0] ?? "atleta"}
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                      Semana de início (segunda-feira)
+                    </span>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => { setStartDate(e.target.value); setSendError(""); }}
+                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+                    />
+                  </label>
+                  {sendError && (
+                    <p className="text-xs text-danger">{sendError}</p>
+                  )}
+                  <Button onClick={submit} size="lg" className="w-full" disabled={!athlete || sending}>
+                    <Send className="h-4 w-4" />
+                    {sending ? "Enviando…" : `Enviar para ${athlete?.name.split(" ")[0] ?? "atleta"}`}
                   </Button>
                   <AnimatePresence mode="wait">
                     {savedAsTemplate ? (

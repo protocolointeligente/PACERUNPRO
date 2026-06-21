@@ -33,13 +33,14 @@ export class StravaApiError extends Error {
   }
 }
 
-export function getStravaAuthorizeUrl(redirectUri: string): string {
+export function getStravaAuthorizeUrl(redirectUri: string, state: string): string {
   const params = new URLSearchParams({
     client_id: process.env.STRAVA_CLIENT_ID ?? "",
     redirect_uri: redirectUri,
     response_type: "code",
     approval_prompt: "auto",
     scope: "read,activity:read_all",
+    state,
   });
   return `${STRAVA_OAUTH_BASE}/authorize?${params.toString()}`;
 }

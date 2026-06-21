@@ -13,6 +13,9 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return NextResponse.json({ error: "Informe um e-mail válido." }, { status: 400 });
+    }
     const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
     // Resposta idêntica independente de o e-mail existir, para não revelar

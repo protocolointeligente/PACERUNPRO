@@ -6,10 +6,16 @@ import { exchangeStravaCode } from "@/lib/integrations/strava";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
+  const state = searchParams.get("state");
   const error = searchParams.get("error");
 
   if (error || !code) {
     return NextResponse.redirect(new URL("/atleta/perfil?tab=dispositivos&error=strava_denied", request.url));
+  }
+
+  const storedState = request.cookies.get("strava_state")?.value;
+  if (!storedState || storedState !== state) {
+    return NextResponse.redirect(new URL("/atleta/perfil?tab=dispositivos&error=strava_csrf", request.url));
   }
 
   const session = await getSession();
@@ -43,5 +49,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/atleta/perfil?tab=dispositivos&error=strava_token", request.url));
   }
 
-  return NextResponse.redirect(new URL("/atleta/perfil?tab=dispositivos&connected=strava", request.url));
+  const successResponse = NextResponse.redirect(new URL("/atleta/perfil?tab=dispositivos&connected=strava", request.url));
+  successResponse.cookies.delete("strava_state");
+  return successResponse;
 }

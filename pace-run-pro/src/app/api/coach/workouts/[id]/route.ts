@@ -19,15 +19,19 @@ export async function DELETE(
   });
   if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
 
-  const plan = await prisma.trainingPlan.findFirst({
-    where: { id, coachId: coach.id },
+  // Verify the workout belongs to this coach via the training plan
+  const workout = await prisma.workout.findFirst({
+    where: {
+      id,
+      week: { plan: { coachId: coach.id } },
+    },
     select: { id: true },
   });
-  if (!plan) {
-    return NextResponse.json({ error: "Plano não encontrado" }, { status: 404 });
+  if (!workout) {
+    return NextResponse.json({ error: "Treino não encontrado" }, { status: 404 });
   }
 
-  await prisma.trainingPlan.delete({ where: { id } });
+  await prisma.workout.delete({ where: { id } });
 
   return NextResponse.json({ success: true });
 }

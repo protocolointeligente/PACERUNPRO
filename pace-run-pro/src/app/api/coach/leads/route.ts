@@ -36,6 +36,6 @@ export async function PATCH(req: NextRequest) {
 
   if (result.count === 0) return NextResponse.json({ error: "Lead não encontrado" }, { status: 404 });
 
-  const lead = await prisma.lead.findUnique({ where: { id } });
+  const lead = await prisma.lead.findFirst({ where: { id, coachId: coach.id } });
   return NextResponse.json(lead);
 }
