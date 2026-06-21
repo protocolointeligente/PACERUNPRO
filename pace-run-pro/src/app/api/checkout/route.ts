@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth-guard";
 import { createPixOrder, createCreditCardOrder } from "@/lib/pagbank";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  const session = await getSession();
 
   const body = (await req.json()) as {
     method: string;

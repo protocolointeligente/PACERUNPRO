@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id || session.user.role !== "ATHLETE") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
@@ -49,7 +49,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id || session.user.role !== "ATHLETE") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
 const GOAL_LABELS: Record<string, string> = {
@@ -21,7 +21,7 @@ const LEVEL_LABELS: Record<string, string> = {
 };
 
 export async function GET() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id || session.user.role !== "COACH") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }

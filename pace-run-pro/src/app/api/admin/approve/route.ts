@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
   }

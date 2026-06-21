@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
   const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } });
@@ -18,7 +18,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
   const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } });

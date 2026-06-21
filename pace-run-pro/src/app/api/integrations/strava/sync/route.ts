@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { StravaApiError, fetchStravaActivities, refreshStravaToken } from "@/lib/integrations/strava";
 
 export async function POST() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

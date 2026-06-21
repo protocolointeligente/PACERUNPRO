@@ -42,10 +42,14 @@ interface TodayWorkout {
 }
 
 export default function AthleteDashboard() {
-  const greeting = getGreeting();
+  const [greeting, setGreeting] = useState("");
   const [firstName, setFirstName] = useState("Atleta");
   const [todayWorkout, setTodayWorkout] = useState<TodayWorkout | null>(null);
   const [workoutsLoading, setWorkoutsLoading] = useState(true);
+
+  useEffect(() => {
+    setGreeting(getGreeting());
+  }, []);
 
   useEffect(() => {
     fetch("/api/atleta/perfil")

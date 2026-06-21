@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import type { VoucherAudience, VoucherType } from "@prisma/client";
 
 export async function GET() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "COACH")) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
@@ -19,7 +19,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "COACH")) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
