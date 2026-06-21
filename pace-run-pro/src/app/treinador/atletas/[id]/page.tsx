@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Activity, AlertTriangle, ArrowLeft, Calendar, CalendarDays, CheckCircle2, ClipboardList, Clock, Dumbbell, HeartPulse, Moon, Ruler, Target, TrendingUp, Weight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaTrend, LineTrend } from "@/components/charts/trend-chart";
 import { WeeklyReleaseDialog } from "@/components/coach/weekly-release-dialog";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth-guard";
 
 const GOAL_LABELS: Record<string, string> = {
   CINCO_KM: "5 km",
@@ -36,8 +37,19 @@ const statusLabels = { ativo: "Ativo", risco: "Em risco", inativo: "Inativo" } a
 export default async function AthleteFullViewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const dbAthlete = await prisma.athlete.findUnique({
-    where: { id },
+  const session = await getSession();
+  if (!session?.user?.id || session.user.role !== "COACH") redirect("/login");
+
+  // Resolve coach record for ownership check
+  const coach = await prisma.coach.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+  if (!coach) redirect("/treinador/dashboard");
+
+  // Verify this athlete belongs to the logged-in coach (prevents IDOR)
+  const dbAthlete = await prisma.athlete.findFirst({
+    where: { id, coachId: coach.id },
     select: {
       id: true,
       status: true,
@@ -55,7 +67,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
 
   // Fetch real check-in history (last 10)
   const rawCheckins = await prisma.checkIn.findMany({
-    where: { athleteId: id },
+    where: { athleteId: dbAthlete.id },
     orderBy: { date: "desc" },
     take: 10,
     select: { date: true, rpe: true, pain: true, sleep: true, fatigue: true, mood: true },
@@ -71,7 +83,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
 
   // Fetch recent workout sessions (last 5 completed)
   const rawLogs = await prisma.workoutLog.findMany({
-    where: { athleteId: id },
+    where: { athleteId: dbAthlete.id },
     include: { workout: { select: { date: true, title: true } } },
     orderBy: { workout: { date: "desc" } },
     take: 5,
@@ -88,7 +100,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
 
   // Active training plan with upcoming workouts
   const activePlan = await prisma.trainingPlan.findFirst({
-    where: { athleteId: id },
+    where: { athleteId: dbAthlete.id },
     orderBy: { startDate: "desc" },
     select: {
       id: true,
@@ -126,7 +138,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
   // Weekly volume series (last 8 weeks)
   const eightWeeksAgo = new Date(Date.now() - 8 * 7 * 24 * 60 * 60 * 1000);
   const volumeLogs = await prisma.workoutLog.findMany({
-    where: { athleteId: id, workout: { date: { gte: eightWeeksAgo } } },
+    where: { athleteId: dbAthlete.id, workout: { date: { gte: eightWeeksAgo } } },
     include: { workout: { select: { date: true } } },
     orderBy: { workout: { date: "asc" } },
   });
@@ -141,7 +153,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
 
   // Weight series from Metric
   const metricRows = await prisma.metric.findMany({
-    where: { athleteId: id, weightKg: { not: null } },
+    where: { athleteId: dbAthlete.id, weightKg: { not: null } },
     orderBy: { date: "asc" },
     take: 12,
     select: { date: true, weightKg: true },

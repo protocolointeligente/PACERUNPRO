@@ -14,7 +14,9 @@ const inputClass =
 // ── Inner content (reads searchParams) ───────────────────────────────────
 function LoginContent() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "";
+  // Validate callbackUrl to prevent open-redirect attacks
+  const raw = searchParams.get("callbackUrl") ?? "";
+  const callbackUrl = raw.startsWith("/") ? raw : "";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -7,6 +7,7 @@ export default async function TreinadorLayout({ children }: { children: React.Re
   const session = await getSession();
   if (!session?.user?.id) redirect("/login");
   if (session.user?.role === "ADMIN") redirect("/admin");
+  if (session.user?.role !== "COACH") redirect("/atleta/dashboard");
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
