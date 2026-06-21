@@ -1,11 +1,19 @@
--- CreateEnum
-CREATE TYPE "VoucherType" AS ENUM ('PERCENT', 'FREE_MONTHS');
+-- CreateEnum (idempotent)
+DO $$ BEGIN
+    CREATE TYPE "VoucherType" AS ENUM ('PERCENT', 'FREE_MONTHS');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "VoucherAudience" AS ENUM ('B2C', 'B2B', 'ALL');
+-- CreateEnum (idempotent)
+DO $$ BEGIN
+    CREATE TYPE "VoucherAudience" AS ENUM ('B2C', 'B2B', 'ALL');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "vouchers" (
+CREATE TABLE IF NOT EXISTS "vouchers" (
     "id" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "type" "VoucherType" NOT NULL,
@@ -24,7 +32,11 @@ CREATE TABLE "vouchers" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "vouchers_code_key" ON "vouchers"("code");
+CREATE UNIQUE INDEX IF NOT EXISTS "vouchers_code_key" ON "vouchers"("code");
 
--- AddForeignKey
-ALTER TABLE "vouchers" ADD CONSTRAINT "vouchers_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey (idempotent)
+DO $$ BEGIN
+    ALTER TABLE "vouchers" ADD CONSTRAINT "vouchers_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
