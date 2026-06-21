@@ -73,11 +73,13 @@ function buildSessions(division: string): SessionBlock[] {
 function TemplateCard({
   template,
   athletes,
+  exerciseDb,
   onLoad,
   onDelete,
 }: {
   template: WorkoutTemplate;
   athletes: AthleteListItem[];
+  exerciseDb: ExerciseLibraryItem[];
   onLoad: (t: WorkoutTemplate) => void;
   onDelete?: (id: string) => void;
 }) {
@@ -162,19 +164,31 @@ function TemplateCard({
               {session.exercises.length === 0 ? (
                 <p className="text-xs text-text-muted">Nenhum exercício</p>
               ) : (
-                <div className="space-y-1">
-                  {session.exercises.map((ex, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs">
-                      <span className="font-medium text-text min-w-0 flex-1 truncate">{ex.name}</span>
-                      <span className="shrink-0 rounded bg-card px-1.5 py-0.5 text-text-muted">
-                        {ex.sets}×{ex.reps}
-                      </span>
-                      <span className="shrink-0 text-text-muted">{ex.rest}</span>
-                      <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">
-                        {ex.rpe * 10}%
-                      </span>
-                    </div>
-                  ))}
+                <div className="space-y-1.5">
+                  {session.exercises.map((ex, i) => {
+                    const libEx = exerciseDb.find((e) => e.id === ex.libraryId);
+                    return (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        {libEx?.imageUrl ? (
+                          <img
+                            src={libEx.imageUrl}
+                            alt={ex.name}
+                            className="h-8 w-8 shrink-0 rounded-md object-cover border border-border"
+                          />
+                        ) : (
+                          <div className="h-8 w-8 shrink-0 rounded-md border border-border bg-card-hover/40" />
+                        )}
+                        <span className="font-medium text-text min-w-0 flex-1 truncate">{ex.name}</span>
+                        <span className="shrink-0 rounded bg-card px-1.5 py-0.5 text-text-muted">
+                          {ex.sets}×{ex.reps}
+                        </span>
+                        <span className="shrink-0 text-text-muted">{ex.rest}</span>
+                        <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">
+                          {ex.rpe * 10}%
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -670,6 +684,7 @@ export default function StrengthPrescriptionPage() {
                   key={tpl.id}
                   template={tpl}
                   athletes={athletes}
+                  exerciseDb={exerciseDb}
                   onLoad={loadTemplate}
                   onDelete={tpl.isCustom ? handleDeleteCustomTemplate : undefined}
                 />

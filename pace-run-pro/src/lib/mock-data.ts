@@ -826,10 +826,10 @@ export const workoutTemplates: WorkoutTemplate[] = [
       {
         label: "Full Body",
         exercises: [
-          { libraryId: "ex-1", name: "Agachamento búlgaro", sets: 4, reps: "10-12 por perna", rest: "60-90s", rpe: 7 },
-          { libraryId: "ex-5", name: "Ponte de glúteo unilateral", sets: 3, reps: "12 por lado", rest: "45-60s", rpe: 6 },
-          { libraryId: "ex-2", name: "Elevação de panturrilha unilateral", sets: 3, reps: "12-15 por perna", rest: "45-60s", rpe: 6 },
-          { libraryId: "ex-3", name: "Prancha com elevação de perna", sets: 3, reps: "8 elevações por lado", rest: "45s", rpe: 6 },
+          { libraryId: "ex-031", name: "Agachamento Búlgaro com Halteres", sets: 4, reps: "10-12 por perna", rest: "60-90s", rpe: 7 },
+          { libraryId: "ex-385", name: "Elevação Pélvica Unilateral Com Barra", sets: 3, reps: "12 por lado", rest: "45-60s", rpe: 6 },
+          { libraryId: "ex-325", name: "Elevação de Panturrilha com Uma Perna na Máquina Hack", sets: 3, reps: "12-15 por perna", rest: "45-60s", rpe: 6 },
+          { libraryId: "ex-401", name: "Escalador de Montanha", sets: 3, reps: "30s de esforço", rest: "45s", rpe: 6 },
         ],
       },
     ],
@@ -846,16 +846,16 @@ export const workoutTemplates: WorkoutTemplate[] = [
       {
         label: "Treino A",
         exercises: [
-          { libraryId: "ex-5", name: "Ponte de glúteo unilateral", sets: 3, reps: "12 por lado", rest: "45-60s", rpe: 5 },
-          { libraryId: "ex-6", name: "Mobilidade de tornozelo em parede", sets: 3, reps: "10 repetições por lado", rest: "30s", rpe: 4 },
-          { libraryId: "ex-3", name: "Prancha com elevação de perna", sets: 3, reps: "6 elevações por lado", rest: "45s", rpe: 5 },
+          { libraryId: "ex-344", name: "Elevação de Quadril com Peso Corporal", sets: 3, reps: "15 repetições", rest: "45-60s", rpe: 5 },
+          { libraryId: "ex-160", name: "Alongamentos de pés e tornozelos", sets: 3, reps: "10 por lado", rest: "30s", rpe: 4 },
+          { libraryId: "ex-401", name: "Escalador de Montanha", sets: 3, reps: "20s de esforço", rest: "45s", rpe: 5 },
         ],
       },
       {
         label: "Treino B",
         exercises: [
-          { libraryId: "ex-1", name: "Agachamento búlgaro", sets: 3, reps: "8-10 por perna", rest: "60-90s", rpe: 6 },
-          { libraryId: "ex-2", name: "Elevação de panturrilha unilateral", sets: 3, reps: "12-15 por perna", rest: "45-60s", rpe: 6 },
+          { libraryId: "ex-032", name: "Agachamento Búlgaro com Peso Corporal", sets: 3, reps: "8-10 por perna", rest: "60-90s", rpe: 6 },
+          { libraryId: "ex-336", name: "Elevação de Panturrilhas", sets: 3, reps: "15-20 repetições", rest: "45-60s", rpe: 6 },
         ],
       },
     ],
@@ -872,9 +872,10 @@ export const workoutTemplates: WorkoutTemplate[] = [
       {
         label: "Full Body",
         exercises: [
-          { libraryId: "ex-4", name: "Skipping com elástico (pliometria)", sets: 5, reps: "20s de esforço", rest: "40s", rpe: 9 },
-          { libraryId: "ex-1", name: "Agachamento búlgaro", sets: 4, reps: "8 por perna", rest: "90s", rpe: 8 },
-          { libraryId: "ex-3", name: "Prancha com elevação de perna", sets: 3, reps: "10 elevações por lado", rest: "45s", rpe: 7 },
+          { libraryId: "ex-240", name: "Corrida com Joelhos Altos", sets: 5, reps: "20s de esforço", rest: "40s", rpe: 9 },
+          { libraryId: "ex-033", name: "Agachamento búlgaro com salto", sets: 4, reps: "8 por perna", rest: "90s", rpe: 8 },
+          { libraryId: "ex-407", name: "Exercício Pliométrico X", sets: 3, reps: "10 repetições", rest: "60s", rpe: 8 },
+          { libraryId: "ex-401", name: "Escalador de Montanha", sets: 3, reps: "30s de esforço", rest: "45s", rpe: 7 },
         ],
       },
     ],
@@ -892,22 +893,22 @@ export const workoutTemplates: WorkoutTemplate[] = [
       {
         label: "Treino A — Inferiores",
         exercises: [
-          { libraryId: "ex-1", name: "Agachamento búlgaro", sets: 4, reps: "10-12 por perna", rest: "60-90s", rpe: 7 },
-          { libraryId: "ex-5", name: "Ponte de glúteo unilateral", sets: 3, reps: "12 por lado", rest: "45-60s", rpe: 6 },
+          { libraryId: "ex-031", name: "Agachamento Búlgaro com Halteres", sets: 4, reps: "10-12 por perna", rest: "60-90s", rpe: 7 },
+          { libraryId: "ex-385", name: "Elevação Pélvica Unilateral Com Barra", sets: 3, reps: "12 por lado", rest: "45-60s", rpe: 6 },
         ],
       },
       {
         label: "Treino B — Panturrilha + Potência",
         exercises: [
-          { libraryId: "ex-2", name: "Elevação de panturrilha unilateral", sets: 4, reps: "12-15 por perna", rest: "45-60s", rpe: 7 },
-          { libraryId: "ex-4", name: "Skipping com elástico (pliometria)", sets: 4, reps: "20s de esforço", rest: "40s", rpe: 8 },
+          { libraryId: "ex-323", name: "Elevação de Panturrilha com Barra em Pé", sets: 4, reps: "12-15 repetições", rest: "45-60s", rpe: 7 },
+          { libraryId: "ex-244", name: "Corrida de Sprint com Assistência de Faixa Elástica", sets: 4, reps: "20s de esforço", rest: "40s", rpe: 8 },
         ],
       },
       {
         label: "Treino C — Core + Mobilidade",
         exercises: [
-          { libraryId: "ex-3", name: "Prancha com elevação de perna", sets: 3, reps: "8 elevações por lado", rest: "45s", rpe: 6 },
-          { libraryId: "ex-6", name: "Mobilidade de tornozelo em parede", sets: 3, reps: "10 repetições por lado", rest: "30s", rpe: 4 },
+          { libraryId: "ex-401", name: "Escalador de Montanha", sets: 3, reps: "30s de esforço", rest: "45s", rpe: 6 },
+          { libraryId: "ex-160", name: "Alongamentos de pés e tornozelos", sets: 3, reps: "10 por lado", rest: "30s", rpe: 4 },
         ],
       },
     ],
