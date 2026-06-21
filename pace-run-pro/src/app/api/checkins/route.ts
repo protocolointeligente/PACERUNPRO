@@ -2,6 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
+export async function GET() {
+  const session = await getSession();
+  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+
+  const athlete = await prisma.athlete.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+  if (!athlete) return NextResponse.json([]);
+
+  const rows = await prisma.checkIn.findMany({
+    where: { athleteId: athlete.id },
+    orderBy: { date: "desc" },
+    take: 10,
+    select: { date: true, rpe: true, pain: true, sleep: true, fatigue: true, mood: true },
+  });
+
+  return NextResponse.json(
+    rows.map((c) => ({
+      date: c.date.toISOString().slice(0, 10),
+      rpe: c.rpe ?? 0,
+      pain: c.pain ?? 0,
+      sleep: c.sleep ?? 0,
+      fatigue: c.fatigue ?? 0,
+      mood: c.mood ?? 0,
+      plannedRpe: 7,
+    })),
+  );
+}
+
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session?.user?.id) {

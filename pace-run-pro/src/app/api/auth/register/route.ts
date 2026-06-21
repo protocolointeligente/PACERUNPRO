@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { getRecommendedB2BPlan } from "@/lib/mock-data";
+
+function recommendPlanId(athleteCount: number): string {
+  if (athleteCount <= 1) return "b2b-free";
+  if (athleteCount <= 20) return "b2b-starter";
+  if (athleteCount <= 80) return "b2b-pro";
+  if (athleteCount <= 250) return "b2b-assessoria";
+  return "b2b-unlimited";
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -48,9 +55,7 @@ export async function POST(req: NextRequest) {
       select: { id: true, email: true, name: true, role: true },
     });
 
-    const recommendedPlanId = isCoach
-      ? getRecommendedB2BPlan(Number(studentCount) || 1).id
-      : null;
+    const recommendedPlanId = isCoach ? recommendPlanId(Number(studentCount) || 1) : null;
 
     return NextResponse.json({ user, recommendedPlanId }, { status: 201 });
   } catch (err) {

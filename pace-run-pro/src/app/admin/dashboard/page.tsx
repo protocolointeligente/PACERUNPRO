@@ -76,6 +76,15 @@ export default function AdminDashboard() {
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
   const [refusedIds, setRefusedIds] = useState<Set<string>>(new Set());
 
+  async function handleApprove(id: string) {
+    setApprovedIds((prev) => new Set([...prev, id]));
+    await fetch("/api/admin/approve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assessoriaId: id, action: "approve" }),
+    }).catch(() => null);
+  }
+
   useEffect(() => {
     fetch("/api/admin/coaches")
       .then((r) => r.ok ? r.json() : [])
@@ -263,7 +272,7 @@ export default function AdminDashboard() {
                               variant="success"
                               size="sm"
                               className="h-7 px-2.5 text-xs"
-                              onClick={() => setApprovedIds((prev) => new Set([...prev, a.id]))}
+                              onClick={() => handleApprove(a.id)}
                             >
                               Aprovar
                             </Button>

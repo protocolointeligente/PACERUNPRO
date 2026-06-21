@@ -23,14 +23,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  integrationsList,
-  personalRecords,
-  syncedActivities,
-  sourceLabels,
-  sourceColors,
-} from "@/lib/mock-data";
-import { normalizeActivity } from "@/lib/integrations/normalize-activity";
+// Static integration metadata (connected status fetched from /api/integrations/status)
+const INTEGRATIONS_LIST = [
+  { id: "strava", name: "Strava", description: "Compartilhe e importe atividades automaticamente." },
+  { id: "garmin", name: "Garmin Connect", description: "Sincronize treinos, FC e GPS automaticamente." },
+  { id: "coros", name: "Coros", description: "Importe sessões de corrida e métricas de desempenho." },
+  { id: "polar", name: "Polar Flow", description: "Sincronize dados de frequência cardíaca e treinos." },
+  { id: "apple", name: "Apple Watch / HealthKit", description: "Sincronize treinos e dados de saúde do iPhone." },
+];
+const SOURCE_LABELS: Record<string, string> = { strava: "Strava", garmin: "Garmin", polar: "Polar", coros: "Coros", apple: "Apple Watch", manual: "Manual" };
+const SOURCE_COLORS: Record<string, string> = { strava: "#FC4C02", garmin: "#00B9FF", polar: "#E63946", coros: "#1A1A2E", apple: "#555555", manual: "#94a3b8" };
 import { cn } from "@/lib/utils";
 
 const inputClass =
@@ -48,6 +50,7 @@ export default function ProfilePage() {
 
   const [notifs, setNotifs] = useState({ workouts: true, community: false, coach: true });
   const [activeTab, setActiveTab] = useState("dados");
+  const [races, setRaces] = useState<Array<{ id: string; name: string; date: string; distanceKm: number; resultTime?: string | null }>>([]);
   const [stravaConnected, setStravaConnected] = useState(false);
   const [stravaLastSync, setStravaLastSync] = useState<string | null>(null);
   const [stravaLoading, setStravaLoading] = useState<"sync" | "disconnect" | null>(null);
@@ -217,6 +220,11 @@ export default function ProfilePage() {
         }
       })
       .catch(() => {});
+
+    fetch("/api/athlete/races")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: Array<{ id: string; name: string; date: string; distanceKm: number; resultTime?: string | null }>) => setRaces(data))
+      .catch(() => null);
   }, []);
 
   async function handleStravaSync() {
@@ -350,20 +358,27 @@ export default function ProfilePage() {
             <div>
               <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-text">
                 <Award className="h-4 w-4 text-warning" />
-                Histórico de recordes
+                Provas registradas
               </h3>
-              <div className="grid gap-2.5 sm:grid-cols-2">
-                {personalRecords.map((r) => (
-                  <Card key={r.distance}>
-                    <CardContent className="flex items-center justify-between p-3.5">
-                      <span className="text-sm font-medium text-text">{r.distance}</span>
-                      <span className="text-sm text-text-muted">
-                        <span className="font-display font-bold text-text">{r.time}</span> · {r.pace}
-                      </span>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              {races.length === 0 ? (
+                <p className="text-sm text-text-muted">Nenhuma prova registrada ainda.</p>
+              ) : (
+                <div className="grid gap-2.5 sm:grid-cols-2">
+                  {races.map((r) => (
+                    <Card key={r.id}>
+                      <CardContent className="flex items-center justify-between p-3.5">
+                        <div>
+                          <p className="text-sm font-medium text-text">{r.name}</p>
+                          <p className="text-xs text-text-muted">{r.distanceKm} km · {new Date(r.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
+                        </div>
+                        {r.resultTime && (
+                          <span className="font-display text-sm font-bold text-text">{r.resultTime}</span>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </TabsContent>
@@ -400,9 +415,9 @@ export default function ProfilePage() {
 
             {/* Integration cards */}
             <div className="grid gap-3 sm:grid-cols-2">
-              {integrationsList.map((d) => {
+              {INTEGRATIONS_LIST.map((d) => {
                 const isStrava = d.id === "strava";
-                const connected = isStrava ? stravaConnected : d.connected;
+                const connected = isStrava ? stravaConnected : false;
 
                 return (
                   <Card key={d.id}>
@@ -505,63 +520,19 @@ export default function ProfilePage() {
               <h3 className="mb-3 font-display text-sm font-semibold text-text">
                 Atividades sincronizadas
               </h3>
-              <div className="space-y-2.5">
-                {syncedActivities.map((raw) => {
-                  const act = normalizeActivity(raw);
-                  const color = sourceColors[act.source] ?? "#94a3b8";
-                  const label = sourceLabels[act.source] ?? act.source;
-                  const dateFormatted = new Date(act.date).toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  });
-                  return (
-                    <Card key={act.id}>
-                      <CardContent className="p-4">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1 space-y-1">
-                            {/* Source badge + title */}
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color }}>
-                                <span
-                                  className="h-2 w-2 rounded-full shrink-0"
-                                  style={{ backgroundColor: color }}
-                                />
-                                {label}
-                              </span>
-                              <span className="text-text-muted text-xs">{dateFormatted}</span>
-                            </div>
-                            <p className="font-display text-sm font-semibold text-text">{act.title}</p>
-                            {/* Metrics row */}
-                            <div className="flex flex-wrap gap-3 text-xs text-text-muted">
-                              <span>
-                                <span className="font-medium text-text">{act.distanceKm.toFixed(1)} km</span>
-                              </span>
-                              <span>Pace <span className="font-medium text-text">{act.pace}</span></span>
-                              <span>FC méd <span className="font-medium text-text">{act.avgHrBpm} bpm</span></span>
-                              <span>Calorias <span className="font-medium text-text">{act.calories} kcal</span></span>
-                              <span>Elevação <span className="font-medium text-text">{act.elevationM} m</span></span>
-                              <span>RPE estimado <span className="font-medium text-text">{act.estimatedRpe}</span></span>
-                            </div>
-                          </div>
-                          {/* Check-in badge or button */}
-                          <div className="shrink-0">
-                            {act.autoCheckInFilled ? (
-                              <Badge variant="success" className="whitespace-nowrap">
-                                auto check-in preenchido
-                              </Badge>
-                            ) : (
-                              <Button size="sm" variant="secondary" className="whitespace-nowrap text-xs">
-                                preencher check-in
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+              {!stravaConnected ? (
+                <Card>
+                  <CardContent className="p-5 text-center text-sm text-text-muted">
+                    Conecte o <span className="font-semibold text-text">Strava</span> para ver suas atividades sincronizadas automaticamente.
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardContent className="p-5 text-center text-sm text-text-muted">
+                    Strava conectado. As atividades aparecerão aqui após a próxima sincronização.
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </TabsContent>

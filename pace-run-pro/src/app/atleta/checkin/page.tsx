@@ -8,7 +8,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScaleInput } from "@/components/checkin/scale-input";
-import { checkInHistory, shoesList } from "@/lib/mock-data";
 import { evaluateCheckInRules, type CheckInRecord } from "@/lib/calculations";
 import { cn, formatDuration, formatPace } from "@/lib/utils";
 
@@ -37,7 +36,9 @@ export default function CheckInPage() {
   const [notes, setNotes] = useState("");
   const [selectedShoeId, setSelectedShoeId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [lastWorkout, setLastWorkout] = useState<LastWorkout | null>(null);
+  const [checkInHistory, setCheckInHistory] = useState<CheckInRecord[]>([]);
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -47,6 +48,13 @@ export default function CheckInPage() {
     if (raw) {
       try { setLastWorkout(JSON.parse(raw) as LastWorkout); } catch { /* ignore */ }
     }
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/checkins")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: CheckInRecord[]) => setCheckInHistory(data))
+      .catch(() => null);
   }, []);
 
   async function shareWorkout() {
@@ -109,7 +117,8 @@ export default function CheckInPage() {
     }, "image/png");
   }
 
-  const activeShoes = shoesList.filter((s) => s.active);
+  // Shoe list is empty until a dedicated /api/athlete/shoes endpoint is implemented
+  const activeShoes: Array<{ id: string; brand: string; model: string; kmAccumulated: number; color: string; imageEmoji: string }> = [];
   const selectedShoe = activeShoes.find((s) => s.id === selectedShoeId);
 
   function update(key: Key, v: number) {
@@ -126,15 +135,26 @@ export default function CheckInPage() {
 
   async function save() {
     setSaving(true);
+    setSaveError(false);
     try {
-      await fetch("/api/checkins", {
+      const res = await fetch("/api/checkins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...values, notes }),
       });
-    } catch { /* continua mesmo com erro de rede */ }
-    setSaved(true);
-    setSaving(false);
+      if (res.ok) {
+        setSaved(true);
+        // Refresh history to include the new check-in
+        const updated: CheckInRecord[] = await fetch("/api/checkins").then((r) => r.ok ? r.json() : []).catch(() => []);
+        setCheckInHistory(updated);
+      } else {
+        setSaveError(true);
+      }
+    } catch {
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
   }
 
   const severityStyles = {
@@ -227,35 +247,39 @@ export default function CheckInPage() {
         <Card>
           <CardContent className="p-4 sm:p-5">
             <span className="mb-3 block text-sm font-semibold text-text">Qual tênis você usou neste treino?</span>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {activeShoes.map((shoe) => (
-                <button
-                  key={shoe.id}
-                  type="button"
-                  onClick={() => setSelectedShoeId((id) => (id === shoe.id ? null : shoe.id))}
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-xl border p-3 text-left transition-all",
-                    selectedShoeId === shoe.id
-                      ? "border-primary bg-primary/10"
-                      : "border-border bg-background hover:border-primary/40"
-                  )}
-                >
-                  <span
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xl"
-                    style={{ backgroundColor: `${shoe.color}20`, border: `1.5px solid ${shoe.color}40` }}
+            {activeShoes.length === 0 ? (
+              <p className="text-sm text-text-muted">Nenhum tênis cadastrado — adicione na seção <span className="font-medium text-text">Tênis</span>.</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {activeShoes.map((shoe) => (
+                  <button
+                    key={shoe.id}
+                    type="button"
+                    onClick={() => setSelectedShoeId((id) => (id === shoe.id ? null : shoe.id))}
+                    className={cn(
+                      "flex items-center gap-2.5 rounded-xl border p-3 text-left transition-all",
+                      selectedShoeId === shoe.id
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-background hover:border-primary/40"
+                    )}
                   >
-                    {shoe.imageEmoji}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-text">
-                      {shoe.brand} {shoe.model}
-                    </p>
-                    <p className="text-xs text-text-muted">{shoe.kmAccumulated.toLocaleString("pt-BR")} km</p>
-                  </div>
-                  {selectedShoeId === shoe.id && <CheckCircle2 className="ml-auto h-4 w-4 shrink-0 text-primary" />}
-                </button>
-              ))}
-            </div>
+                    <span
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xl"
+                      style={{ backgroundColor: `${shoe.color}20`, border: `1.5px solid ${shoe.color}40` }}
+                    >
+                      {shoe.imageEmoji}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-text">
+                        {shoe.brand} {shoe.model}
+                      </p>
+                      <p className="text-xs text-text-muted">{shoe.kmAccumulated.toLocaleString("pt-BR")} km</p>
+                    </div>
+                    {selectedShoeId === shoe.id && <CheckCircle2 className="ml-auto h-4 w-4 shrink-0 text-primary" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -308,6 +332,11 @@ export default function CheckInPage() {
         )}
       </AnimatePresence>
 
+      {saveError && (
+        <p className="rounded-xl border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
+          Erro ao salvar check-in. Verifique sua conexão e tente novamente.
+        </p>
+      )}
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button size="lg" className="flex-1" onClick={save} disabled={saved || saving}>
           <Save className="h-4 w-4" />
