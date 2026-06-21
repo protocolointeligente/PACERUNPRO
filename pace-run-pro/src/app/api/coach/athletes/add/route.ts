@@ -5,12 +5,12 @@ import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id || session.user.role !== "COACH") {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
-
   try {
+    const session = await auth();
+    if (!session?.user?.id || session.user.role !== "COACH") {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
     const { name, email } = await req.json();
     if (!name || !email) {
       return NextResponse.json({ error: "Nome e email são obrigatórios" }, { status: 400 });
