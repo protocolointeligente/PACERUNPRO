@@ -5,8 +5,8 @@ import { ReceivingMethod } from "@prisma/client";
 
 export async function GET() {
   const session = await getSession();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  if (!session?.user?.id || session.user.role !== "COACH") {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const settings = await prisma.billingSettings.findUnique({
@@ -18,8 +18,8 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
   const session = await getSession();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  if (!session?.user?.id || session.user.role !== "COACH") {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const body = (await req.json()) as {

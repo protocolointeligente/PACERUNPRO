@@ -126,21 +126,27 @@ export async function POST(req: NextRequest) {
       const workoutType =
         (ZONE_TYPE_MAP[s.zone ?? "E"] ?? "RODAGEM_LEVE") as WorkoutType;
 
-      await prisma.workout.create({
-        data: {
-          weekId: week.id,
-          date: workoutDate,
-          type: workoutType,
-          title: s.title,
-          status: "LIBERADO",
-          objective: s.description ?? "",
-          mainSet: s.intervals ?? "",
-          targetDistanceKm: s.distanceKm,
-          notes: `Template: ${templateName}`,
-        },
+      const existing = await prisma.workout.findFirst({
+        where: { weekId: week.id, date: workoutDate },
+        select: { id: true },
       });
 
-      totalWorkoutsCreated++;
+      if (!existing) {
+        await prisma.workout.create({
+          data: {
+            weekId: week.id,
+            date: workoutDate,
+            type: workoutType,
+            title: s.title,
+            status: "LIBERADO",
+            objective: s.description ?? "",
+            mainSet: s.intervals ?? "",
+            targetDistanceKm: s.distanceKm,
+            notes: `Template: ${templateName}`,
+          },
+        });
+        totalWorkoutsCreated++;
+      }
     }
   }
 

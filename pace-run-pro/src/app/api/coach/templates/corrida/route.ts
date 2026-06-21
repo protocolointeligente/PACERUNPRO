@@ -8,7 +8,7 @@ async function getCoach(userId: string) {
 
 export async function GET() {
   const session = await getSession();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || session.user.role !== "COACH") return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const coach = await getCoach(session.user.id);
   if (!coach) return NextResponse.json({ error: "Treinador não encontrado" }, { status: 403 });
 
@@ -22,7 +22,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || session.user.role !== "COACH") return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const coach = await getCoach(session.user.id);
   if (!coach) return NextResponse.json({ error: "Treinador não encontrado" }, { status: 403 });
 

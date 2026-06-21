@@ -63,9 +63,9 @@ export async function POST(
     return NextResponse.json({ error: "Atleta não encontrado" }, { status: 404 });
   }
 
-  // Verify workout belongs to this athlete
+  // Verify workout belongs to this athlete AND week is released
   const workout = await prisma.workout.findFirst({
-    where: { id, week: { plan: { athleteId: athlete.id } } },
+    where: { id, week: { released: true, plan: { athleteId: athlete.id } } },
     select: { id: true },
   });
 

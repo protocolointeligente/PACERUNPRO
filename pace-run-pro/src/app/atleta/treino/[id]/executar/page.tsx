@@ -170,17 +170,21 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
     setRunning(false);
     // Persist real GPS stats so the check-in page can build the share card
     const avgPace = distanceKm > 0.01 && elapsed > 0 ? elapsed / distanceKm : null;
-    localStorage.setItem(
-      "lastWorkout",
-      JSON.stringify({
-        distanceKm,
-        durationSec: elapsed,
-        avgPaceSec: avgPace ? Math.round(avgPace) : null,
-        elevationGain: hasAltitude ? elevationGain : null,
-        title: workout?.title ?? "",
-        splits,
-      }),
-    );
+    try {
+      localStorage.setItem(
+        "lastWorkout",
+        JSON.stringify({
+          distanceKm,
+          durationSec: elapsed,
+          avgPaceSec: avgPace ? Math.round(avgPace) : null,
+          elevationGain: hasAltitude ? elevationGain : null,
+          title: workout?.title ?? "",
+          splits,
+        }),
+      );
+    } catch {
+      // storage unavailable (private browsing or permissions)
+    }
     // Save workout log to the database
     fetch(`/api/athlete/workouts/${id}`, {
       method: "POST",

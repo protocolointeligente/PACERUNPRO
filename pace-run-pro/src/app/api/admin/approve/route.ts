@@ -14,24 +14,28 @@ export async function POST(req: NextRequest) {
     coachUserId?: string;
   };
 
-  if (!assessoriaId || !action) {
+  if (!assessoriaId || (action !== "approve" && action !== "refuse")) {
     return NextResponse.json({ error: "Parâmetros inválidos" }, { status: 400 });
   }
 
   if (action === "approve") {
     await prisma.subscription.updateMany({
       where: {
-        user: {
-          role: "COACH",
-          coach: { id: assessoriaId },
-        },
+        user: { role: "COACH", coach: { id: assessoriaId } },
         status: "TRIAL",
       },
       data: { status: "ACTIVE" },
     });
-
     return NextResponse.json({ ok: true, message: "Assessoria aprovada" });
   }
 
+  // action === "refuse"
+  await prisma.subscription.updateMany({
+    where: {
+      user: { role: "COACH", coach: { id: assessoriaId } },
+      status: { in: ["TRIAL", "ACTIVE"] },
+    },
+    data: { status: "CANCELED" },
+  });
   return NextResponse.json({ ok: true, message: "Assessoria recusada" });
 }

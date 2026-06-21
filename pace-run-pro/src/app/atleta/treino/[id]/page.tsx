@@ -121,7 +121,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
       {/* Hero */}
       <Card className="overflow-hidden">
         <div className="relative h-52 sm:h-64">
-          {workout.imageUrl && (
+          {workout.imageUrl && workout.imageUrl.startsWith("https://") && (
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url('${workout.imageUrl}')` }}

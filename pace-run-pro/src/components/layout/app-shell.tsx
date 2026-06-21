@@ -228,7 +228,6 @@ export function AppShell({
             </Badge>
             <button className="relative rounded-lg p-2 text-text-muted hover:bg-card hover:text-text" aria-label="Notificações">
               <Bell className="h-5 w-5" />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-danger" />
             </button>
             <Avatar className="h-9 w-9 lg:hidden">
               <AvatarImage src={avatarUrl} alt={userName} />

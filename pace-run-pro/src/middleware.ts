@@ -30,6 +30,10 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/atleta/dashboard", nextUrl));
   }
 
+  if (isLoggedIn && isAthleteRoute && role === "COACH") {
+    return NextResponse.redirect(new URL("/treinador/dashboard", nextUrl));
+  }
+
   return NextResponse.next();
 });
 

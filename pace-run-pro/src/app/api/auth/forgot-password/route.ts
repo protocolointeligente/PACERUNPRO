@@ -37,11 +37,14 @@ export async function POST(request: NextRequest) {
     const resetUrl = new URL("/redefinir-senha", request.url);
     resetUrl.searchParams.set("token", token);
 
+    const safeName = user.name
+      ? user.name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+      : null;
     await sendEmail({
       to: normalizedEmail,
       subject: "Redefinir senha — Pace Run Pro",
       html: `
-        <p>Olá${user.name ? `, ${user.name}` : ""}!</p>
+        <p>Olá${safeName ? `, ${safeName}` : ""}!</p>
         <p>Recebemos uma solicitação para redefinir a senha da sua conta no Pace Run Pro.</p>
         <p><a href="${resetUrl.toString()}">Clique aqui para criar uma nova senha</a></p>
         <p>Este link expira em 1 hora. Se você não pediu essa alteração, pode ignorar este e-mail.</p>

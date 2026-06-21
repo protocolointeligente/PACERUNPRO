@@ -48,7 +48,11 @@ export default function ProfilePage() {
     level?: string | null; coachName?: string | null;
   }>({});
 
-  const [notifs, setNotifs] = useState({ workouts: true, community: false, coach: true });
+  const [notifs, setNotifsRaw] = useState({ workouts: true, community: false, coach: true });
+  function setNotifs(val: typeof notifs) {
+    setNotifsRaw(val);
+    try { localStorage.setItem("notif-prefs", JSON.stringify(val)); } catch { /* storage unavailable */ }
+  }
   const [activeTab, setActiveTab] = useState("dados");
   const [races, setRaces] = useState<Array<{ id: string; name: string; date: string; distanceKm: number; resultTime?: string | null }>>([]);
   const [stravaConnected, setStravaConnected] = useState(false);
@@ -166,6 +170,13 @@ export default function ProfilePage() {
       setEditSaving(false);
     }
   }
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("notif-prefs");
+      if (stored) setNotifsRaw(JSON.parse(stored));
+    } catch { /* storage unavailable */ }
+  }, []);
 
   useEffect(() => {
     fetch("/api/atleta/perfil")
