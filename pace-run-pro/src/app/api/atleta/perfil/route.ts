@@ -22,7 +22,7 @@ const LEVEL_LABELS: Record<string, string> = {
 
 export async function GET() {
   const session = await getSession();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  if (!session?.user?.id || session.user.role !== "ATHLETE") return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },

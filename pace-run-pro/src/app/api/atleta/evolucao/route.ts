@@ -14,7 +14,7 @@ function monthLabel(date: Date): string {
 
 export async function GET() {
   const session = await getSession();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  if (!session?.user?.id || session.user.role !== "ATHLETE") return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
   const athleteRow = await prisma.athlete.findUnique({
     where: { userId: session.user.id },

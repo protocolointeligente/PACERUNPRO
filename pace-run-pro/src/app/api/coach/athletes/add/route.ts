@@ -28,7 +28,13 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (user && user.role === "ATHLETE") {
-      // Link existing athlete to this coach
+      const athleteRow = await prisma.athlete.findUnique({
+        where: { userId: user.id },
+        select: { coachId: true },
+      });
+      if (athleteRow?.coachId && athleteRow.coachId !== coach.id) {
+        return NextResponse.json({ error: "Atleta já vinculado a outro treinador." }, { status: 409 });
+      }
       await prisma.athlete.upsert({
         where: { userId: user.id },
         update: { coachId: coach.id },

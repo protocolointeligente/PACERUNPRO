@@ -73,6 +73,14 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const existing = await prisma.workoutLog.findFirst({
+    where: { workoutId: id, athleteId: athlete.id },
+    select: { id: true },
+  });
+  if (existing) {
+    return NextResponse.json({ success: true });
+  }
+
   const { rpe, feeling, distanceKm, durationSec } = await req.json();
 
   await prisma.workoutLog.create({

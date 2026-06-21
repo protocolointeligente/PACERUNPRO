@@ -5,7 +5,7 @@ import { StravaApiError, fetchStravaActivities, refreshStravaToken } from "@/lib
 
 export async function POST() {
   const session = await getSession();
-  if (!session?.user) {
+  if (!session?.user?.id || session.user.role !== "ATHLETE") {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

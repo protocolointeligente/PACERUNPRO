@@ -5,7 +5,7 @@ import { deauthorizeStrava } from "@/lib/integrations/strava";
 
 export async function POST() {
   const session = await getSession();
-  if (!session?.user) {
+  if (!session?.user?.id || session.user.role !== "ATHLETE") {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
