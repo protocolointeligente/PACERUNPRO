@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/logo";
@@ -13,7 +13,6 @@ const inputClass =
 
 // ── Inner content (reads searchParams) ───────────────────────────────────
 function LoginContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "";
 
@@ -40,18 +39,13 @@ function LoginContent() {
       return;
     }
 
-    // Fetch session to get role
-    const { getSession } = await import("next-auth/react");
-    const session = await getSession();
-    const role = (session?.user as { role?: string })?.role;
-
-    if (role === "ADMIN") router.push("/admin/dashboard");
-    else if (role === "COACH") router.push("/treinador/dashboard");
-    else router.push(callbackUrl || "/atleta/dashboard");
+    // Full page navigation so the server picks up the new session cookie
+    // and each layout applies role-based routing (COACH → /treinador, ADMIN → /admin)
+    window.location.assign(callbackUrl || "/atleta/dashboard");
   }
 
   function handleGoogle() {
-    signIn("google", { callbackUrl: callbackUrl || "/painel" });
+    signIn("google", { callbackUrl: callbackUrl || "/atleta/dashboard" });
   }
 
   return (

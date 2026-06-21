@@ -39,13 +39,21 @@ export function AppShell({
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    setCollapsed(localStorage.getItem("sidebar-collapsed") === "true");
+    try {
+      setCollapsed(localStorage.getItem("sidebar-collapsed") === "true");
+    } catch {
+      // storage unavailable (private browsing or permissions)
+    }
   }, []);
 
   function toggleCollapsed() {
     const next = !collapsed;
     setCollapsed(next);
-    localStorage.setItem("sidebar-collapsed", String(next));
+    try {
+      localStorage.setItem("sidebar-collapsed", String(next));
+    } catch {
+      // storage unavailable (private browsing or permissions)
+    }
   }
 
   function handleLogout() {

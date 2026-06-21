@@ -64,8 +64,11 @@ export default function AthleteDashboard() {
     fetch("/api/athlete/workouts")
       .then((r) => r.ok ? r.json() : [])
       .then((data: Array<{ id: string; date: string; title: string; type: string; objective?: string; targetPaceSecPerKm?: number; targetDistanceKm?: number; targetDurationMin?: number; targetRpe?: number }>) => {
-        const today = new Date().toDateString();
-        const todaysWorkout = data.find((w) => new Date(w.date).toDateString() === today);
+        // Compare date portions directly to avoid UTC-to-local timezone shifts
+        // w.date is an ISO string ("2026-06-21T00:00:00.000Z"); slice(0,10) gives "2026-06-21"
+        // toLocaleDateString("sv") gives "YYYY-MM-DD" in the browser's local timezone
+        const todayLocal = new Date().toLocaleDateString("sv");
+        const todaysWorkout = data.find((w) => w.date.slice(0, 10) === todayLocal);
         setTodayWorkout(todaysWorkout ?? null);
       })
       .catch(() => null)
