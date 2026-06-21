@@ -34,6 +34,7 @@ const INTEGRATIONS_LIST = [
 const SOURCE_LABELS: Record<string, string> = { strava: "Strava", garmin: "Garmin", polar: "Polar", coros: "Coros", apple: "Apple Watch", manual: "Manual" };
 const SOURCE_COLORS: Record<string, string> = { strava: "#FC4C02", garmin: "#00B9FF", polar: "#E63946", coros: "#1A1A2E", apple: "#555555", manual: "#94a3b8" };
 import { cn } from "@/lib/utils";
+import { signOut } from "next-auth/react";
 
 const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
@@ -158,6 +159,16 @@ export default function ProfilePage() {
         }),
       });
       if (res.ok) {
+        setProfile((prev) => ({
+          ...prev,
+          name: editName,
+          city: editCity,
+          state: editState,
+          phone: editPhone,
+          weightKg: editWeightKg ? parseFloat(editWeightKg) : null,
+          heightCm: editHeightCm ? parseFloat(editHeightCm) : null,
+          raceDate: editRaceDate || null,
+        }));
         setEditOpen(false);
         setBanner({ type: "success", text: "Perfil atualizado com sucesso!" });
         setActiveTab("dados");
@@ -596,7 +607,12 @@ export default function ProfilePage() {
               <SettingsLink icon={Shield} label="Privacidade e segurança" />
               <SettingsLink icon={Globe} label="Idioma — Português (Brasil)" />
               <SettingsLink icon={User} label="Editar dados da conta" />
-              <SettingsLink icon={LogOut} label="Sair da conta" danger />
+              <SettingsLink
+                icon={LogOut}
+                label="Sair da conta"
+                danger
+                onClick={() => signOut({ callbackUrl: "/login" })}
+              />
             </div>
           </div>
         </TabsContent>
@@ -674,9 +690,12 @@ function InfoField({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SettingsLink({ icon: Icon, label, danger }: { icon: React.ComponentType<{ className?: string }>; label: string; danger?: boolean }) {
+function SettingsLink({ icon: Icon, label, danger, onClick }: { icon: React.ComponentType<{ className?: string }>; label: string; danger?: boolean; onClick?: () => void }) {
   return (
-    <button className={cn("flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 text-left text-sm font-medium transition-colors hover:border-primary/40", danger ? "text-danger hover:border-danger/40" : "text-text")}>
+    <button
+      onClick={onClick}
+      className={cn("flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 text-left text-sm font-medium transition-colors hover:border-primary/40", danger ? "text-danger hover:border-danger/40" : "text-text")}
+    >
       <Icon className="h-4 w-4" />
       {label}
     </button>

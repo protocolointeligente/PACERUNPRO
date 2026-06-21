@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { shoesList, type Shoe } from "@/lib/mock-data";
+import type { Shoe } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -43,7 +43,7 @@ function resizeShoeImage(file: File): Promise<string> {
 }
 
 export default function TenisPage() {
-  const [shoes, setShoes] = useState(shoesList);
+  const [shoes, setShoes] = useState<Shoe[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [showRetired, setShowRetired] = useState(false);
   const [newName, setNewName] = useState("");

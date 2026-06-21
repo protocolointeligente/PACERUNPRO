@@ -7,9 +7,83 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorkoutCard } from "@/components/dashboard/workout-card";
-import { calendarLegend, getMonthEvents, weekWorkouts, type CalendarEvent } from "@/lib/mock-data";
-import { TYPE_LABELS, getSubtypeColor } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import type { WorkoutSummary } from "@/lib/types";
+
+interface CalendarEvent {
+  date: string; // YYYY-MM-DD
+  type: string;
+  title: string;
+  subtype?: string;
+}
+
+interface WorkoutRow {
+  id: string;
+  date: string;
+  type: string;
+  subtype?: string;
+  title: string;
+  status: "liberado" | "agendado" | "concluido" | "perdido";
+  distanceKm?: number | null;
+  durationMin?: number | null;
+  targetPaceSecPerKm?: number | null;
+  targetRpe?: number | null;
+  targetHrZone?: string | null;
+  color: string;
+}
+
+interface RaceRow {
+  id: string;
+  name: string;
+  date: string;
+  distanceKm: number;
+  goalTime?: string | null;
+  location?: string | null;
+}
+
+const calendarLegend = [
+  { type: "corrida", color: "#38bdf8", label: "Corrida" },
+  { type: "forca", color: "#8b5cf6", label: "Força" },
+  { type: "funcional", color: "#a855f7", label: "Funcional" },
+  { type: "mobilidade", color: "#84cc16", label: "Mobilidade" },
+  { type: "recuperacao", color: "#94a3b8", label: "Recuperação" },
+];
+
+const TYPE_LABELS: Record<string, string> = {
+  corrida: "Corrida",
+  forca: "Força",
+  funcional: "Funcional",
+  mobilidade: "Mobilidade",
+  recuperacao: "Recuperação",
+  prova: "Prova",
+};
+
+const TYPE_COLORS: Record<string, string> = {
+  corrida: "#38bdf8",
+  forca: "#8b5cf6",
+  funcional: "#a855f7",
+  mobilidade: "#84cc16",
+  recuperacao: "#94a3b8",
+  prova: "#facc15",
+};
+
+const RUN_SUBTYPE_COLORS: Record<string, string> = {
+  "Regenerativo": "#94a3b8",
+  "Rodagem leve": "#84cc16",
+  "Longão": "#22c55e",
+  "Técnica": "#06b6d4",
+  "Progressivo": "#38bdf8",
+  "Fartlek": "#a78bfa",
+  "Tempo Run": "#eab308",
+  "Subida": "#fb923c",
+  "Intervalado longo": "#f97316",
+  "Intervalado curto": "#ef4444",
+};
+
+function getSubtypeColor(type: string, subtype?: string): string {
+  if (subtype && RUN_SUBTYPE_COLORS[subtype]) return RUN_SUBTYPE_COLORS[subtype];
+  return TYPE_COLORS[type] ?? TYPE_COLORS.corrida;
+}
 
 const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
@@ -24,17 +98,9 @@ const DISTANCES = [
 const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 transition-colors";
 
-interface RaceRow {
-  id: string;
-  name: string;
-  date: string;
-  distanceKm: number;
-  goalTime?: string | null;
-  location?: string | null;
-}
-
 export default function CalendarPage() {
   const [monthOffset, setMonthOffset] = useState(0);
+  const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
   const [races, setRaces] = useState<RaceRow[]>([]);
   const [loadingRaces, setLoadingRaces] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -52,7 +118,38 @@ export default function CalendarPage() {
     return d;
   }, [monthOffset]);
 
-  const events = useMemo(() => getMonthEvents(reference), [reference]);
+  const monthLabel = reference.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  const grid = useMemo(() => buildMonthGrid(reference), [reference]);
+
+  // Fetch workouts for the viewed month (+ 7-day buffer on each side to cover week tab)
+  useEffect(() => {
+    const year = reference.getFullYear();
+    const month = reference.getMonth();
+    const from = new Date(year, month, -6).toISOString().slice(0, 10);
+    const to = new Date(year, month + 1, 7).toISOString().slice(0, 10);
+    fetch(`/api/athlete/workouts?from=${from}&to=${to}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: WorkoutRow[]) => setWorkouts(Array.isArray(data) ? data : []))
+      .catch(() => null);
+  }, [monthOffset]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    fetch("/api/athlete/races")
+      .then((r) => r.json())
+      .then((d: RaceRow[]) => setRaces(Array.isArray(d) ? d : []))
+      .catch(() => [])
+      .finally(() => setLoadingRaces(false));
+  }, []);
+
+  const workoutEvents = useMemo((): CalendarEvent[] =>
+    workouts.map((w) => ({
+      date: w.date.slice(0, 10),
+      type: w.type,
+      title: w.title,
+      subtype: w.subtype,
+    })),
+    [workouts]
+  );
 
   const raceEvents = useMemo((): CalendarEvent[] =>
     races.map((r) => ({
@@ -64,7 +161,7 @@ export default function CalendarPage() {
     [races]
   );
 
-  const allEvents = useMemo(() => [...events, ...raceEvents], [events, raceEvents]);
+  const allEvents = useMemo(() => [...workoutEvents, ...raceEvents], [workoutEvents, raceEvents]);
 
   const eventsByDate = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
@@ -76,16 +173,34 @@ export default function CalendarPage() {
     return map;
   }, [allEvents]);
 
-  const monthLabel = reference.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-  const grid = useMemo(() => buildMonthGrid(reference), [reference]);
+  // Current week's workouts (Mon–Sun containing today)
+  const currentWeekWorkouts = useMemo((): WorkoutSummary[] => {
+    const now = new Date();
+    const dow = (now.getDay() + 6) % 7; // Mon = 0
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow);
+    const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+    return workouts
+      .filter((w) => {
+        const d = new Date(w.date);
+        return d >= weekStart && d < weekEnd;
+      })
+      .map((w) => ({
+        id: w.id,
+        date: w.date,
+        type: w.type as WorkoutSummary["type"],
+        subtype: w.subtype,
+        title: w.title,
+        status: w.status,
+        distanceKm: w.distanceKm ?? undefined,
+        durationMin: w.durationMin ?? undefined,
+        targetPaceSecPerKm: w.targetPaceSecPerKm ?? undefined,
+        targetRpe: w.targetRpe ?? undefined,
+        targetHrZone: w.targetHrZone ?? undefined,
+        color: w.color,
+      }));
+  }, [workouts]);
 
-  useEffect(() => {
-    fetch("/api/athlete/races")
-      .then((r) => r.json())
-      .then((d: RaceRow[]) => setRaces(Array.isArray(d) ? d : []))
-      .catch(() => [])
-      .finally(() => setLoadingRaces(false));
-  }, []);
+  const upcomingRaces = races.filter((r) => new Date(r.date) >= new Date());
 
   async function addRace() {
     if (!raceName || !raceDate) return;
@@ -113,8 +228,6 @@ export default function CalendarPage() {
     await fetch(`/api/athlete/races/${id}`, { method: "DELETE" });
     setRaces((prev) => prev.filter((r) => r.id !== id));
   }
-
-  const upcomingRaces = races.filter((r) => new Date(r.date) >= new Date());
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -176,7 +289,6 @@ export default function CalendarPage() {
               </button>
             </div>
 
-            {/* Upcoming races list */}
             {loadingRaces ? (
               <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-text-muted" /></div>
             ) : races.length === 0 ? (
@@ -206,7 +318,6 @@ export default function CalendarPage() {
               </div>
             )}
 
-            {/* Add race form */}
             <div className="border-t border-border pt-3 space-y-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Cadastrar nova prova</p>
               <div className="grid gap-2 sm:grid-cols-2">
@@ -313,50 +424,68 @@ export default function CalendarPage() {
         {/* Week view */}
         <TabsContent value="semana">
           <div className="space-y-3">
-            {weekWorkouts.map((w) => (
-              <WorkoutCard key={w.id} workout={w} href={`/atleta/treino/${w.id}`} />
-            ))}
+            {currentWeekWorkouts.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <p className="text-sm font-semibold text-text">Nenhum treino nesta semana</p>
+                  <p className="mt-1 text-xs text-text-muted">Seu treinador ainda não liberou treinos para esta semana.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              currentWeekWorkouts.map((w) => (
+                <WorkoutCard key={w.id} workout={w} href={`/atleta/treino/${w.id}`} />
+              ))
+            )}
           </div>
         </TabsContent>
 
         {/* Agenda view */}
         <TabsContent value="agenda">
           <div className="space-y-5">
-            {Array.from(eventsByDate.entries())
-              .sort(([a], [b]) => a.localeCompare(b))
-              .map(([date, items]) => (
-                <div key={date}>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
-                    {new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
-                  </p>
-                  <div className="space-y-2">
-                    {items.map((e, idx) => {
-                      const isRace = e.type === "prova" && e.title.startsWith("🏅");
-                      const color = isRace ? "#f97316" : getSubtypeColor(e.type, e.subtype);
-                      return (
-                        <Card key={idx}>
-                          <CardContent className="flex items-center gap-3 p-3.5">
-                            <span className="h-9 w-9 shrink-0 rounded-lg" style={{ backgroundColor: `${color}22` }}>
-                              <span className="flex h-full w-full items-center justify-center">
-                                {isRace ? <Trophy className="h-4 w-4" style={{ color }} /> : <MapPin className="h-4 w-4" style={{ color }} />}
+            {allEvents.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <p className="text-sm font-semibold text-text">Nenhum evento neste mês</p>
+                  <p className="mt-1 text-xs text-text-muted">Os treinos liberados pelo treinador aparecerão aqui.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              Array.from(eventsByDate.entries())
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([date, items]) => (
+                  <div key={date}>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
+                      {new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
+                    </p>
+                    <div className="space-y-2">
+                      {items.map((e, idx) => {
+                        const isRace = e.type === "prova" && e.title.startsWith("🏅");
+                        const color = isRace ? "#f97316" : getSubtypeColor(e.type, e.subtype);
+                        return (
+                          <Card key={idx}>
+                            <CardContent className="flex items-center gap-3 p-3.5">
+                              <span className="h-9 w-9 shrink-0 rounded-lg" style={{ backgroundColor: `${color}22` }}>
+                                <span className="flex h-full w-full items-center justify-center">
+                                  {isRace ? <Trophy className="h-4 w-4" style={{ color }} /> : <MapPin className="h-4 w-4" style={{ color }} />}
+                                </span>
                               </span>
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-text">{e.title.replace("🏅 ", "")}</p>
-                              <span className="flex items-center gap-1 text-xs text-text-muted">
-                                <Clock className="h-3 w-3" /> {isRace ? "Prova" : TYPE_LABELS[e.type]}
-                              </span>
-                            </div>
-                            <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="border">
-                              {e.subtype ?? (isRace ? "Prova" : TYPE_LABELS[e.type])}
-                            </Badge>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold text-text">{e.title.replace("🏅 ", "")}</p>
+                                <span className="flex items-center gap-1 text-xs text-text-muted">
+                                  <Clock className="h-3 w-3" /> {isRace ? "Prova" : TYPE_LABELS[e.type]}
+                                </span>
+                              </div>
+                              <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="border">
+                                {e.subtype ?? (isRace ? "Prova" : TYPE_LABELS[e.type])}
+                              </Badge>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+            )}
           </div>
         </TabsContent>
       </Tabs>
