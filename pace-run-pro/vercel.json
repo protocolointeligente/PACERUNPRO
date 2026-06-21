@@ -1,0 +1,3 @@
+{
+  "buildCommand": "prisma generate && (prisma migrate resolve --rolled-back 20260615000000_add_vouchers || true) && prisma migrate deploy && next build"
+}
