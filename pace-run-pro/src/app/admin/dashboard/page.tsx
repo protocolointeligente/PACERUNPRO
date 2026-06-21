@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -21,7 +21,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { SectionHeader } from "@/components/shared/section-header";
 import { BarTrend } from "@/components/charts/trend-chart";
-import { assessoriaList, pendingApprovals, superAdminStats } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const fadeUp = {
@@ -33,9 +32,24 @@ const fadeUp = {
   }),
 };
 
+interface AssessoriaItem {
+  id: string;
+  name: string;
+  city: string;
+  plan: string;
+  coaches: number;
+  athletes: number;
+  mrr: number;
+  status: "ativo" | "pendente" | "suspenso";
+  contact: string;
+  healthScore: number;
+  churnRisk: "baixo" | "medio" | "alto";
+  lastLoginDays: number;
+  prescribedLast7d: number;
+}
+
 const PLAN_LABEL: Record<string, string> = {
   starter: "Starter", pro: "Pro", assessoria: "Assessoria", "white-label": "White Label",
-  "b2b-starter": "Starter", "b2b-pro": "Pro", "b2b-assessoria": "Assessoria", "b2b-unlimited": "White Label",
 };
 const PLAN_VARIANT = (p: string) => {
   if (p.includes("white") || p.includes("unlimited")) return "danger" as const;
@@ -54,27 +68,42 @@ function HealthBadge({ score }: { score: number }) {
   );
 }
 
-const b2bSeries = superAdminStats.mrrSeries.map((d) => ({ label: d.month, b2b: d.b2b }));
-
 const today = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
-// Contas com churnRisk alto ou healthScore baixo
-const atRiskAccounts = assessoriaList.filter(
-  (a) => a.status === "ativo" && (a.churnRisk === "alto" || a.healthScore < 55)
-);
-
-// MRR B2B total das ativas
-const b2bMrr = assessoriaList.filter((a) => a.status === "ativo").reduce((s, a) => s + a.mrr, 0);
-const b2bActive = assessoriaList.filter((a) => a.status === "ativo").length;
-const avgHealth = b2bActive > 0
-  ? Math.round(assessoriaList.filter((a) => a.status === "ativo").reduce((s, a) => s + a.healthScore, 0) / b2bActive)
-  : 0;
-
 export default function AdminDashboard() {
+  const [assessoriaList, setAssessoriaList] = useState<AssessoriaItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
   const [refusedIds, setRefusedIds] = useState<Set<string>>(new Set());
 
-  const visibleApprovals = pendingApprovals.filter((a) => !refusedIds.has(a.id));
+  useEffect(() => {
+    fetch("/api/admin/coaches")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: AssessoriaItem[]) => setAssessoriaList(data))
+      .catch(() => null)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const pendingApprovals = assessoriaList.filter(
+    (a) => a.status === "pendente" && !approvedIds.has(a.id) && !refusedIds.has(a.id),
+  );
+  const visibleApprovals = pendingApprovals;
+
+  const activeList = assessoriaList.filter(
+    (a) => a.status === "ativo" || approvedIds.has(a.id),
+  );
+  const b2bMrr = activeList.reduce((s, a) => s + a.mrr, 0);
+  const b2bActive = activeList.length;
+  const avgHealth =
+    b2bActive > 0
+      ? Math.round(activeList.reduce((s, a) => s + a.healthScore, 0) / b2bActive)
+      : 0;
+
+  const atRiskAccounts = activeList.filter(
+    (a) => a.churnRisk === "alto" || a.healthScore < 55,
+  );
+
+  const b2bSeries: { label: string; b2b: number }[] = [];
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -87,7 +116,7 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
 
-      {/* B2B KPIs — principal */}
+      {/* B2B KPIs */}
       <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard
           label="MRR B2B"
@@ -98,14 +127,14 @@ export default function AdminDashboard() {
         />
         <StatCard
           label="Assessorias ativas"
-          value={`${b2bActive}`}
-          unit={`${assessoriaList.filter((a) => a.status === "pendente").length} pendentes`}
+          value={loading ? "…" : `${b2bActive}`}
+          unit={`${pendingApprovals.length} pendentes`}
           icon={Building2}
           accent="success"
         />
         <StatCard
           label="Treinadores ativos"
-          value={`${assessoriaList.filter((a) => a.status === "ativo").reduce((s, a) => s + a.coaches, 0)}`}
+          value={loading ? "…" : `${activeList.reduce((s, a) => s + a.coaches, 0)}`}
           icon={Users}
           accent="info"
         />
@@ -146,7 +175,11 @@ export default function AdminDashboard() {
             subtitle={`${atRiskAccounts.length} assessoria(s) com health score baixo ou atividade reduzida`}
             href="/admin/assessorias"
           />
-          {atRiskAccounts.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </div>
+          ) : atRiskAccounts.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center text-sm text-success">
                 Todas as assessorias estão saudáveis.
@@ -187,7 +220,11 @@ export default function AdminDashboard() {
             <SectionHeader title="MRR B2B — evolução" subtitle="Receita mensal recorrente das assessorias" />
             <Card>
               <CardContent className="p-5">
-                <BarTrend data={b2bSeries} dataKey="b2b" color="#7C3AED" unit="" />
+                {b2bSeries.length === 0 ? (
+                  <p className="py-4 text-center text-sm text-text-muted">Sem dados de MRR ainda.</p>
+                ) : (
+                  <BarTrend data={b2bSeries} dataKey="b2b" color="#7C3AED" unit="" />
+                )}
               </CardContent>
             </Card>
           </div>
@@ -256,7 +293,7 @@ export default function AdminDashboard() {
               </h3>
               {(["starter", "pro", "assessoria", "white-label"] as const).map((planId) => {
                 const label = PLAN_LABEL[planId];
-                const accounts = assessoriaList.filter((a) => a.status === "ativo" && (a.plan === planId || a.plan === `b2b-${planId}`));
+                const accounts = activeList.filter((a) => a.plan === planId);
                 const planMrr = accounts.reduce((s, a) => s + a.mrr, 0);
                 const pct = b2bMrr > 0 ? Math.round((planMrr / b2bMrr) * 100) : 0;
                 return (
@@ -283,14 +320,18 @@ export default function AdminDashboard() {
               <h3 className="font-display text-sm font-semibold text-text mb-3 flex items-center gap-2">
                 <Zap className="h-4 w-4 text-warning" /> Health score da base
               </h3>
-              <div className="space-y-2.5">
-                {assessoriaList.filter((a) => a.status === "ativo").map((a) => (
-                  <div key={a.id} className="flex items-center justify-between gap-2">
-                    <span className="truncate text-xs text-text-muted max-w-[10rem]">{a.name}</span>
-                    <HealthBadge score={a.healthScore} />
-                  </div>
-                ))}
-              </div>
+              {activeList.length === 0 ? (
+                <p className="text-xs text-text-muted">Nenhuma assessoria ativa ainda.</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {activeList.map((a) => (
+                    <div key={a.id} className="flex items-center justify-between gap-2">
+                      <span className="truncate text-xs text-text-muted max-w-[10rem]">{a.name}</span>
+                      <HealthBadge score={a.healthScore} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

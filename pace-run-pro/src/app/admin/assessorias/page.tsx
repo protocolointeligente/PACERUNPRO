@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Building2, CheckCircle2, Users, DollarSign, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { SectionHeader } from "@/components/shared/section-header";
-import { assessoriaList } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const fadeUp = {
@@ -21,6 +20,22 @@ const fadeUp = {
   }),
 };
 
+interface AssessoriaItem {
+  id: string;
+  name: string;
+  city: string;
+  plan: string;
+  coaches: number;
+  athletes: number;
+  mrr: number;
+  status: "ativo" | "pendente" | "suspenso";
+  contact: string;
+  healthScore: number;
+  churnRisk: "baixo" | "medio" | "alto";
+  lastLoginDays: number;
+  prescribedLast7d: number;
+}
+
 const planBadgeVariant = (plan: string) => {
   if (plan.includes("white") || plan.includes("unlimited")) return "danger" as const;
   if (plan.includes("assessoria") || plan.includes("premium")) return "warning" as const;
@@ -30,10 +45,10 @@ const planBadgeVariant = (plan: string) => {
 
 const planLabel = (plan: string) => {
   const map: Record<string, string> = {
-    "starter": "Starter", "b2b-starter": "Starter",
-    "pro": "Pro", "b2b-pro": "Pro",
-    "assessoria": "Assessoria", "b2b-assessoria": "Assessoria",
-    "white-label": "White Label", "b2b-unlimited": "White Label",
+    "starter": "Starter",
+    "pro": "Pro",
+    "assessoria": "Assessoria",
+    "white-label": "White Label",
   };
   return map[plan] ?? plan;
 };
@@ -63,21 +78,31 @@ const statusFilters = [
 ];
 
 export default function AssessoriasPage() {
+  const [assessoriaList, setAssessoriaList] = useState<AssessoriaItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
 
+  useEffect(() => {
+    fetch("/api/admin/coaches")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: AssessoriaItem[]) => setAssessoriaList(data))
+      .catch(() => null)
+      .finally(() => setLoading(false));
+  }, []);
+
   const stats = useMemo(() => {
     const active = assessoriaList.filter(
-      (a) => a.status === "ativo" || approvedIds.has(a.id)
+      (a) => a.status === "ativo" || approvedIds.has(a.id),
     );
     const pending = assessoriaList.filter(
-      (a) => a.status === "pendente" && !approvedIds.has(a.id)
+      (a) => a.status === "pendente" && !approvedIds.has(a.id),
     );
     const mrr = assessoriaList.reduce((acc, a) => acc + a.mrr, 0);
     return { total: assessoriaList.length, active: active.length, pending: pending.length, mrr };
-  }, [approvedIds]);
+  }, [assessoriaList, approvedIds]);
 
   const filtered = useMemo(() => {
     return assessoriaList.filter((a) => {
@@ -91,7 +116,16 @@ export default function AssessoriasPage() {
       const matchStatus = statusFilter === "all" || effectiveStatus === statusFilter;
       return matchSearch && matchPlan && matchStatus;
     });
-  }, [search, planFilter, statusFilter, approvedIds]);
+  }, [assessoriaList, search, planFilter, statusFilter, approvedIds]);
+
+  const handleApprove = async (id: string) => {
+    setApprovedIds((prev) => new Set([...prev, id]));
+    await fetch("/api/admin/approve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assessoriaId: id, action: "approve" }),
+    }).catch(() => null);
+  };
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -118,9 +152,9 @@ export default function AssessoriasPage() {
         animate="show"
         className="grid grid-cols-2 gap-3 sm:grid-cols-4"
       >
-        <StatCard label="Total" value={`${stats.total}`} icon={Building2} accent="primary" />
-        <StatCard label="Ativas" value={`${stats.active}`} icon={CheckCircle2} accent="success" />
-        <StatCard label="Pendentes" value={`${stats.pending}`} icon={Clock} accent="danger" />
+        <StatCard label="Total" value={loading ? "…" : `${stats.total}`} icon={Building2} accent="primary" />
+        <StatCard label="Ativas" value={loading ? "…" : `${stats.active}`} icon={CheckCircle2} accent="success" />
+        <StatCard label="Pendentes" value={loading ? "…" : `${stats.pending}`} icon={Clock} accent="danger" />
         <StatCard label="MRR B2B" value={`R$${stats.mrr.toLocaleString("pt-BR")}`} icon={DollarSign} accent="info" />
       </motion.div>
 
@@ -148,7 +182,7 @@ export default function AssessoriasPage() {
                 "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                 planFilter === f.id
                   ? "border-primary/50 bg-primary/15 text-primary"
-                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text"
+                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text",
               )}
             >
               {f.label}
@@ -164,7 +198,7 @@ export default function AssessoriasPage() {
                 "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                 statusFilter === f.id
                   ? "border-primary/50 bg-primary/15 text-primary"
-                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text"
+                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text",
               )}
             >
               {f.label}
@@ -184,66 +218,74 @@ export default function AssessoriasPage() {
           title="Assessorias"
           subtitle={`${filtered.length} resultado(s)`}
         />
-        <div className="space-y-3">
-          {filtered.map((a) => {
-            const effectiveStatus =
-              a.status === "pendente" && approvedIds.has(a.id) ? "ativo" : a.status;
-            return (
-              <Card key={a.id}>
-                <CardContent className="p-4 space-y-3">
-                  {/* Row 1: Identity + status */}
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Avatar className="h-10 w-10 shrink-0">
-                        <AvatarFallback>
-                          {a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-text">{a.name}</p>
-                        <p className="truncate text-xs text-text-muted">{a.city}</p>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((a) => {
+              const effectiveStatus =
+                a.status === "pendente" && approvedIds.has(a.id) ? "ativo" : a.status;
+              return (
+                <Card key={a.id}>
+                  <CardContent className="p-4 space-y-3">
+                    {/* Row 1: Identity + status */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="h-10 w-10 shrink-0">
+                          <AvatarFallback>
+                            {a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-text">{a.name}</p>
+                          <p className="truncate text-xs text-text-muted">{a.city}</p>
+                        </div>
+                      </div>
+                      <div className="shrink-0 flex items-center gap-2">
+                        <Badge variant={effectiveStatus === "ativo" ? "success" : "warning"}>
+                          {effectiveStatus === "ativo" ? "Ativo" : "Pendente"}
+                        </Badge>
+                        <HealthBadge score={a.healthScore} />
                       </div>
                     </div>
-                    <div className="shrink-0 flex items-center gap-2">
-                      <Badge variant={effectiveStatus === "ativo" ? "success" : "warning"}>
-                        {effectiveStatus === "ativo" ? "Ativo" : "Pendente"}
-                      </Badge>
-                      <HealthBadge score={a.healthScore} />
+
+                    {/* Row 2: Plan + athletes + MRR */}
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
+                      <Badge variant={planBadgeVariant(a.plan)}>{planLabel(a.plan)}</Badge>
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3 w-3" />{a.coaches} trein. · {a.athletes} atletas
+                      </span>
+                      <span className="font-semibold text-text ml-auto">R${a.mrr}/mês</span>
                     </div>
-                  </div>
 
-                  {/* Row 2: Plan + athletes + MRR */}
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
-                    <Badge variant={planBadgeVariant(a.plan)}>{planLabel(a.plan)}</Badge>
-                    <span className="flex items-center gap-1"><Users className="h-3 w-3" />{a.coaches} trein. · {a.athletes} atletas</span>
-                    <span className="font-semibold text-text ml-auto">R${a.mrr}/mês</span>
-                  </div>
-
-                  {/* Row 3: Actions */}
-                  <div className="flex gap-2 pt-1 border-t border-border/40">
-                    <Button variant="secondary" size="sm">Detalhe</Button>
-                    {effectiveStatus === "pendente" && (
-                      <Button
-                        variant="success"
-                        size="sm"
-                        onClick={() => setApprovedIds((prev) => new Set([...prev, a.id]))}
-                      >
-                        Aprovar
-                      </Button>
-                    )}
-                  </div>
+                    {/* Row 3: Actions */}
+                    <div className="flex gap-2 pt-1 border-t border-border/40">
+                      <Button variant="secondary" size="sm">Detalhe</Button>
+                      {effectiveStatus === "pendente" && (
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={() => handleApprove(a.id)}
+                        >
+                          Aprovar
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+            {filtered.length === 0 && (
+              <Card>
+                <CardContent className="p-6 text-center text-sm text-text-muted">
+                  Nenhuma assessoria encontrada.
                 </CardContent>
               </Card>
-            );
-          })}
-          {filtered.length === 0 && (
-            <Card>
-              <CardContent className="p-6 text-center text-sm text-text-muted">
-                Nenhuma assessoria encontrada.
-              </CardContent>
-            </Card>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </motion.div>
     </div>
   );
