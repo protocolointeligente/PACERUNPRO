@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth-guard";
 
 // Destino padrão pós-login (ex.: callback do Google OAuth), que redireciona
 // para a área correta de acordo com o papel do usuário.
 export default async function PainelRedirect() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user) redirect("/login");
 
   const role = (session.user as { role?: string }).role;

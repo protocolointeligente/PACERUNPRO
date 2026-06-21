@@ -16,7 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatPace } from "@/lib/utils";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
 const WORKOUT_TYPE_LABELS: Record<string, string> = {
@@ -57,7 +57,7 @@ const WORKOUT_TYPE_COLORS: Record<string, string> = {
 
 export default async function WorkoutDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) redirect("/login");
 
   const athlete = await prisma.athlete.findUnique({

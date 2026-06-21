@@ -1,5 +1,4 @@
-import { auth } from "@/auth";
-import type { Session } from "next-auth";
+import { getSession } from "@/lib/auth-guard";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/layout/app-shell";
@@ -18,29 +17,19 @@ const GOAL_LABELS: Record<string, string> = {
 };
 
 export default async function AtletaLayout({ children }: { children: React.ReactNode }) {
-  let session: Session | null = null;
-  try {
-    session = await auth();
-  } catch {
-    redirect("/login");
-  }
+  const session = await getSession();
   if (!session?.user?.id) redirect("/login");
   if (session.user?.role === "ADMIN") redirect("/admin");
   if (session.user?.role === "COACH") redirect("/treinador/dashboard");
 
-  let user: { name: string; avatarUrl: string | null; athlete: { goal: string | null } | null } | null = null;
-  try {
-    user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        name: true,
-        avatarUrl: true,
-        athlete: { select: { goal: true } },
-      },
-    });
-  } catch {
-    redirect("/login");
-  }
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      name: true,
+      avatarUrl: true,
+      athlete: { select: { goal: true } },
+    },
+  }).catch(() => null);
 
   const goalLabel = GOAL_LABELS[user?.athlete?.goal ?? ""] ?? "Atleta";
 

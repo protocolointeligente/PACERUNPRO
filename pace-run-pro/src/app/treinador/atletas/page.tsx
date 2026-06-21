@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth-guard";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { AthleteRow } from "./_list-client";
@@ -38,7 +38,7 @@ function formatRaceDate(date?: Date | null): string {
 }
 
 export default async function AthleteListPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) redirect("/login");
 
   const coach = await prisma.coach.findUnique({

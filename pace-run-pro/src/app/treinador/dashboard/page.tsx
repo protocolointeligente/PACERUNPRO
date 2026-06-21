@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth-guard";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import CoachDashboard from "./_dashboard-client";
@@ -32,7 +32,7 @@ function formatLastCheckIn(date?: Date | null): string {
 }
 
 export default async function CoachDashboardPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) redirect("/login");
 
   const user = await prisma.user.findUnique({
