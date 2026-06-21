@@ -119,12 +119,18 @@ export default function AssessoriasPage() {
   }, [assessoriaList, search, planFilter, statusFilter, approvedIds]);
 
   const handleApprove = async (id: string) => {
-    setApprovedIds((prev) => new Set([...prev, id]));
-    await fetch("/api/admin/approve", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assessoriaId: id, action: "approve" }),
-    }).catch(() => null);
+    try {
+      const res = await fetch("/api/admin/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessoriaId: id, action: "approve" }),
+      });
+      if (res.ok) {
+        setApprovedIds((prev) => new Set([...prev, id]));
+      }
+    } catch {
+      // network error — do not update UI
+    }
   };
 
   return (

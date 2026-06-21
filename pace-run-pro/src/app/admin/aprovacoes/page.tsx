@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Clock, Mail, MapPin, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { pendingApprovals } from "@/lib/mock-data";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -25,34 +24,76 @@ const PLAN_VARIANT = (p: string) => {
   return "outline" as const;
 };
 
-type ApprovalState = "pending" | "approved" | "refused";
+interface ApprovalItem {
+  id: string;
+  name: string;
+  city: string;
+  plan: string;
+  contact: string;
+}
 
 export default function AprovacoesPage() {
-  const [states, setStates] = useState<Record<string, ApprovalState>>(
-    Object.fromEntries(pendingApprovals.map((a) => [a.id, "pending"]))
-  );
-  const [approving, setApproving] = useState<string | null>(null);
+  const [pending, setPending] = useState<ApprovalItem[]>([]);
+  const [done, setDone] = useState<{ item: ApprovalItem; result: "approved" | "refused" }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [acting, setActing] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleApprove(id: string) {
-    setApproving(id);
+  useEffect(() => {
+    fetch("/api/admin/coaches")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: (ApprovalItem & { status: string })[]) => {
+        setPending(data.filter((c) => c.status === "pendente"));
+      })
+      .catch(() => null)
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleApprove(item: ApprovalItem) {
+    setActing(item.id);
+    setError(null);
     try {
-      await fetch("/api/admin/approve", {
+      const res = await fetch("/api/admin/approve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assessoriaId: id, action: "approve" }),
+        body: JSON.stringify({ assessoriaId: item.id, action: "approve" }),
       });
-    } catch { /* continua mesmo com erro */ }
-    setStates((s) => ({ ...s, [id]: "approved" }));
-    setApproving(null);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError((body as { error?: string }).error ?? "Erro ao aprovar. Tente novamente.");
+        return;
+      }
+      setPending((prev) => prev.filter((a) => a.id !== item.id));
+      setDone((prev) => [...prev, { item, result: "approved" }]);
+    } catch {
+      setError("Erro de rede ao aprovar. Tente novamente.");
+    } finally {
+      setActing(null);
+    }
   }
 
-  async function handleRefuse(id: string) {
-    setStates((s) => ({ ...s, [id]: "refused" }));
+  async function handleRefuse(item: ApprovalItem) {
+    setActing(item.id);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessoriaId: item.id, action: "refuse" }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError((body as { error?: string }).error ?? "Erro ao recusar. Tente novamente.");
+        return;
+      }
+      setPending((prev) => prev.filter((a) => a.id !== item.id));
+      setDone((prev) => [...prev, { item, result: "refused" }]);
+    } catch {
+      setError("Erro de rede ao recusar. Tente novamente.");
+    } finally {
+      setActing(null);
+    }
   }
-
-  const pending = pendingApprovals.filter((a) => states[a.id] === "pending");
-  const approved = pendingApprovals.filter((a) => states[a.id] === "approved");
-  const refused = pendingApprovals.filter((a) => states[a.id] === "refused");
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -66,9 +107,19 @@ export default function AprovacoesPage() {
         </p>
       </motion.div>
 
+      {error && (
+        <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+          {error}
+        </div>
+      )}
+
       {/* Pendentes */}
       <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show" className="space-y-3">
-        {pending.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : pending.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
               <CheckCircle2 className="mx-auto h-8 w-8 text-success mb-2" />
@@ -109,17 +160,18 @@ export default function AprovacoesPage() {
                 <div className="mt-4 flex gap-2">
                   <Button
                     variant="success"
-                    onClick={() => handleApprove(a.id)}
-                    disabled={approving === a.id}
+                    onClick={() => handleApprove(a)}
+                    disabled={acting === a.id}
                     className="gap-1.5"
                   >
                     <CheckCircle2 className="h-4 w-4" />
-                    {approving === a.id ? "Aprovando..." : "Aprovar assessoria"}
+                    {acting === a.id ? "Processando..." : "Aprovar assessoria"}
                   </Button>
                   <Button
                     variant="ghost"
                     className="text-danger hover:text-danger gap-1.5"
-                    onClick={() => handleRefuse(a.id)}
+                    onClick={() => handleRefuse(a)}
+                    disabled={acting === a.id}
                   >
                     <XCircle className="h-4 w-4" />
                     Recusar
@@ -131,37 +183,20 @@ export default function AprovacoesPage() {
         )}
       </motion.div>
 
-      {/* Aprovadas */}
-      {approved.length > 0 && (
-        <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-text-muted">Aprovadas nesta sessão</p>
-          <div className="space-y-2">
-            {approved.map((a) => (
-              <Card key={a.id} className="border-success/20 opacity-70">
-                <CardContent className="flex items-center justify-between p-3">
-                  <span className="text-sm text-text">{a.name}</span>
-                  <Badge variant="success"><CheckCircle2 className="h-3 w-3" /> Aprovado</Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Recusadas */}
-      {refused.length > 0 && (
-        <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-text-muted">Recusadas nesta sessão</p>
-          <div className="space-y-2">
-            {refused.map((a) => (
-              <Card key={a.id} className="opacity-50">
-                <CardContent className="flex items-center justify-between p-3">
-                  <span className="text-sm text-text-muted">{a.name}</span>
-                  <Badge variant="danger">Recusado</Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+      {/* Processadas nesta sessão */}
+      {done.length > 0 && (
+        <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show" className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-text-muted">Processadas nesta sessão</p>
+          {done.map(({ item, result }) => (
+            <Card key={item.id} className={result === "approved" ? "border-success/20 opacity-70" : "opacity-50"}>
+              <CardContent className="flex items-center justify-between p-3">
+                <span className="text-sm text-text">{item.name}</span>
+                {result === "approved"
+                  ? <Badge variant="success"><CheckCircle2 className="h-3 w-3" /> Aprovado</Badge>
+                  : <Badge variant="danger">Recusado</Badge>}
+              </CardContent>
+            </Card>
+          ))}
         </motion.div>
       )}
     </div>

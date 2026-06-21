@@ -26,10 +26,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
   }
 
-  const userId = session?.user?.id ?? body.userId ?? null;
-  if (!userId) {
-    return NextResponse.json({ error: "Conta não encontrada. Recarregue e tente novamente." }, { status: 401 });
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Faça login antes de prosseguir com o pagamento." }, { status: 401 });
   }
+  const userId = session.user.id;
 
   const origin =
     req.headers.get("origin") ??
