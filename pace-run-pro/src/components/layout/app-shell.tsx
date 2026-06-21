@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { NavItem } from "./nav-config";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface AppShellProps {
@@ -36,15 +36,16 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("sidebar-collapsed") === "true";
-  });
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    setCollapsed(localStorage.getItem("sidebar-collapsed") === "true");
+  }, []);
 
   function toggleCollapsed() {
     const next = !collapsed;
     setCollapsed(next);
-    if (typeof window !== "undefined") localStorage.setItem("sidebar-collapsed", String(next));
+    localStorage.setItem("sidebar-collapsed", String(next));
   }
 
   function handleLogout() {
