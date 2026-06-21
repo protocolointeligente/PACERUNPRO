@@ -16,13 +16,21 @@ export async function POST(req: NextRequest) {
     const passwordHash = await bcrypt.hash(password, 12);
     const isCoach = role === "COACH";
 
-    // Look up coach record when coachId (user ID) is provided for athlete registration
+    // Look up (or create) coach record when coachId (user ID) is provided for athlete registration
     let coachRecord: { id: string } | null = null;
     if (!isCoach && coachId) {
-      coachRecord = await prisma.coach.findUnique({
-        where: { userId: coachId },
+      const coachUser = await prisma.user.findUnique({
+        where: { id: coachId, role: "COACH" },
         select: { id: true },
       });
+      if (coachUser) {
+        coachRecord = await prisma.coach.upsert({
+          where: { userId: coachId },
+          update: {},
+          create: { userId: coachId, specialties: [] },
+          select: { id: true },
+        });
+      }
     }
 
     const user = await prisma.user.create({

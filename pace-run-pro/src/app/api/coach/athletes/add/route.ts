@@ -15,11 +15,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Nome e email são obrigatórios" }, { status: 400 });
   }
 
-  const coach = await prisma.coach.findUnique({
+  const coach = await prisma.coach.upsert({
     where: { userId: session.user.id },
+    update: {},
+    create: { userId: session.user.id, specialties: [] },
     select: { id: true },
   });
-  if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
 
   // Check if user already exists
   const user = await prisma.user.findUnique({ where: { email } });

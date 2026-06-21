@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -43,11 +42,19 @@ interface TodayWorkout {
 }
 
 export default function AthleteDashboard() {
-  const { data: session } = useSession();
-  const firstName = session?.user?.name?.split(" ")[0] ?? "Atleta";
   const greeting = getGreeting();
+  const [firstName, setFirstName] = useState("Atleta");
   const [todayWorkout, setTodayWorkout] = useState<TodayWorkout | null>(null);
   const [workoutsLoading, setWorkoutsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/atleta/perfil")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { name?: string } | null) => {
+        if (data?.name) setFirstName(data.name.split(" ")[0]);
+      })
+      .catch(() => null);
+  }, []);
 
   useEffect(() => {
     fetch("/api/athlete/workouts")
