@@ -61,6 +61,7 @@ export default function ProfilePage() {
   const [stravaLoading, setStravaLoading] = useState<"sync" | "disconnect" | null>(null);
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [comingSoonId, setComingSoonId] = useState<string | null>(null);
+  const [settingsMsg, setSettingsMsg] = useState<string | null>(null);
 
   // Avatar & banner upload
   const [avatarSrc, setAvatarSrc] = useState("");
@@ -304,7 +305,7 @@ export default function ProfilePage() {
             </span>
           </label>
         </div>
-        <CardContent className="-mt-12 flex flex-wrap items-end justify-between gap-4 p-5 sm:p-6">
+        <CardContent className="-mt-12 relative z-10 bg-card flex flex-wrap items-end justify-between gap-4 p-5 sm:p-6">
           <div className="flex items-end gap-4">
             {/* Avatar with camera overlay */}
             <div className="relative">
@@ -362,7 +363,7 @@ export default function ProfilePage() {
                 <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
                   <Target className="h-4 w-4" />
                 </span>
-                <div>
+                <div className="flex-1">
                   <h3 className="font-display text-sm font-semibold text-text">Objetivo atual</h3>
                   <p className="mt-1 text-sm text-text-muted">{profile.goal ?? "—"}</p>
                   {profile.raceDate && (
@@ -374,6 +375,10 @@ export default function ProfilePage() {
                     </p>
                   )}
                 </div>
+                <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
+                  <Pencil className="h-3.5 w-3.5" />
+                  Editar
+                </Button>
               </CardContent>
             </Card>
 
@@ -603,10 +608,27 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
+            {settingsMsg && (
+              <div className="rounded-xl border border-border bg-card-hover px-4 py-3 text-sm text-text-muted">
+                {settingsMsg}
+              </div>
+            )}
             <div className="grid gap-3 sm:grid-cols-2">
-              <SettingsLink icon={Shield} label="Privacidade e segurança" />
-              <SettingsLink icon={Globe} label="Idioma — Português (Brasil)" />
-              <SettingsLink icon={User} label="Editar dados da conta" />
+              <SettingsLink
+                icon={Shield}
+                label="Privacidade e segurança"
+                onClick={() => setSettingsMsg("Configurações de privacidade e segurança em breve.")}
+              />
+              <SettingsLink
+                icon={Globe}
+                label="Idioma — Português (Brasil)"
+                onClick={() => setSettingsMsg("Seleção de idioma disponível em breve.")}
+              />
+              <SettingsLink
+                icon={User}
+                label="Editar dados da conta"
+                onClick={() => { setSettingsMsg(null); setEditOpen(true); }}
+              />
               <SettingsLink
                 icon={LogOut}
                 label="Sair da conta"

@@ -7,6 +7,8 @@ import {
   Activity,
   CalendarCheck2,
   CalendarClock,
+  Dumbbell,
+  Footprints,
   ShieldCheck,
   UserCircle,
 } from "lucide-react";
@@ -30,21 +32,23 @@ function getGreeting() {
   return "Boa noite";
 }
 
-interface TodayWorkout {
+interface WorkoutEntry {
   id: string;
+  date: string;
   title: string;
   type: string;
   objective?: string;
   targetPaceSecPerKm?: number;
-  targetDistanceKm?: number;
-  targetDurationMin?: number;
+  distanceKm?: number;
+  durationMin?: number;
   targetRpe?: number;
 }
 
 export default function AthleteDashboard() {
   const [greeting, setGreeting] = useState("");
   const [firstName, setFirstName] = useState("Atleta");
-  const [todayWorkout, setTodayWorkout] = useState<TodayWorkout | null>(null);
+  const [todayWorkout, setTodayWorkout] = useState<WorkoutEntry | null>(null);
+  const [upcomingWorkouts, setUpcomingWorkouts] = useState<WorkoutEntry[]>([]);
   const [workoutsLoading, setWorkoutsLoading] = useState(true);
 
   useEffect(() => {
@@ -63,13 +67,10 @@ export default function AthleteDashboard() {
   useEffect(() => {
     fetch("/api/athlete/workouts")
       .then((r) => r.ok ? r.json() : [])
-      .then((data: Array<{ id: string; date: string; title: string; type: string; objective?: string; targetPaceSecPerKm?: number; targetDistanceKm?: number; targetDurationMin?: number; targetRpe?: number }>) => {
-        // Compare date portions directly to avoid UTC-to-local timezone shifts
-        // w.date is an ISO string ("2026-06-21T00:00:00.000Z"); slice(0,10) gives "2026-06-21"
-        // toLocaleDateString("sv") gives "YYYY-MM-DD" in the browser's local timezone
+      .then((data: WorkoutEntry[]) => {
         const todayLocal = new Date().toLocaleDateString("sv");
-        const todaysWorkout = data.find((w) => w.date.slice(0, 10) === todayLocal);
-        setTodayWorkout(todaysWorkout ?? null);
+        setTodayWorkout(data.find((w) => w.date.slice(0, 10) === todayLocal) ?? null);
+        setUpcomingWorkouts(data.filter((w) => w.date.slice(0, 10) > todayLocal).slice(0, 6));
       })
       .catch(() => null)
       .finally(() => setWorkoutsLoading(false));
@@ -109,16 +110,16 @@ export default function AthleteDashboard() {
                 )}
               </div>
               <div className="flex flex-wrap gap-3 text-sm">
-                {todayWorkout.targetDistanceKm && (
+                {todayWorkout.distanceKm && (
                   <div className="rounded-xl border border-border bg-background/40 px-3 py-2">
                     <p className="text-[11px] uppercase tracking-wider text-text-muted">Distância</p>
-                    <p className="font-display font-bold text-text">{todayWorkout.targetDistanceKm} km</p>
+                    <p className="font-display font-bold text-text">{todayWorkout.distanceKm} km</p>
                   </div>
                 )}
-                {todayWorkout.targetDurationMin && (
+                {todayWorkout.durationMin && (
                   <div className="rounded-xl border border-border bg-background/40 px-3 py-2">
                     <p className="text-[11px] uppercase tracking-wider text-text-muted">Duração</p>
-                    <p className="font-display font-bold text-text">{todayWorkout.targetDurationMin} min</p>
+                    <p className="font-display font-bold text-text">{todayWorkout.durationMin} min</p>
                   </div>
                 )}
                 {todayWorkout.targetRpe && (
@@ -202,12 +203,38 @@ export default function AthleteDashboard() {
           <Card>
             <CardContent className="p-5">
               <h3 className="mb-4 font-display text-base font-semibold text-text">Próximas sessões</h3>
-              <div className="flex flex-col items-center gap-3 py-8 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-card-hover text-text-muted">
-                  <CalendarClock className="h-6 w-6" />
+              {workoutsLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 </div>
-                <p className="text-sm text-text-muted">Nenhuma sessão agendada ainda.</p>
-              </div>
+              ) : upcomingWorkouts.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-8 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-card-hover text-text-muted">
+                    <CalendarClock className="h-6 w-6" />
+                  </div>
+                  <p className="text-sm text-text-muted">Nenhuma sessão agendada para os próximos dias.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {upcomingWorkouts.map((w) => {
+                    const d = new Date(w.date);
+                    const dayStr = d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
+                    const isForca = w.type === "forca" || w.type === "funcional";
+                    return (
+                      <div key={w.id} className="flex items-center gap-3 rounded-xl border border-border bg-card-hover/30 px-4 py-3">
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${isForca ? "bg-violet-500/15 text-violet-500" : "bg-sky-500/15 text-sky-500"}`}>
+                          {isForca ? <Dumbbell className="h-4 w-4" /> : <Footprints className="h-4 w-4" />}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-text">{w.title}</p>
+                          {w.objective && <p className="truncate text-xs text-text-muted">{w.objective}</p>}
+                        </div>
+                        <span className="shrink-0 text-xs capitalize text-text-muted">{dayStr}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
 

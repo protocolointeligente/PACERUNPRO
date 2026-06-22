@@ -2,12 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Dumbbell, Flame, ListChecks, Repeat, Timer } from "lucide-react";
+import { CalendarClock, Dumbbell, Flame, ListChecks, Repeat, Timer } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { exerciseCategories, exerciseLibrary } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
 
 interface StrengthBlock {
   id: string;
@@ -44,10 +42,19 @@ interface ExerciseJsonEntry {
   imageUrl?: string;
 }
 
+interface UpcomingWorkout {
+  id: string;
+  date: string;
+  title: string;
+  type: string;
+  objective?: string;
+}
+
 export default function StrengthPage() {
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [todayWorkout, setTodayWorkout] = useState<TodayWorkout | null | undefined>(undefined);
   const [exerciseGifs, setExerciseGifs] = useState<Record<string, string>>({});
+  const [upcomingWorkouts, setUpcomingWorkouts] = useState<UpcomingWorkout[]>([]);
+  const [upcomingLoading, setUpcomingLoading] = useState(true);
 
   // Load exercises.json once to get gifUrls
   useEffect(() => {
@@ -71,9 +78,16 @@ export default function StrengthPage() {
       .catch(() => setTodayWorkout(null));
   }, []);
 
-  const filtered = activeCategory
-    ? exerciseLibrary.filter((e) => e.category === activeCategory)
-    : exerciseLibrary;
+  useEffect(() => {
+    fetch("/api/athlete/workouts")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: UpcomingWorkout[]) => {
+        const todayLocal = new Date().toLocaleDateString("sv");
+        setUpcomingWorkouts(data.filter((w) => w.type === "forca" && w.date.slice(0, 10) !== todayLocal));
+      })
+      .catch(() => null)
+      .finally(() => setUpcomingLoading(false));
+  }, []);
 
   const blocks = todayWorkout?.strengthWorkout?.blocks ?? [];
   const sessionLabel =
@@ -84,9 +98,6 @@ export default function StrengthPage() {
       <div>
         <Badge variant="primary" className="mb-2">Força &amp; Funcional</Badge>
         <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Seu treino de força de hoje</h1>
-        <p className="mt-1.5 text-sm text-text-muted">
-          O diferencial do Pace Run Pro: sessões completas de força e funcional, criadas pelo seu treinador, com biblioteca de exercícios em vídeo.
-        </p>
       </div>
 
       {/* Today's strength session */}
@@ -184,63 +195,46 @@ export default function StrengthPage() {
         </Card>
       )}
 
-      {/* Library */}
+      {/* Upcoming força sessions */}
       <div>
-        <h2 className="mb-3 font-display text-lg font-semibold text-text">Biblioteca de exercícios</h2>
-        <div className="mb-4 flex flex-wrap gap-2">
-          <button
-            onClick={() => setActiveCategory(null)}
-            className={cn(
-              "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
-              activeCategory === null
-                ? "border-primary/60 bg-primary/15 text-primary"
-                : "border-border bg-card text-text-muted hover:border-primary/30"
-            )}
-          >
-            Todas
-          </button>
-          {exerciseCategories.map((c) => (
-            <button
-              key={c}
-              onClick={() => setActiveCategory(c)}
-              className={cn(
-                "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
-                activeCategory === c
-                  ? "border-primary/60 bg-primary/15 text-primary"
-                  : "border-border bg-card text-text-muted hover:border-primary/30"
-              )}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((ex) => {
-            const gif = exerciseGifs[ex.id] ?? ex.gifUrl;
-            return (
-              <Link key={ex.id} href={`/atleta/forca/${ex.id}`}>
-                <Card hover className="overflow-hidden">
-                  {gif ? (
-                    <img src={gif} alt={ex.name} className="h-36 w-full object-cover" />
-                  ) : (
-                    <div className="h-36 bg-card-hover/60" />
-                  )}
-                  <CardContent className="p-4">
-                    <Badge variant="primary" className="mb-2">{ex.category}</Badge>
-                    <p className="text-sm font-semibold text-text">{ex.name}</p>
-                    <p className="mt-1 line-clamp-2 text-xs text-text-muted">{ex.description}</p>
-                    <div className="mt-3 flex items-center gap-3 text-xs text-text-muted">
-                      <span>{ex.sets}× {ex.reps}</span>
-                      <span>·</span>
-                      <span>{ex.rest} descanso</span>
+        <h2 className="mb-3 font-display text-lg font-semibold text-text">Próximas sessões de força</h2>
+        {upcomingLoading ? (
+          <Card>
+            <CardContent className="flex justify-center py-8">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </CardContent>
+          </Card>
+        ) : upcomingWorkouts.length === 0 ? (
+          <Card className="border-border/50">
+            <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+              <CalendarClock className="h-8 w-8 text-text-muted/40" />
+              <p className="text-sm text-text-muted">Nenhuma sessão de força agendada nos próximos dias.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-2">
+            {upcomingWorkouts.map((w) => {
+              const d = new Date(w.date);
+              const dayStr = d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
+              return (
+                <Card key={w.id} className="border-border/60">
+                  <CardContent className="flex items-center gap-4 p-4">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Dumbbell className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-text">{w.title}</p>
+                      {w.objective && (
+                        <p className="truncate text-xs text-text-muted">{w.objective}</p>
+                      )}
                     </div>
+                    <span className="shrink-0 text-xs text-text-muted capitalize">{dayStr}</span>
                   </CardContent>
                 </Card>
-              </Link>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
