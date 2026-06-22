@@ -44,7 +44,7 @@ interface PrescribedExercise {
 interface SessionBlock {
   id: string;
   label: string;
-  dayLabel: string;
+  dayLabels: string[];
   exercises: PrescribedExercise[];
 }
 
@@ -82,7 +82,7 @@ function buildSessions(division: string): SessionBlock[] {
   return labels.map((label, i) => ({
     id: `s-${division}-${i}`,
     label,
-    dayLabel: days[i] ?? "Seg",
+    dayLabels: [days[i] ?? "Seg"],
     exercises: [],
   }));
 }
@@ -133,7 +133,7 @@ function TemplateCard({
               athleteId,
               sessions: template.sessions.map((s, i) => ({
                 label: s.label,
-                dayLabel: defaultDayLabelsByDivision[template.division]?.[i] ?? "Seg",
+                dayLabels: [defaultDayLabelsByDivision[template.division]?.[i] ?? "Seg"],
                 exercises: s.exercises,
               })),
               startDate: tplStartDate,
@@ -219,14 +219,14 @@ function TemplateCard({
                     const libEx = exerciseDb.find((e) => e.id === ex.libraryId);
                     return (
                       <div key={i} className="flex items-center gap-2 text-xs">
-                        {libEx?.imageUrl ? (
+                        {(libEx?.gifUrl ?? libEx?.imageUrl) ? (
                           <img
-                            src={libEx.imageUrl}
+                            src={libEx!.gifUrl ?? libEx!.imageUrl!}
                             alt={ex.name}
-                            className="h-8 w-8 shrink-0 rounded-md object-cover border border-border"
+                            className="h-10 w-14 shrink-0 rounded-md object-cover border border-border"
                           />
                         ) : (
-                          <div className="h-8 w-8 shrink-0 rounded-md border border-border bg-card-hover/40" />
+                          <div className="h-10 w-14 shrink-0 rounded-md border border-border bg-card-hover/40" />
                         )}
                         <span className="font-medium text-text min-w-0 flex-1 truncate">{ex.name}</span>
                         <span className="shrink-0 rounded bg-card px-1.5 py-0.5 text-text-muted">
@@ -549,7 +549,7 @@ export default function StrengthPrescriptionPage() {
   function addCustomSession() {
     setSessions((prev) => [
       ...prev,
-      { id: `s-custom-${prev.length}`, label: `Treino ${prev.length + 1}`, dayLabel: "Seg", exercises: [] },
+      { id: `s-custom-${prev.length}`, label: `Treino ${prev.length + 1}`, dayLabels: ["Seg"], exercises: [] },
     ]);
     setActiveIndex(sessions.length);
   }
@@ -574,7 +574,7 @@ export default function StrengthPrescriptionPage() {
           athleteId: athlete.id,
           sessions: sessions.map((s) => ({
             label: s.label,
-            dayLabel: s.dayLabel,
+            dayLabels: s.dayLabels,
             exercises: s.exercises.map((e) => ({
               libraryId: e.libraryId,
               name: e.name,
@@ -648,7 +648,7 @@ export default function StrengthPrescriptionPage() {
     const newSessions: SessionBlock[] = template.sessions.map((s, i) => ({
       id: `tpl-${template.id}-${i}`,
       label: s.label,
-      dayLabel: defaultDays[i] ?? "Seg",
+      dayLabels: [defaultDays[i] ?? "Seg"],
       exercises: s.exercises.map((e) => ({
         uid: nextUid(),
         libraryId: e.libraryId,
@@ -898,7 +898,7 @@ export default function StrengthPrescriptionPage() {
                     )} onClick={() => setActiveIndex(i)}>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className={cn(
-                          "min-w-[5rem] text-xs font-semibold",
+                          "min-w-[5rem] shrink-0 text-xs font-semibold",
                           activeIndex === i ? "text-primary" : "text-text"
                         )}>
                           {s.label}
@@ -912,14 +912,23 @@ export default function StrengthPrescriptionPage() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSessions((prev) =>
-                                  prev.map((sess, idx) => idx === i ? { ...sess, dayLabel: d } : sess)
+                                  prev.map((sess, idx) => {
+                                    if (idx !== i) return sess;
+                                    const has = sess.dayLabels.includes(d);
+                                    return {
+                                      ...sess,
+                                      dayLabels: has
+                                        ? sess.dayLabels.filter((x) => x !== d)
+                                        : [...sess.dayLabels, d],
+                                    };
+                                  })
                                 );
                                 setSent(false);
                               }}
                               className={cn(
                                 "rounded border px-2 py-0.5 text-[11px] font-medium transition-colors",
-                                s.dayLabel === d
-                                  ? "border-primary/60 bg-primary/20 text-primary"
+                                s.dayLabels.includes(d)
+                                  ? "border-primary/60 bg-primary/20 text-primary font-bold"
                                   : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text"
                               )}
                             >

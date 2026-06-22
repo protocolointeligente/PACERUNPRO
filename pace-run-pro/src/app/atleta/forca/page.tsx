@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Dumbbell, Flame, ImageOff, ListChecks, Repeat, Timer } from "lucide-react";
+import { Dumbbell, Flame, ListChecks, Repeat, Timer } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,9 +38,31 @@ interface TodayWorkout {
   } | null;
 }
 
+interface ExerciseJsonEntry {
+  id: string;
+  gifUrl?: string;
+  imageUrl?: string;
+}
+
 export default function StrengthPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [todayWorkout, setTodayWorkout] = useState<TodayWorkout | null | undefined>(undefined);
+  const [exerciseGifs, setExerciseGifs] = useState<Record<string, string>>({});
+
+  // Load exercises.json once to get gifUrls
+  useEffect(() => {
+    fetch("/exercises.json")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: ExerciseJsonEntry[]) => {
+        const map: Record<string, string> = {};
+        for (const e of data) {
+          if (e.gifUrl) map[e.id] = e.gifUrl;
+          else if (e.imageUrl) map[e.id] = e.imageUrl;
+        }
+        setExerciseGifs(map);
+      })
+      .catch(() => null);
+  }, []);
 
   useEffect(() => {
     fetch("/api/athlete/forca/hoje")
@@ -103,44 +125,48 @@ export default function StrengthPage() {
             </div>
 
             <div className="mt-5 space-y-2.5">
-              {blocks.map((block, i) => (
-                <Link key={block.id} href={`/atleta/forca/${block.exercise.id}`}>
-                  <div className="flex items-center gap-3 rounded-xl border border-border bg-card-hover/40 p-3 transition-colors hover:border-primary/40">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-card text-sm font-bold text-text-muted">
-                      {i + 1}
-                    </span>
-                    {block.exercise.imageUrl ? (
-                      <div
-                        className="h-12 w-16 shrink-0 rounded-lg bg-cover bg-center"
-                        style={{ backgroundImage: `url('${block.exercise.imageUrl}')` }}
-                      />
-                    ) : (
-                      <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg bg-card-hover">
-                        <ImageOff className="h-4 w-4 text-text-muted/30" />
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-text">{block.exercise.name}</p>
-                      <p className="text-xs text-text-muted">{block.exercise.category}</p>
-                    </div>
-                    <div className="hidden gap-4 text-xs text-text-muted sm:flex">
-                      <span className="flex items-center gap-1">
-                        <Repeat className="h-3 w-3" /> {block.sets}x {block.reps}
+              {blocks.map((block, i) => {
+                const gif = exerciseGifs[block.exercise.id];
+                return (
+                  <Link key={block.id} href={`/atleta/forca/${block.exercise.id}`}>
+                    <div className="flex items-center gap-3 rounded-xl border border-border bg-card-hover/40 p-3 transition-colors hover:border-primary/40">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-card text-sm font-bold text-text-muted">
+                        {i + 1}
                       </span>
-                      {block.restSec && (
-                        <span className="flex items-center gap-1">
-                          <Timer className="h-3 w-3" /> {block.restSec}s
-                        </span>
+                      {gif ? (
+                        <img
+                          src={gif}
+                          alt={block.exercise.name}
+                          className="h-14 w-20 shrink-0 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-lg bg-card-hover">
+                          <Dumbbell className="h-4 w-4 text-text-muted/30" />
+                        </div>
                       )}
-                      {block.rpe && (
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-text">{block.exercise.name}</p>
+                        <p className="text-xs text-text-muted">{block.exercise.category}</p>
+                      </div>
+                      <div className="hidden gap-4 text-xs text-text-muted sm:flex">
                         <span className="flex items-center gap-1">
-                          <Flame className="h-3 w-3" /> RPE {block.rpe}
+                          <Repeat className="h-3 w-3" /> {block.sets}× {block.reps}
                         </span>
-                      )}
+                        {block.restSec && (
+                          <span className="flex items-center gap-1">
+                            <Timer className="h-3 w-3" /> {block.restSec}s
+                          </span>
+                        )}
+                        {block.rpe && (
+                          <span className="flex items-center gap-1">
+                            <Flame className="h-3 w-3" /> RPE {block.rpe}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
               {blocks.length === 0 && (
                 <p className="py-3 text-center text-sm text-text-muted">
                   Treino sem exercícios cadastrados ainda.
@@ -190,23 +216,30 @@ export default function StrengthPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((ex) => (
-            <Link key={ex.id} href={`/atleta/forca/${ex.id}`}>
-              <Card hover className="overflow-hidden">
-                <div className="h-36 bg-cover bg-center" style={{ backgroundImage: `url('${ex.imageUrl}')` }} />
-                <CardContent className="p-4">
-                  <Badge variant="primary" className="mb-2">{ex.category}</Badge>
-                  <p className="text-sm font-semibold text-text">{ex.name}</p>
-                  <p className="mt-1 line-clamp-2 text-xs text-text-muted">{ex.description}</p>
-                  <div className="mt-3 flex items-center gap-3 text-xs text-text-muted">
-                    <span>{ex.sets}x {ex.reps}</span>
-                    <span>·</span>
-                    <span>{ex.rest} descanso</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+          {filtered.map((ex) => {
+            const gif = exerciseGifs[ex.id] ?? ex.gifUrl;
+            return (
+              <Link key={ex.id} href={`/atleta/forca/${ex.id}`}>
+                <Card hover className="overflow-hidden">
+                  {gif ? (
+                    <img src={gif} alt={ex.name} className="h-36 w-full object-cover" />
+                  ) : (
+                    <div className="h-36 bg-card-hover/60" />
+                  )}
+                  <CardContent className="p-4">
+                    <Badge variant="primary" className="mb-2">{ex.category}</Badge>
+                    <p className="text-sm font-semibold text-text">{ex.name}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-text-muted">{ex.description}</p>
+                    <div className="mt-3 flex items-center gap-3 text-xs text-text-muted">
+                      <span>{ex.sets}× {ex.reps}</span>
+                      <span>·</span>
+                      <span>{ex.rest} descanso</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </div>
