@@ -28,6 +28,7 @@ import {
   PackagePlus,
   Globe,
   UserPlus,
+  BookOpen,
   type LucideIcon,
 } from "lucide-react";
 
@@ -63,6 +64,7 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/prescricao/periodizacao", label: "Periodização", icon: CalendarDays },
   { href: "/treinador/prescricao/corrida", label: "Referência VDOT", icon: Activity },
   { href: "/treinador/prescricao/forca", label: "Prescrição força", icon: Dumbbell },
+  { href: "/treinador/biblioteca", label: "Biblioteca de treinos", icon: BookOpen },
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
   { href: "/treinador/gestao",        label: "Gestão & vendas",        icon: DollarSign  },
   { href: "/treinador/planos-venda", label: "Meus planos",            icon: PackagePlus },

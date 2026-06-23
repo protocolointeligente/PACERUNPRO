@@ -49,13 +49,19 @@ export async function GET() {
     where: { athleteId: athlete.id },
     orderBy: { date: "desc" },
     take: 10,
-    select: { distanceKm: true, resultTime: true },
+    select: { distanceM: true, durationSec: true },
   });
   const prMap: Record<string, string> = {};
   for (const t of prTests) {
-    if (!t.resultTime) continue;
-    const key = t.distanceKm >= 42 ? "42k" : t.distanceKm >= 21 ? "21k" : t.distanceKm >= 10 ? "10k" : "5k";
-    if (!prMap[key]) prMap[key] = t.resultTime;
+    if (!t.durationSec || !t.distanceM) continue;
+    const distKm = t.distanceM / 1000;
+    const key = distKm >= 42 ? "42k" : distKm >= 21 ? "21k" : distKm >= 10 ? "10k" : "5k";
+    if (!prMap[key]) {
+      const h = Math.floor(t.durationSec / 3600);
+      const m = Math.floor((t.durationSec % 3600) / 60);
+      const s = t.durationSec % 60;
+      prMap[key] = h > 0 ? `${h}h${String(m).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
+    }
   }
 
   const LEVEL_LABELS: Record<string, string> = {

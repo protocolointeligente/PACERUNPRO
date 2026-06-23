@@ -53,7 +53,7 @@ export async function GET() {
   const logs = await prisma.workoutLog.findMany({
     where: {
       athleteId: athlete.id,
-      gpsTrack: { not: null },
+      gpsTrack: { not: "DbNull" },
       finishedAt: { gte: sixMonthsAgo },
     },
     select: { gpsTrack: true, durationSec: true },

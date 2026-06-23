@@ -184,6 +184,7 @@ model Coach {
   expenses          Expense[]
   zoneModels        CoachZoneModel[]
   planProducts      PlanProduct[]
+  sharedTemplates   SharedWorkoutTemplate[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -836,6 +837,57 @@ model BillingSettings {
   updatedAt DateTime @updatedAt
 
   @@map("billing_settings")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Biblioteca de equipe compartilhada
+// ────────────────────────────────────────────────────────────────────────────
+
+enum TemplateScope {
+  PERSONAL
+  TEAM
+}
+
+enum TemplateCategory {
+  CORRIDA
+  FORCA
+  MOBILIDADE
+  FUNCIONAL
+}
+
+model SharedWorkoutTemplate {
+  id          String           @id @default(cuid())
+  coachId     String
+  coach       Coach            @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  category    TemplateCategory @default(CORRIDA)
+  workoutType WorkoutType?
+  scope       TemplateScope    @default(PERSONAL)
+  tags        String[]
+
+  objective   String?
+  warmup      String?
+  mainSet     String?
+  cooldown    String?
+  notes       String?
+  structured  Boolean          @default(false)
+  blocks      Json?
+
+  targetPaceSecPerKm Int?
+  targetHrZone       String?
+  targetRpe          Int?
+  targetDistanceKm   Float?
+  targetDurationMin  Int?
+
+  usedCount   Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([coachId])
+  @@index([scope])
+  @@map("shared_workout_templates")
 }
 
 // ────────────────────────────────────────────────────────────────────────────
