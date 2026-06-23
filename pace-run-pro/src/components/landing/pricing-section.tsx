@@ -164,7 +164,7 @@ export function PricingSection() {
         </div>
 
         <p className="mt-8 text-center text-xs text-text-muted">
-          Pagamento via cartão, PIX ou boleto · Acesso imediato · Sem taxa de setup
+          Pagamento via cartão ou PIX · Acesso imediato · Sem taxa de setup
         </p>
       </div>
     </section>
