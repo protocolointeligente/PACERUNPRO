@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaTrend, LineTrend } from "@/components/charts/trend-chart";
 import { WeeklyReleaseDialog } from "@/components/coach/weekly-release-dialog";
 import { DeleteWorkoutButton, DeletePlanButton, EditWorkoutButton } from "@/components/coach/delete-buttons";
+import { TrainingLoadPanel } from "@/components/coach/training-load-panel";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-guard";
 
@@ -261,7 +262,8 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
           <TabsTrigger value="visao">Visão geral</TabsTrigger>
           <TabsTrigger value="fisico">Dados físicos &amp; testes</TabsTrigger>
           <TabsTrigger value="treinos">Treinos &amp; histórico</TabsTrigger>
-          <TabsTrigger value="checkins">Check-ins &amp; carga</TabsTrigger>
+          <TabsTrigger value="carga">Carga de treino</TabsTrigger>
+          <TabsTrigger value="checkins">Check-ins</TabsTrigger>
         </TabsList>
 
         {/* Overview */}
@@ -457,7 +459,12 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
           </div>
         </TabsContent>
 
-        {/* Check-ins & load */}
+        {/* Training load (CTL/ATL/TSB) */}
+        <TabsContent value="carga">
+          <TrainingLoadPanel athleteId={dbAthlete.id} />
+        </TabsContent>
+
+        {/* Check-ins */}
         <TabsContent value="checkins">
           {checkInHistory.length === 0 ? (
             <Card>

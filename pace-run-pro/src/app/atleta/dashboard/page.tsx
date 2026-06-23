@@ -9,9 +9,11 @@ import {
   CalendarClock,
   Dumbbell,
   Footprints,
-  ShieldCheck,
+  TrendingUp,
   UserCircle,
 } from "lucide-react";
+import { formStatus, FORM_LABELS } from "@/lib/training-load";
+import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,6 +52,8 @@ export default function AthleteDashboard() {
   const [todayWorkout, setTodayWorkout] = useState<WorkoutEntry | null>(null);
   const [upcomingWorkouts, setUpcomingWorkouts] = useState<WorkoutEntry[]>([]);
   const [workoutsLoading, setWorkoutsLoading] = useState(true);
+  const [loadTsb, setLoadTsb] = useState<number | null>(null);
+  const [loadCtl, setLoadCtl] = useState<number | null>(null);
 
   useEffect(() => {
     setGreeting(getGreeting());
@@ -60,6 +64,18 @@ export default function AthleteDashboard() {
       .then((r) => r.ok ? r.json() : null)
       .then((data: { name?: string } | null) => {
         if (data?.name) setFirstName(data.name.split(" ")[0]);
+      })
+      .catch(() => null);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/athlete/training-load")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { latest?: { tsb: number; ctl: number } | null } | null) => {
+        if (d?.latest) {
+          setLoadTsb(d.latest.tsb);
+          setLoadCtl(d.latest.ctl);
+        }
       })
       .catch(() => null);
   }, []);
@@ -183,19 +199,41 @@ export default function AthleteDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="space-y-3 p-5">
-              <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-card-hover text-text-muted">
-                  <ShieldCheck className="h-4 w-4" />
-                </span>
-                <h3 className="font-display text-sm font-semibold text-text">Status de hoje</h3>
-              </div>
-              <p className="text-sm text-text-muted">
-                Complete seu check-in para que seu status de prontidão seja calculado automaticamente.
-              </p>
-            </CardContent>
-          </Card>
+          {loadTsb !== null ? (() => {
+            const status = formStatus(loadTsb);
+            const info = FORM_LABELS[status];
+            return (
+              <Card className={cn("border-border", info.bg)}>
+                <CardContent className="space-y-2 p-5">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-card-hover text-text-muted">
+                      <TrendingUp className="h-4 w-4" />
+                    </span>
+                    <h3 className="font-display text-sm font-semibold text-text">Forma atual</h3>
+                  </div>
+                  <p className={cn("font-display text-xl font-bold", info.color)}>{info.label}</p>
+                  <div className="flex gap-3 text-xs text-text-muted">
+                    <span>CTL {loadCtl?.toFixed(0)}</span>
+                    <span>TSB {loadTsb >= 0 ? "+" : ""}{loadTsb.toFixed(0)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })() : (
+            <Card>
+              <CardContent className="space-y-3 p-5">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-card-hover text-text-muted">
+                    <TrendingUp className="h-4 w-4" />
+                  </span>
+                  <h3 className="font-display text-sm font-semibold text-text">Carga de treino</h3>
+                </div>
+                <p className="text-sm text-text-muted">
+                  Sua forma, fitness e fadiga aparecerão aqui conforme os treinos forem registrados.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </motion.div>
 
         {/* Próximas sessões */}

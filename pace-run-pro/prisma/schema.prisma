@@ -151,6 +151,7 @@ model Athlete {
   races              Race[]
   achievements       Achievement[]
   teamMemberships    TeamMember[]
+  loadParams         AthleteLoadParams?
 
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -849,6 +850,33 @@ model CoachRunTemplate {
   updatedAt       DateTime @updatedAt
 
   @@map("coach_run_templates")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Carga de treino (CTL/ATL/TSB — modelo de Banister)
+// ────────────────────────────────────────────────────────────────────────────
+
+model AthleteLoadParams {
+  id                      String   @id @default(cuid())
+  athleteId               String   @unique
+  athlete                 Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  // Corrida
+  thresholdPaceSecPerKm   Int?     // pace de limiar em seg/km (ex: 300 = 5:00/km)
+
+  // Ciclismo
+  ftpWatts                Int?     // FTP em watts
+
+  // Natação
+  swimThresholdSecPer100m Int?     // pace de limiar em seg/100 m
+
+  // FC (TRIMP)
+  hrMax                   Int?     // FC máxima
+  hrRest                  Int?     // FC repouso
+
+  updatedAt               DateTime @updatedAt
+
+  @@map("athlete_load_params")
 }
 
 // ────────────────────────────────────────────────────────────────────────────
