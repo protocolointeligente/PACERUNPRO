@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ChevronLeft, ChevronRight, Search, Users, X,
   Clock, Ruler, Zap, CheckCircle2, CircleAlert, Circle,
+  Flame, ShieldAlert, CalendarCheck,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -315,6 +316,84 @@ const LEGEND_ITEMS = [
   { label: "★ Prova",  bg: "bg-red-700" },
 ];
 
+// ── Action Center Banner ──────────────────────────────────────────────────────
+
+interface ActionCenterData {
+  athletesWithoutWorkout: number;
+  unreleasedWorkouts: number;
+  missedWorkouts: number;
+  flaggedCheckins: number;
+}
+
+function ActionBanner({ data }: { data: ActionCenterData }) {
+  const items = [
+    {
+      value: data.athletesWithoutWorkout,
+      label: data.athletesWithoutWorkout === 1 ? "atleta sem treino" : "atletas sem treino",
+      icon: Users,
+      color: "text-warning",
+      bg: "bg-warning/10",
+      href: "/treinador/atletas?filtro=sem-treino",
+      cta: "Prescrever",
+    },
+    {
+      value: data.unreleasedWorkouts,
+      label: data.unreleasedWorkouts === 1 ? "treino aguarda liberação" : "treinos aguardam liberação",
+      icon: Flame,
+      color: "text-info",
+      bg: "bg-info/10",
+      href: "/treinador/atletas",
+      cta: "Liberar",
+    },
+    {
+      value: data.missedWorkouts,
+      label: data.missedWorkouts === 1 ? "treino não realizado" : "treinos não realizados",
+      icon: ShieldAlert,
+      color: "text-danger",
+      bg: "bg-danger/10",
+      href: "/treinador/alertas",
+      cta: "Ver alertas",
+    },
+    {
+      value: data.flaggedCheckins,
+      label: data.flaggedCheckins === 1 ? "check-in com atenção" : "check-ins com atenção",
+      icon: CalendarCheck,
+      color: "text-orange-400",
+      bg: "bg-orange-400/10",
+      href: "/treinador/atletas",
+      cta: "Revisar",
+    },
+  ].filter((i) => i.value > 0);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="rounded-2xl border border-warning/20 bg-warning/5 p-4">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-text-muted">
+        O que precisa de ação hoje
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link key={item.label} href={item.href}>
+              <div className={cn(
+                "flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-opacity hover:opacity-80",
+                item.bg
+              )}>
+                <Icon className={cn("h-3.5 w-3.5 shrink-0", item.color)} />
+                <span className={cn("font-bold", item.color)}>{item.value}</span>
+                <span className="text-text-muted">{item.label}</span>
+                <span className={cn("ml-1 font-semibold", item.color)}>→ {item.cta}</span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
 const TABS = ["Todos", "Com treino", "Sem plano", "Em risco"] as const;
@@ -327,6 +406,14 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<Tab>("Todos");
   const [modal, setModal] = useState<ModalPayload | null>(null);
+  const [actionCenter, setActionCenter] = useState<ActionCenterData | null>(null);
+
+  useEffect(() => {
+    fetch("/api/coach/action-center")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: ActionCenterData | null) => setActionCenter(d))
+      .catch(() => null);
+  }, []);
 
   const fetchWeek = useCallback((monday: Date) => {
     setLoading(true);
@@ -390,6 +477,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   return (
     <div className="mx-auto max-w-6xl space-y-4">
       <Header total={staticAthletes.length} />
+
+      {actionCenter && <ActionBanner data={actionCenter} />}
 
       {/* Week navigation */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

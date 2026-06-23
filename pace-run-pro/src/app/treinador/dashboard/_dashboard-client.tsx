@@ -1,12 +1,17 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowRight,
+  CalendarDays,
   ClipboardCheck,
+  Dumbbell,
   Flame,
+  Library,
+  Plus,
   ShieldAlert,
   Users,
   Wallet,
@@ -38,64 +43,123 @@ export interface CoachDashboardProps {
   athletes: AthleteRow[];
 }
 
+interface ActionCenterData {
+  athletesTotal: number;
+  athletesWithoutWorkout: number;
+  unreleasedWorkouts: number;
+  missedWorkouts: number;
+  flaggedCheckins: number;
+  workoutsThisWeek: number;
+}
+
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
-  show: (i: number = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4, ease: "easeOut" as const } }),
+  show: (i: number = 0) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.06, duration: 0.4, ease: "easeOut" as const },
+  }),
 };
 
-const TODAY_ACTIONS = [
+const QUICK_ACTIONS = [
   {
-    id: "intervencao",
-    label: "atletas precisam de intervenção",
-    value: 0,
-    icon: ShieldAlert,
-    color: "danger" as const,
-    href: "/treinador/alertas",
-    cta: "Ver alertas",
+    label: "Criar treino",
+    description: "Prescreva corrida, força ou mobilidade para um atleta.",
+    href: "/treinador/prescricao/corrida",
+    icon: Plus,
+    accent: "text-primary",
+    bg: "bg-primary/10",
   },
   {
-    id: "checkins",
-    label: "check-ins pendentes de revisão",
-    value: 0,
-    icon: ClipboardCheck,
-    color: "warning" as const,
-    href: "/treinador/atletas",
-    cta: "Revisar check-ins",
+    label: "Criar semana",
+    description: "Monte uma semana completa para um ou vários atletas.",
+    href: "/treinador/prescricao/periodizacao",
+    icon: CalendarDays,
+    accent: "text-success",
+    bg: "bg-success/10",
   },
   {
-    id: "liberacao",
-    label: "treinos aguardam liberação",
-    value: 0,
-    icon: Flame,
-    color: "info" as const,
-    href: "/treinador/atletas",
-    cta: "Liberar treinos",
+    label: "Prescrever força",
+    description: "Adicione treino de força, mobilidade ou funcional.",
+    href: "/treinador/prescricao/forca",
+    icon: Dumbbell,
+    accent: "text-violet-400",
+    bg: "bg-violet-400/10",
   },
   {
-    id: "inadimplencia",
-    label: "em inadimplência",
-    value: "R$ 0",
-    icon: Wallet,
-    color: "text-muted" as const,
-    href: "/treinador/crm",
-    cta: "Ver financeiro",
+    label: "Usar modelo",
+    description: "Aplique um treino salvo da biblioteca.",
+    href: "/treinador/biblioteca",
+    icon: Library,
+    accent: "text-warning",
+    bg: "bg-warning/10",
   },
 ];
 
 const colorMap = {
-  danger: { border: "border-danger/30", bg: "bg-danger/8", text: "text-danger", icon: "bg-danger/15 text-danger" },
-  warning: { border: "border-warning/30", bg: "bg-warning/8", text: "text-warning", icon: "bg-warning/15 text-warning" },
-  info: { border: "border-info/30", bg: "bg-info/8", text: "text-info", icon: "bg-info/15 text-info" },
-  "text-muted": { border: "border-border", bg: "bg-card-hover", text: "text-text", icon: "bg-card-hover text-text-muted" },
+  danger:      { border: "border-danger/30",  bg: "bg-danger/8",   text: "text-danger",  icon: "bg-danger/15 text-danger"   },
+  warning:     { border: "border-warning/30", bg: "bg-warning/8",  text: "text-warning", icon: "bg-warning/15 text-warning" },
+  info:        { border: "border-info/30",    bg: "bg-info/8",     text: "text-info",    icon: "bg-info/15 text-info"       },
+  "text-muted":{ border: "border-border",     bg: "bg-card-hover", text: "text-text",    icon: "bg-card-hover text-text-muted" },
 };
 
-export default function CoachDashboard({ firstName, credential, athleteCount, athletesAtRisk: riskCount, athletes }: CoachDashboardProps) {
+export default function CoachDashboard({
+  firstName, credential, athleteCount, athletesAtRisk: riskCount, athletes,
+}: CoachDashboardProps) {
+  const [center, setCenter] = useState<ActionCenterData | null>(null);
+
+  useEffect(() => {
+    fetch("/api/coach/action-center")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: ActionCenterData | null) => setCenter(d))
+      .catch(() => null);
+  }, []);
+
   const athletesAtRisk = athletes.filter((a) => a.status === "risco");
+
+  const todayActions = [
+    {
+      id: "sem-treino",
+      label: "atletas sem treino esta semana",
+      value: center ? center.athletesWithoutWorkout : "—",
+      icon: Users,
+      color: (center && center.athletesWithoutWorkout > 0 ? "warning" : "text-muted") as keyof typeof colorMap,
+      href: "/treinador/atletas?filtro=sem-treino",
+      cta: "Ver atletas",
+    },
+    {
+      id: "liberacao",
+      label: "treinos aguardando liberação",
+      value: center ? center.unreleasedWorkouts : "—",
+      icon: Flame,
+      color: (center && center.unreleasedWorkouts > 0 ? "info" : "text-muted") as keyof typeof colorMap,
+      href: "/treinador/atletas",
+      cta: "Liberar treinos",
+    },
+    {
+      id: "perdidos",
+      label: "treinos não realizados",
+      value: center ? center.missedWorkouts : "—",
+      icon: ShieldAlert,
+      color: (center && center.missedWorkouts > 0 ? "danger" : "text-muted") as keyof typeof colorMap,
+      href: "/treinador/alertas",
+      cta: "Ver alertas",
+    },
+    {
+      id: "checkins",
+      label: "check-ins com sinal de atenção (7 dias)",
+      value: center ? center.flaggedCheckins : "—",
+      icon: ClipboardCheck,
+      color: (center && center.flaggedCheckins > 0 ? "warning" : "text-muted") as keyof typeof colorMap,
+      href: "/treinador/atletas",
+      cta: "Revisar check-ins",
+    },
+  ];
 
   return (
     <div className="mx-auto max-w-6xl space-y-7">
       {/* Greeting */}
-      <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap items-center justify-between gap-4">
+      <motion.div variants={fadeUp} initial="hidden" animate="show"
+        className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-sm text-text-muted">Painel do treinador</p>
           <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
@@ -103,38 +167,60 @@ export default function CoachDashboard({ firstName, credential, athleteCount, at
           </h1>
           <p className="mt-1 text-xs text-text-muted">{credential}</p>
         </div>
-        <Link href="/treinador/prescricao/corrida">
-          <Button size="lg">Nova prescrição</Button>
+        <Link href="/treinador/atletas/convidar">
+          <Button size="lg" variant="secondary">Convidar atleta</Button>
         </Link>
       </motion.div>
 
-      {/* Ações de hoje */}
+      {/* Quick actions */}
       <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show">
         <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-text-muted">
-          Ações de hoje
+          Ações rápidas
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {QUICK_ACTIONS.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link key={action.href} href={action.href}>
+                <div className="group rounded-2xl border border-border bg-card p-4 transition-all duration-200 hover:bg-card-hover hover:shadow-md">
+                  <div className={cn("mb-3 flex h-9 w-9 items-center justify-center rounded-xl", action.bg)}>
+                    <Icon className={cn("h-4 w-4", action.accent)} />
+                  </div>
+                  <p className="text-sm font-semibold text-text">{action.label}</p>
+                  <p className="mt-1 text-xs leading-snug text-text-muted">{action.description}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* O que precisa de ação hoje */}
+      <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-text-muted">
+          O que precisa de ação hoje
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {TODAY_ACTIONS.map((action) => {
+          {todayActions.map((action) => {
             const Icon = action.icon;
             const c = colorMap[action.color];
+            const isZero = action.value === 0;
             return (
               <Link key={action.id} href={action.href}>
-                <div
-                  className={cn(
-                    "group relative flex flex-col gap-3 rounded-2xl border p-5 transition-all duration-200 hover:shadow-lg",
-                    c.border, c.bg
-                  )}
-                >
-                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", c.icon)}>
+                <div className={cn(
+                  "group relative flex flex-col gap-3 rounded-2xl border p-5 transition-all duration-200 hover:shadow-lg",
+                  isZero ? "border-border bg-card-hover/40" : `${c.border} ${c.bg}`
+                )}>
+                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", isZero ? "bg-card text-text-muted" : c.icon)}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className={cn("font-display text-2xl font-extrabold", c.text)}>
+                    <div className={cn("font-display text-2xl font-extrabold", isZero ? "text-text-muted" : c.text)}>
                       {action.value}
                     </div>
-                    <p className="mt-0.5 text-xs text-text-muted leading-snug">{action.label}</p>
+                    <p className="mt-0.5 text-xs leading-snug text-text-muted">{action.label}</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-text-muted group-hover:text-text transition-colors">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-text-muted transition-colors group-hover:text-text">
                     {action.cta} <ArrowRight className="h-3 w-3" />
                   </span>
                 </div>
@@ -144,12 +230,13 @@ export default function CoachDashboard({ firstName, credential, athleteCount, at
         </div>
       </motion.div>
 
-      {/* Visão geral */}
-      <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {/* Overview stats */}
+      <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {[
-          { label: "Total de atletas", value: athleteCount, icon: Users, accent: "text-primary" },
-          { label: "Treinos prescritos / sem", value: 0, icon: ClipboardCheck, accent: "text-info" },
-          { label: "Atletas em risco", value: riskCount, icon: AlertTriangle, accent: "text-danger" },
+          { label: "Total de atletas",         value: athleteCount,                            icon: Users,         accent: "text-primary" },
+          { label: "Treinos nesta semana",      value: center ? center.workoutsThisWeek : "—", icon: ClipboardCheck, accent: "text-info"    },
+          { label: "Atletas em risco",          value: riskCount,                               icon: AlertTriangle,  accent: "text-danger"  },
         ].map(({ label, value, icon: Icon, accent }) => (
           <Card key={label}>
             <CardContent className="flex items-center gap-3 p-4">
@@ -165,37 +252,50 @@ export default function CoachDashboard({ firstName, credential, athleteCount, at
 
       <div className="grid gap-5 lg:grid-cols-3">
         {/* Atletas em risco */}
-        <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show" className="lg:col-span-2 space-y-5">
+        <motion.div custom={4} variants={fadeUp} initial="hidden" animate="show"
+          className="space-y-5 lg:col-span-2">
           <SectionHeader title="Atletas que precisam de atenção" href="/treinador/atletas" />
-          <div className="space-y-3">
-            {athletesAtRisk.map((a) => (
-              <Link key={a.id} href={`/treinador/atletas/${a.id}`}>
-                <Card hover className="p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-danger/15 font-display text-sm font-bold text-danger">
-                        {a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
-                      </span>
-                      <div>
-                        <p className="text-sm font-semibold text-text">{a.name}</p>
-                        <p className="text-xs text-text-muted">Meta: {a.goal} · {a.level}</p>
+          {athletesAtRisk.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-success/10">
+                  <Users className="h-6 w-6 text-success" />
+                </div>
+                <p className="text-sm font-semibold text-text">Nenhum atleta em risco</p>
+                <p className="text-xs text-text-muted">Todos os atletas estão com status ativo.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {athletesAtRisk.map((a) => (
+                <Link key={a.id} href={`/treinador/atletas/${a.id}`}>
+                  <Card hover className="p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-danger/15 font-display text-sm font-bold text-danger">
+                          {a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-text">{a.name}</p>
+                          <p className="text-xs text-text-muted">Meta: {a.goal} · {a.level}</p>
+                        </div>
                       </div>
+                      <Badge variant="danger">Em risco</Badge>
                     </div>
-                    <Badge variant="danger">Em risco</Badge>
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-text-muted sm:grid-cols-3 sm:gap-3">
-                    <span>Adesão: <span className="font-semibold text-text">{Math.round(a.adherence * 100)}%</span></span>
-                    <span>Carga: <span className="font-semibold text-text">{a.weeklyLoad} UA</span></span>
-                    <span>Último check-in: <span className="font-semibold text-text">{a.lastCheckIn}</span></span>
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-text-muted sm:grid-cols-3 sm:gap-3">
+                      <span>Adesão: <span className="font-semibold text-text">{Math.round(a.adherence * 100)}%</span></span>
+                      <span>Carga: <span className="font-semibold text-text">{a.weeklyLoad} UA</span></span>
+                      <span>Último check-in: <span className="font-semibold text-text">{a.lastCheckIn}</span></span>
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Carga da equipe */}
-        <motion.div custom={4} variants={fadeUp} initial="hidden" animate="show" className="space-y-5">
+        <motion.div custom={5} variants={fadeUp} initial="hidden" animate="show" className="space-y-5">
           <Card>
             <CardContent className="p-5">
               <h3 className="mb-4 flex items-center gap-1.5 font-display text-base font-semibold text-text">
@@ -226,17 +326,33 @@ export default function CoachDashboard({ firstName, credential, athleteCount, at
             </CardContent>
           </Card>
 
-          <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-card">
-            <CardContent className="p-5">
-              <h3 className="font-display text-base font-semibold text-text">Liberação semanal</h3>
-              <p className="mt-1.5 text-sm text-text-muted">
-                Nenhum treino aguarda liberação esta semana.
-              </p>
-              <Link href="/treinador/atletas">
-                <Button className="mt-3 w-full">Revisar liberações</Button>
-              </Link>
-            </CardContent>
-          </Card>
+          {center && center.unreleasedWorkouts > 0 && (
+            <Card className="border-warning/30 bg-warning/5">
+              <CardContent className="p-5">
+                <h3 className="font-display text-base font-semibold text-text">Liberação pendente</h3>
+                <p className="mt-1.5 text-sm text-text-muted">
+                  {center.unreleasedWorkouts} {center.unreleasedWorkouts === 1 ? "treino aguarda" : "treinos aguardam"} liberação.
+                </p>
+                <Link href="/treinador/atletas">
+                  <Button className="mt-3 w-full">Liberar agora</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+
+          {(!center || center.unreleasedWorkouts === 0) && (
+            <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-card">
+              <CardContent className="p-5">
+                <h3 className="font-display text-base font-semibold text-text">Prescrição rápida</h3>
+                <p className="mt-1.5 text-sm text-text-muted">
+                  Crie uma semana de treinos e libere para seus atletas.
+                </p>
+                <Link href="/treinador/prescricao/periodizacao">
+                  <Button className="mt-3 w-full">Criar semana</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
         </motion.div>
       </div>
     </div>

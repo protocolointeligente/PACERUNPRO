@@ -22,6 +22,8 @@ interface AppShellProps {
   children: React.ReactNode;
   /** Extra content rendered above the user card in the sidebar */
   sidebarFooterSlot?: React.ReactNode;
+  /** Extra actions rendered in the topbar (right side, before notifications) */
+  headerActions?: React.ReactNode;
 }
 
 export function AppShell({
@@ -33,6 +35,7 @@ export function AppShell({
   avatarUrl,
   children,
   sidebarFooterSlot,
+  headerActions,
 }: AppShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -60,39 +63,49 @@ export function AppShell({
     signOut({ callbackUrl: "/login" });
   }
 
-  function renderNavLink(item: NavItem, onClick?: () => void, forceExpanded = false) {
+  function renderNavItem(item: NavItem, onClick?: () => void, forceExpanded = false) {
     const isCollapsed = collapsed && !forceExpanded;
     const active = pathname?.startsWith(item.href);
+    const sectionLabel = item.sectionStart && !isCollapsed ? (
+      <p key={`sec-${item.sectionStart}`} className="px-3.5 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted/50">
+        {item.sectionStart}
+      </p>
+    ) : item.sectionStart && isCollapsed ? (
+      <div key={`sec-${item.sectionStart}`} className="mx-auto my-2 h-px w-6 bg-border/60" />
+    ) : null;
+
     return (
-      <Link
-        key={item.href}
-        href={item.href}
-        onClick={onClick}
-        title={item.label}
-        className={cn(
-          "group flex items-center rounded-xl py-2.5 text-sm font-medium text-text-muted transition-colors",
-          isCollapsed ? "justify-center px-2.5" : "gap-3 px-3.5",
-          active ? "bg-primary/15 text-primary" : "hover:bg-card-hover hover:text-text"
-        )}
-      >
-        <item.icon
+      <div key={item.href}>
+        {sectionLabel}
+        <Link
+          href={item.href}
+          onClick={onClick}
+          title={item.label}
           className={cn(
-            "h-[18px] w-[18px] shrink-0 transition-colors",
-            active ? "text-primary" : "text-text-muted group-hover:text-text"
+            "group flex items-center rounded-xl py-2.5 text-sm font-medium text-text-muted transition-colors",
+            isCollapsed ? "justify-center px-2.5" : "gap-3 px-3.5",
+            active ? "bg-primary/15 text-primary" : "hover:bg-card-hover hover:text-text"
           )}
-        />
-        {!isCollapsed && (
-          <>
-            {item.label}
-            {active && (
-              <motion.span
-                layoutId="active-pill"
-                className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
-              />
+        >
+          <item.icon
+            className={cn(
+              "h-[18px] w-[18px] shrink-0 transition-colors",
+              active ? "text-primary" : "text-text-muted group-hover:text-text"
             )}
-          </>
-        )}
-      </Link>
+          />
+          {!isCollapsed && (
+            <>
+              {item.label}
+              {active && (
+                <motion.span
+                  layoutId="active-pill"
+                  className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
+                />
+              )}
+            </>
+          )}
+        </Link>
+      </div>
     );
   }
 
@@ -119,18 +132,9 @@ export function AppShell({
           <p className="px-5 pt-3 pb-1 text-[10px] uppercase tracking-[0.16em] text-text-muted/70">{roleLabel}</p>
         )}
 
-        <nav className="flex-1 overflow-y-auto space-y-1 px-3 pb-2 pt-1">
-          {nav.map((item) => renderNavLink(item))}
-          {moreNav.length > 0 && (
-            <>
-              {!collapsed && (
-                <p className="px-3.5 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted/50">
-                  Mais
-                </p>
-              )}
-              {moreNav.map((item) => renderNavLink(item))}
-            </>
-          )}
+        <nav className="flex-1 overflow-y-auto space-y-0.5 px-3 pb-2 pt-1">
+          {nav.map((item) => renderNavItem(item))}
+          {moreNav.length > 0 && moreNav.map((item) => renderNavItem(item))}
         </nav>
 
         <div className="border-t border-border p-4">
@@ -181,16 +185,9 @@ export function AppShell({
               <div className="mb-6 px-2 pt-2">
                 <Logo size={30} />
               </div>
-              <nav className="space-y-1">
-                {nav.map((item) => renderNavLink(item, () => setMobileOpen(false), true))}
-                {moreNav.length > 0 && (
-                  <>
-                    <p className="px-3.5 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted/50">
-                      Mais
-                    </p>
-                    {moreNav.map((item) => renderNavLink(item, () => setMobileOpen(false), true))}
-                  </>
-                )}
+              <nav className="space-y-0.5">
+                {nav.map((item) => renderNavItem(item, () => setMobileOpen(false), true))}
+                {moreNav.length > 0 && moreNav.map((item) => renderNavItem(item, () => setMobileOpen(false), true))}
                 <button
                   onClick={() => {
                     setMobileOpen(false);
@@ -222,6 +219,7 @@ export function AppShell({
             <span className="text-xs">Buscar atletas, treinos, exercícios…</span>
           </div>
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            {headerActions}
             <Badge variant="primary" className="hidden sm:inline-flex">
               <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-primary" />
               {roleLabel}

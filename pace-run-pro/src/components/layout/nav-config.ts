@@ -37,6 +37,8 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  /** When set, render a section label above this item in the sidebar */
+  sectionStart?: string;
 }
 
 export const athleteNav: NavItem[] = [

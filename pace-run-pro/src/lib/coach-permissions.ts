@@ -51,21 +51,25 @@ function planTier(planId: string): number {
 }
 
 const coreNav: NavItem[] = [
-  { href: "/treinador/dashboard",               label: "Dashboard",        icon: LayoutDashboard },
-  { href: "/treinador/alertas",                 label: "Alertas",          icon: Bell            },
-  { href: "/treinador/analise-semanal",         label: "Análise semanal",  icon: BarChart2       },
-  { href: "/treinador/atletas",                 label: "Atletas",          icon: Users           },
-  { href: "/treinador/prescricao/periodizacao", label: "Periodização",     icon: CalendarDays    },
-  { href: "/treinador/prescricao/corrida",      label: "Corrida & VDOT",   icon: Activity        },
-  { href: "/treinador/prescricao/forca",        label: "Prescrição força", icon: Dumbbell        },
-  { href: "/treinador/relatorios",              label: "Relatórios",       icon: FileBarChart    },
-  { href: "/treinador/biblioteca",              label: "Biblioteca",       icon: BookOpen        },
-  { href: "/treinador/minha-loja",              label: "Minha loja",       icon: ShoppingBag     },
+  { href: "/treinador/dashboard", label: "Dashboard", icon: LayoutDashboard },
+
+  // — Prescrição —
+  { href: "/treinador/prescricao/periodizacao", label: "Periodização",     icon: CalendarDays, sectionStart: "Prescrição" },
+  { href: "/treinador/prescricao/corrida",      label: "Corrida & VDOT",   icon: Activity    },
+  { href: "/treinador/prescricao/forca",        label: "Força",            icon: Dumbbell    },
+  { href: "/treinador/minha-loja",              label: "Minha loja",       icon: ShoppingBag },
+  { href: "/treinador/biblioteca",              label: "Biblioteca",       icon: BookOpen    },
+
+  // — Acompanhamento —
+  { href: "/treinador/atletas",         label: "Atletas",         icon: Users,      sectionStart: "Acompanhamento" },
+  { href: "/treinador/alertas",         label: "Alertas",         icon: Bell        },
+  { href: "/treinador/analise-semanal", label: "Análise semanal", icon: BarChart2   },
+  { href: "/treinador/relatorios",      label: "Relatórios",      icon: FileBarChart},
 ];
 
 // Starter+ (tier ≥ 1)
 const businessNavBase: NavItem[] = [
-  { href: "/treinador/gestao",       label: "Gestão & vendas",      icon: DollarSign  },
+  { href: "/treinador/gestao",       label: "Gestão & vendas",      icon: DollarSign,  sectionStart: "Negócio" },
   { href: "/treinador/planos-venda", label: "Meus planos",          icon: PackagePlus },
   { href: "/treinador/loja-planos",  label: "Loja de planilhas",    icon: ShoppingBag },
   { href: "/treinador/financeiro",   label: "Config. financeiras",  icon: Wallet      },
@@ -89,8 +93,8 @@ const businessNavUnlimited: NavItem[] = [
 ];
 
 const helpNav: NavItem[] = [
-  { href: "/treinador/configuracoes/zonas", label: "Zonas de treino",  icon: Zap          },
-  { href: "/treinador/perfil",              label: "Meu Perfil",       icon: User         },
+  { href: "/treinador/configuracoes/zonas", label: "Zonas de treino",   icon: Zap,          sectionStart: "Conta" },
+  { href: "/treinador/perfil",              label: "Meu Perfil",        icon: User          },
   { href: "/treinador/conheca-o-sistema",   label: "Conheça o sistema", icon: GraduationCap },
 ];
 

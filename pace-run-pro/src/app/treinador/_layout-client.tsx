@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { CoachRoleProvider, useCoachRole } from "@/context/coach-role-context";
 import { getCoachNav, ROLE_LABELS, ROLE_DESCRIPTIONS, type CoachRole } from "@/lib/coach-permissions";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const ROLES: CoachRole[] = ["owner", "hired"];
@@ -68,6 +71,14 @@ function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUr
       userSubtitle={userCredential || "Treinador"}
       avatarUrl={userAvatarUrl}
       sidebarFooterSlot={process.env.NODE_ENV !== "production" ? <RoleSwitcher /> : undefined}
+      headerActions={
+        <Link href="/treinador/prescricao/corrida">
+          <Button size="sm" className="hidden gap-1.5 sm:inline-flex">
+            <Plus className="h-3.5 w-3.5" />
+            Prescrever
+          </Button>
+        </Link>
+      }
     >
       {children}
       <BottomNav items={main.slice(0, 5)} />
