@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, Search, Users, X,
   Clock, Ruler, Zap, CheckCircle2, CircleAlert, Circle,
   Flame, ShieldAlert, CalendarCheck,
+  BookmarkPlus, Copy, CopyPlus, Plus, Loader2, Check,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -139,7 +140,17 @@ interface ModalPayload {
   workouts: WorkoutEntry[];
 }
 
-function WorkoutModal({ payload, onClose }: { payload: ModalPayload; onClose: () => void }) {
+function WorkoutModal({
+  payload,
+  onClose,
+  onCopy,
+  onSaveToLib,
+}: {
+  payload: ModalPayload;
+  onClose: () => void;
+  onCopy: (workout: WorkoutEntry, athlete: AthleteWeekly) => void;
+  onSaveToLib: (workout: WorkoutEntry) => void;
+}) {
   const date = new Date(payload.dayDate + "T12:00:00");
   const dayLabel = date.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
 
@@ -238,6 +249,24 @@ function WorkoutModal({ payload, onClose }: { payload: ModalPayload; onClose: ()
                     Pace alvo: <span className="font-semibold text-text">{formatPace(wo.targetPaceSecPerKm)}</span>
                   </p>
                 )}
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={() => onSaveToLib(wo)}
+                    className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-text-muted transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+                  >
+                    <BookmarkPlus className="h-3 w-3" />
+                    Salvar na biblioteca
+                  </button>
+                  <button
+                    onClick={() => onCopy(wo, payload.athlete)}
+                    className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-text-muted transition-colors hover:border-success/40 hover:bg-success/5 hover:text-success"
+                  >
+                    <Copy className="h-3 w-3" />
+                    Copiar para...
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -394,6 +423,437 @@ function ActionBanner({ data }: { data: ActionCenterData }) {
   );
 }
 
+// ── Workout type options for quick prescribe ──────────────────────────────────
+
+const QUICK_TYPES = [
+  { value: "RODAGEM_LEVE",      label: "Rodagem leve"      },
+  { value: "REGENERATIVO",      label: "Regenerativo"      },
+  { value: "PROGRESSIVO",       label: "Progressivo"       },
+  { value: "TEMPO_RUN",         label: "Tempo Run"         },
+  { value: "FARTLEK",           label: "Fartlek"           },
+  { value: "INTERVALADO_LONGO", label: "Intervalado longo" },
+  { value: "INTERVALADO_CURTO", label: "Intervalado curto" },
+  { value: "LONGAO",            label: "Longão"            },
+  { value: "FORCA",             label: "Força"             },
+  { value: "FUNCIONAL",         label: "Funcional"         },
+  { value: "MOBILIDADE",        label: "Mobilidade"        },
+] as const;
+
+const CATEGORY_FOR_TYPE: Record<string, string> = {
+  FORCA: "FORCA", FUNCIONAL: "FORCA", MOBILIDADE: "MOBILIDADE",
+};
+
+// ── QuickPrescribeModal ───────────────────────────────────────────────────────
+
+interface QuickPrescribePayload {
+  athleteId: string;
+  athleteName: string;
+  date: string;
+}
+
+function QuickPrescribeModal({
+  payload,
+  onClose,
+  onSaved,
+}: {
+  payload: QuickPrescribePayload;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [type, setType] = useState("RODAGEM_LEVE");
+  const [title, setTitle] = useState("Rodagem leve");
+  const [durationMin, setDurationMin] = useState("");
+  const [distanceKm, setDistanceKm] = useState("");
+  const [rpe, setRpe] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const dateLabel = new Date(payload.date + "T12:00:00").toLocaleDateString("pt-BR", {
+    weekday: "long", day: "2-digit", month: "long",
+  });
+
+  function handleTypeChange(v: string) {
+    setType(v);
+    const t = QUICK_TYPES.find((q) => q.value === v);
+    if (t) setTitle(t.label);
+  }
+
+  async function handleSave() {
+    if (!title.trim()) { setError("Informe o nome do treino."); return; }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/coach/workouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: payload.athleteId,
+          date: payload.date,
+          title: title.trim(),
+          type,
+          ...(durationMin ? { targetDurationMin: parseInt(durationMin) } : {}),
+          ...(distanceKm ? { targetDistanceKm: parseFloat(distanceKm) } : {}),
+          ...(rpe ? { targetRpe: parseInt(rpe) } : {}),
+        }),
+      });
+      if (!res.ok) { setError("Erro ao salvar treino."); return; }
+      onSaved();
+      onClose();
+    } catch {
+      setError("Erro de conexão.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="relative z-10 w-full max-w-sm rounded-2xl border border-border bg-card shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-border p-5">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+              Nova prescrição — {payload.athleteName.split(" ")[0]}
+            </p>
+            <p className="mt-0.5 font-display text-base font-bold capitalize text-text">{dateLabel}</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover hover:text-text">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4 p-5">
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Tipo</label>
+            <select
+              value={type}
+              onChange={(e) => handleTypeChange(e.target.value)}
+              className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-text outline-none focus:border-primary/60"
+            >
+              {QUICK_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Nome</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-text outline-none focus:border-primary/60"
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Min</label>
+              <input
+                type="number"
+                min={1}
+                placeholder="—"
+                value={durationMin}
+                onChange={(e) => setDurationMin(e.target.value)}
+                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-text outline-none focus:border-primary/60"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">km</label>
+              <input
+                type="number"
+                min={0.1}
+                step={0.1}
+                placeholder="—"
+                value={distanceKm}
+                onChange={(e) => setDistanceKm(e.target.value)}
+                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-text outline-none focus:border-primary/60"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">RPE</label>
+              <input
+                type="number"
+                min={1}
+                max={10}
+                placeholder="—"
+                value={rpe}
+                onChange={(e) => setRpe(e.target.value)}
+                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-text outline-none focus:border-primary/60"
+              />
+            </div>
+          </div>
+
+          {error && <p className="text-xs text-danger">{error}</p>}
+
+          <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            {saving ? "Salvando…" : "Salvar e liberar"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── CopyWorkoutModal ──────────────────────────────────────────────────────────
+
+interface CopyWorkoutPayload {
+  workout: WorkoutEntry;
+  athlete: AthleteWeekly;
+}
+
+function CopyWorkoutModal({
+  payload,
+  allAthletes,
+  onClose,
+  onCopied,
+}: {
+  payload: CopyWorkoutPayload;
+  allAthletes: AthleteRow[];
+  onClose: () => void;
+  onCopied: () => void;
+}) {
+  const others = allAthletes.filter((a) => a.id !== payload.athlete.id);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [copying, setCopying] = useState(false);
+  const [done, setDone] = useState(false);
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAll() {
+    setSelected(new Set(others.map((a) => a.id)));
+  }
+
+  async function handleCopy() {
+    if (selected.size === 0) return;
+    setCopying(true);
+    try {
+      await fetch("/api/coach/workouts/copy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workoutId: payload.workout.id, targetAthleteIds: [...selected] }),
+      });
+      setDone(true);
+      setTimeout(() => { onCopied(); onClose(); }, 800);
+    } finally {
+      setCopying(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="relative z-10 w-full max-w-sm rounded-2xl border border-border bg-card shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-border p-5">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Copiar treino</p>
+            <p className="mt-0.5 font-display text-base font-bold text-text">{payload.workout.title}</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover hover:text-text">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-xs font-semibold text-text-muted">Selecionar atletas</p>
+            {others.length > 1 && (
+              <button onClick={selectAll} className="text-xs font-medium text-primary hover:underline">
+                Todos
+              </button>
+            )}
+          </div>
+          <div className="max-h-52 space-y-1.5 overflow-y-auto">
+            {others.map((a) => (
+              <button
+                key={a.id}
+                onClick={() => toggle(a.id)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors",
+                  selected.has(a.id)
+                    ? "border-success/40 bg-success/8 text-text"
+                    : "border-border bg-card hover:bg-card-hover text-text-muted"
+                )}
+              >
+                <span className={cn(
+                  "flex h-5 w-5 items-center justify-center rounded-md border text-[10px]",
+                  selected.has(a.id) ? "border-success bg-success text-white" : "border-border"
+                )}>
+                  {selected.has(a.id) && <Check className="h-3 w-3" />}
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-card-hover text-xs font-bold text-text">
+                  {a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                </span>
+                <span className="text-sm font-medium text-text">{a.name}</span>
+              </button>
+            ))}
+            {others.length === 0 && (
+              <p className="py-4 text-center text-sm text-text-muted">Nenhum outro atleta cadastrado.</p>
+            )}
+          </div>
+
+          <Button
+            onClick={handleCopy}
+            disabled={selected.size === 0 || copying || done}
+            className="mt-4 w-full gap-2"
+          >
+            {done ? (
+              <><Check className="h-4 w-4" /> Copiado!</>
+            ) : copying ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Copiando…</>
+            ) : (
+              <><Copy className="h-4 w-4" /> Copiar para {selected.size > 0 ? selected.size : ""} atleta{selected.size !== 1 ? "s" : ""}</>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── CopyWeekModal ─────────────────────────────────────────────────────────────
+
+interface CopyWeekPayload {
+  athlete: AthleteWeekly;
+  weekStart: string;
+  workoutCount: number;
+}
+
+function CopyWeekModal({
+  payload,
+  allAthletes,
+  onClose,
+  onCopied,
+}: {
+  payload: CopyWeekPayload;
+  allAthletes: AthleteRow[];
+  onClose: () => void;
+  onCopied: () => void;
+}) {
+  const others = allAthletes.filter((a) => a.id !== payload.athlete.id);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [copying, setCopying] = useState(false);
+  const [done, setDone] = useState(false);
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleCopy() {
+    if (selected.size === 0) return;
+    setCopying(true);
+    try {
+      await fetch("/api/coach/workouts/copy-week", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceAthleteId: payload.athlete.id,
+          weekStart: payload.weekStart,
+          targetAthleteIds: [...selected],
+        }),
+      });
+      setDone(true);
+      setTimeout(() => { onCopied(); onClose(); }, 800);
+    } finally {
+      setCopying(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="relative z-10 w-full max-w-sm rounded-2xl border border-border bg-card shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-border p-5">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Copiar semana</p>
+            <p className="mt-0.5 font-display text-base font-bold text-text">
+              {payload.workoutCount} treino{payload.workoutCount !== 1 ? "s" : ""} de {payload.athlete.name.split(" ")[0]}
+            </p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover hover:text-text">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-xs font-semibold text-text-muted">Aplicar para</p>
+            {others.length > 1 && (
+              <button
+                onClick={() => setSelected(new Set(others.map((a) => a.id)))}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Todos
+              </button>
+            )}
+          </div>
+          <div className="max-h-52 space-y-1.5 overflow-y-auto">
+            {others.map((a) => (
+              <button
+                key={a.id}
+                onClick={() => toggle(a.id)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors",
+                  selected.has(a.id)
+                    ? "border-success/40 bg-success/8 text-text"
+                    : "border-border bg-card hover:bg-card-hover text-text-muted"
+                )}
+              >
+                <span className={cn(
+                  "flex h-5 w-5 items-center justify-center rounded-md border text-[10px]",
+                  selected.has(a.id) ? "border-success bg-success text-white" : "border-border"
+                )}>
+                  {selected.has(a.id) && <Check className="h-3 w-3" />}
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-card-hover text-xs font-bold text-text">
+                  {a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                </span>
+                <span className="text-sm font-medium text-text">{a.name}</span>
+              </button>
+            ))}
+            {others.length === 0 && (
+              <p className="py-4 text-center text-sm text-text-muted">Nenhum outro atleta cadastrado.</p>
+            )}
+          </div>
+
+          <Button
+            onClick={handleCopy}
+            disabled={selected.size === 0 || copying || done}
+            className="mt-4 w-full gap-2"
+          >
+            {done ? (
+              <><Check className="h-4 w-4" /> Semana copiada!</>
+            ) : copying ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Copiando…</>
+            ) : (
+              <><CopyPlus className="h-4 w-4" /> Aplicar para {selected.size > 0 ? selected.size : ""} atleta{selected.size !== 1 ? "s" : ""}</>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
 const TABS = ["Todos", "Com treino", "Sem plano", "Em risco"] as const;
@@ -407,6 +867,11 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   const [tab, setTab] = useState<Tab>("Todos");
   const [modal, setModal] = useState<ModalPayload | null>(null);
   const [actionCenter, setActionCenter] = useState<ActionCenterData | null>(null);
+  const [quickPrescribe, setQuickPrescribe] = useState<QuickPrescribePayload | null>(null);
+  const [copyWorkout, setCopyWorkout] = useState<CopyWorkoutPayload | null>(null);
+  const [copyWeek, setCopyWeek] = useState<CopyWeekPayload | null>(null);
+  const [savingLibrary, setSavingLibrary] = useState<string | null>(null); // workoutId being saved
+  const [savedLibrary, setSavedLibrary] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch("/api/coach/action-center")
@@ -414,6 +879,30 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
       .then((d: ActionCenterData | null) => setActionCenter(d))
       .catch(() => null);
   }, []);
+
+  async function handleSaveToLib(workout: WorkoutEntry) {
+    if (savingLibrary === workout.id || savedLibrary.has(workout.id)) return;
+    setSavingLibrary(workout.id);
+    const category = CATEGORY_FOR_TYPE[workout.type] ?? "CORRIDA";
+    try {
+      await fetch("/api/coach/biblioteca", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: workout.title,
+          workoutType: workout.type,
+          category,
+          targetDurationMin: workout.targetDurationMin,
+          targetDistanceKm: workout.targetDistanceKm,
+          targetPaceSecPerKm: workout.targetPaceSecPerKm,
+          targetRpe: workout.targetRpe,
+        }),
+      });
+      setSavedLibrary((prev) => new Set([...prev, workout.id]));
+    } finally {
+      setSavingLibrary(null);
+    }
+  }
 
   const fetchWeek = useCallback((monday: Date) => {
     setLoading(true);
@@ -609,25 +1098,40 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                   style={{ gridTemplateColumns: "1.8fr repeat(7, 2.2rem) 3.5rem 4rem" }}
                 >
                   {/* Athlete info */}
-                  <Link href={`/treinador/atletas/${athlete.id}`} className="flex items-center gap-2.5 min-w-0">
-                    <Avatar className="h-8 w-8 shrink-0">
-                      <AvatarFallback className="text-xs">
-                        {athlete.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
-                      </AvatarFallback>
-                      {athlete.avatarUrl && <img src={athlete.avatarUrl} alt="" />}
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-text">{athlete.name}</p>
-                      <div className="flex items-center gap-1">
-                        <Badge variant={statusCfg.variant} className="px-1.5 py-0 text-[9px]">
-                          {statusCfg.label}
-                        </Badge>
-                        {athlete.status === "risco" && (
-                          <CircleAlert className="h-3 w-3 text-danger" />
-                        )}
+                  <div className="group/row flex min-w-0 items-center gap-1.5">
+                    <Link href={`/treinador/atletas/${athlete.id}`} className="flex min-w-0 flex-1 items-center gap-2">
+                      <Avatar className="h-8 w-8 shrink-0">
+                        <AvatarFallback className="text-xs">
+                          {athlete.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                        </AvatarFallback>
+                        {athlete.avatarUrl && <img src={athlete.avatarUrl} alt="" />}
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-text">{athlete.name}</p>
+                        <div className="flex items-center gap-1">
+                          <Badge variant={statusCfg.variant} className="px-1.5 py-0 text-[9px]">
+                            {statusCfg.label}
+                          </Badge>
+                          {athlete.status === "risco" && (
+                            <CircleAlert className="h-3 w-3 text-danger" />
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                    {athlete.workouts.length > 0 && (
+                      <button
+                        onClick={() => setCopyWeek({
+                          athlete,
+                          weekStart: toISODate(weekStart),
+                          workoutCount: athlete.workouts.length,
+                        })}
+                        title="Copiar semana para outros atletas"
+                        className="shrink-0 rounded-lg p-1 text-text-muted opacity-0 transition-all hover:bg-card-hover hover:text-primary group-hover/row:opacity-100"
+                      >
+                        <CopyPlus className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
 
                   {/* 7-day calendar cells */}
                   {weekDays.map((d) => {
@@ -642,7 +1146,18 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                         )}
                       >
                         {dayWorkouts.length === 0 ? (
-                          <Circle className="h-4 w-4 text-border" />
+                          <button
+                            onClick={() => setQuickPrescribe({
+                              athleteId: athlete.id,
+                              athleteName: athlete.name,
+                              date: d.date,
+                            })}
+                            title={`Prescrever treino para ${athlete.name.split(" ")[0]}`}
+                            className="group/cell relative flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-primary/10"
+                          >
+                            <Circle className="h-4 w-4 text-border transition-colors group-hover/cell:hidden" />
+                            <Plus className="hidden h-3.5 w-3.5 text-primary group-hover/cell:block" />
+                          </button>
                         ) : (
                           dayWorkouts.slice(0, 2).map((wo) => (
                             <WorkoutDot
@@ -686,7 +1201,41 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
 
       {/* Workout detail modal */}
       {modal && (
-        <WorkoutModal payload={modal} onClose={() => setModal(null)} />
+        <WorkoutModal
+          payload={modal}
+          onClose={() => setModal(null)}
+          onCopy={(workout, athlete) => { setModal(null); setCopyWorkout({ workout, athlete }); }}
+          onSaveToLib={handleSaveToLib}
+        />
+      )}
+
+      {/* Quick prescribe from calendar cell */}
+      {quickPrescribe && (
+        <QuickPrescribeModal
+          payload={quickPrescribe}
+          onClose={() => setQuickPrescribe(null)}
+          onSaved={() => fetchWeek(weekStart)}
+        />
+      )}
+
+      {/* Copy single workout to other athletes */}
+      {copyWorkout && (
+        <CopyWorkoutModal
+          payload={copyWorkout}
+          allAthletes={staticAthletes}
+          onClose={() => setCopyWorkout(null)}
+          onCopied={() => fetchWeek(weekStart)}
+        />
+      )}
+
+      {/* Copy full week to other athletes */}
+      {copyWeek && (
+        <CopyWeekModal
+          payload={copyWeek}
+          allAthletes={staticAthletes}
+          onClose={() => setCopyWeek(null)}
+          onCopied={() => fetchWeek(weekStart)}
+        />
       )}
     </div>
   );

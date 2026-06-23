@@ -594,6 +594,8 @@ export default function CorridaPage() {
   const [criarDurMin, setCriarDurMin] = useState("");
   const [criarSaving, setCriarSaving] = useState(false);
   const [criarOk, setCriarOk] = useState(false);
+  const [criarLastWorkout, setCriarLastWorkout] = useState<{ title: string; type: string; distKm: string; durMin: string } | null>(null);
+  const [criarSavedLib, setCriarSavedLib] = useState(false);
 
   async function handleCriarTreino() {
     if (!criarAthleteId || !criarDate || !criarTitle.trim() || criarSaving) return;
@@ -614,13 +616,15 @@ export default function CorridaPage() {
         }),
       });
       if (res.ok) {
+        setCriarLastWorkout({ title: criarTitle.trim(), type: criarType, distKm: criarDistKm, durMin: criarDurMin });
+        setCriarSavedLib(false);
         setCriarOk(true);
         setCriarTitle("");
         setCriarDistKm("");
         setCriarDurMin("");
         setCriarStructured(false);
         setCriarBlocks(defaultBlocks());
-        setTimeout(() => setCriarOk(false), 3000);
+        setTimeout(() => setCriarOk(false), 6000);
       }
     } finally {
       setCriarSaving(false);
@@ -901,7 +905,7 @@ export default function CorridaPage() {
               )}
 
               {/* Actions */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Button
                   onClick={handleCriarTreino}
                   disabled={!criarAthleteId || !criarDate || !criarTitle.trim() || criarSaving}
@@ -917,6 +921,35 @@ export default function CorridaPage() {
                   <span className="flex items-center gap-1.5 text-sm text-success">
                     <CheckCircle2 className="h-4 w-4" />
                     Treino adicionado ao calendário!
+                  </span>
+                )}
+                {criarOk && criarLastWorkout && !criarSavedLib && (
+                  <button
+                    onClick={async () => {
+                      if (!criarLastWorkout) return;
+                      await fetch("/api/coach/biblioteca", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          name: criarLastWorkout.title,
+                          workoutType: criarLastWorkout.type,
+                          category: ["FORCA","FUNCIONAL","MOBILIDADE"].includes(criarLastWorkout.type) ? "FORCA" : "CORRIDA",
+                          targetDistanceKm: criarLastWorkout.distKm ? parseFloat(criarLastWorkout.distKm) : undefined,
+                          targetDurationMin: criarLastWorkout.durMin ? parseInt(criarLastWorkout.durMin) : undefined,
+                        }),
+                      });
+                      setCriarSavedLib(true);
+                    }}
+                    className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-muted transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+                  >
+                    <Bookmark className="h-3.5 w-3.5" />
+                    Salvar na biblioteca
+                  </button>
+                )}
+                {criarSavedLib && (
+                  <span className="flex items-center gap-1.5 text-xs text-primary">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Salvo na biblioteca!
                   </span>
                 )}
               </div>
