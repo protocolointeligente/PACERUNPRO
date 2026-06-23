@@ -13,8 +13,8 @@ function slugify(text: string): string {
     .slice(0, 80);
 }
 
-async function uniqueSlug(base: string, coachId: string): Promise<string> {
-  let slug = slugify(base);
+async function uniqueSlug(base: string): Promise<string> {
+  const slug = slugify(base);
   let suffix = 0;
   while (true) {
     const candidate = suffix === 0 ? slug : `${slug}-${suffix}`;
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Título obrigatório" }, { status: 400 });
   }
 
-  const slug = await uniqueSlug(title, coach.id);
+  const slug = await uniqueSlug(title);
 
   const product = await prisma.planProduct.create({
     data: {
