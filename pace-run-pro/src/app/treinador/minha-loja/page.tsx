@@ -186,6 +186,17 @@ export default function MinhaLojaPage() {
   const [showPicker, setShowPicker] = useState(false);
   const [pickerDay, setPickerDay] = useState(0);
 
+  // exercise library for autocomplete
+  const [exerciseLibrary, setExerciseLibrary] = useState<{ name: string; category: string }[]>([]);
+  useEffect(() => {
+    fetch("/exercises.json")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: { name: string; category: string }[]) =>
+        setExerciseLibrary(data.map((e) => ({ name: e.name, category: e.category })))
+      )
+      .catch(() => null);
+  }, []);
+
   const load = useCallback(() => {
     setLoading(true);
     fetch("/api/coach/produtos")
@@ -626,6 +637,7 @@ export default function MinhaLojaPage() {
           onRemoveExercise={removeExercise}
           onSave={saveWorkout}
           onClose={() => setShowWorkoutForm(false)}
+          exerciseLibrary={exerciseLibrary}
         />
       )}
 
@@ -834,7 +846,7 @@ function WorkoutPickerModal({ workouts, day, onImport, onNew, onClose }: {
 
 // ── Workout Form Modal ─────────────────────────────────────────────────────────
 
-function WorkoutFormModal({ wForm, setWForm, cat, exerciseRow, setExerciseRow, onAddExercise, onRemoveExercise, onSave, onClose }: {
+function WorkoutFormModal({ wForm, setWForm, cat, exerciseRow, setExerciseRow, onAddExercise, onRemoveExercise, onSave, onClose, exerciseLibrary }: {
   wForm: PlanWorkout;
   setWForm: React.Dispatch<React.SetStateAction<PlanWorkout>>;
   cat: "corrida" | "forca" | "recuperacao";
@@ -844,6 +856,7 @@ function WorkoutFormModal({ wForm, setWForm, cat, exerciseRow, setExerciseRow, o
   onRemoveExercise: (i: number) => void;
   onSave: () => void;
   onClose: () => void;
+  exerciseLibrary: { name: string; category: string }[];
 }) {
   const inputClass = "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
   const miniInput = "rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-text outline-none focus:border-primary/60";
@@ -851,6 +864,13 @@ function WorkoutFormModal({ wForm, setWForm, cat, exerciseRow, setExerciseRow, o
     setWForm((f) => ({ ...f, [k]: e.target.value || undefined }));
   const setNum = (k: keyof PlanWorkout) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setWForm((f) => ({ ...f, [k]: e.target.value ? parseFloat(e.target.value) : undefined }));
+
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestions = exerciseRow.name.length >= 2
+    ? exerciseLibrary
+        .filter((e) => e.name.toLowerCase().includes(exerciseRow.name.toLowerCase()))
+        .slice(0, 8)
+    : [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -944,8 +964,39 @@ function WorkoutFormModal({ wForm, setWForm, cat, exerciseRow, setExerciseRow, o
                 </div>
               ))}
               <div className="mt-2 flex gap-2 flex-wrap">
-                <input className={cn(miniInput, "flex-1 min-w-0")} placeholder="Exercício" value={exerciseRow.name}
-                  onChange={(e) => setExerciseRow((r) => ({ ...r, name: e.target.value }))} />
+                <div className="relative flex-1 min-w-0">
+                  <input
+                    className={cn(miniInput, "w-full")}
+                    placeholder="Exercício (busca da biblioteca)"
+                    value={exerciseRow.name}
+                    autoComplete="off"
+                    onChange={(e) => {
+                      setExerciseRow((r) => ({ ...r, name: e.target.value }));
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  />
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute left-0 top-full z-50 mt-1 w-64 rounded-xl border border-border bg-card shadow-xl">
+                      {suggestions.map((s) => (
+                        <button
+                          key={s.name}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setExerciseRow((r) => ({ ...r, name: s.name }));
+                            setShowSuggestions(false);
+                          }}
+                          className="flex w-full items-start gap-2 px-3 py-2 text-left text-xs hover:bg-card-hover"
+                        >
+                          <span className="flex-1 font-medium text-text">{s.name}</span>
+                          <span className="shrink-0 text-[10px] text-text-muted">{s.category}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <input type="number" className={cn(miniInput, "w-14")} placeholder="Séries" value={exerciseRow.sets}
                   onChange={(e) => setExerciseRow((r) => ({ ...r, sets: e.target.value }))} />
                 <input className={cn(miniInput, "w-20")} placeholder="Reps" value={exerciseRow.reps}

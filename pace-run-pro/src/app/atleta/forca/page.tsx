@@ -185,7 +185,7 @@ export default function StrengthPage() {
               )}
             </div>
 
-            <Link href="/atleta/forca/executar">
+            <Link href={`/atleta/forca/treino/${todayWorkout.id}/executar`}>
               <Button size="lg" className="mt-5 w-full sm:w-auto">
                 <ListChecks className="h-4 w-4" />
                 Iniciar sessão de força
@@ -218,7 +218,7 @@ export default function StrengthPage() {
               const dayStr = d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "short" });
               const isToday = d.toLocaleDateString("sv") === new Date().toLocaleDateString("sv");
               return (
-                <Link key={w.id} href={`/atleta/treino/${w.id}`}>
+                <Link key={w.id} href={`/atleta/forca/treino/${w.id}`}>
                   <Card className="border-border/60 cursor-pointer transition-colors hover:border-primary/40 hover:bg-card-hover">
                     <CardContent className="flex items-center gap-4 p-4">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
