@@ -17,6 +17,7 @@ import {
   Settings,
   GraduationCap,
   User,
+  Zap,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -83,8 +84,9 @@ const businessNavUnlimited: NavItem[] = [
 ];
 
 const helpNav: NavItem[] = [
-  { href: "/treinador/perfil",            label: "Meu Perfil",       icon: User           },
-  { href: "/treinador/conheca-o-sistema", label: "Conheça o sistema", icon: GraduationCap },
+  { href: "/treinador/configuracoes/zonas", label: "Zonas de treino",  icon: Zap          },
+  { href: "/treinador/perfil",              label: "Meu Perfil",       icon: User         },
+  { href: "/treinador/conheca-o-sistema",   label: "Conheça o sistema", icon: GraduationCap },
 ];
 
 export function getCoachNav(

@@ -1,16 +1,85 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, SlidersHorizontal, ArrowUpDown, Users } from "lucide-react";
+import {
+  ChevronLeft, ChevronRight, Search, Users, X,
+  Clock, Ruler, Zap, CheckCircle2, CircleAlert, Circle,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { cn } from "@/lib/utils";
 
+// ── Workout type visual config ───────────────────────────────────────────────
+
+const WO_CONFIG: Record<string, { label: string; short: string; bg: string; text: string }> = {
+  REGENERATIVO:      { label: "Regenerativo",       short: "Z1", bg: "bg-emerald-400", text: "text-white" },
+  RODAGEM_LEVE:      { label: "Rodagem Leve",        short: "Z2", bg: "bg-sky-400",     text: "text-white" },
+  PROGRESSIVO:       { label: "Progressivo",         short: "P",  bg: "bg-blue-500",    text: "text-white" },
+  LONGAO:            { label: "Longão",              short: "L",  bg: "bg-indigo-500",  text: "text-white" },
+  FARTLEK:           { label: "Fartlek",             short: "F",  bg: "bg-amber-400",   text: "text-white" },
+  TECNICA:           { label: "Técnica",             short: "T",  bg: "bg-teal-400",    text: "text-white" },
+  SUBIDA:            { label: "Subida",              short: "S",  bg: "bg-orange-400",  text: "text-white" },
+  TEMPO_RUN:         { label: "Tempo Run",           short: "T4", bg: "bg-orange-500",  text: "text-white" },
+  INTERVALADO_LONGO: { label: "Intervalado Longo",   short: "IL", bg: "bg-rose-500",    text: "text-white" },
+  INTERVALADO_CURTO: { label: "Intervalado Curto",   short: "IC", bg: "bg-red-600",     text: "text-white" },
+  PROVA:             { label: "Prova/Competição",    short: "★",  bg: "bg-red-700",     text: "text-white" },
+  FORCA:             { label: "Força",               short: "FC", bg: "bg-violet-500",  text: "text-white" },
+  FUNCIONAL:         { label: "Funcional",           short: "FN", bg: "bg-purple-500",  text: "text-white" },
+  MOBILIDADE:        { label: "Mobilidade",          short: "MB", bg: "bg-green-400",   text: "text-white" },
+  RECUPERACAO:       { label: "Recuperação",         short: "RC", bg: "bg-gray-400",    text: "text-white" },
+};
+
+const WO_DEFAULT = { label: "Treino", short: "?", bg: "bg-gray-400", text: "text-white" };
+
+function woCfg(type: string) {
+  return WO_CONFIG[type] ?? WO_DEFAULT;
+}
+
+// ── Status config ────────────────────────────────────────────────────────────
+
+const STATUS_BADGE: Record<string, { variant: "success" | "danger" | "default" | "outline"; label: string }> = {
+  ativo:   { variant: "success", label: "Ativo" },
+  risco:   { variant: "danger",  label: "Em risco" },
+  inativo: { variant: "default", label: "Inativo" },
+};
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface WorkoutEntry {
+  id: string;
+  date: string;
+  type: string;
+  title: string;
+  status: string;
+  targetDistanceKm: number | null;
+  targetDurationMin: number | null;
+  targetPaceSecPerKm: number | null;
+  targetRpe: number | null;
+  tss: number;
+  released: boolean;
+}
+
+interface AthleteWeekly {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  status: string;
+  goal: string | null;
+  level: string;
+  adherence: number;
+  workouts: WorkoutEntry[];
+}
+
+interface WeeklyData {
+  weekStart: string;
+  weekEnd: string;
+  athletes: AthleteWeekly[];
+}
+
+// Props passed from the server page (static athlete list for count + empty state)
 export interface AthleteRow {
   id: string;
   name: string;
@@ -24,47 +93,284 @@ export interface AthleteRow {
   raceDate: string;
 }
 
-const statusLabels = { ativo: "Ativo", risco: "Em risco", inativo: "Inativo" } as const;
-const statusVariants = { ativo: "success", risco: "danger", inativo: "default" } as const;
-
-const filters = ["Todos", "Ativos", "Em risco", "Inativos"] as const;
-
-interface AthleteListClientProps {
+interface Props {
   athletes: AthleteRow[];
 }
 
-export default function AthleteListClient({ athletes }: AthleteListClientProps) {
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<(typeof filters)[number]>("Todos");
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-  const filtered = useMemo(() => {
-    return athletes.filter((a) => {
-      const matchesQuery =
-        a.name.toLowerCase().includes(query.toLowerCase()) ||
-        a.goal.toLowerCase().includes(query.toLowerCase());
-      const matchesFilter =
-        filter === "Todos" ||
-        (filter === "Ativos" && a.status === "ativo") ||
-        (filter === "Em risco" && a.status === "risco") ||
-        (filter === "Inativos" && a.status === "inativo");
-      return matchesQuery && matchesFilter;
-    });
-  }, [query, filter, athletes]);
+function getMondayOf(d: Date): Date {
+  const copy = new Date(d);
+  copy.setHours(0, 0, 0, 0);
+  const day = copy.getDay();
+  copy.setDate(copy.getDate() - (day === 0 ? 6 : day - 1));
+  return copy;
+}
 
-  if (athletes.length === 0) {
-    return (
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+function addDays(d: Date, n: number): Date {
+  const copy = new Date(d);
+  copy.setDate(copy.getDate() + n);
+  return copy;
+}
+
+function toISODate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+const DAYS_PT = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+function formatWeekRange(monday: Date): string {
+  const sunday = addDays(monday, 6);
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }).replace(".", "");
+  return `${fmt(monday)} – ${fmt(sunday)}, ${sunday.getFullYear()}`;
+}
+
+function formatPace(secPerKm: number): string {
+  return `${Math.floor(secPerKm / 60)}:${String(secPerKm % 60).padStart(2, "0")}/km`;
+}
+
+// ── Workout Detail Modal ──────────────────────────────────────────────────────
+
+interface ModalPayload {
+  athlete: AthleteWeekly;
+  dayDate: string;
+  workouts: WorkoutEntry[];
+}
+
+function WorkoutModal({ payload, onClose }: { payload: ModalPayload; onClose: () => void }) {
+  const date = new Date(payload.dayDate + "T12:00:00");
+  const dayLabel = date.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 border-b border-border p-5">
           <div>
-            <Badge variant="primary" className="mb-2">Gestão de atletas</Badge>
-            <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Seus atletas</h1>
-            <p className="mt-1 text-sm text-text-muted">Nenhum atleta cadastrado ainda</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+              Treinos de {payload.athlete.name}
+            </p>
+            <p className="mt-0.5 font-display text-base font-bold capitalize text-text">{dayLabel}</p>
           </div>
-          <Link href="/treinador/atletas/convidar">
-            <Button variant="primary">Convidar atleta</Button>
-          </Link>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-text-muted transition-colors hover:bg-card-hover hover:text-text"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
+        {/* Workout list */}
+        <div className="divide-y divide-border">
+          {payload.workouts.map((wo) => {
+            const cfg = woCfg(wo.type);
+            const isCompleted = wo.status === "CONCLUIDO";
+            const isMissed    = wo.status === "PERDIDO";
+
+            // IF estimation: tss = h * IF^2 * 100 → IF ≈ sqrt(tss / (h * 100))
+            const durationH = wo.targetDurationMin ? wo.targetDurationMin / 60 : 1;
+            const ifEst = wo.tss > 0 ? Math.min(Math.sqrt(wo.tss / (durationH * 100)), 1.3) : null;
+
+            return (
+              <div key={wo.id} className="p-4 space-y-2.5">
+                {/* Sport + title */}
+                <div className="flex items-center gap-2.5">
+                  <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold", cfg.bg, cfg.text)}>
+                    {cfg.short}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-text">{wo.title ?? cfg.label}</p>
+                    <p className="text-[11px] text-text-muted">{cfg.label}</p>
+                  </div>
+                  <div className="ml-auto shrink-0">
+                    {isCompleted ? (
+                      <Badge variant="success" className="gap-1 text-[10px]">
+                        <CheckCircle2 className="h-2.5 w-2.5" />Realizado
+                      </Badge>
+                    ) : isMissed ? (
+                      <Badge variant="danger" className="gap-1 text-[10px]">
+                        <CircleAlert className="h-2.5 w-2.5" />Perdido
+                      </Badge>
+                    ) : wo.released ? (
+                      <Badge variant="primary" className="text-[10px]">Liberado</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] text-text-muted">Planejado</Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Metrics grid */}
+                <div className="grid grid-cols-4 gap-2 rounded-xl bg-card-hover/40 p-3">
+                  <MetricCell
+                    icon={<Clock className="h-3 w-3" />}
+                    label="Tempo"
+                    value={wo.targetDurationMin ? `${wo.targetDurationMin} min` : "—"}
+                  />
+                  <MetricCell
+                    icon={<Ruler className="h-3 w-3" />}
+                    label="Distância"
+                    value={wo.targetDistanceKm ? `${wo.targetDistanceKm} km` : "—"}
+                  />
+                  <MetricCell
+                    icon={<Zap className="h-3 w-3" />}
+                    label="TSS"
+                    value={wo.tss > 0 ? String(wo.tss) : "—"}
+                    highlight={wo.tss > 0}
+                  />
+                  <MetricCell
+                    label="IS"
+                    value={ifEst ? `${Math.round(ifEst * 100)}%` : "—"}
+                  />
+                </div>
+
+                {/* Pace */}
+                {wo.targetPaceSecPerKm && (
+                  <p className="text-xs text-text-muted">
+                    Pace alvo: <span className="font-semibold text-text">{formatPace(wo.targetPaceSecPerKm)}</span>
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-border p-4">
+          <Link href={`/treinador/atletas/${payload.athlete.id}`}>
+            <Button variant="secondary" size="sm" className="w-full">
+              Ver perfil completo de {payload.athlete.name.split(" ")[0]}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MetricCell({
+  icon,
+  label,
+  value,
+  highlight,
+}: {
+  icon?: React.ReactNode;
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="text-center">
+      {icon && <div className="mb-0.5 flex justify-center text-text-muted">{icon}</div>}
+      <p className="text-[10px] text-text-muted">{label}</p>
+      <p className={cn("text-xs font-bold", highlight ? "text-primary" : "text-text")}>{value}</p>
+    </div>
+  );
+}
+
+// ── Workout Dot (calendar cell) ───────────────────────────────────────────────
+
+function WorkoutDot({
+  workout,
+  onClick,
+}: {
+  workout: WorkoutEntry;
+  onClick: () => void;
+}) {
+  const cfg = woCfg(workout.type);
+  const isCompleted = workout.status === "CONCLUIDO";
+  const isMissed    = workout.status === "PERDIDO";
+
+  return (
+    <button
+      onClick={onClick}
+      title={`${cfg.label} — TSS ${workout.tss}`}
+      className={cn(
+        "flex h-7 w-7 items-center justify-center rounded-full text-[9px] font-bold transition-transform hover:scale-110",
+        cfg.bg, cfg.text,
+        isCompleted && "ring-2 ring-success ring-offset-1",
+        isMissed && "opacity-40",
+      )}
+    >
+      {cfg.short}
+    </button>
+  );
+}
+
+// ── Legend ────────────────────────────────────────────────────────────────────
+
+const LEGEND_ITEMS = [
+  { label: "Z1 Reg.",  bg: "bg-emerald-400" },
+  { label: "Z2 Leve",  bg: "bg-sky-400" },
+  { label: "T4 Limiar", bg: "bg-orange-500" },
+  { label: "IL Int.",  bg: "bg-rose-500" },
+  { label: "FC Força", bg: "bg-violet-500" },
+  { label: "★ Prova",  bg: "bg-red-700" },
+];
+
+// ── Main Component ────────────────────────────────────────────────────────────
+
+const TABS = ["Todos", "Com treino", "Sem plano", "Em risco"] as const;
+type Tab = (typeof TABS)[number];
+
+export default function AthleteListClient({ athletes: staticAthletes }: Props) {
+  const [weekStart, setWeekStart] = useState<Date>(() => getMondayOf(new Date()));
+  const [weeklyData, setWeeklyData] = useState<WeeklyData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [tab, setTab] = useState<Tab>("Todos");
+  const [modal, setModal] = useState<ModalPayload | null>(null);
+
+  const fetchWeek = useCallback((monday: Date) => {
+    setLoading(true);
+    fetch(`/api/coach/athletes/week?weekStart=${toISODate(monday)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: WeeklyData | null) => setWeeklyData(d))
+      .catch(() => null)
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { fetchWeek(weekStart); }, [weekStart, fetchWeek]);
+
+  const prevWeek = () => setWeekStart((d) => addDays(d, -7));
+  const nextWeek = () => setWeekStart((d) => addDays(d, 7));
+
+  // Days in the current week (Mon → Sun)
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = addDays(weekStart, i);
+    return { date: toISODate(d), dayLabel: DAYS_PT[i], dayNum: d.getDate() };
+  });
+
+  // Use weekly API data if loaded, fall back to static athletes for empty state
+  const athletes: AthleteWeekly[] = weeklyData?.athletes ?? staticAthletes.map((a) => ({
+    id: a.id, name: a.name, avatarUrl: a.avatarUrl ?? null,
+    status: a.status, goal: a.goal, level: a.level,
+    adherence: a.adherence, workouts: [],
+  }));
+
+  const filtered = athletes.filter((a) => {
+    const matchQuery = a.name.toLowerCase().includes(query.toLowerCase());
+    if (!matchQuery) return false;
+    if (tab === "Em risco") return a.status === "risco";
+    if (tab === "Com treino") return a.workouts.length > 0;
+    if (tab === "Sem plano") return a.workouts.length === 0;
+    return true;
+  });
+
+  const isThisWeek = toISODate(weekStart) === toISODate(getMondayOf(new Date()));
+
+  // Empty state
+  if (staticAthletes.length === 0) {
+    return (
+      <div className="mx-auto max-w-6xl space-y-6">
+        <Header total={0} />
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
             <Users className="h-8 w-8 text-primary" />
@@ -82,99 +388,236 @@ export default function AthleteListClient({ athletes }: AthleteListClientProps) 
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <Badge variant="primary" className="mb-2">Gestão de atletas</Badge>
-          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Seus atletas</h1>
-          <p className="mt-1 text-sm text-text-muted">{athletes.length} {athletes.length === 1 ? "atleta" : "atletas"} sob sua orientação</p>
+    <div className="mx-auto max-w-6xl space-y-4">
+      <Header total={staticAthletes.length} />
+
+      {/* Week navigation */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-2 py-1.5">
+          <button
+            onClick={prevWeek}
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-card-hover hover:text-text"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="min-w-[190px] text-center text-sm font-semibold text-text">
+            {formatWeekRange(weekStart)}
+          </span>
+          <button
+            onClick={nextWeek}
+            disabled={isThisWeek}
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-card-hover hover:text-text disabled:opacity-30"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          {!isThisWeek && (
+            <button
+              onClick={() => setWeekStart(getMondayOf(new Date()))}
+              className="ml-1 rounded-lg px-2 py-0.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/10"
+            >
+              Hoje
+            </button>
+          )}
         </div>
+
+        {/* Legend */}
+        <div className="hidden items-center gap-2 xl:flex">
+          {LEGEND_ITEMS.map((l) => (
+            <span key={l.label} className="flex items-center gap-1 text-[10px] text-text-muted">
+              <span className={cn("h-3 w-3 rounded-full", l.bg)} />
+              {l.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Tabs + Search */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex gap-1 rounded-xl border border-border bg-card p-1">
+          {TABS.map((t) => {
+            const count =
+              t === "Todos" ? athletes.length
+              : t === "Em risco" ? athletes.filter((a) => a.status === "risco").length
+              : t === "Com treino" ? athletes.filter((a) => a.workouts.length > 0).length
+              : athletes.filter((a) => a.workouts.length === 0).length;
+            return (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                  tab === t
+                    ? "bg-primary text-white"
+                    : "text-text-muted hover:bg-card-hover hover:text-text"
+                )}
+              >
+                {t}
+                <span className={cn(
+                  "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                  tab === t ? "bg-white/20 text-white" : "bg-card-hover text-text-muted"
+                )}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 sm:ml-2">
+          <Search className="h-3.5 w-3.5 shrink-0 text-text-muted" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar atleta…"
+            className="w-full bg-transparent text-sm text-text placeholder:text-text-muted/60 outline-none"
+          />
+        </div>
+      </div>
+
+      {/* Calendar grid */}
+      <Card className="overflow-hidden">
+        {/* Column headers */}
+        <div className="grid border-b border-border bg-card-hover/40 px-4 py-2"
+          style={{ gridTemplateColumns: "1.8fr repeat(7, 2.2rem) 3.5rem 4rem" }}>
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Atleta</div>
+          {weekDays.map((d) => {
+            const isToday = d.date === toISODate(new Date());
+            return (
+              <div key={d.date} className="text-center">
+                <p className={cn("text-[9px] font-semibold uppercase", isToday ? "text-primary" : "text-text-muted")}>{d.dayLabel}</p>
+                <p className={cn("text-[11px] font-bold leading-none", isToday ? "text-primary" : "text-text-muted")}>{d.dayNum}</p>
+              </div>
+            );
+          })}
+          <div className="text-center text-[11px] font-semibold uppercase tracking-wider text-text-muted">TSS</div>
+          <div className="text-center text-[11px] font-semibold uppercase tracking-wider text-text-muted">Adesão</div>
+        </div>
+
+        {/* Athlete rows */}
+        <div className="divide-y divide-border">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="py-10 text-center text-sm text-text-muted">
+              Nenhum atleta encontrado para esses filtros.
+            </div>
+          ) : (
+            filtered.map((athlete) => {
+              const weekTss = athlete.workouts.reduce((s, w) => s + w.tss, 0);
+              const statusCfg = STATUS_BADGE[athlete.status] ?? STATUS_BADGE.ativo;
+              const workoutsByDay = new Map<string, WorkoutEntry[]>();
+              for (const wo of athlete.workouts) {
+                if (!workoutsByDay.has(wo.date)) workoutsByDay.set(wo.date, []);
+                workoutsByDay.get(wo.date)!.push(wo);
+              }
+
+              return (
+                <div
+                  key={athlete.id}
+                  className="grid items-center gap-x-2 px-4 py-2.5 transition-colors hover:bg-card-hover/30"
+                  style={{ gridTemplateColumns: "1.8fr repeat(7, 2.2rem) 3.5rem 4rem" }}
+                >
+                  {/* Athlete info */}
+                  <Link href={`/treinador/atletas/${athlete.id}`} className="flex items-center gap-2.5 min-w-0">
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarFallback className="text-xs">
+                        {athlete.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                      </AvatarFallback>
+                      {athlete.avatarUrl && <img src={athlete.avatarUrl} alt="" />}
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-text">{athlete.name}</p>
+                      <div className="flex items-center gap-1">
+                        <Badge variant={statusCfg.variant} className="px-1.5 py-0 text-[9px]">
+                          {statusCfg.label}
+                        </Badge>
+                        {athlete.status === "risco" && (
+                          <CircleAlert className="h-3 w-3 text-danger" />
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* 7-day calendar cells */}
+                  {weekDays.map((d) => {
+                    const dayWorkouts = workoutsByDay.get(d.date) ?? [];
+                    const isToday = d.date === toISODate(new Date());
+                    return (
+                      <div
+                        key={d.date}
+                        className={cn(
+                          "flex flex-col items-center gap-0.5 rounded-lg py-1",
+                          isToday && "bg-primary/5",
+                        )}
+                      >
+                        {dayWorkouts.length === 0 ? (
+                          <Circle className="h-4 w-4 text-border" />
+                        ) : (
+                          dayWorkouts.slice(0, 2).map((wo) => (
+                            <WorkoutDot
+                              key={wo.id}
+                              workout={wo}
+                              onClick={() => setModal({ athlete, dayDate: d.date, workouts: dayWorkouts })}
+                            />
+                          ))
+                        )}
+                        {dayWorkouts.length > 2 && (
+                          <span className="text-[9px] text-text-muted">+{dayWorkouts.length - 2}</span>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {/* Weekly TSS */}
+                  <div className="text-center">
+                    {weekTss > 0 ? (
+                      <span className="text-xs font-bold text-primary">{Math.round(weekTss)}</span>
+                    ) : (
+                      <span className="text-xs text-text-muted">—</span>
+                    )}
+                  </div>
+
+                  {/* Adherence */}
+                  <div className="text-center">
+                    <span className={cn(
+                      "text-xs font-semibold",
+                      athlete.adherence >= 0.8 ? "text-success" : athlete.adherence >= 0.5 ? "text-warning" : "text-danger"
+                    )}>
+                      {Math.round(athlete.adherence * 100)}%
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </Card>
+
+      {/* Workout detail modal */}
+      {modal && (
+        <WorkoutModal payload={modal} onClose={() => setModal(null)} />
+      )}
+    </div>
+  );
+}
+
+function Header({ total }: { total: number }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <Badge variant="primary" className="mb-2">Central de atletas</Badge>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Seus atletas</h1>
+        <p className="mt-1 text-sm text-text-muted">
+          {total} {total === 1 ? "atleta" : "atletas"} — calendário semanal de treinos
+        </p>
+      </div>
+      <div className="flex items-center gap-2">
         <Link href="/treinador/atletas/convidar">
           <Button variant="primary">Convidar atleta</Button>
         </Link>
       </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5">
-          <Search className="h-4 w-4 text-text-muted" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Pesquisar por nome ou objetivo…"
-            className="w-full bg-transparent text-sm text-text placeholder:text-text-muted/60 outline-none"
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <SlidersHorizontal className="hidden h-4 w-4 text-text-muted sm:block" />
-          {filters.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn(
-                "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
-                filter === f
-                  ? "border-primary/60 bg-primary/15 text-primary"
-                  : "border-border bg-card text-text-muted hover:border-primary/30"
-              )}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Table-like list */}
-      <Card className="overflow-hidden">
-        <div className="hidden grid-cols-[1.6fr_1fr_1fr_1fr_1fr_0.8fr] gap-3 border-b border-border bg-card-hover/40 px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-text-muted lg:grid">
-          <span>Atleta</span>
-          <span>Objetivo / Nível</span>
-          <span className="flex items-center gap-1">Status</span>
-          <span className="flex items-center gap-1">Adesão <ArrowUpDown className="h-3 w-3" /></span>
-          <span className="flex items-center gap-1">
-            Carga semanal
-            <InfoTooltip text="UA = Unidades Arbitrárias. Mede a carga de treino combinando duração (min) e percepção de esforço (RPE de 1 a 10) de cada sessão, somadas na semana." />
-          </span>
-          <span>Próx. prova</span>
-        </div>
-        <div className="divide-y divide-border">
-          {filtered.map((a) => (
-            <Link key={a.id} href={`/treinador/atletas/${a.id}`} className="block transition-colors hover:bg-card-hover/40">
-              <div className="grid grid-cols-1 gap-3 px-5 py-4 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr_0.8fr] lg:items-center">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={a.avatarUrl ?? undefined} alt={a.name} />
-                    <AvatarFallback>{a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-text">{a.name}</p>
-                    <p className="truncate text-xs text-text-muted">Check-in: {a.lastCheckIn}</p>
-                  </div>
-                </div>
-
-                <div className="text-sm text-text-muted">
-                  <span className="text-text">{a.goal}</span> · {a.level}
-                </div>
-
-                <div>
-                  <Badge variant={statusVariants[a.status]}>{statusLabels[a.status]}</Badge>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Progress value={a.adherence * 100} className="h-1.5 max-w-[100px]" />
-                  <span className="text-xs font-semibold text-text">{Math.round(a.adherence * 100)}%</span>
-                </div>
-
-                <div className="text-sm text-text">{a.weeklyLoad} <span className="text-xs text-text-muted">UA</span></div>
-
-                <div className="text-sm text-text-muted">{a.raceDate}</div>
-              </div>
-            </Link>
-          ))}
-          {filtered.length === 0 && (
-            <div className="px-5 py-10 text-center text-sm text-text-muted">Nenhum atleta encontrado para esses filtros.</div>
-          )}
-        </div>
-      </Card>
     </div>
   );
 }

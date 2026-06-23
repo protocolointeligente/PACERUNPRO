@@ -180,6 +180,7 @@ model Coach {
   runTemplates      CoachRunTemplate[]
   leads             Lead[]
   expenses          Expense[]
+  zoneModels        CoachZoneModel[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -898,6 +899,25 @@ model Lead {
   updatedAt       DateTime @updatedAt
 
   @@map("leads")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Modelos de zona de treino (configuração por treinador)
+// ────────────────────────────────────────────────────────────────────────────
+
+model CoachZoneModel {
+  id        String   @id @default(cuid())
+  coachId   String
+  coach     Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  name      String                       // ex: "Corrida Avançada"
+  sport     String   @default("CORRIDA") // CORRIDA | CICLISMO | NATACAO | FORCA | GERAL
+  method    String   @default("FC_MAXIMA") // FC_MAXIMA | LIMIAR | FTP | PACE | RPE
+  zoneCount Int      @default(5)
+  zones     Json     @default("[]")      // ZoneDef[] — ver lib/zone-models.ts
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("coach_zone_models")
 }
 
 // ────────────────────────────────────────────────────────────────────────────
