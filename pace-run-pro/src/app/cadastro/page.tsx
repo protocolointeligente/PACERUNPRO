@@ -4,8 +4,9 @@ import Link from "next/link";
 import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Building2, Dumbbell, User, Users, Zap } from "lucide-react";
+import { ArrowLeft, Building2, Dumbbell, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/logo";
 import { getRecommendedB2BPlan } from "@/lib/mock-data";
 import { formatBRL } from "@/lib/utils";
 
@@ -411,13 +412,8 @@ export default function CadastroPage() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
-              <Zap className="h-5 w-5 text-white" fill="white" />
-            </div>
-            <span className="font-display text-lg font-extrabold tracking-wide text-text">
-              PACE RUN <span className="gradient-text">PRO</span>
-            </span>
+          <Link href="/">
+            <Logo size={36} />
           </Link>
         </div>
       </nav>
