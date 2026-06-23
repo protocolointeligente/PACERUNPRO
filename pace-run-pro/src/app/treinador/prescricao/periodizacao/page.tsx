@@ -20,6 +20,7 @@ import {
   Zap,
   Send,
   CheckCircle2,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -176,6 +177,10 @@ function parsePaceStr(str: string): number {
   return 0;
 }
 
+// ── Draft persistence ─────────────────────────────────────────────────────────
+
+const DRAFT_KEY = "periodizacao-draft-v1";
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PeriodizacaoPage() {
@@ -212,6 +217,7 @@ export default function PeriodizacaoPage() {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [liberating, setLiberating] = useState(false);
   const [liberated, setLiberated] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
 
   // Computed VDOT from race result
   const raceDistMeters = RACE_DISTANCES.find((d) => d.id === raceDistId)?.meters ?? 5000;
@@ -235,14 +241,75 @@ export default function PeriodizacaoPage() {
     setView("macro");
   }
 
+  // Load draft on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as {
+        goal?: Goal; level?: Level; totalWeeks?: number; trainingDays?: string[];
+        weeks?: Week[]; vdotValue?: string; raceDistId?: string; raceTime?: string;
+        workoutsMap?: Record<number, GeneratedWorkout[]>;
+      };
+      if (!draft.weeks?.length) return;
+      setGoal(draft.goal ?? "Meia-maratona");
+      setLevel(draft.level ?? "Intermediário");
+      setTotalWeeks(draft.totalWeeks ?? 16);
+      setTrainingDays(draft.trainingDays ?? ["Segunda-feira", "Quarta-feira", "Sábado"]);
+      setWeeks(draft.weeks);
+      setGenerated(true);
+      setSaved(false);
+      setVdotValue(draft.vdotValue ?? "");
+      setRaceDistId(draft.raceDistId ?? "5000");
+      setRaceTime(draft.raceTime ?? "");
+      if (draft.workoutsMap && Object.keys(draft.workoutsMap).length > 0) {
+        setWorkoutsMap(draft.workoutsMap);
+      }
+      setDraftRestored(true);
+    } catch { /* storage unavailable */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-save draft whenever key state changes (1.5s debounce)
+  useEffect(() => {
+    if (!generated || weeks.length === 0) return;
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({
+          goal, level, totalWeeks, trainingDays, weeks, vdotValue, raceDistId, raceTime, workoutsMap,
+        }));
+      } catch { /* storage unavailable */ }
+    }, 1500);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weeks, workoutsMap, goal, level, totalWeeks, trainingDays, vdotValue, raceDistId, raceTime, generated]);
+
   function handleWeekChange(weekNum: number, field: keyof Week, value: string | number) {
     setWeeks((prev) => prev.map((w) => (w.week === weekNum ? { ...w, [field]: value } : w)));
     setSaved(false);
   }
 
   function handleSave() {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        goal, level, totalWeeks, trainingDays, weeks, vdotValue, raceDistId, raceTime, workoutsMap,
+      }));
+    } catch { /* storage unavailable */ }
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
+  }
+
+  function handleDiscardDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+    setWeeks([]);
+    setGenerated(false);
+    setSaved(false);
+    setWorkoutsMap({});
+    setView("macro");
+    setDraftRestored(false);
+    setExpandedWeek(null);
+    setEditingKey(null);
+    setLiberated(false);
   }
 
   function buildWorkoutsMap(): Record<number, GeneratedWorkout[]> {
@@ -304,6 +371,7 @@ export default function PeriodizacaoPage() {
         )
       );
       setLiberated(true);
+      try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
       setTimeout(() => setLiberated(false), 4000);
     } finally {
       setLiberating(false);
@@ -684,19 +752,58 @@ export default function PeriodizacaoPage() {
 
           {/* ── Main area ── */}
           <div className="flex-1 min-w-0 space-y-4">
+            {/* Draft restored banner */}
+            {draftRestored && (
+              <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm text-primary print:hidden">
+                <RefreshCw className="h-4 w-4 shrink-0" />
+                <span className="flex-1">Rascunho restaurado — continue de onde parou.</span>
+                <button
+                  type="button"
+                  onClick={handleDiscardDraft}
+                  className="text-xs underline opacity-70 hover:opacity-100 transition-opacity"
+                >
+                  Novo plano
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDraftRestored(false)}
+                  className="opacity-60 hover:opacity-100 transition-opacity"
+                  aria-label="Fechar"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
             {!generated ? (
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-20 text-center"
+                className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-20 text-center px-6"
               >
                 <CalendarDays className="h-12 w-12 text-primary/30 mb-4" />
                 <p className="font-display text-lg font-semibold text-text">
                   Nenhuma periodização gerada
                 </p>
-                <p className="mt-1 text-sm text-text-muted">
+                <p className="mt-1 text-sm text-text-muted max-w-xs">
                   Configure os parâmetros e clique em{" "}
-                  <span className="text-primary">Gerar periodização</span>
+                  <span className="text-primary font-medium">Gerar periodização</span>
+                </p>
+                <div className="mt-6 flex items-center gap-2 text-xs text-text-muted">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card font-bold text-primary">1</span>
+                  <span>Configurar</span>
+                  <ChevronRight className="h-3 w-3" />
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card font-bold text-primary">2</span>
+                  <span>Gerar</span>
+                  <ChevronRight className="h-3 w-3" />
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card font-bold text-primary">3</span>
+                  <span>Salvar</span>
+                  <ChevronRight className="h-3 w-3" />
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card font-bold text-primary">4</span>
+                  <span>Liberar</span>
+                </div>
+                <p className="mt-3 text-[11px] text-text-muted">
+                  O rascunho é salvo automaticamente — não perca seu trabalho ao sair da página.
                 </p>
               </motion.div>
             ) : (
@@ -730,12 +837,12 @@ export default function PeriodizacaoPage() {
                       </Button>
                       {view === "macro" && (
                         <Button
-                          variant={saved ? "success" : "primary"}
+                          variant={saved ? "success" : "secondary"}
                           size="sm"
                           onClick={handleSave}
                         >
                           <Save className="h-4 w-4" />
-                          {saved ? "Salvo!" : "Salvar"}
+                          {saved ? "Rascunho salvo!" : "Salvar rascunho"}
                         </Button>
                       )}
                       {view === "treinos" && totalWorkouts > 0 && (
@@ -820,12 +927,12 @@ export default function PeriodizacaoPage() {
                             Exportar PDF
                           </Button>
                           <Button
-                            variant={saved ? "success" : "primary"}
+                            variant={saved ? "success" : "secondary"}
                             size="sm"
                             onClick={handleSave}
                           >
                             <Save className="h-4 w-4" />
-                            {saved ? "Salvo!" : "Salvar periodização"}
+                            {saved ? "Rascunho salvo!" : "Salvar rascunho"}
                           </Button>
                         </div>
                       </div>

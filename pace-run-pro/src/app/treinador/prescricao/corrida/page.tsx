@@ -558,6 +558,15 @@ function VdotReferenceTab({ athletes }: { athletes: AthleteListItem[] }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────
 
+type DraftSession = {
+  dayLabel: string;
+  title: string;
+  zone: string;
+  distanceKm: number;
+};
+
+const DAY_OPTIONS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
 export default function CorridaPage() {
   const [activeTab, setActiveTab] = useState<"referencia" | "templates">("referencia");
   const [realAthletes, setRealAthletes] = useState<AthleteListItem[]>([]);
@@ -570,6 +579,13 @@ export default function CorridaPage() {
   const [newRtKm, setNewRtKm] = useState("40");
   const [newRtFocus, setNewRtFocus] = useState("Base aeróbica");
   const [savingRunTemplate, setSavingRunTemplate] = useState(false);
+
+  // Draft sessions for new template
+  const [draftSessions, setDraftSessions] = useState<DraftSession[]>([]);
+  const [newSessDay, setNewSessDay] = useState("Seg");
+  const [newSessTitle, setNewSessTitle] = useState("");
+  const [newSessZone, setNewSessZone] = useState("E");
+  const [newSessDist, setNewSessDist] = useState("5");
 
   useEffect(() => {
     fetch("/api/coach/athletes")
@@ -590,6 +606,20 @@ export default function CorridaPage() {
       .finally(() => setRunTemplatesLoading(false));
   }, []);
 
+  function handleAddSession() {
+    if (!newSessTitle.trim()) return;
+    setDraftSessions((prev) => [
+      ...prev,
+      { dayLabel: newSessDay, title: newSessTitle.trim(), zone: newSessZone, distanceKm: parseFloat(newSessDist) || 5 },
+    ]);
+    setNewSessTitle("");
+    setNewSessDist("5");
+  }
+
+  function handleRemoveSession(idx: number) {
+    setDraftSessions((prev) => prev.filter((_, i) => i !== idx));
+  }
+
   async function handleCreateRunTemplate() {
     if (!newRtName.trim() || savingRunTemplate) return;
     setSavingRunTemplate(true);
@@ -598,9 +628,9 @@ export default function CorridaPage() {
       description: newRtDesc.trim(),
       targetLevel: newRtLevel,
       weeklyKm: parseFloat(newRtKm) || 40,
-      sessionsPerWeek: 3,
+      sessionsPerWeek: draftSessions.length || 3,
       focus: newRtFocus,
-      sessions: [],
+      sessions: draftSessions,
     };
     try {
       const res = await fetch("/api/coach/templates/corrida", {
@@ -613,6 +643,7 @@ export default function CorridaPage() {
         setCustomRunTemplates((prev) => [{ ...saved, description: saved.description ?? "", isCustom: true }, ...prev]);
         setNewRtName("");
         setNewRtDesc("");
+        setDraftSessions([]);
         setShowNewRunTemplate(false);
       }
     } finally {
@@ -737,12 +768,56 @@ export default function CorridaPage() {
                     </div>
                   </div>
                 </div>
+                {/* Sessions editor */}
+                <div className="space-y-2">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    Sessões da semana {draftSessions.length > 0 && <span className="text-primary">({draftSessions.length})</span>}
+                  </span>
+                  {draftSessions.length > 0 && (
+                    <div className="space-y-1">
+                      {draftSessions.map((s, i) => (
+                        <div key={i} className="flex items-center gap-2 rounded-lg border border-border bg-card-hover/30 px-3 py-2 text-xs">
+                          <span className="w-7 shrink-0 font-mono font-bold text-primary">{s.dayLabel}</span>
+                          <span className="flex-1 text-text">{s.title}</span>
+                          <span className="text-text-muted">{s.distanceKm} km · Zona {s.zone}</span>
+                          <button type="button" onClick={() => handleRemoveSession(i)} className="text-text-muted hover:text-danger transition-colors">
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-2 rounded-xl border border-dashed border-border bg-background/50 p-3">
+                    <select value={newSessDay} onChange={(e) => setNewSessDay(e.target.value)}
+                      className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-text outline-none focus:border-primary/60">
+                      {DAY_OPTIONS.map((d) => <option key={d}>{d}</option>)}
+                    </select>
+                    <select value={newSessZone} onChange={(e) => setNewSessZone(e.target.value)}
+                      className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-text outline-none focus:border-primary/60">
+                      {["E","M","T","I","R"].map((z) => <option key={z} value={z}>Zona {z}</option>)}
+                    </select>
+                    <input value={newSessTitle} onChange={(e) => setNewSessTitle(e.target.value)}
+                      placeholder="Ex.: Rodagem leve"
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddSession(); }}}
+                      className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-text outline-none focus:border-primary/60 placeholder:text-text-muted/50" />
+                    <input value={newSessDist} onChange={(e) => setNewSessDist(e.target.value)}
+                      type="number" min={1} max={50} step={0.5} placeholder="km"
+                      className="w-16 rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-text outline-none focus:border-primary/60" />
+                    <Button size="sm" variant="secondary" onClick={handleAddSession} disabled={!newSessTitle.trim()}>
+                      <Plus className="h-3.5 w-3.5" /> Adicionar
+                    </Button>
+                  </div>
+                  {draftSessions.length === 0 && (
+                    <p className="text-[11px] text-text-muted">Adicione ao menos uma sessão para poder prescrever este template.</p>
+                  )}
+                </div>
+
                 <div className="flex gap-3">
-                  <Button size="sm" onClick={handleCreateRunTemplate} disabled={!newRtName.trim() || savingRunTemplate} className="gap-1.5">
+                  <Button size="sm" onClick={handleCreateRunTemplate} disabled={!newRtName.trim() || draftSessions.length === 0 || savingRunTemplate} className="gap-1.5">
                     <Bookmark className="h-3.5 w-3.5" />
                     {savingRunTemplate ? "Salvando…" : "Salvar template"}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setShowNewRunTemplate(false)}>Cancelar</Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setShowNewRunTemplate(false); setDraftSessions([]); }}>Cancelar</Button>
                 </div>
               </CardContent>
             </Card>
