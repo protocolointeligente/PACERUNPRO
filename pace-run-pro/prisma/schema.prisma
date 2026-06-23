@@ -1025,6 +1025,7 @@ model PlanProduct {
   rating        Float?
   ratingCount   Int       @default(0)
   included      String[]  // bullet list of what's included
+  planContent   Json?     // PlanWeek[] — semanas e treinos do plano
 
   planPurchases PlanPurchase[]
 

@@ -28,7 +28,7 @@ export async function PATCH(
   const allowedFields = [
     "title", "description", "sport", "level", "durationWeeks",
     "weeklyHoursMin", "weeklyHoursMax", "goal", "priceCents",
-    "coverUrl", "included", "published", "featured",
+    "coverUrl", "included", "published", "featured", "planContent",
   ] as const;
 
   const data: Record<string, unknown> = {};

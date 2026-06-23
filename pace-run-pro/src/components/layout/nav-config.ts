@@ -29,6 +29,7 @@ import {
   Globe,
   UserPlus,
   BookOpen,
+  ShoppingBag,
   type LucideIcon,
 } from "lucide-react";
 
@@ -66,6 +67,7 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/prescricao/forca", label: "Prescrição força", icon: Dumbbell },
   { href: "/treinador/biblioteca", label: "Biblioteca de treinos", icon: BookOpen },
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
+  { href: "/treinador/minha-loja", label: "Minha loja de treinos", icon: ShoppingBag },
   { href: "/treinador/gestao",        label: "Gestão & vendas",        icon: DollarSign  },
   { href: "/treinador/planos-venda", label: "Meus planos",            icon: PackagePlus },
   { href: "/treinador/financeiro",   label: "Config. financeiras",    icon: Wallet      },
