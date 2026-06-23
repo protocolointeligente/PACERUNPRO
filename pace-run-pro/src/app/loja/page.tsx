@@ -116,10 +116,12 @@ function ProductCard({ p }: { p: Product }) {
           <span className="font-display font-bold text-sm text-primary">{fmtPrice(p.priceCents)}</span>
         </div>
 
-        <Button size="sm" className="w-full gap-1.5">
-          <ShoppingCart className="h-3.5 w-3.5" />
-          {p.priceCents === 0 ? "Acessar grátis" : "Comprar plano"}
-        </Button>
+        <Link href={`/loja/${p.slug}`} className="w-full">
+          <Button size="sm" className="w-full gap-1.5">
+            <ShoppingCart className="h-3.5 w-3.5" />
+            {p.priceCents === 0 ? "Acessar grátis" : "Comprar plano"}
+          </Button>
+        </Link>
       </CardContent>
     </Card>
   );
