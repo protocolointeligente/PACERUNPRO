@@ -9,6 +9,7 @@ import {
   FileBarChart,
   DollarSign,
   PackagePlus,
+  ShoppingBag,
   Wallet,
   Globe,
   Ticket,
@@ -63,6 +64,7 @@ const coreNav: NavItem[] = [
 const businessNavBase: NavItem[] = [
   { href: "/treinador/gestao",       label: "Gestão & vendas",      icon: DollarSign  },
   { href: "/treinador/planos-venda", label: "Meus planos",          icon: PackagePlus },
+  { href: "/treinador/loja-planos",  label: "Loja de planilhas",    icon: ShoppingBag },
   { href: "/treinador/financeiro",   label: "Config. financeiras",  icon: Wallet      },
   { href: "/treinador/minha-pagina", label: "Minha página pública", icon: Globe       },
   { href: "/treinador/crm",          label: "CRM de leads",         icon: Kanban      },

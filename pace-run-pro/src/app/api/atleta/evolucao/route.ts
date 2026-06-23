@@ -60,6 +60,7 @@ export async function GET() {
   // ── Weekly aggregates ────────────────────────────────────────────────────
   const weekMap = new Map<string, { km: number; paces: number[]; hrs: number[]; loadUA: number }>();
   for (const log of logs) {
+    if (!log.workout) continue;
     const label = weekLabel(new Date(log.workout.date));
     const e = weekMap.get(label) ?? { km: 0, paces: [], hrs: [], loadUA: 0 };
     e.km += log.distanceKm ?? 0;
@@ -77,6 +78,7 @@ export async function GET() {
   // ── Monthly ──────────────────────────────────────────────────────────────
   const monthMap = new Map<string, number>();
   for (const log of logs) {
+    if (!log.workout) continue;
     const label = monthLabel(new Date(log.workout.date));
     monthMap.set(label, (monthMap.get(label) ?? 0) + (log.distanceKm ?? 0));
   }

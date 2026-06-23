@@ -152,6 +152,7 @@ model Athlete {
   achievements       Achievement[]
   teamMemberships    TeamMember[]
   loadParams         AthleteLoadParams?
+  planPurchases      PlanPurchase[]
 
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -181,6 +182,7 @@ model Coach {
   leads             Lead[]
   expenses          Expense[]
   zoneModels        CoachZoneModel[]
+  planProducts      PlanProduct[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -228,8 +230,8 @@ model TrainingPlan {
   id          String   @id @default(cuid())
   athleteId   String
   athlete     Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  coachId     String
-  coach       Coach    @relation(fields: [coachId], references: [id])
+  coachId     String?
+  coach       Coach?   @relation(fields: [coachId], references: [id])
 
   name        String
   goal        Goal
@@ -337,10 +339,14 @@ model Workout {
 
 model WorkoutLog {
   id           String   @id @default(cuid())
-  workoutId    String
-  workout      Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  workoutId    String?
+  workout      Workout? @relation(fields: [workoutId], references: [id], onDelete: SetNull)
   athleteId    String
   athlete      Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  // Source tracking
+  source          String   @default("manual") // manual | strava | garmin | polar | coros | apple
+  stravaActivityId String?  @unique
 
   startedAt    DateTime?
   finishedAt   DateTime?
@@ -921,6 +927,61 @@ model CoachZoneModel {
   updatedAt DateTime @updatedAt
 
   @@map("coach_zone_models")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Loja de planilhas — coach publica, atleta independente compra
+// ────────────────────────────────────────────────────────────────────────────
+
+model PlanProduct {
+  id            String    @id @default(cuid())
+  coachId       String
+  coach         Coach     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  title         String
+  slug          String    @unique
+  description   String    @default("")
+  sport         String    @default("CORRIDA") // CORRIDA | CICLISMO | NATACAO | FORCA | GERAL
+  level         String    @default("Intermediário")
+  durationWeeks Int       @default(12)
+  weeklyHoursMin Float?
+  weeklyHoursMax Float?
+  goal          String    @default("PERFORMANCE")
+  priceCents    Int       @default(0) // em centavos BRL
+  currency      String    @default("BRL")
+  coverUrl      String?
+  published     Boolean   @default(false)
+  featured      Boolean   @default(false)
+  purchases     Int       @default(0)
+  rating        Float?
+  ratingCount   Int       @default(0)
+  included      String[]  // bullet list of what's included
+
+  planPurchases PlanPurchase[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([coachId])
+  @@map("plan_products")
+}
+
+model PlanPurchase {
+  id              String      @id @default(cuid())
+  productId       String
+  product         PlanProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  athleteId       String
+  athlete         Athlete     @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  pricePaidCents  Int         @default(0)
+  currency        String      @default("BRL")
+  status          String      @default("pending") // pending | paid | refunded
+  stripeSessionId String?
+
+  createdAt       DateTime    @default(now())
+
+  @@unique([productId, athleteId])
+  @@map("plan_purchases")
 }
 
 // ────────────────────────────────────────────────────────────────────────────

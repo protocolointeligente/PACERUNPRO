@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Building2, User, Users, Zap } from "lucide-react";
+import { ArrowLeft, Building2, Dumbbell, User, Users, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getRecommendedB2BPlan } from "@/lib/mock-data";
 import { formatBRL } from "@/lib/utils";
@@ -12,8 +12,8 @@ import { formatBRL } from "@/lib/utils";
 const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
-type ProfileType = "atleta" | "treinador" | "assessoria";
-type Step = "perfil" | "alunos" | "conta";
+type ProfileType = "atleta_independente" | "atleta_com_treinador" | "treinador" | "assessoria";
+type Step = "perfil" | "atleta_tipo" | "alunos" | "conta";
 
 const profileOptions: {
   type: ProfileType;
@@ -22,9 +22,15 @@ const profileOptions: {
   icon: typeof User;
 }[] = [
   {
-    type: "atleta",
-    title: "Sou atleta",
-    description: "Quero treinar com periodização, prescrição e acompanhamento do treinador.",
+    type: "atleta_independente",
+    title: "Sou atleta — treino sozinho",
+    description: "Compro planilhas prontas, conecto o Strava e acompanho minha evolução sem treinador.",
+    icon: Dumbbell,
+  },
+  {
+    type: "atleta_com_treinador",
+    title: "Sou atleta — tenho treinador",
+    description: "Meu treinador já usa a plataforma e me convidou para acompanhar os treinos.",
     icon: User,
   },
   {
@@ -48,12 +54,18 @@ function CadastroContent() {
   const perfilParam = searchParams.get("perfil");
   const coachId = searchParams.get("coach");
   const initialProfile: ProfileType | null =
-    perfilParam === "treinador" || perfilParam === "assessoria" || perfilParam === "atleta"
+    perfilParam === "treinador" || perfilParam === "assessoria"
       ? perfilParam
+      : perfilParam === "atleta"
+      ? "atleta_com_treinador"
       : null;
 
   const [step, setStep] = useState<Step>(
-    initialProfile === "atleta" ? "conta" : initialProfile ? "alunos" : "perfil"
+    initialProfile === "atleta_com_treinador"
+      ? "conta"
+      : initialProfile
+      ? "alunos"
+      : "perfil"
   );
   const [profileType, setProfileType] = useState<ProfileType | null>(initialProfile);
   const [studentCount, setStudentCount] = useState(1);
@@ -63,17 +75,22 @@ function CadastroContent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const role: "ATHLETE" | "COACH" = profileType === "atleta" ? "ATHLETE" : "COACH";
+  const isAthlete = profileType === "atleta_independente" || profileType === "atleta_com_treinador";
+  const role: "ATHLETE" | "COACH" = isAthlete ? "ATHLETE" : "COACH";
   const recommendedPlan = role === "COACH" ? getRecommendedB2BPlan(studentCount) : null;
 
   function selectProfile(type: ProfileType) {
     setProfileType(type);
-    setStep(type === "atleta" ? "conta" : "alunos");
+    if (type === "atleta_independente" || type === "atleta_com_treinador") {
+      setStep("conta");
+    } else {
+      setStep("alunos");
+    }
   }
 
   function goBack() {
     if (step === "conta") {
-      setStep(profileType === "atleta" ? "perfil" : "alunos");
+      setStep(isAthlete ? "perfil" : "alunos");
     } else if (step === "alunos") {
       setStep("perfil");
     }
@@ -94,7 +111,7 @@ function CadastroContent() {
           password: senha,
           role,
           studentCount: role === "COACH" ? studentCount : undefined,
-          coachId: role === "ATHLETE" ? coachId : undefined,
+          coachId: profileType === "atleta_com_treinador" ? coachId : undefined,
         }),
       });
       const data = await res.json();
@@ -113,7 +130,9 @@ function CadastroContent() {
         return;
       }
 
-      if (role === "ATHLETE") {
+      if (profileType === "atleta_independente") {
+        router.push("/onboarding?tipo=independente");
+      } else if (role === "ATHLETE") {
         router.push("/onboarding");
       } else if (data.recommendedPlanId === "b2b-free") {
         router.push("/treinador/dashboard");

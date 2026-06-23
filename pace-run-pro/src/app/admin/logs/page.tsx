@@ -64,7 +64,7 @@ export default async function LogsPage() {
       id: `log-${l.id}`,
       action: "treino.concluido",
       actor: l.athlete.user.name,
-      target: l.workout.title ?? l.workout.type,
+      target: l.workout?.title ?? l.workout?.type ?? "Treino",
       at: l.createdAt,
     })),
   ].sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, 50);

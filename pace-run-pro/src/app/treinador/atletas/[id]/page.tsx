@@ -91,10 +91,10 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
     orderBy: { workout: { date: "desc" } },
     take: 5,
   });
-  const recentSessions = rawLogs.map((log) => ({
+  const recentSessions = rawLogs.filter((log) => log.workout).map((log) => ({
     id: log.id,
-    title: log.workout.title,
-    date: new Date(log.workout.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+    title: log.workout!.title,
+    date: new Date(log.workout!.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
     pace: log.avgPaceSecPerKm
       ? `${Math.floor(log.avgPaceSecPerKm / 60)}:${String(log.avgPaceSecPerKm % 60).padStart(2, "0")}/km`
       : "—",
@@ -179,6 +179,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
   });
   const weekMap = new Map<string, number>();
   for (const log of volumeLogs) {
+    if (!log.workout) continue;
     const d = new Date(log.workout.date);
     d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
     const label = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
