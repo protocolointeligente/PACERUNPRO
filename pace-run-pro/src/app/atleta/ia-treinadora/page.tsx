@@ -7,13 +7,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const ATHLETE_CONTEXT = {
-  name: "Camila Andrade",
-  level: "Intermediária",
-  weeklyVolume: "45 km/semana",
-  currentPlan: "Preparatório São Silvestre 2025",
-  nextRace: "10k Corrida da Saudade — 20 Jul 2025",
-  recentPRs: { "5k": "24:15", "10k": "51:02" },
+type AthleteContext = {
+  name: string;
+  level: string;
+  goal?: string;
+  weeklyVolume: string;
+  currentPlan: string;
+  nextRace: string;
+  recentPRs: Record<string, string>;
+};
+
+const DEFAULT_CONTEXT: AthleteContext = {
+  name: "Atleta",
+  level: "—",
+  weeklyVolume: "—",
+  currentPlan: "—",
+  nextRace: "—",
+  recentPRs: {},
 };
 
 const SUGGESTED_QUESTIONS = [
@@ -32,8 +42,16 @@ export default function IATreinadoraPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [athleteContext, setAthleteContext] = useState<AthleteContext>(DEFAULT_CONTEXT);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    fetch("/api/atleta/ia-context")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data) setAthleteContext(data); })
+      .catch(() => null);
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -54,7 +72,7 @@ export default function IATreinadoraPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           messages: updatedMessages,
-          athleteContext: ATHLETE_CONTEXT,
+          athleteContext: athleteContext,
         }),
       });
 
@@ -110,27 +128,27 @@ export default function IATreinadoraPage() {
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-3">
             <div>
               <span className="text-[11px] text-text-muted">Atleta</span>
-              <p className="text-sm font-semibold text-text">{ATHLETE_CONTEXT.name}</p>
+              <p className="text-sm font-semibold text-text">{athleteContext.name}</p>
             </div>
             <div>
               <span className="text-[11px] text-text-muted">Nível</span>
-              <p className="text-sm font-semibold text-text">{ATHLETE_CONTEXT.level}</p>
+              <p className="text-sm font-semibold text-text">{athleteContext.level}</p>
             </div>
             <div>
               <span className="text-[11px] text-text-muted">Volume</span>
-              <p className="text-sm font-semibold text-text">{ATHLETE_CONTEXT.weeklyVolume}</p>
+              <p className="text-sm font-semibold text-text">{athleteContext.weeklyVolume}</p>
             </div>
             <div>
               <span className="text-[11px] text-text-muted">PR 5k</span>
-              <p className="text-sm font-semibold text-text">{ATHLETE_CONTEXT.recentPRs["5k"]}</p>
+              <p className="text-sm font-semibold text-text">{athleteContext.recentPRs["5k"]}</p>
             </div>
             <div>
               <span className="text-[11px] text-text-muted">PR 10k</span>
-              <p className="text-sm font-semibold text-text">{ATHLETE_CONTEXT.recentPRs["10k"]}</p>
+              <p className="text-sm font-semibold text-text">{athleteContext.recentPRs["10k"]}</p>
             </div>
             <div>
               <span className="text-[11px] text-text-muted">Próxima prova</span>
-              <p className="text-sm font-semibold text-text">{ATHLETE_CONTEXT.nextRace}</p>
+              <p className="text-sm font-semibold text-text">{athleteContext.nextRace}</p>
             </div>
           </div>
         </CardContent>
@@ -151,7 +169,7 @@ export default function IATreinadoraPage() {
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
                   <Bot className="h-7 w-7 text-primary" />
                 </div>
-                <p className="mb-1 font-semibold text-text">Olá, {ATHLETE_CONTEXT.name}!</p>
+                <p className="mb-1 font-semibold text-text">Olá, {athleteContext.name}!</p>
                 <p className="mb-6 max-w-xs text-sm text-text-muted">
                   Sou sua IA Treinadora. Pergunte sobre treino, pace, nutrição ou sua próxima prova.
                 </p>

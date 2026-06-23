@@ -1,21 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
+  CheckCircle2,
   Flag,
   Flame,
   HeartPulse,
   Medal,
   Mountain,
   RotateCcw,
+  ShoppingBag,
   Timer,
   TrendingUp,
   Zap,
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { OptionGrid } from "@/components/onboarding/option-grid";
@@ -92,11 +95,15 @@ const initialState: FormState = {
   recentTime: "",
 };
 
-export default function OnboardingPage() {
+function OnboardingContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isIndependente = searchParams.get("tipo") === "independente";
+
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(initialState);
   const [direction, setDirection] = useState(1);
+  const [stravaConnecting, setStravaConnecting] = useState(false);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -262,8 +269,71 @@ export default function OnboardingPage() {
     [form]
   );
 
-  const total = steps.length;
-  const current = steps[step];
+  const independenteSteps = useMemo(
+    () => [
+      {
+        title: "Conecte o Strava",
+        subtitle: "Importe atividades automaticamente e acompanhe sua evolução. Você pode pular e conectar depois.",
+        valid: true,
+        content: (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-border bg-card p-5 text-center">
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#FC4C02]/10">
+                <svg viewBox="0 0 24 24" className="h-7 w-7" fill="#FC4C02">
+                  <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.599h4.172L10.463 0l-7 13.828h4.169" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold text-text mb-1">Strava</p>
+              <p className="text-xs text-text-muted mb-4">Sincronize treinos, pace, ritmo cardíaco e rotas GPS.</p>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                disabled={stravaConnecting}
+                onClick={() => {
+                  setStravaConnecting(true);
+                  window.location.href = "/api/integrations/strava/connect?redirect=/onboarding?tipo=independente&step=strava_done";
+                }}
+              >
+                {stravaConnecting ? "Conectando…" : "Conectar com Strava"}
+              </Button>
+            </div>
+            <p className="text-center text-xs text-text-muted">Ou clique em Continuar para pular este passo.</p>
+          </div>
+        ),
+      },
+      {
+        title: "Tudo pronto!",
+        subtitle: "Seu perfil foi criado. Agora escolha um plano ou comece a explorar a plataforma.",
+        valid: true,
+        content: (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-success/30 bg-success/5 p-5 text-center">
+              <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-success" />
+              <p className="text-base font-bold text-text">Perfil configurado!</p>
+              <p className="mt-1 text-sm text-text-muted">Explore a loja de planilhas ou vá direto para seu dashboard.</p>
+            </div>
+            <Link href="/loja">
+              <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 cursor-pointer hover:bg-primary/10 transition-colors">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                  <ShoppingBag className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text">Loja de planilhas</p>
+                  <p className="text-xs text-text-muted">Planilhas criadas por treinadores certificados</p>
+                </div>
+              </div>
+            </Link>
+          </div>
+        ),
+      },
+    ],
+    [stravaConnecting]
+  );
+
+  const allSteps = isIndependente ? [...steps, ...independenteSteps] : steps;
+  const total = allSteps.length;
+  const current = allSteps[step];
   const progress = ((step + 1) / total) * 100;
   const isLast = step === total - 1;
   const [saving, setSaving] = useState(false);
@@ -292,9 +362,14 @@ export default function OnboardingPage() {
     "outro": "OUTRO",
   };
 
+  // Save profile when athlete completes the core steps (last core step = steps.length - 1)
+  const coreLastStep = steps.length - 1;
+
   async function next() {
     if (!current.valid) return;
-    if (isLast) {
+
+    // Save profile data at the end of core steps
+    if (step === coreLastStep) {
       setSaving(true);
       try {
         await fetch("/api/atleta/perfil", {
@@ -315,13 +390,21 @@ export default function OnboardingPage() {
           }),
         });
       } catch {
-        // Non-fatal: proceed to dashboard even if save fails
+        // Non-fatal
       } finally {
         setSaving(false);
       }
+      if (!isIndependente) {
+        router.push("/atleta/dashboard");
+        return;
+      }
+    }
+
+    if (isLast) {
       router.push("/atleta/dashboard");
       return;
     }
+
     setDirection(1);
     setStep((s) => Math.min(total - 1, s + 1));
   }
@@ -379,6 +462,18 @@ export default function OnboardingPage() {
             ) : (
               <>
                 <Timer className="h-4 w-4" />
+                Ir para o dashboard
+              </>
+            )
+          ) : step === coreLastStep && !isIndependente ? (
+            saving ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Salvando…
+              </>
+            ) : (
+              <>
+                <Timer className="h-4 w-4" />
                 Concluir e ver meu plano
               </>
             )
@@ -391,6 +486,14 @@ export default function OnboardingPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={null}>
+      <OnboardingContent />
+    </Suspense>
   );
 }
 

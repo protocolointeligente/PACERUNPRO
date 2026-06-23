@@ -37,6 +37,7 @@ export default function EvolutionPage() {
     weeklyVolume: [], monthlyVolume: [], avgPace: [], avgHr: [],
     trainingLoad: [], weightHistory: [], vo2History: [], races: [], hasData: false,
   });
+  const [peakPace, setPeakPace] = useState<{ label: string; paceSec: number; paceStr: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,6 +46,10 @@ export default function EvolutionPage() {
       .then((data) => { if (data) setEvolucao(data); })
       .catch(() => null)
       .finally(() => setLoading(false));
+    fetch("/api/atleta/peak-pace")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.data) setPeakPace(d.data); })
+      .catch(() => null);
   }, []);
 
   function handlePhotoChange(idx: number, file: File | undefined) {
@@ -125,6 +130,16 @@ export default function EvolutionPage() {
         <ChartCard title="VO2 estimado" description="Estimativa de consumo máximo de oxigênio (ml/kg/min)" trend="up" trendLabel="+3.5 pontos em 6 meses">
           {evolucao.vo2History.length > 0
             ? <LineTrend data={evolucao.vo2History} dataKey="vo2" color="#38bdf8" unit=" ml/kg/min" />
+            : <EmptyChart />}
+        </ChartCard>
+
+        <ChartCard
+          title="Curva de pico de pace"
+          description="Seu melhor pace sustentado em cada duração (últimos 6 meses)"
+          tooltip="Mostra o pace mais rápido que você conseguiu manter por cada intervalo de tempo. Quanto mais baixo o valor, melhor. Útil para identificar seu perfil de esforço: atletas de sprint têm melhor pace nos tempos curtos; maratonistas sustentam bem os tempos longos."
+        >
+          {peakPace.length > 0
+            ? <BarTrend data={peakPace} dataKey="paceSec" color="#f97316" reverse formatValue={(v) => formatPace(v)} />
             : <EmptyChart />}
         </ChartCard>
 
@@ -228,8 +243,8 @@ function ChartCard({
 }: {
   title: string;
   description: string;
-  trend: "up" | "down";
-  trendLabel: string;
+  trend?: "up" | "down";
+  trendLabel?: string;
   tooltip?: string;
   children: React.ReactNode;
 }) {
@@ -244,13 +259,15 @@ function ChartCard({
           </CardTitle>
           <CardDescription>{description}</CardDescription>
         </div>
-        <Badge variant={trend === "up" ? "success" : "info"} className="shrink-0">
-          <TrendIcon className="h-3 w-3" />
-        </Badge>
+        {trend && (
+          <Badge variant={trend === "up" ? "success" : "info"} className="shrink-0">
+            <TrendIcon className="h-3 w-3" />
+          </Badge>
+        )}
       </CardHeader>
       <CardContent className="pt-3">
         {children}
-        <p className="mt-1 text-xs text-text-muted">{trendLabel}</p>
+        {trendLabel && <p className="mt-1 text-xs text-text-muted">{trendLabel}</p>}
       </CardContent>
     </Card>
   );

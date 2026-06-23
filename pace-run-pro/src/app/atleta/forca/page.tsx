@@ -82,8 +82,7 @@ export default function StrengthPage() {
     fetch("/api/athlete/workouts")
       .then((r) => r.ok ? r.json() : [])
       .then((data: UpcomingWorkout[]) => {
-        const todayLocal = new Date().toLocaleDateString("sv");
-        setUpcomingWorkouts(data.filter((w) => w.type === "forca" && w.date.slice(0, 10) !== todayLocal));
+        setUpcomingWorkouts(data.filter((w) => w.type === "forca"));
       })
       .catch(() => null)
       .finally(() => setUpcomingLoading(false));
@@ -97,7 +96,8 @@ export default function StrengthPage() {
     <div className="mx-auto max-w-6xl space-y-7">
       <div>
         <Badge variant="primary" className="mb-2">Força &amp; Funcional</Badge>
-        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Seu treino de força de hoje</h1>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Força — plano da semana</h1>
+        <p className="mt-1 text-sm text-text-muted">Veja e acesse todos os treinos de força agendados.</p>
       </div>
 
       {/* Today's strength session */}
@@ -215,22 +215,28 @@ export default function StrengthPage() {
           <div className="space-y-2">
             {upcomingWorkouts.map((w) => {
               const d = new Date(w.date);
-              const dayStr = d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
+              const dayStr = d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "short" });
+              const isToday = d.toLocaleDateString("sv") === new Date().toLocaleDateString("sv");
               return (
-                <Card key={w.id} className="border-border/60">
-                  <CardContent className="flex items-center gap-4 p-4">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Dumbbell className="h-4 w-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-text">{w.title}</p>
-                      {w.objective && (
-                        <p className="truncate text-xs text-text-muted">{w.objective}</p>
-                      )}
-                    </div>
-                    <span className="shrink-0 text-xs text-text-muted capitalize">{dayStr}</span>
-                  </CardContent>
-                </Card>
+                <Link key={w.id} href={`/atleta/treino/${w.id}`}>
+                  <Card className="border-border/60 cursor-pointer transition-colors hover:border-primary/40 hover:bg-card-hover">
+                    <CardContent className="flex items-center gap-4 p-4">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Dumbbell className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-text">{w.title}</p>
+                        {w.objective && (
+                          <p className="truncate text-xs text-text-muted">{w.objective}</p>
+                        )}
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-xs text-text-muted capitalize">{dayStr}</p>
+                        {isToday && <p className="text-[10px] font-semibold text-primary">Hoje</p>}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               );
             })}
           </div>

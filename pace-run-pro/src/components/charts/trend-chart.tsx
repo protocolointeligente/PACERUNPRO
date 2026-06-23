@@ -101,19 +101,23 @@ export function BarTrend({
   dataKey,
   color = "#a855f7",
   unit = "",
+  reverse = false,
+  formatValue,
 }: {
   data: SeriesDatum[];
   dataKey: string;
   color?: string;
   unit?: string;
+  reverse?: boolean;
+  formatValue?: (v: number) => string;
 }) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} margin={{ top: 10, right: 8, bottom: 0, left: -24 }}>
         <CartesianGrid stroke="#1e2a40" strokeDasharray="3 6" vertical={false} />
         <XAxis dataKey="label" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-        <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} width={42} />
-        <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "#94a3b8" }} formatter={(value) => [`${value}${unit}`, ""]} cursor={{ fill: "rgba(139,92,246,0.08)" }} />
+        <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} width={46} reversed={reverse} tickFormatter={formatValue} />
+        <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "#94a3b8" }} formatter={(value) => [formatValue ? formatValue(Number(value)) : `${value}${unit}`, ""]} cursor={{ fill: "rgba(139,92,246,0.08)" }} />
         <Bar dataKey={dataKey} fill={color} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
