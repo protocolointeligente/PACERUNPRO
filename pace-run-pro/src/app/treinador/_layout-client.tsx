@@ -56,11 +56,12 @@ interface TreinadorLayoutClientProps {
   userName: string;
   userCredential: string;
   userAvatarUrl?: string;
+  planId?: string;
 }
 
-function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUrl }: TreinadorLayoutClientProps) {
+function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUrl, planId }: TreinadorLayoutClientProps) {
   const { role } = useCoachRole();
-  const { main, more } = getCoachNav(role, "b2b-free");
+  const { main, more } = getCoachNav(role, planId ?? "b2b-free");
 
   return (
     <AppShell
@@ -86,10 +87,10 @@ function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUr
   );
 }
 
-export default function TreinadorLayoutClient({ children, userName, userCredential, userAvatarUrl }: TreinadorLayoutClientProps) {
+export default function TreinadorLayoutClient({ children, userName, userCredential, userAvatarUrl, planId }: TreinadorLayoutClientProps) {
   return (
     <CoachRoleProvider initialRole="owner">
-      <TreinadorLayoutInner userName={userName} userCredential={userCredential} userAvatarUrl={userAvatarUrl}>
+      <TreinadorLayoutInner userName={userName} userCredential={userCredential} userAvatarUrl={userAvatarUrl} planId={planId}>
         {children}
       </TreinadorLayoutInner>
     </CoachRoleProvider>

@@ -77,6 +77,63 @@ const statusFilters = [
   { id: "pendente", label: "Pendentes" },
 ];
 
+const PLAN_OPTIONS: { value: string; label: string }[] = [
+  { value: "FREE",    label: "Free (b2b-free)"         },
+  { value: "ATHLETE", label: "Starter (b2b-starter)"   },
+  { value: "COACH",   label: "Pro (b2b-pro)"           },
+  { value: "TEAM",    label: "Unlimited (b2b-unlimited)" },
+];
+
+function EditPlanButton({ coachId, currentPlan }: { coachId: string; currentPlan: string }) {
+  const [open, setOpen] = useState(false);
+  const [plan, setPlan] = useState("TEAM");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/set-plan", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coachId, plan }),
+      });
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => { setSaved(false); setOpen(false); }, 1500);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
+        Editar plano
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <select
+        value={plan}
+        onChange={(e) => setPlan(e.target.value)}
+        className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-text focus:outline-none"
+      >
+        {PLAN_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+      <Button size="sm" onClick={handleSave} disabled={saving}>
+        {saved ? "Salvo!" : saving ? "…" : "Salvar"}
+      </Button>
+      <button onClick={() => setOpen(false)} className="text-xs text-text-muted hover:text-text">✕</button>
+    </div>
+  );
+}
+
 export default function AssessoriasPage() {
   const [assessoriaList, setAssessoriaList] = useState<AssessoriaItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -267,8 +324,7 @@ export default function AssessoriasPage() {
                     </div>
 
                     {/* Row 3: Actions */}
-                    <div className="flex gap-2 pt-1 border-t border-border/40">
-                      <Button variant="secondary" size="sm">Detalhe</Button>
+                    <div className="flex flex-wrap gap-2 pt-1 border-t border-border/40">
                       {effectiveStatus === "pendente" && (
                         <Button
                           variant="success"
@@ -278,6 +334,7 @@ export default function AssessoriasPage() {
                           Aprovar
                         </Button>
                       )}
+                      <EditPlanButton coachId={a.id} currentPlan={a.plan} />
                     </div>
                   </CardContent>
                 </Card>
