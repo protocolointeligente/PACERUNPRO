@@ -72,8 +72,9 @@ model User {
   feedLikes     FeedLike[]
   accounts      Account[]
   sessions      Session[]
-  vouchersCreated Voucher[] @relation("VouchersCreated")
-  billingSettings BillingSettings?
+  vouchersCreated     Voucher[] @relation("VouchersCreated")
+  billingSettings     BillingSettings?
+  workoutLogComments  WorkoutLogComment[]
 
   @@map("users")
 }
@@ -364,9 +365,25 @@ model WorkoutLog {
   rpe          Int?
   feeling      String?
 
+  comments     WorkoutLogComment[]
+
   createdAt    DateTime @default(now())
 
   @@map("workout_logs")
+}
+
+model WorkoutLogComment {
+  id           String     @id @default(cuid())
+  workoutLogId String
+  workoutLog   WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text         String
+
+  createdAt    DateTime   @default(now())
+
+  @@index([workoutLogId])
+  @@map("workout_log_comments")
 }
 
 // ────────────────────────────────────────────────────────────────────────────

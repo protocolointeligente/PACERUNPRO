@@ -13,6 +13,7 @@ import { WeeklyReleaseDialog } from "@/components/coach/weekly-release-dialog";
 import { DeleteWorkoutButton, DeletePlanButton, EditWorkoutButton } from "@/components/coach/delete-buttons";
 import { TrainingLoadPanel } from "@/components/coach/training-load-panel";
 import { AthleteCalendar, type CalWorkout } from "@/components/coach/athlete-calendar";
+import { WorkoutLogComments } from "@/components/workout-log-comments";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-guard";
 
@@ -455,20 +456,27 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
                 <div className="space-y-1.5">
                   {recentSessions.map((s) => (
                     <Card key={s.id}>
-                      <CardContent className="flex items-center justify-between p-4">
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-success/10 text-success">
-                            <ClipboardList className="h-3.5 w-3.5" />
-                          </span>
-                          <div>
-                            <p className="text-sm font-semibold text-text">{s.title}</p>
-                            <p className="text-xs text-text-muted">{s.date}</p>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-success/10 text-success">
+                              <ClipboardList className="h-3.5 w-3.5" />
+                            </span>
+                            <div>
+                              <p className="text-sm font-semibold text-text">{s.title}</p>
+                              <p className="text-xs text-text-muted">{s.date}</p>
+                            </div>
+                          </div>
+                          <div className="text-right text-xs text-text-muted">
+                            <p className="font-semibold text-text">{s.pace}</p>
+                            <p>RPE {s.rpe ?? "—"}</p>
                           </div>
                         </div>
-                        <div className="text-right text-xs text-text-muted">
-                          <p className="font-semibold text-text">{s.pace}</p>
-                          <p>RPE {s.rpe ?? "—"}</p>
-                        </div>
+                        <WorkoutLogComments
+                          logId={s.id}
+                          currentUserId={session.user.id}
+                          currentUserRole={session.user.role}
+                        />
                       </CardContent>
                     </Card>
                   ))}
