@@ -116,7 +116,7 @@ export default function IATreinadoraPage() {
         </h1>
         <p className="mt-1 text-sm text-text-muted">
           <Sparkles className="mr-1 inline h-3.5 w-3.5 text-primary" />
-          Powered by Claude — sua assistente especializada em corrida
+          Powered by Gemini — sua assistente especializada em corrida
         </p>
       </div>
 

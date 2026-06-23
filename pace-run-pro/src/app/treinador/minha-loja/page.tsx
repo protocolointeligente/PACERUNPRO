@@ -182,6 +182,10 @@ export default function MinhaLojaPage() {
   const [exerciseRow, setExerciseRow] = useState({ name: "", sets: "3", reps: "10-12", restSec: "60" });
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // workout picker (reuse)
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerDay, setPickerDay] = useState(0);
+
   const load = useCallback(() => {
     setLoading(true);
     fetch("/api/coach/produtos")
@@ -316,8 +320,28 @@ export default function MinhaLojaPage() {
   // ── workout form ────────────────────────────────────────────────────────────
 
   function openAddWorkout(dayOfWeek: number) {
-    setWForm({ ...EMPTY_WORKOUT, id: uid(), dayOfWeek });
+    const existing = planContent.flatMap((w) => w.workouts);
+    if (existing.length > 0) {
+      setPickerDay(dayOfWeek);
+      setShowPicker(true);
+    } else {
+      setWForm({ ...EMPTY_WORKOUT, id: uid(), dayOfWeek });
+      setExerciseRow({ name: "", sets: "3", reps: "10-12", restSec: "60" });
+      setShowWorkoutForm(true);
+    }
+  }
+
+  function importWorkout(source: PlanWorkout) {
+    setWForm({ ...source, id: uid(), dayOfWeek: pickerDay });
     setExerciseRow({ name: "", sets: "3", reps: "10-12", restSec: "60" });
+    setShowPicker(false);
+    setShowWorkoutForm(true);
+  }
+
+  function openNewFromPicker() {
+    setWForm({ ...EMPTY_WORKOUT, id: uid(), dayOfWeek: pickerDay });
+    setExerciseRow({ name: "", sets: "3", reps: "10-12", restSec: "60" });
+    setShowPicker(false);
     setShowWorkoutForm(true);
   }
 
@@ -604,6 +628,17 @@ export default function MinhaLojaPage() {
           onClose={() => setShowWorkoutForm(false)}
         />
       )}
+
+      {/* Workout picker modal */}
+      {showPicker && (
+        <WorkoutPickerModal
+          workouts={planContent.flatMap((w) => w.workouts)}
+          day={pickerDay}
+          onImport={importWorkout}
+          onNew={openNewFromPicker}
+          onClose={() => setShowPicker(false)}
+        />
+      )}
     </div>
   );
 }
@@ -698,6 +733,100 @@ function MetaModal({ meta, setMeta, editId, saving, onSave, onClose }: {
             {editId ? "Salvar alterações" : "Criar plano"}
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Workout Picker Modal ───────────────────────────────────────────────────────
+
+function WorkoutPickerModal({ workouts, day, onImport, onNew, onClose }: {
+  workouts: PlanWorkout[];
+  day: number;
+  onImport: (w: PlanWorkout) => void;
+  onNew: () => void;
+  onClose: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const filtered = workouts.filter((w) =>
+    w.title.toLowerCase().includes(search.toLowerCase()) ||
+    typeLabel(w.type).toLowerCase().includes(search.toLowerCase())
+  );
+
+  const catColors: Record<string, string> = {
+    corrida: "bg-sky-400/10 border-sky-400/20 text-sky-400",
+    forca: "bg-violet-400/10 border-violet-400/20 text-violet-400",
+    recuperacao: "bg-lime-400/10 border-lime-400/20 text-lime-400",
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg max-h-[80vh] flex flex-col rounded-2xl border border-border bg-card shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border p-5">
+          <div>
+            <h2 className="font-display text-lg font-bold text-text">{DAY_LABELS[day]} — Adicionar treino</h2>
+            <p className="text-xs text-text-muted mt-0.5">Importe um treino existente ou crie um novo</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-4 border-b border-border">
+          <Button onClick={onNew} className="w-full" variant="outline">
+            <Plus className="mr-1.5 h-4 w-4" />
+            Criar novo treino
+          </Button>
+        </div>
+
+        {workouts.length > 0 && (
+          <>
+            <div className="px-4 pt-3 pb-2">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                Importar de treinos anteriores
+              </p>
+              <input
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60"
+                placeholder="Buscar por título ou tipo..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-1.5">
+              {filtered.length === 0 ? (
+                <p className="py-6 text-center text-sm text-text-muted">Nenhum treino encontrado</p>
+              ) : (
+                filtered.map((w) => {
+                  const cat = typeCategory(w.type);
+                  return (
+                    <button
+                      key={w.id}
+                      onClick={() => onImport(w)}
+                      className={cn(
+                        "flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors hover:opacity-80",
+                        catColors[cat]
+                      )}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold leading-tight">{w.title}</p>
+                        <p className="text-xs opacity-70 mt-0.5">{typeLabel(w.type)}</p>
+                        {(w.targetDistanceKm || w.targetDurationMin) && (
+                          <p className="text-[11px] opacity-60 mt-0.5">
+                            {w.targetDistanceKm ? `${w.targetDistanceKm} km` : ""}
+                            {w.targetDistanceKm && w.targetDurationMin ? " · " : ""}
+                            {w.targetDurationMin ? `${w.targetDurationMin} min` : ""}
+                          </p>
+                        )}
+                      </div>
+                      <ChevronRight className="h-4 w-4 shrink-0 opacity-50 mt-0.5" />
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
