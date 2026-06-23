@@ -12,6 +12,7 @@ import { AreaTrend, LineTrend } from "@/components/charts/trend-chart";
 import { WeeklyReleaseDialog } from "@/components/coach/weekly-release-dialog";
 import { DeleteWorkoutButton, DeletePlanButton, EditWorkoutButton } from "@/components/coach/delete-buttons";
 import { TrainingLoadPanel } from "@/components/coach/training-load-panel";
+import { AthleteCalendar, type CalWorkout } from "@/components/coach/athlete-calendar";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-guard";
 
@@ -130,6 +131,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
               targetDurationMin: true,
               targetPaceSecPerKm: true,
               targetRpe: true,
+              structured: true,
             },
           },
         },
@@ -195,6 +197,21 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
     label: new Date(m.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
     kg: m.weightKg!,
   }));
+
+  const calWorkouts: CalWorkout[] = activePlan?.weeks.flatMap((w) =>
+    w.workouts.map((wo) => ({
+      id: wo.id,
+      date: new Date(wo.date).toISOString().slice(0, 10),
+      type: wo.type as string,
+      title: wo.title,
+      status: wo.status as string,
+      targetDistanceKm: wo.targetDistanceKm,
+      targetDurationMin: wo.targetDurationMin,
+      targetPaceSecPerKm: wo.targetPaceSecPerKm,
+      targetRpe: wo.targetRpe,
+      structured: wo.structured,
+    }))
+  ) ?? [];
 
   const rawStatus = dbAthlete.status ?? "ativo";
   const status = (rawStatus === "ativo" || rawStatus === "risco" || rawStatus === "inativo"
@@ -262,6 +279,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
           <TabsTrigger value="visao">Visão geral</TabsTrigger>
           <TabsTrigger value="fisico">Dados físicos &amp; testes</TabsTrigger>
           <TabsTrigger value="treinos">Treinos &amp; histórico</TabsTrigger>
+          <TabsTrigger value="calendario">Calendário</TabsTrigger>
           <TabsTrigger value="carga">Carga de treino</TabsTrigger>
           <TabsTrigger value="checkins">Check-ins</TabsTrigger>
         </TabsList>
@@ -457,6 +475,11 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
               </div>
             )}
           </div>
+        </TabsContent>
+
+        {/* Calendar with drag & drop rescheduling */}
+        <TabsContent value="calendario">
+          <AthleteCalendar athleteId={dbAthlete.id} initialWorkouts={calWorkouts} />
         </TabsContent>
 
         {/* Training load (CTL/ATL/TSB) */}

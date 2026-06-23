@@ -29,6 +29,8 @@ interface Session {
   distanceKm?: number;
   description?: string;
   intervals?: string;
+  structured?: boolean;
+  blocks?: unknown;
 }
 
 export async function POST(req: NextRequest) {
@@ -143,6 +145,8 @@ export async function POST(req: NextRequest) {
             mainSet: s.intervals ?? "",
             targetDistanceKm: s.distanceKm,
             notes: `Template: ${templateName}`,
+            structured: s.structured ?? false,
+            ...(s.blocks ? { blocks: s.blocks } : {}),
           },
         });
         totalWorkoutsCreated++;

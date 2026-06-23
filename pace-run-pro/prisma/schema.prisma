@@ -314,6 +314,9 @@ model Workout {
   cooldown      String?
   notes         String?
 
+  structured    Boolean  @default(false)  // treino com blocos estruturados
+  blocks        Json?                     // WorkoutBlock[] — ver lib/workout-blocks.ts
+
   targetPaceSecPerKm Int?
   targetHrZone       String?
   targetRpe          Int?

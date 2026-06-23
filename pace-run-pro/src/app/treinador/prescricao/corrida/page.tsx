@@ -9,6 +9,7 @@ import {
   BookOpen,
   CheckCircle2,
   LayoutTemplate,
+  Layers,
   Loader2,
   Plus,
   Send,
@@ -32,6 +33,8 @@ import {
   type TrainingZoneId,
 } from "@/lib/vdot";
 import type { AthleteListItem, RunWorkoutTemplate } from "@/lib/types";
+import { WorkoutBlockEditor } from "@/components/coach/workout-block-editor";
+import { defaultBlocks, type WorkoutBlock } from "@/lib/workout-blocks";
 
 const runTypes = [
   { label: "Rodagem leve",      zone: "E", description: "Volume em ritmo confortável — base aeróbica" },
@@ -568,7 +571,7 @@ type DraftSession = {
 const DAY_OPTIONS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
 export default function CorridaPage() {
-  const [activeTab, setActiveTab] = useState<"referencia" | "templates">("referencia");
+  const [activeTab, setActiveTab] = useState<"referencia" | "templates" | "criar">("referencia");
   const [realAthletes, setRealAthletes] = useState<AthleteListItem[]>([]);
   const [customRunTemplates, setCustomRunTemplates] = useState<RunWorkoutTemplate[]>([]);
   const [runTemplatesLoading, setRunTemplatesLoading] = useState(true);
@@ -579,6 +582,50 @@ export default function CorridaPage() {
   const [newRtKm, setNewRtKm] = useState("40");
   const [newRtFocus, setNewRtFocus] = useState("Base aeróbica");
   const [savingRunTemplate, setSavingRunTemplate] = useState(false);
+
+  // ── "Criar treino" form state ─────────────────────────────────────────────
+  const [criarAthleteId, setCriarAthleteId] = useState("");
+  const [criarDate, setCriarDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [criarTitle, setCriarTitle] = useState("");
+  const [criarType, setCriarType] = useState("RODAGEM_LEVE");
+  const [criarStructured, setCriarStructured] = useState(false);
+  const [criarBlocks, setCriarBlocks] = useState<WorkoutBlock[]>(defaultBlocks());
+  const [criarDistKm, setCriarDistKm] = useState("");
+  const [criarDurMin, setCriarDurMin] = useState("");
+  const [criarSaving, setCriarSaving] = useState(false);
+  const [criarOk, setCriarOk] = useState(false);
+
+  async function handleCriarTreino() {
+    if (!criarAthleteId || !criarDate || !criarTitle.trim() || criarSaving) return;
+    setCriarSaving(true);
+    try {
+      const res = await fetch("/api/coach/workouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: criarAthleteId,
+          date: criarDate + "T12:00:00.000Z",
+          title: criarTitle.trim(),
+          type: criarType,
+          structured: criarStructured,
+          blocks: criarStructured ? criarBlocks : undefined,
+          targetDistanceKm: criarDistKm ? parseFloat(criarDistKm) : undefined,
+          targetDurationMin: criarDurMin ? parseInt(criarDurMin) : undefined,
+        }),
+      });
+      if (res.ok) {
+        setCriarOk(true);
+        setCriarTitle("");
+        setCriarDistKm("");
+        setCriarDurMin("");
+        setCriarStructured(false);
+        setCriarBlocks(defaultBlocks());
+        setTimeout(() => setCriarOk(false), 3000);
+      }
+    } finally {
+      setCriarSaving(false);
+    }
+  }
 
   // Draft sessions for new template
   const [draftSessions, setDraftSessions] = useState<DraftSession[]>([]);
@@ -699,9 +746,184 @@ export default function CorridaPage() {
             {runWorkoutTemplates.length}
           </span>
         </button>
+        <button
+          onClick={() => setActiveTab("criar")}
+          className={cn(
+            "flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-colors",
+            activeTab === "criar"
+              ? "border-primary/60 bg-primary/15 text-primary"
+              : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text"
+          )}
+        >
+          <Layers className="h-4 w-4" />
+          Criar treino
+        </button>
       </div>
 
       {activeTab === "referencia" && <VdotReferenceTab athletes={realAthletes} />}
+
+      {activeTab === "criar" && (
+        <div className="space-y-4">
+          <p className="text-sm text-text-muted">
+            Crie uma sessão de corrida diretamente no calendário do atleta — com blocos estruturados ou configuração simples.
+          </p>
+          <Card>
+            <CardContent className="space-y-5 p-5">
+              {/* Athlete + date */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className={labelClass}>Atleta *</span>
+                  <select
+                    value={criarAthleteId}
+                    onChange={(e) => setCriarAthleteId(e.target.value)}
+                    className={inputClass}
+                  >
+                    <option value="">Selecione o atleta…</option>
+                    {realAthletes.map((a) => (
+                      <option key={a.id} value={a.id} className="bg-card text-text">
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className={labelClass}>Data *</span>
+                  <input
+                    type="date"
+                    value={criarDate}
+                    onChange={(e) => setCriarDate(e.target.value)}
+                    className={inputClass}
+                  />
+                </label>
+              </div>
+
+              {/* Title + type */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className={labelClass}>Título *</span>
+                  <input
+                    value={criarTitle}
+                    onChange={(e) => setCriarTitle(e.target.value)}
+                    placeholder="Ex.: Tempo Run 45min"
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block">
+                  <span className={labelClass}>Tipo de treino</span>
+                  <select
+                    value={criarType}
+                    onChange={(e) => setCriarType(e.target.value)}
+                    className={inputClass}
+                  >
+                    {[
+                      ["RODAGEM_LEVE", "Rodagem Leve"],
+                      ["REGENERATIVO", "Regenerativo"],
+                      ["PROGRESSIVO", "Progressivo"],
+                      ["TEMPO_RUN", "Tempo Run"],
+                      ["FARTLEK", "Fartlek"],
+                      ["INTERVALADO_LONGO", "Intervalado Longo"],
+                      ["INTERVALADO_CURTO", "Intervalado Curto"],
+                      ["LONGAO", "Longão"],
+                      ["SUBIDA", "Subida"],
+                      ["TECNICA", "Técnica"],
+                      ["PROVA", "Prova"],
+                      ["FORCA", "Força"],
+                      ["FUNCIONAL", "Funcional"],
+                      ["MOBILIDADE", "Mobilidade"],
+                      ["RECUPERACAO", "Recuperação"],
+                    ].map(([v, l]) => (
+                      <option key={v} value={v} className="bg-card text-text">{l}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {/* Structured toggle */}
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-card-hover/20 p-3">
+                <button
+                  type="button"
+                  onClick={() => setCriarStructured((v) => !v)}
+                  className={cn(
+                    "relative flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
+                    criarStructured ? "bg-primary" : "bg-border"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute h-4 w-4 rounded-full bg-white shadow transition-transform",
+                      criarStructured ? "translate-x-6" : "translate-x-1"
+                    )}
+                  />
+                </button>
+                <div>
+                  <p className="text-sm font-semibold text-text">Treino estruturado em blocos</p>
+                  <p className="text-[11px] text-text-muted">
+                    {criarStructured
+                      ? "Defina aquecimento, estímulo e desaquecimento abaixo."
+                      : "Defina apenas distância ou duração."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Non-structured fields */}
+              {!criarStructured && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block">
+                    <span className={labelClass}>Distância alvo (km)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.5}
+                      value={criarDistKm}
+                      onChange={(e) => setCriarDistKm(e.target.value)}
+                      placeholder="Ex.: 12"
+                      className={inputClass}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className={labelClass}>Duração alvo (min)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={5}
+                      value={criarDurMin}
+                      onChange={(e) => setCriarDurMin(e.target.value)}
+                      placeholder="Ex.: 60"
+                      className={inputClass}
+                    />
+                  </label>
+                </div>
+              )}
+
+              {/* Block editor */}
+              {criarStructured && (
+                <WorkoutBlockEditor blocks={criarBlocks} onChange={setCriarBlocks} />
+              )}
+
+              {/* Actions */}
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={handleCriarTreino}
+                  disabled={!criarAthleteId || !criarDate || !criarTitle.trim() || criarSaving}
+                >
+                  {criarSaving ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Send className="h-3.5 w-3.5" />
+                  )}
+                  {criarSaving ? "Salvando…" : "Prescrever treino"}
+                </Button>
+                {criarOk && (
+                  <span className="flex items-center gap-1.5 text-sm text-success">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Treino adicionado ao calendário!
+                  </span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {activeTab === "templates" && (
         <div className="space-y-4">
