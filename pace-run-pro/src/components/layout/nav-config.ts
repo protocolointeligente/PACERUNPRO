@@ -14,12 +14,22 @@ import {
   Building2,
   Bell,
   Target,
-  Gauge,
   Shirt,
   BarChart2,
   Kanban,
   Palette,
   Bot,
+  GraduationCap,
+  Ticket,
+  LayoutGrid,
+  CheckSquare,
+  ScrollText,
+  Wallet,
+  PackagePlus,
+  Globe,
+  UserPlus,
+  BookOpen,
+  ShoppingBag,
   type LucideIcon,
 } from "lucide-react";
 
@@ -27,46 +37,57 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  /** When set, render a section label above this item in the sidebar */
+  sectionStart?: string;
 }
 
 export const athleteNav: NavItem[] = [
-  { href: "/aluno/dashboard", label: "Início", icon: LayoutDashboard },
-  { href: "/aluno/calendario", label: "Calendário", icon: CalendarDays },
-  { href: "/aluno/evolucao", label: "Evolução", icon: TrendingUp },
-  { href: "/aluno/forca", label: "Força", icon: Dumbbell },
-  { href: "/aluno/comunidade", label: "Comunidade", icon: Trophy },
+  { href: "/atleta/dashboard", label: "Início", icon: LayoutDashboard },
+  { href: "/atleta/calendario", label: "Calendário", icon: CalendarDays },
+  { href: "/atleta/evolucao", label: "Evolução", icon: TrendingUp },
+  { href: "/atleta/forca", label: "Força", icon: Dumbbell },
+  { href: "/atleta/comunidade", label: "Comunidade", icon: Trophy },
 ];
 
 export const athleteMoreNav: NavItem[] = [
-  { href: "/aluno/testes", label: "Testes de performance", icon: Activity },
-  { href: "/aluno/planos", label: "Planos & periodização", icon: ClipboardList },
-  { href: "/aluno/previsao", label: "Previsão de prova", icon: Target },
-  { href: "/aluno/simulador", label: "Simulador de pace", icon: Gauge },
-  { href: "/aluno/ia-treinadora", label: "IA Treinadora", icon: Bot },
-  { href: "/aluno/tenis", label: "Tênis tracker", icon: Shirt },
-  { href: "/aluno/timeline", label: "Minha jornada", icon: CalendarDays },
-  { href: "/aluno/analise-semanal", label: "Minha semana", icon: BarChart2 },
-  { href: "/aluno/perfil", label: "Perfil", icon: User },
+  { href: "/atleta/atividade", label: "Atividades", icon: CheckSquare },
+  { href: "/atleta/testes", label: "Testes de performance", icon: Activity },
+  { href: "/atleta/planos", label: "Planos & periodização", icon: ClipboardList },
+  { href: "/atleta/previsao", label: "Previsão & estratégia", icon: Target },
+  { href: "/atleta/ia-treinadora", label: "IA Treinadora", icon: Bot },
+  { href: "/atleta/tenis", label: "Tênis tracker", icon: Shirt },
+  { href: "/atleta/perfil", label: "Perfil", icon: User },
 ];
 
 export const coachNav: NavItem[] = [
   { href: "/treinador/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/treinador/alertas", label: "Alertas", icon: Bell },
   { href: "/treinador/analise-semanal", label: "Análise semanal", icon: BarChart2 },
-  { href: "/treinador/alunos", label: "Atletas", icon: Users },
-  { href: "/treinador/prescricao/corrida", label: "Prescrição corrida", icon: Activity },
-  { href: "/treinador/prescricao/forca", label: "Prescrição força", icon: Dumbbell },
+  { href: "/treinador/atletas", label: "Atletas", icon: Users },
   { href: "/treinador/prescricao/periodizacao", label: "Periodização", icon: CalendarDays },
+  { href: "/treinador/prescricao/corrida", label: "Referência VDOT", icon: Activity },
+  { href: "/treinador/prescricao/forca", label: "Prescrição força", icon: Dumbbell },
+  { href: "/treinador/biblioteca", label: "Biblioteca de treinos", icon: BookOpen },
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
-  { href: "/treinador/gestao", label: "Gestão & vendas", icon: DollarSign },
+  { href: "/treinador/minha-loja", label: "Minha loja de treinos", icon: ShoppingBag },
+  { href: "/treinador/gestao",        label: "Gestão & vendas",        icon: DollarSign  },
+  { href: "/treinador/planos-venda", label: "Meus planos",            icon: PackagePlus },
+  { href: "/treinador/financeiro",   label: "Config. financeiras",    icon: Wallet      },
+  { href: "/treinador/minha-pagina", label: "Minha página pública",   icon: Globe       },
+  { href: "/treinador/vouchers", label: "Vouchers", icon: Ticket },
   { href: "/treinador/crm", label: "CRM de leads", icon: Kanban },
   { href: "/treinador/white-label", label: "White-label", icon: Palette },
   { href: "/treinador/admin", label: "Admin", icon: Settings },
+  { href: "/treinador/conheca-o-sistema", label: "Conheça o sistema", icon: GraduationCap },
 ];
 
 export const adminNav: NavItem[] = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/assessorias", label: "Assessorias", icon: Building2 },
-  { href: "/admin/atletas", label: "Atletas B2C", icon: Users },
-  { href: "/admin/financeiro", label: "Financeiro", icon: DollarSign },
+  { href: "/admin/dashboard",   label: "Visão Geral",     icon: LayoutDashboard },
+  { href: "/admin/assessorias", label: "Assessorias",     icon: Building2       },
+  { href: "/admin/planos",      label: "Planos & Módulos",icon: LayoutGrid      },
+  { href: "/admin/financeiro",  label: "Financeiro",      icon: DollarSign      },
+  { href: "/admin/pendencias",  label: "Pendências",      icon: CheckSquare     },
+  { href: "/admin/vouchers",    label: "Vouchers",        icon: Ticket          },
+  { href: "/admin/logs",        label: "Logs e auditoria",icon: ScrollText      },
+  { href: "/admin/usuarios",    label: "Adicionar usuário",icon: UserPlus        },
 ];

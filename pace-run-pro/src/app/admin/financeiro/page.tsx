@@ -12,8 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { SectionHeader } from "@/components/shared/section-header";
-import { superAdminStats } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
+import { superAdminStats, b2bPlans } from "@/lib/mock-data";
+import { formatBRL } from "@/lib/utils";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -25,69 +25,29 @@ const fadeUp = {
 };
 
 // B2B plan breakdown (mock)
+const planPrice = (id: string) => b2bPlans.find((p) => p.id === id)?.price ?? 0;
+
 const b2bBreakdown = [
-  { name: "Starter", count: 12, price: 89, mrr: 12 * 89 },
-  { name: "Pro", count: 22, price: 189, mrr: 22 * 189 },
-  { name: "Premium", count: 8, price: 389, mrr: 8 * 389 },
-  { name: "Ilimitado", count: 6, price: 997, mrr: 6 * 997 },
-];
+  { name: "Starter", count: 0, price: planPrice("b2b-starter") },
+  { name: "Pro", count: 0, price: planPrice("b2b-pro") },
+  { name: "Assessoria", count: 0, price: planPrice("b2b-assessoria") },
+  { name: "White Label", count: 0, price: planPrice("b2b-unlimited") },
+].map((row) => ({ ...row, mrr: row.count * row.price }));
 
 const b2bBadgeVariant = (name: string) => {
-  if (name === "Ilimitado") return "danger" as const;
-  if (name === "Premium") return "warning" as const;
+  if (name === "White Label") return "danger" as const;
+  if (name === "Assessoria") return "warning" as const;
   if (name === "Pro") return "primary" as const;
   return "outline" as const;
 };
 
-// Mock upcoming charges
-const upcomingCharges = [
-  {
-    id: "uc-1",
-    name: "Run Tribe Assessoria",
-    plan: "Ilimitado",
-    amount: 997,
-    dueDate: "10 jun 2026",
-    status: "processando",
-  },
-  {
-    id: "uc-2",
-    name: "Pace & Cia Esportes",
-    plan: "Pro",
-    amount: 189,
-    dueDate: "12 jun 2026",
-    status: "agendado",
-  },
-  {
-    id: "uc-3",
-    name: "Runners BH",
-    plan: "Premium",
-    amount: 389,
-    dueDate: "15 jun 2026",
-    status: "agendado",
-  },
-  {
-    id: "uc-4",
-    name: "Ultra Training SP",
-    plan: "Pro",
-    amount: 189,
-    dueDate: "18 jun 2026",
-    status: "agendado",
-  },
-  {
-    id: "uc-5",
-    name: "Maratonistas do Sul",
-    plan: "Starter",
-    amount: 89,
-    dueDate: "22 jun 2026",
-    status: "agendado",
-  },
-];
+const upcomingCharges: { id: string; name: string; plan: string; amount: number; dueDate: string; status: string }[] = [];
 
 const totalMrr = superAdminStats.totalMrr;
 const b2cMrr = superAdminStats.b2cMrr;
 const b2bMrr = superAdminStats.b2bMrr;
-const b2cPct = Math.round((b2cMrr / totalMrr) * 100);
-const b2bPct = Math.round((b2bMrr / totalMrr) * 100);
+const b2cPct = totalMrr > 0 ? Math.round((b2cMrr / totalMrr) * 100) : 0;
+const b2bPct = totalMrr > 0 ? Math.round((b2bMrr / totalMrr) * 100) : 0;
 
 export default function FinanceiroPage() {
   return (
@@ -101,7 +61,7 @@ export default function FinanceiroPage() {
       >
         <div>
           <Badge variant="success" className="mb-2">Financeiro</Badge>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
             Receita e faturamento
           </h1>
         </div>
@@ -117,25 +77,25 @@ export default function FinanceiroPage() {
       >
         <StatCard
           label="Receita 12 meses"
-          value="R$689.040"
+          value="R$0"
           icon={TrendingUp}
           accent="primary"
         />
         <StatCard
           label="MRR atual"
-          value="R$63.480"
+          value="R$0"
           icon={DollarSign}
           accent="success"
         />
         <StatCard
           label="LTV médio estimado"
-          value="R$2.340"
+          value="R$0"
           icon={Users}
           accent="info"
         />
         <StatCard
           label="Churn 30d"
-          value="8"
+          value="0"
           unit="cancelamentos"
           icon={TrendingDown}
           accent="danger"
@@ -159,11 +119,11 @@ export default function FinanceiroPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="text-sm font-semibold text-white">B2C — Atletas diretos</p>
-                    <p className="text-xs text-text-muted">312 atletas ativos</p>
+                    <p className="text-sm font-semibold text-text">B2C — Atletas diretos</p>
+                    <p className="text-xs text-text-muted">0 atletas ativos</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-xl font-bold text-white">
+                    <p className="font-display text-xl font-bold text-text">
                       R${b2cMrr.toLocaleString("pt-BR")}
                     </p>
                     <p className="text-xs text-text-muted">{b2cPct}% do MRR</p>
@@ -182,11 +142,11 @@ export default function FinanceiroPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="text-sm font-semibold text-white">B2B — Assessorias</p>
-                    <p className="text-xs text-text-muted">48 assessorias ativas</p>
+                    <p className="text-sm font-semibold text-text">B2B — Assessorias</p>
+                    <p className="text-xs text-text-muted">0 assessorias ativas</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-xl font-bold text-white">
+                    <p className="font-display text-xl font-bold text-text">
                       R${b2bMrr.toLocaleString("pt-BR")}
                     </p>
                     <p className="text-xs text-text-muted">{b2bPct}% do MRR</p>
@@ -219,21 +179,21 @@ export default function FinanceiroPage() {
                       {row.name}
                     </Badge>
                     <p className="text-center text-sm text-text-muted">
-                      {row.count}×R${row.price}
+                      {row.count}×R${formatBRL(row.price)}
                     </p>
-                    <p className="text-right text-sm font-semibold text-white">
-                      R${row.mrr.toLocaleString("pt-BR")}
+                    <p className="text-right text-sm font-semibold text-text">
+                      R${formatBRL(row.mrr)}
                     </p>
                   </div>
                 ))}
                 {/* Total row */}
                 <div className="grid grid-cols-3 items-center gap-2 border-t border-border pt-2">
-                  <span className="text-sm font-bold text-white">Total</span>
-                  <p className="text-center text-sm font-bold text-white">
+                  <span className="text-sm font-bold text-text">Total</span>
+                  <p className="text-center text-sm font-bold text-text">
                     {b2bBreakdown.reduce((acc, r) => acc + r.count, 0)}
                   </p>
                   <p className="text-right text-sm font-bold text-primary">
-                    R${b2bBreakdown.reduce((acc, r) => acc + r.mrr, 0).toLocaleString("pt-BR")}
+                    R${formatBRL(b2bBreakdown.reduce((acc, r) => acc + r.mrr, 0))}
                   </p>
                 </div>
               </div>
@@ -254,18 +214,25 @@ export default function FinanceiroPage() {
           subtitle="Cobranças previstas nos próximos dias"
         />
         <div className="space-y-3">
+          {upcomingCharges.length === 0 && (
+            <Card>
+              <CardContent className="py-8 text-center text-sm text-text-muted">
+                Nenhuma cobrança prevista.
+              </CardContent>
+            </Card>
+          )}
           {upcomingCharges.map((charge) => (
             <Card key={charge.id}>
               <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div>
-                  <p className="text-sm font-semibold text-white">{charge.name}</p>
+                  <p className="text-sm font-semibold text-text">{charge.name}</p>
                   <p className="text-xs text-text-muted">
                     Plano {charge.plan} · Vencimento: {charge.dueDate}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-display text-base font-bold text-white">
-                    R${charge.amount.toLocaleString("pt-BR")}
+                  <span className="font-display text-base font-bold text-text">
+                    R${formatBRL(charge.amount)}
                   </span>
                   <Badge
                     variant={

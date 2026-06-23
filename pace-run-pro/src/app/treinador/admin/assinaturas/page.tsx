@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { useCoachRole } from "@/context/coach-role-context";
+import { canAccess } from "@/lib/coach-permissions";
+import { AccessRestricted } from "@/components/shared/access-restricted";
 
 const actionConfig: Record<
   string,
@@ -29,6 +32,11 @@ const totalRevenue = adminOverview.revenueByPlan.reduce(
 );
 
 export default function AdminAssinaturasPage() {
+  const { role } = useCoachRole();
+  if (!canAccess(role, "admin")) {
+    return <AccessRestricted feature="Admin — Assinaturas" currentRole={role} requiredRoles={["owner"]} />;
+  }
+
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
       {/* Header */}
@@ -36,7 +44,7 @@ export default function AdminAssinaturasPage() {
         <Badge variant="primary" className="mb-2">
           Painel Administrativo
         </Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
           Assinaturas
         </h1>
         <p className="text-sm text-text-muted">
@@ -82,7 +90,7 @@ export default function AdminAssinaturasPage() {
       {/* Plan distribution */}
       <Card>
         <CardContent className="p-5">
-          <h2 className="mb-5 font-display text-base font-semibold text-white">
+          <h2 className="mb-5 font-display text-base font-semibold text-text">
             Distribuição por plano
           </h2>
 
@@ -102,7 +110,7 @@ export default function AdminAssinaturasPage() {
                   key={item.plan}
                   className="flex flex-col gap-3 py-4 sm:grid sm:grid-cols-[1.5fr_1fr_1fr_2fr] sm:items-center sm:gap-4"
                 >
-                  <span className="font-semibold text-white">{item.plan}</span>
+                  <span className="font-semibold text-text">{item.plan}</span>
                   <span className="text-sm text-text-muted">
                     {item.count} treinadores
                   </span>
@@ -125,7 +133,7 @@ export default function AdminAssinaturasPage() {
           </div>
 
           <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-            <span className="text-sm font-semibold text-white">Total</span>
+            <span className="text-sm font-semibold text-text">Total</span>
             <span className="text-sm font-bold text-success">
               {formatCurrency(totalRevenue)}
             </span>
@@ -136,7 +144,7 @@ export default function AdminAssinaturasPage() {
       {/* Recent subscriptions */}
       <Card>
         <CardContent className="p-5">
-          <h2 className="mb-5 font-display text-base font-semibold text-white">
+          <h2 className="mb-5 font-display text-base font-semibold text-text">
             Atividade recente
           </h2>
           <div className="space-y-3">
@@ -148,23 +156,23 @@ export default function AdminAssinaturasPage() {
               return (
                 <div
                   key={sub.id}
-                  className="flex items-center justify-between rounded-xl border border-border bg-card-hover p-4"
+                  className="flex flex-wrap items-center justify-between gap-y-2 rounded-xl border border-border bg-card-hover p-4"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
                     <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full gradient-primary font-display text-xs font-bold text-white">
                       {sub.coachName.slice(0, 2).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-text">
                         {sub.coachName}
                       </p>
-                      <p className="text-xs text-text-muted">
+                      <p className="truncate text-xs text-text-muted">
                         Plano {sub.plan}
                         {sub.from ? ` (antes: ${sub.from})` : ""} · {sub.date}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex shrink-0 items-center gap-3">
                     <Badge variant={cfg.variant}>{cfg.label}</Badge>
                     <span
                       className={cn(

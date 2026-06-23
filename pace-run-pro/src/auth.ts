@@ -11,20 +11,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      profile(profile) {
-        return {
-          id: profile.sub,
-          name: profile.name,
-          email: profile.email,
-          image: profile.picture,
-          role: "ATHLETE" as UserRole,
-          passwordHash: null,
-        };
-      },
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            profile(profile) {
+              return {
+                id: profile.sub,
+                name: profile.name,
+                email: profile.email,
+                image: profile.picture,
+                role: "ATHLETE" as UserRole,
+                passwordHash: null,
+              };
+            },
+          }),
+        ]
+      : []),
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
@@ -32,8 +36,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
+        const email = (credentials.email as string).trim().toLowerCase();
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
+          where: { email },
         });
         if (!user || !user.passwordHash) return null;
         const valid = await bcrypt.compare(
@@ -53,10 +58,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
-        token.role = (user as { role?: UserRole }).role ?? "ATHLETE";
+        let role = (user as { role?: UserRole }).role ?? "ATHLETE";
+
+        // Bootstrap: e-mails listados em ADMIN_EMAILS sempre recebem acesso de ADMIN,
+        // mesmo que a conta tenha sido criada com o papel padrão (ATHLETE).
+        const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+          .split(",")
+          .map((e) => e.trim().toLowerCase())
+          .filter(Boolean);
+
+        if (user.email && adminEmails.includes(user.email.toLowerCase()) && role !== "ADMIN") {
+          role = "ADMIN" as UserRole;
+          await prisma.user.update({ where: { id: user.id }, data: { role: "ADMIN" } });
+        }
+
+        token.role = role;
         token.id = user.id;
+      } else if (token.id) {
+        // Token refresh: re-read role from DB so changes take effect without re-login
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true },
+        });
+        if (dbUser) token.role = dbUser.role;
       }
       return token;
     },

@@ -3,14 +3,40 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { Check, CheckCircle, Copy, Zap } from "lucide-react";
+import { Check, CheckCircle, Copy, Loader2, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { b2cPlans, b2cIncludes } from "@/lib/mock-data";
+import { formatBRL } from "@/lib/utils";
 
 // ── Shared input style ────────────────────────────────────────────────────
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+
+// ── Input formatters ──────────────────────────────────────────────────────
+function formatCpf(v: string) {
+  return v
+    .replace(/\D/g, "")
+    .slice(0, 11)
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+
+function formatCardNumber(v: string) {
+  return v
+    .replace(/\D/g, "")
+    .slice(0, 16)
+    .replace(/(\d{4})/g, "$1 ")
+    .trim();
+}
+
+function formatCardExpiry(v: string) {
+  return v
+    .replace(/\D/g, "")
+    .slice(0, 4)
+    .replace(/^(\d{2})(\d)/, "$1/$2");
+}
 
 // ── Step indicator ────────────────────────────────────────────────────────
 function StepIndicator({ current, total }: { current: number; total: number }) {
@@ -52,17 +78,17 @@ function PlanSummaryCard({ planId }: { planId: string }) {
       <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-muted">
         Plano selecionado
       </p>
-      <h4 className="font-display text-lg font-bold text-white">{plan.name}</h4>
+      <h4 className="font-display text-lg font-bold text-text">{plan.name}</h4>
       <p className="text-xs text-text-muted">{plan.description}</p>
       <div className="mt-3 flex items-end gap-1">
-        <span className="font-display text-2xl font-extrabold text-white">
-          R$ {plan.pricePerMonth}
+        <span className="font-display text-2xl font-extrabold text-text">
+          R$ {formatBRL(plan.pricePerMonth)}
         </span>
         <span className="mb-0.5 text-sm text-text-muted">/mês</span>
       </div>
       {plan.months > 1 && (
         <p className="mt-1 text-xs text-text-muted">
-          Total: R$ {plan.totalPrice} em {plan.months}x
+          Total: R$ {formatBRL(plan.totalPrice)} em {plan.months}x
         </p>
       )}
       {plan.discountPct > 0 && (
@@ -75,7 +101,7 @@ function PlanSummaryCard({ planId }: { planId: string }) {
 }
 
 // ── Payment method toggle ─────────────────────────────────────────────────
-type PaymentMethod = "cartao" | "pix" | "boleto";
+type PaymentMethod = "cartao" | "pix";
 
 function PaymentToggle({
   value,
@@ -87,7 +113,6 @@ function PaymentToggle({
   const options: { id: PaymentMethod; label: string }[] = [
     { id: "cartao", label: "Cartão de crédito" },
     { id: "pix", label: "PIX" },
-    { id: "boleto", label: "Boleto" },
   ];
   return (
     <div className="flex gap-2">
@@ -99,8 +124,8 @@ function PaymentToggle({
           className={[
             "flex-1 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all",
             value === o.id
-              ? "border-primary/60 bg-primary/10 text-white"
-              : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-white",
+              ? "border-primary/60 bg-primary/10 text-primary"
+              : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text",
           ].join(" ")}
         >
           {o.label}
@@ -127,12 +152,13 @@ function AssinarContent() {
   // Step 2
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [cidade, setCidade] = useState("");
   const [objetivo, setObjetivo] = useState("");
   const [dataProva, setDataProva] = useState("");
 
-  // Step 3
+  // Step 3 — payment
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cartao");
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
@@ -140,14 +166,99 @@ function AssinarContent() {
   const [cardCvv, setCardCvv] = useState("");
   const [pixCopied, setPixCopied] = useState(false);
 
+  // Step 3 — checkout state
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [pixResult, setPixResult] = useState<{
+    orderId: string;
+    pixText: string;
+    pixQrCodeUrl: string | null;
+  } | null>(null);
+
+  // Cupom de desconto
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
+  const [coupon, setCoupon] = useState<{ code: string; type: "PERCENT" | "FREE_MONTHS"; value: number } | null>(null);
+
   const plan = b2cPlans.find((p) => p.id === selectedPlan) ?? b2cPlans[2];
 
-  function handleCopyPix() {
-    navigator.clipboard
-      .writeText("00020126580014BR.GOV.BCB.PIX0136e7c6d1a2-3f4b-5c6d-7e8f-9a0b1c2d3e4f5204000053039865802BR5925PACE RUN PRO TECNOLOGIA6009SAO PAULO62070503***6304ABCD")
-      .catch(() => undefined);
+  const discountPct = coupon?.type === "PERCENT" ? coupon.value : 0;
+  const discountedMonthly = plan.pricePerMonth * (1 - discountPct / 100);
+  const discountedTotal = plan.totalPrice * (1 - discountPct / 100);
+
+  async function applyCoupon() {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError("");
+    try {
+      const res = await fetch("/api/vouchers/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode, audience: "B2C" }),
+      });
+      const data = await res.json();
+      if (!data.valid) {
+        setCoupon(null);
+        setCouponError(data.error ?? "Cupom inválido.");
+      } else {
+        setCoupon({ code: couponCode.trim().toUpperCase(), type: data.type, value: data.value });
+        setCouponError("");
+      }
+    } catch {
+      setCoupon(null);
+      setCouponError("Não foi possível validar o cupom.");
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  function handleCopyPix(text: string) {
+    navigator.clipboard.writeText(text).catch(() => undefined);
     setPixCopied(true);
     setTimeout(() => setPixCopied(false), 2500);
+  }
+
+  async function handleCheckout() {
+    setCheckoutLoading(true);
+    setCheckoutError("");
+    try {
+      const amountCents = Math.round(discountedTotal * 100);
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          method: paymentMethod,
+          planId: selectedPlan,
+          planName: plan.name,
+          amountCents,
+          customerName: nome,
+          customerEmail: email,
+          customerCpf: cpf,
+          ...(paymentMethod === "cartao" && { cardNumber, cardName, cardExpiry, cardCvv }),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCheckoutError(data.error ?? "Erro ao processar pagamento.");
+        return;
+      }
+      if (paymentMethod === "pix") {
+        setPixResult(data);
+      } else {
+        if (data.status === "PAID") {
+          setConfirmed(true);
+        } else {
+          setCheckoutError(
+            `Pagamento recusado${data.declineCode ? ` (cód. ${data.declineCode})` : ""}. Verifique os dados do cartão.`
+          );
+        }
+      }
+    } catch {
+      setCheckoutError("Não foi possível conectar ao servidor. Tente novamente.");
+    } finally {
+      setCheckoutLoading(false);
+    }
   }
 
   // ── Success screen ──────────────────────────────────────────────────────
@@ -158,7 +269,7 @@ function AssinarContent() {
           <CheckCircle className="h-10 w-10 text-success" />
         </div>
         <div>
-          <h2 className="font-display text-3xl font-extrabold text-white">
+          <h2 className="font-display text-3xl font-extrabold text-text">
             Assinatura confirmada!
           </h2>
           <p className="mx-auto mt-4 max-w-md text-text-muted">
@@ -167,9 +278,11 @@ function AssinarContent() {
           </p>
         </div>
         <div className="rounded-2xl border border-success/20 bg-success/5 px-6 py-4 text-sm text-success">
-          Plano <strong>{plan.name}</strong> · R$ {plan.pricePerMonth}/mês ativo
+          Plano <strong>{plan.name}</strong> · R$ {formatBRL(discountedMonthly)}/mês ativo
+          {coupon?.type === "FREE_MONTHS" &&
+            ` · +${coupon.value} ${coupon.value === 1 ? "mês" : "meses"} grátis`}
         </div>
-        <Link href="/aluno/dashboard">
+        <Link href="/atleta/dashboard">
           <Button variant="primary" size="lg" className="gap-2">
             Acessar minha conta →
           </Button>
@@ -185,7 +298,7 @@ function AssinarContent() {
       {/* ── Step 1 ── */}
       {step === 1 && (
         <div>
-          <h1 className="mt-8 font-display text-3xl font-extrabold text-white">
+          <h1 className="mt-8 font-display text-3xl font-extrabold text-text">
             Escolha seu plano
           </h1>
           <p className="mt-2 text-sm text-text-muted">
@@ -214,24 +327,24 @@ function AssinarContent() {
                 )}
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-display text-base font-bold text-white">{p.name}</h3>
+                    <h3 className="font-display text-base font-bold text-text">{p.name}</h3>
                     <p className="mt-0.5 text-xs text-text-muted">{p.description}</p>
                   </div>
                   {selectedPlan === p.id && (
                     <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary">
-                      <Check className="h-3 w-3 text-white" />
+                      <Check className="h-3 w-3 text-text" />
                     </div>
                   )}
                 </div>
                 <div className="mt-4 flex items-end gap-1">
-                  <span className="font-display text-2xl font-extrabold text-white">
-                    R$ {p.pricePerMonth}
+                  <span className="font-display text-2xl font-extrabold text-text">
+                    R$ {formatBRL(p.pricePerMonth)}
                   </span>
                   <span className="mb-0.5 text-sm text-text-muted">/mês</span>
                 </div>
                 {p.months > 1 && (
                   <p className="mt-1 text-xs text-text-muted">
-                    Total: R$ {p.totalPrice} em {p.months}x
+                    Total: R$ {formatBRL(p.totalPrice)} em {p.months}x
                   </p>
                 )}
                 {p.discountPct > 0 && (
@@ -245,7 +358,7 @@ function AssinarContent() {
 
           {/* Includes checklist */}
           <div className="mt-8 rounded-2xl border border-border bg-card p-6">
-            <p className="mb-4 text-sm font-semibold text-white">Todos os planos incluem:</p>
+            <p className="mb-4 text-sm font-semibold text-text">Todos os planos incluem:</p>
             <ul className="space-y-2">
               {b2cIncludes.map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-sm text-text-muted">
@@ -270,7 +383,7 @@ function AssinarContent() {
       {/* ── Step 2 ── */}
       {step === 2 && (
         <div>
-          <h1 className="mt-8 font-display text-3xl font-extrabold text-white">
+          <h1 className="mt-8 font-display text-3xl font-extrabold text-text">
             Crie sua conta
           </h1>
           <p className="mt-2 text-sm text-text-muted">
@@ -301,6 +414,19 @@ function AssinarContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
+                  className={inputClass}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  CPF
+                </span>
+                <input
+                  value={cpf}
+                  onChange={(e) => setCpf(formatCpf(e.target.value))}
+                  placeholder="000.000.000-00"
+                  inputMode="numeric"
                   className={inputClass}
                 />
               </label>
@@ -400,7 +526,7 @@ function AssinarContent() {
       {/* ── Step 3 ── */}
       {step === 3 && (
         <div>
-          <h1 className="mt-8 font-display text-3xl font-extrabold text-white">
+          <h1 className="mt-8 font-display text-3xl font-extrabold text-text">
             Finalizar assinatura
           </h1>
           <p className="mt-2 text-sm text-text-muted">
@@ -411,32 +537,109 @@ function AssinarContent() {
             <div className="space-y-6 lg:col-span-2">
               {/* Order summary */}
               <div className="rounded-2xl border border-border bg-card p-6">
-                <p className="mb-4 text-sm font-semibold text-white">Resumo do pedido</p>
+                <p className="mb-4 text-sm font-semibold text-text">Resumo do pedido</p>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-text-muted">Plano</span>
-                    <span className="font-medium text-white">{plan.name}</span>
+                    <span className="font-medium text-text">{plan.name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-muted">Valor mensal</span>
-                    <span className="font-medium text-white">R$ {plan.pricePerMonth}/mês</span>
+                    <span className="font-medium text-text">
+                      {discountPct > 0 && (
+                        <span className="mr-1.5 text-xs text-text-muted line-through">
+                          R$ {formatBRL(plan.pricePerMonth)}
+                        </span>
+                      )}
+                      R$ {formatBRL(discountedMonthly)}/mês
+                    </span>
                   </div>
                   {plan.months > 1 && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">Total cobrado hoje</span>
-                      <span className="font-bold text-white">R$ {plan.totalPrice}</span>
+                      <span className="font-bold text-text">
+                        {discountPct > 0 && (
+                          <span className="mr-1.5 text-xs font-normal text-text-muted line-through">
+                            R$ {formatBRL(plan.totalPrice)}
+                          </span>
+                        )}
+                        R$ {formatBRL(discountedTotal)}
+                      </span>
                     </div>
                   )}
+
+                  {coupon?.type === "PERCENT" && (
+                    <div className="rounded-xl border border-success/30 bg-success/10 px-3 py-2 text-xs text-success">
+                      🎉 Cupom <strong>{coupon.code}</strong> aplicado: {coupon.value}% de desconto.
+                    </div>
+                  )}
+                  {coupon?.type === "FREE_MONTHS" && (
+                    <div className="rounded-xl border border-success/30 bg-success/10 px-3 py-2 text-xs text-success">
+                      🎁 Cupom <strong>{coupon.code}</strong> aplicado: {coupon.value}{" "}
+                      {coupon.value === 1 ? "mês" : "meses"} grátis serão adicionados após a confirmação.
+                    </div>
+                  )}
+
                   <div className="border-t border-border pt-3 text-xs text-text-muted">
                     {plan.description}
                   </div>
+                </div>
+
+                {/* Cupom de desconto */}
+                <div className="mt-4 border-t border-border pt-4">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    Cupom de desconto
+                  </span>
+                  <div className="flex gap-2">
+                    <input
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Ex.: PACE-ABC123"
+                      className={inputClass}
+                      disabled={!!coupon}
+                    />
+                    {coupon ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="md"
+                        className="flex-shrink-0"
+                        onClick={() => {
+                          setCoupon(null);
+                          setCouponCode("");
+                          setCouponError("");
+                        }}
+                      >
+                        Remover
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="md"
+                        className="flex-shrink-0"
+                        onClick={applyCoupon}
+                        disabled={couponLoading || !couponCode.trim()}
+                      >
+                        {couponLoading ? "Validando…" : "Aplicar"}
+                      </Button>
+                    )}
+                  </div>
+                  {couponError && <p className="mt-1.5 text-xs text-red-400">{couponError}</p>}
                 </div>
               </div>
 
               {/* Payment method */}
               <div className="space-y-4">
-                <p className="text-sm font-semibold text-white">Forma de pagamento</p>
-                <PaymentToggle value={paymentMethod} onChange={setPaymentMethod} />
+                <p className="text-sm font-semibold text-text">Forma de pagamento</p>
+                <PaymentToggle
+                  value={paymentMethod}
+                  onChange={(v) => {
+                    setPaymentMethod(v);
+                    setPixResult(null);
+                    setCheckoutError("");
+                  }}
+                />
 
                 {/* Cartão */}
                 {paymentMethod === "cartao" && (
@@ -447,8 +650,9 @@ function AssinarContent() {
                       </span>
                       <input
                         value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
+                        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
                         placeholder="0000 0000 0000 0000"
+                        inputMode="numeric"
                         maxLength={19}
                         className={inputClass}
                       />
@@ -459,8 +663,8 @@ function AssinarContent() {
                       </span>
                       <input
                         value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        placeholder="Exatamente como no cartão"
+                        onChange={(e) => setCardName(e.target.value.toUpperCase())}
+                        placeholder="EXATAMENTE COMO NO CARTÃO"
                         className={inputClass}
                       />
                     </label>
@@ -471,8 +675,9 @@ function AssinarContent() {
                         </span>
                         <input
                           value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value)}
+                          onChange={(e) => setCardExpiry(formatCardExpiry(e.target.value))}
                           placeholder="MM/AA"
+                          inputMode="numeric"
                           maxLength={5}
                           className={inputClass}
                         />
@@ -483,8 +688,9 @@ function AssinarContent() {
                         </span>
                         <input
                           value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value)}
+                          onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
                           placeholder="000"
+                          inputMode="numeric"
                           maxLength={4}
                           className={inputClass}
                         />
@@ -496,51 +702,78 @@ function AssinarContent() {
                 {/* PIX */}
                 {paymentMethod === "pix" && (
                   <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-6">
-                    <div className="flex h-[200px] w-[200px] items-center justify-center rounded-2xl border-2 border-dashed border-border bg-card-hover">
-                      <span className="text-center text-xs text-text-muted">
-                        QR Code PIX
-                        <br />
-                        (mock)
-                      </span>
-                    </div>
-                    <p className="text-xs text-text-muted">
-                      Escaneie o QR code ou copie a chave PIX abaixo
-                    </p>
-                    <div className="flex w-full gap-2">
-                      <input
-                        readOnly
-                        value="00020126580014BR.GOV.BCB.PIX..."
-                        className={`${inputClass} truncate cursor-default`}
-                      />
-                      <Button
-                        variant="outline"
-                        size="md"
-                        className="flex-shrink-0 gap-1.5"
-                        onClick={handleCopyPix}
-                      >
-                        <Copy className="h-4 w-4" />
-                        {pixCopied ? "Copiado!" : "Copiar"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Boleto */}
-                {paymentMethod === "boleto" && (
-                  <div className="rounded-2xl border border-border bg-card p-6 text-center">
-                    <div className="mx-auto mb-4 flex h-14 w-48 items-center justify-center rounded-lg border border-dashed border-border bg-card-hover">
-                      <span className="text-xs text-text-muted">Código de barras</span>
-                    </div>
-                    <p className="text-sm text-text-muted">
-                      Boleto vence em{" "}
-                      <span className="font-semibold text-warning">3 dias úteis</span>
-                    </p>
-                    <p className="mt-1 text-xs text-text-muted">
-                      Após o pagamento, a confirmação ocorre em até 1 dia útil.
-                    </p>
+                    {pixResult ? (
+                      <>
+                        <div className="rounded-2xl bg-white p-3 shadow-sm">
+                          {pixResult.pixQrCodeUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={pixResult.pixQrCodeUrl}
+                              alt="QR Code PIX"
+                              width={200}
+                              height={200}
+                              className="h-[200px] w-[200px]"
+                            />
+                          ) : (
+                            <div className="flex h-[200px] w-[200px] items-center justify-center rounded-xl border border-dashed border-gray-200 text-xs text-gray-400">
+                              QR Code indisponível
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-medium text-warning">
+                          <div className="h-2 w-2 animate-pulse rounded-full bg-warning" />
+                          Aguardando pagamento…
+                        </div>
+                        <p className="text-center text-xs text-text-muted">
+                          Escaneie o QR code ou copie a chave PIX abaixo.
+                          <br />O código expira em 30 minutos.
+                        </p>
+                        <div className="flex w-full gap-2">
+                          <input
+                            readOnly
+                            value={pixResult.pixText}
+                            className={`${inputClass} cursor-default truncate`}
+                          />
+                          <Button
+                            variant="outline"
+                            size="md"
+                            className="flex-shrink-0 gap-1.5"
+                            onClick={() => handleCopyPix(pixResult.pixText)}
+                          >
+                            <Copy className="h-4 w-4" />
+                            {pixCopied ? "Copiado!" : "Copiar"}
+                          </Button>
+                        </div>
+                        <p className="text-center text-xs text-text-muted">
+                          Após pagar, clique em{" "}
+                          <strong className="text-text">&ldquo;Já paguei →&rdquo;</strong> abaixo para confirmar.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex h-[200px] w-[200px] items-center justify-center rounded-2xl border-2 border-dashed border-border bg-card-hover">
+                          <span className="text-center text-xs text-text-muted">
+                            QR Code PIX
+                            <br />
+                            será gerado ao confirmar
+                          </span>
+                        </div>
+                        <p className="text-xs text-text-muted">
+                          Clique em{" "}
+                          <strong className="text-text">&ldquo;Gerar QR Code PIX&rdquo;</strong> para continuar
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
+
+              {/* Error feedback */}
+              {checkoutError && (
+                <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                  {checkoutError}
+                </div>
+              )}
             </div>
 
             {/* Plan summary — desktop right */}
@@ -560,16 +793,25 @@ function AssinarContent() {
               size="lg"
               className="px-5"
               onClick={() => setStep(2)}
+              disabled={checkoutLoading}
             >
               ← Voltar
             </Button>
             <Button
               variant="primary"
               size="lg"
-              className="flex-1"
-              onClick={() => setConfirmed(true)}
+              className="flex-1 gap-2"
+              onClick={pixResult ? () => setConfirmed(true) : handleCheckout}
+              disabled={checkoutLoading}
             >
-              Confirmar e assinar
+              {checkoutLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {checkoutLoading
+                ? "Processando…"
+                : pixResult
+                ? "Já paguei →"
+                : paymentMethod === "pix"
+                ? "Gerar QR Code PIX"
+                : "Confirmar e assinar"}
             </Button>
           </div>
         </div>
@@ -581,7 +823,7 @@ function AssinarContent() {
 // ── Page wrapper ──────────────────────────────────────────────────────────
 export default function AssinarPage() {
   return (
-    <div className="min-h-dvh bg-background text-white">
+    <div className="min-h-dvh bg-background text-text">
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
@@ -589,7 +831,7 @@ export default function AssinarPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
               <Zap className="h-5 w-5 text-white" fill="white" />
             </div>
-            <span className="font-display text-lg font-extrabold tracking-wide text-white">
+            <span className="font-display text-lg font-extrabold tracking-wide text-text">
               PACE RUN <span className="gradient-text">PRO</span>
             </span>
           </Link>

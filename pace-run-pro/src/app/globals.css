@@ -1,25 +1,65 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #050816;
-  --color-card: #0b1220;
-  --color-card-hover: #121c2d;
-  --color-border: #1e2a40;
-  --color-primary: #8b5cf6;
-  --color-secondary: #a855f7;
-  --color-success: #84cc16;
-  --color-warning: #facc15;
-  --color-danger: #ef4444;
-  --color-info: #38bdf8;
-  --color-text: #ffffff;
-  --color-text-muted: #94a3b8;
+  --color-background: var(--bg);
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-violet: var(--violet);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+
+  --radius-2xl: 1.25rem;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-stat: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 
   --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
   --animate-float: float 6s ease-in-out infinite;
   --animate-shimmer: shimmer 2.5s linear infinite;
+  --animate-glow-pulse: glow-pulse 800ms ease-in-out;
+  --animate-fade-scale-in: fade-scale-in 300ms ease-out;
+}
+
+/* ── PACE RUN PRO brand palette ─────────────────────────────────────────────
+   Primary  : #7C3AED  (violet — inteligência / performance)
+   Orange   : #FF6B35  (laranja — CTA / ação / corrida)
+   Dark bg  : #06070A  (quase preto neutro)
+   Light bg : #F8FAFC  (branco frio)
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --bg: #06070A;
+  --card: #0D1117;
+  --card-hover: #111827;
+  --border: #1F2937;
+  --primary: #7C3AED;      /* violet — inteligência */
+  --secondary: #8B5CF6;    /* violet claro */
+  --accent: #FF6B35;       /* laranja — CTA / corrida */
+  --violet: #A78BFA;       /* violet pastel */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #38bdf8;
+  --text: #F8FAFC;
+  --text-muted: #94A3B8;
+}
+
+.light {
+  --bg: #F8FAFC;
+  --card: #FFFFFF;
+  --card-hover: #F1F5F9;
+  --border: #E2E8F0;
+  --text: #0F172A;
+  --text-muted: #64748B;
 }
 
 @keyframes pulse-soft {
@@ -34,6 +74,14 @@
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+  50% { box-shadow: 0 0 28px 10px rgba(124, 58, 237, 0.45); }
+}
+@keyframes fade-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
 
 * {
   border-color: var(--color-border);
@@ -43,15 +91,24 @@ html {
   color-scheme: dark;
 }
 
+html.light {
+  color-scheme: light;
+}
+
 body {
   background:
-    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(139, 92, 246, 0.16), transparent 60%),
-    radial-gradient(ellipse 900px 500px at 100% 20%, rgba(56, 189, 248, 0.08), transparent 55%),
+    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(124, 58, 237, 0.15), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 30%, rgba(255, 107, 53, 0.07), transparent 55%),
     var(--color-background);
   color: var(--color-text);
   font-family: var(--font-sans);
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.light body {
+  background: var(--color-background);
 }
 
 ::-webkit-scrollbar {
@@ -70,21 +127,32 @@ body {
 }
 
 .glass {
-  background: rgba(11, 18, 32, 0.6);
+  background: rgba(13, 17, 23, 0.70);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(30, 42, 64, 0.7);
+  border: 1px solid rgba(31, 41, 55, 0.8);
+}
+
+.light .glass {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(226, 232, 240, 0.9);
 }
 
 .gradient-text {
-  background: linear-gradient(120deg, #8b5cf6 0%, #a855f7 50%, #38bdf8 100%);
+  background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #FF6B35 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
+/* laranja para CTAs — texto branco em cima */
 .gradient-primary {
-  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #FF6B35 0%, #E85A20 60%, #FF8C5A 100%);
+}
+
+/* violeta para destaques de inteligência */
+.gradient-violet {
+  background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 60%, #8B5CF6 100%);
 }
 
 .no-scrollbar::-webkit-scrollbar {

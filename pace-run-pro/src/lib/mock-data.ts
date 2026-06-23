@@ -1,9 +1,12 @@
 import type {
   AthleteListItem,
+  AthleteRosterItem,
   CheckInEntry,
   ExerciseLibraryItem,
+  RunWorkoutTemplate,
   WorkoutDetail,
   WorkoutSummary,
+  WorkoutTemplate,
 } from "./types";
 
 export const TYPE_COLORS: Record<string, string> = {
@@ -23,6 +26,26 @@ export const TYPE_LABELS: Record<string, string> = {
   recuperacao: "Recuperação",
   prova: "Prova",
 };
+
+// Paleta por tipo de treino de corrida (estilo Runna), do mais leve ao mais intenso
+export const RUN_SUBTYPE_COLORS: Record<string, string> = {
+  "Regenerativo": "#94a3b8",
+  "Rodagem leve": "#84cc16",
+  "Longão": "#22c55e",
+  "Técnica": "#06b6d4",
+  "Progressivo": "#38bdf8",
+  "Fartlek": "#a78bfa",
+  "Tempo Run": "#eab308",
+  "Subida": "#fb923c",
+  "Intervalado longo": "#f97316",
+  "Intervalado curto": "#ef4444",
+  "Prova": "#ec4899",
+};
+
+export function getSubtypeColor(type: string, subtype?: string): string {
+  if (subtype && RUN_SUBTYPE_COLORS[subtype]) return RUN_SUBTYPE_COLORS[subtype];
+  return TYPE_COLORS[type] ?? TYPE_COLORS.corrida;
+}
 
 export const currentAthlete = {
   name: "Camila Andrade",
@@ -378,39 +401,40 @@ export const achievements = [
 export interface CalendarEvent {
   date: string; // ISO yyyy-mm-dd
   type: keyof typeof TYPE_COLORS;
+  subtype?: string;
   title: string;
 }
 
-const monthPattern: { offset: number; type: keyof typeof TYPE_COLORS; title: string }[] = [
-  { offset: -10, type: "corrida", title: "Rodagem leve 6 km" },
+const monthPattern: { offset: number; type: keyof typeof TYPE_COLORS; subtype?: string; title: string }[] = [
+  { offset: -10, type: "corrida", subtype: "Rodagem leve", title: "Rodagem leve 6 km" },
   { offset: -9, type: "forca", title: "Força — Treino B" },
-  { offset: -8, type: "corrida", title: "Tempo Run 7 km" },
-  { offset: -7, type: "recuperacao", title: "Trote regenerativo" },
-  { offset: -6, type: "corrida", title: "Longão 16 km" },
+  { offset: -8, type: "corrida", subtype: "Tempo Run", title: "Tempo Run 7 km" },
+  { offset: -7, type: "recuperacao", subtype: "Regenerativo", title: "Trote regenerativo" },
+  { offset: -6, type: "corrida", subtype: "Longão", title: "Longão 16 km" },
   { offset: -5, type: "mobilidade", title: "Mobilidade ativa" },
-  { offset: -3, type: "corrida", title: "Rodagem leve 5 km" },
+  { offset: -3, type: "corrida", subtype: "Rodagem leve", title: "Rodagem leve 5 km" },
   { offset: -2, type: "forca", title: "Força — Treino A" },
-  { offset: -1, type: "corrida", title: "Fartlek 8 km" },
+  { offset: -1, type: "corrida", subtype: "Fartlek", title: "Fartlek 8 km" },
   { offset: 1, type: "funcional", title: "Funcional — core" },
-  { offset: 2, type: "corrida", title: "Longão 18 km" },
+  { offset: 2, type: "corrida", subtype: "Longão", title: "Longão 18 km" },
   { offset: 3, type: "mobilidade", title: "Mobilidade e liberação" },
-  { offset: 4, type: "corrida", title: "Rodagem leve 7 km" },
+  { offset: 4, type: "corrida", subtype: "Rodagem leve", title: "Rodagem leve 7 km" },
   { offset: 5, type: "forca", title: "Força — Treino A" },
-  { offset: 6, type: "corrida", title: "Intervalado 10 x 400m" },
-  { offset: 7, type: "recuperacao", title: "Trote regenerativo" },
-  { offset: 8, type: "corrida", title: "Tempo Run 8 km" },
+  { offset: 6, type: "corrida", subtype: "Intervalado curto", title: "Intervalado 10 x 400m" },
+  { offset: 7, type: "recuperacao", subtype: "Regenerativo", title: "Trote regenerativo" },
+  { offset: 8, type: "corrida", subtype: "Tempo Run", title: "Tempo Run 8 km" },
   { offset: 9, type: "funcional", title: "Funcional — mobilidade" },
-  { offset: 10, type: "corrida", title: "Longão 20 km" },
-  { offset: 14, type: "prova", title: "10 km Night Run BH" },
+  { offset: 10, type: "corrida", subtype: "Longão", title: "Longão 20 km" },
+  { offset: 14, type: "prova", subtype: "Prova", title: "10 km Night Run BH" },
   { offset: 17, type: "forca", title: "Força — Treino B" },
-  { offset: 20, type: "corrida", title: "Progressivo 12 km" },
+  { offset: 20, type: "corrida", subtype: "Progressivo", title: "Progressivo 12 km" },
 ];
 
 export function getMonthEvents(reference = new Date()): CalendarEvent[] {
   return monthPattern.map((p) => {
     const d = new Date(reference);
     d.setDate(d.getDate() + p.offset);
-    return { date: d.toISOString().slice(0, 10), type: p.type, title: p.title };
+    return { date: d.toISOString().slice(0, 10), type: p.type, subtype: p.subtype, title: p.title };
   });
 }
 
@@ -447,7 +471,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Agachamento búlgaro",
     category: "Glúteos",
     muscles: ["Glúteo máximo", "Quadríceps", "Isquiotibiais"],
-    imageUrl: "/exercises/agachamento.gif",
+    imageUrl: null,
     description:
       "Exercício unilateral que fortalece glúteos e quadríceps, melhora estabilidade e corrige assimetrias entre as pernas — essencial para corredores.",
     execution:
@@ -464,7 +488,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Elevação de panturrilha unilateral",
     category: "Panturrilhas",
     muscles: ["Gastrocnêmio", "Sóleo"],
-    imageUrl: "/exercises/panturrilha.gif",
+    imageUrl: null,
     description:
       "Fortalece a musculatura da panturrilha, fundamental para a fase de propulsão da passada e prevenção de lesões no tendão de Aquiles.",
     execution:
@@ -481,7 +505,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Prancha com elevação de perna",
     category: "Core",
     muscles: ["Reto abdominal", "Transverso", "Glúteo médio"],
-    imageUrl: "/exercises/prancha.gif",
+    imageUrl: null,
     description:
       "Melhora a estabilidade lombo-pélvica e a transferência de força entre tronco e membros inferiores durante a corrida.",
     execution:
@@ -498,7 +522,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Skipping com elástico (pliometria)",
     category: "Pliometria",
     muscles: ["Flexores de quadril", "Quadríceps", "Panturrilhas"],
-    imageUrl: "/exercises/elastico.gif",
+    imageUrl: null,
     description:
       "Desenvolve potência e ritmo de passada, melhorando a economia de corrida em ritmos de prova.",
     execution:
@@ -515,7 +539,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Ponte de glúteo unilateral",
     category: "Prevenção",
     muscles: ["Glúteo máximo", "Isquiotibiais", "Core"],
-    imageUrl: "/exercises/ponte.gif",
+    imageUrl: null,
     description:
       "Ativa e fortalece a cadeia posterior, prevenindo dores lombares e desequilíbrios musculares comuns em corredores.",
     execution:
@@ -532,7 +556,7 @@ export const exerciseLibrary: ExerciseLibraryItem[] = [
     name: "Mobilidade de tornozelo em parede",
     category: "Tornozelo",
     muscles: ["Tríceps sural", "Tibial anterior"],
-    imageUrl: "/exercises/mobilidade.gif",
+    imageUrl: null,
     description:
       "Melhora a amplitude de dorsiflexão do tornozelo, importante para a aterrissagem e propulsão eficiente da passada.",
     execution:
@@ -708,27 +732,187 @@ export const clubs = [
 export const coachOverview = {
   name: "Ricardo Pace Júnior",
   credential: "CREF 014626-G/MG",
-  athletesCount: 38,
-  prescribedThisWeek: 142,
-  pendingCheckIns: 9,
-  athletesAtRisk: 3,
-  teamLoad: 0.78,
-  alerts: [
-    { id: "al-1", severity: "danger" as const, text: "Bruno Lacerda relatou dor 8/10 — treino intenso bloqueado automaticamente." },
-    { id: "al-2", severity: "warning" as const, text: "Marina Sales com fadiga alta por 3 dias — volume da semana reduzido em 20%." },
-    { id: "al-3", severity: "info" as const, text: "5 atletas com check-in pendente há mais de 24h." },
-  ],
+  currentPlanId: "b2b-free",
+  athletesCount: 1,
+  prescribedThisWeek: 0,
+  pendingCheckIns: 0,
+  athletesAtRisk: 0,
+  teamLoad: 0,
+  alerts: [],
 };
 
 export const athleteList: AthleteListItem[] = [
-  { id: "ath-1", name: "Camila Andrade", goal: "21 km", level: "Intermediário", status: "ativo", adherence: 0.92, lastCheckIn: "Hoje, 07:40", weeklyLoad: 312, raceDate: "16 ago 2026" },
-  { id: "ath-2", name: "Bruno Lacerda", goal: "10 km", level: "Iniciante", status: "risco", adherence: 0.61, lastCheckIn: "Hoje, 06:15", weeklyLoad: 198, raceDate: "20 set 2026" },
-  { id: "ath-3", name: "Marina Sales", goal: "42 km", level: "Avançado", status: "risco", adherence: 0.74, lastCheckIn: "Ontem, 21:02", weeklyLoad: 410, raceDate: "07 dez 2026" },
-  { id: "ath-4", name: "Felipe Tannous", goal: "Performance", level: "Pro", status: "ativo", adherence: 0.97, lastCheckIn: "Hoje, 05:50", weeklyLoad: 460, raceDate: "—" },
-  { id: "ath-5", name: "Renata Vidal", goal: "5 km", level: "Iniciante", status: "ativo", adherence: 0.88, lastCheckIn: "Hoje, 08:12", weeklyLoad: 142, raceDate: "30 ago 2026" },
-  { id: "ath-6", name: "Diego Martins", goal: "Retorno às corridas", level: "Iniciante", status: "inativo", adherence: 0.32, lastCheckIn: "há 6 dias", weeklyLoad: 64, raceDate: "—" },
-  { id: "ath-7", name: "Ana Beatriz Lima", goal: "21 km", level: "Intermediário", status: "ativo", adherence: 0.81, lastCheckIn: "Hoje, 06:50", weeklyLoad: 268, raceDate: "16 ago 2026" },
-  { id: "ath-8", name: "Thiago Ferraz", goal: "Emagrecimento", level: "Iniciante", status: "ativo", adherence: 0.69, lastCheckIn: "Ontem, 19:30", weeklyLoad: 120, raceDate: "—" },
+  { id: "ath-1", name: "Camila Andrade", avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=128&h=128&fit=crop&crop=faces", goal: "21 km", level: "Intermediário", status: "ativo", adherence: 0.92, lastCheckIn: "Hoje, 07:40", weeklyLoad: 312, raceDate: "16 ago 2026", vdot: 43 },
+];
+
+export const runWorkoutTemplates: RunWorkoutTemplate[] = [
+  {
+    id: "run-tpl-1",
+    name: "Base Aeróbica — Iniciante",
+    description: "Três sessões semanais em ritmo fácil para construir a base aeróbica sem risco de sobrecarga.",
+    targetLevel: "Iniciante",
+    weeklyKm: 25,
+    sessionsPerWeek: 3,
+    focus: "Volume, Aeróbico",
+    createdAt: "2026-04-15",
+    sessions: [
+      { dayLabel: "Ter", title: "Rodagem leve 6 km", type: "corrida", zone: "E", distanceKm: 6, description: "Ritmo confortável, respira pelo nariz sem dificuldade" },
+      { dayLabel: "Qui", title: "Rodagem leve + strides 7 km", type: "corrida", zone: "E", distanceKm: 7, intervals: "4×80m", description: "Finaliza com 4 acelerações curtas de 80m para ativar a passada" },
+      { dayLabel: "Sáb", title: "Longão 8 km", type: "corrida", zone: "E", distanceKm: 8, description: "Maior sessão da semana — ritmo leve do início ao fim" },
+    ],
+  },
+  {
+    id: "run-tpl-2",
+    name: "Bloco de Limiar — Intermediário",
+    description: "Quatro sessões com ênfase no limiar de lactato para elevar o ritmo de prova em meias maratonas.",
+    targetLevel: "Intermediário",
+    weeklyKm: 45,
+    sessionsPerWeek: 4,
+    focus: "Limiar, Resistência",
+    createdAt: "2026-05-03",
+    sessions: [
+      { dayLabel: "Seg", title: "Rodagem leve 8 km", type: "corrida", zone: "E", distanceKm: 8, description: "Recuperação ativa após o fim de semana" },
+      { dayLabel: "Ter", title: "Tempo Run 6 km", type: "corrida", zone: "T", distanceKm: 6, description: "Aquecimento 2km (E) + 4km contínuos em limiar + volta calma" },
+      { dayLabel: "Qui", title: "Rodagem com progressão 10 km", type: "corrida", zone: "M", distanceKm: 10, description: "Inicia em E, finaliza os últimos 3km em ritmo de maratona" },
+      { dayLabel: "Sáb", title: "Longão 14 km", type: "corrida", zone: "E", distanceKm: 14, description: "Volume longo em zona E, foco em resistência geral" },
+    ],
+  },
+  {
+    id: "run-tpl-3",
+    name: "VO₂máx & Velocidade — Avançado",
+    description: "Cinco sessões de alto volume com intervalados e tempo run para maximizar o VO₂máx e a economia de corrida.",
+    targetLevel: "Avançado",
+    weeklyKm: 70,
+    sessionsPerWeek: 5,
+    focus: "VO₂máx, Velocidade, Volume",
+    createdAt: "2026-05-18",
+    sessions: [
+      { dayLabel: "Seg", title: "Rodagem leve 10 km", type: "corrida", zone: "E", distanceKm: 10, description: "Ativação após descanso — ritmo totalmente confortável" },
+      { dayLabel: "Ter", title: "Intervalado 8×400m", type: "corrida", zone: "R", distanceKm: 8, intervals: "8×400m", description: "Tiros em pace de repetição com 200m de trote entre cada" },
+      { dayLabel: "Qui", title: "Tempo Run 8 km", type: "corrida", zone: "T", distanceKm: 8, description: "Aquecimento 2km + 5km em limiar + 1km de volta calma" },
+      { dayLabel: "Sex", title: "Rodagem leve 8 km", type: "corrida", zone: "E", distanceKm: 8, description: "Recuperação ativa entre o Tempo Run e o longão" },
+      { dayLabel: "Sáb", title: "Longão 20 km", type: "corrida", zone: "E", distanceKm: 20, description: "Maior sessão da semana — últimos 5km em ritmo M se sentir bem" },
+    ],
+  },
+  {
+    id: "run-tpl-4",
+    name: "Pré-Prova 10 km",
+    description: "Semana específica para quem corre 10km, com intervalados em zona I e progressivo para afiar o ritmo de prova.",
+    targetLevel: "Intermediário",
+    weeklyKm: 40,
+    sessionsPerWeek: 4,
+    focus: "Velocidade, VO₂máx",
+    createdAt: "2026-06-10",
+    isCustom: true,
+    sessions: [
+      { dayLabel: "Ter", title: "Intervalado 6×800m", type: "corrida", zone: "I", distanceKm: 9, intervals: "6×800m", description: "Tiros em zona I com 90s de trote entre cada; ritmo próximo à prova" },
+      { dayLabel: "Qui", title: "Progressivo 8 km", type: "corrida", zone: "M", distanceKm: 8, description: "Inicia suave (E) e progride para ritmo de maratona nos últimos 3km" },
+      { dayLabel: "Sex", title: "Pernas leves 5 km", type: "corrida", zone: "E", distanceKm: 5, description: "Recuperação curta — não forçar, só manter o movimento" },
+      { dayLabel: "Dom", title: "Longão leve 10 km", type: "corrida", zone: "E", distanceKm: 10, description: "Volume de fim de semana em ritmo completamente confortável" },
+    ],
+  },
+];
+
+export const workoutTemplates: WorkoutTemplate[] = [
+  {
+    id: "tpl-1",
+    name: "Full Body para Corredores",
+    description: "Treino completo focado em força funcional e prevenção de lesões para corredores de longa distância.",
+    division: "Full Body",
+    targetLevel: "Intermediário",
+    focus: "Força funcional, Prevenção",
+    createdAt: "2026-05-10",
+    sessions: [
+      {
+        label: "Full Body",
+        exercises: [
+          { libraryId: "ex-031", name: "Agachamento Búlgaro com Halteres", sets: 4, reps: "10-12 por perna", rest: "60-90s", rpe: 7 },
+          { libraryId: "ex-385", name: "Elevação Pélvica Unilateral Com Barra", sets: 3, reps: "12 por lado", rest: "45-60s", rpe: 6 },
+          { libraryId: "ex-325", name: "Elevação de Panturrilha com Uma Perna na Máquina Hack", sets: 3, reps: "12-15 por perna", rest: "45-60s", rpe: 6 },
+          { libraryId: "ex-401", name: "Escalador de Montanha", sets: 3, reps: "30s de esforço", rest: "45s", rpe: 6 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "tpl-2",
+    name: "Força Base AB",
+    description: "Divisão AB para iniciantes que estão começando o treinamento de força complementar à corrida.",
+    division: "AB",
+    targetLevel: "Iniciante",
+    focus: "Força, Estabilidade",
+    createdAt: "2026-04-22",
+    sessions: [
+      {
+        label: "Treino A",
+        exercises: [
+          { libraryId: "ex-344", name: "Elevação de Quadril com Peso Corporal", sets: 3, reps: "15 repetições", rest: "45-60s", rpe: 5 },
+          { libraryId: "ex-160", name: "Alongamentos de pés e tornozelos", sets: 3, reps: "10 por lado", rest: "30s", rpe: 4 },
+          { libraryId: "ex-401", name: "Escalador de Montanha", sets: 3, reps: "20s de esforço", rest: "45s", rpe: 5 },
+        ],
+      },
+      {
+        label: "Treino B",
+        exercises: [
+          { libraryId: "ex-032", name: "Agachamento Búlgaro com Peso Corporal", sets: 3, reps: "8-10 por perna", rest: "60-90s", rpe: 6 },
+          { libraryId: "ex-336", name: "Elevação de Panturrilhas", sets: 3, reps: "15-20 repetições", rest: "45-60s", rpe: 6 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "tpl-3",
+    name: "Pliometria Sprint",
+    description: "Treino de potência e velocidade para atletas avançados que buscam melhorar o ritmo de prova.",
+    division: "Full Body",
+    targetLevel: "Avançado",
+    focus: "Potência, Velocidade",
+    createdAt: "2026-05-28",
+    sessions: [
+      {
+        label: "Full Body",
+        exercises: [
+          { libraryId: "ex-240", name: "Corrida com Joelhos Altos", sets: 5, reps: "20s de esforço", rest: "40s", rpe: 9 },
+          { libraryId: "ex-033", name: "Agachamento búlgaro com salto", sets: 4, reps: "8 por perna", rest: "90s", rpe: 8 },
+          { libraryId: "ex-407", name: "Exercício Pliométrico X", sets: 3, reps: "10 repetições", rest: "60s", rpe: 8 },
+          { libraryId: "ex-401", name: "Escalador de Montanha", sets: 3, reps: "30s de esforço", rest: "45s", rpe: 7 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "tpl-4",
+    name: "Força + Mobilidade ABC",
+    description: "Divisão ABC equilibrada que combina força muscular com exercícios de mobilidade para prevenção de lesões.",
+    division: "ABC",
+    targetLevel: "Intermediário",
+    focus: "Força, Mobilidade",
+    createdAt: "2026-06-01",
+    isCustom: true,
+    sessions: [
+      {
+        label: "Treino A — Inferiores",
+        exercises: [
+          { libraryId: "ex-031", name: "Agachamento Búlgaro com Halteres", sets: 4, reps: "10-12 por perna", rest: "60-90s", rpe: 7 },
+          { libraryId: "ex-385", name: "Elevação Pélvica Unilateral Com Barra", sets: 3, reps: "12 por lado", rest: "45-60s", rpe: 6 },
+        ],
+      },
+      {
+        label: "Treino B — Panturrilha + Potência",
+        exercises: [
+          { libraryId: "ex-323", name: "Elevação de Panturrilha com Barra em Pé", sets: 4, reps: "12-15 repetições", rest: "45-60s", rpe: 7 },
+          { libraryId: "ex-244", name: "Corrida de Sprint com Assistência de Faixa Elástica", sets: 4, reps: "20s de esforço", rest: "40s", rpe: 8 },
+        ],
+      },
+      {
+        label: "Treino C — Core + Mobilidade",
+        exercises: [
+          { libraryId: "ex-401", name: "Escalador de Montanha", sets: 3, reps: "30s de esforço", rest: "45s", rpe: 6 },
+          { libraryId: "ex-160", name: "Alongamentos de pés e tornozelos", sets: 3, reps: "10 por lado", rest: "30s", rpe: 4 },
+        ],
+      },
+    ],
+  },
 ];
 
 export const reportsList = [
@@ -811,7 +995,7 @@ export const pricingPlans = [
       "Painel administrativo completo",
       "White-label (domínio e logo próprios)",
       "API para integrações customizadas",
-      "Relatórios PDF premium estilo IronGuides",
+      "Relatórios PDF premium para atletas",
       "Gerente de conta dedicado",
     ],
     cta: "Falar com consultor",
@@ -848,7 +1032,7 @@ export const testimonials = [
 
 export const landingFeatures = [
   {
-    persona: "Aluno",
+    persona: "Atleta",
     color: "#38bdf8",
     items: [
       { icon: "📅", title: "Plano liberado semana a semana", description: "Sem ansiedade de ver o ciclo todo — só o que importa agora." },
@@ -863,7 +1047,7 @@ export const landingFeatures = [
     items: [
       { icon: "🧠", title: "Prescrição inteligente com IA", description: "Sugestões de pace, volume e RPE baseadas no perfil de cada atleta." },
       { icon: "🚨", title: "Alertas de risco automáticos", description: "Saiba antes do atleta se algo vai sair dos trilhos." },
-      { icon: "📄", title: "Relatórios PDF estilo IronGuides", description: "Profissionais, prontos para enviar ao atleta em 1 clique." },
+      { icon: "📄", title: "Relatórios PDF profissionais", description: "Prontos para enviar ao atleta em 1 clique, com design premium." },
       { icon: "🔓", title: "Liberação semanal controlada", description: "O atleta só vê o que você liberar — você mantém o controle." },
     ],
   },
@@ -918,12 +1102,12 @@ export const adminOverview = {
 };
 
 export const adminCoaches = [
-  { id: "c1", name: "Ricardo Pace Júnior", credential: "CREF 014626-G/MG", plan: "Pro", athletes: 38, mrr: 397, status: "ativo", joinedAt: "Jan 2025" },
-  { id: "c2", name: "Fernando Queiroz", credential: "CREF 022140-G/SP", plan: "Assessoria", athletes: 62, mrr: 897, status: "ativo", joinedAt: "Fev 2025" },
-  { id: "c3", name: "Patrícia Melo", credential: "CREF 031822-G/RJ", plan: "Pro", athletes: 41, mrr: 397, status: "ativo", joinedAt: "Mar 2025" },
-  { id: "c4", name: "André Bastos", credential: "CREF 018903-G/MG", plan: "Starter", athletes: 12, mrr: 197, status: "ativo", joinedAt: "Abr 2025" },
-  { id: "c5", name: "Juliana Fonseca", credential: "CREF 027541-G/PR", plan: "Pro", athletes: 33, mrr: 397, status: "em risco", joinedAt: "Jan 2025" },
-  { id: "c6", name: "Run Tribe Assessoria", credential: "CNPJ 42.801.334/0001-99", plan: "Assessoria", athletes: 340, mrr: 897, status: "ativo", joinedAt: "Out 2024" },
+  { id: "c1", name: "Ricardo Pace Júnior", avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=128&h=128&fit=crop&crop=faces", credential: "CREF 014626-G/MG", plan: "Pro", athletes: 38, mrr: 397, status: "ativo", joinedAt: "Jan 2025" },
+  { id: "c2", name: "Fernando Queiroz", avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=128&h=128&fit=crop&crop=faces", credential: "CREF 022140-G/SP", plan: "Assessoria", athletes: 62, mrr: 897, status: "ativo", joinedAt: "Fev 2025" },
+  { id: "c3", name: "Patrícia Melo", avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=128&h=128&fit=crop&crop=faces", credential: "CREF 031822-G/RJ", plan: "Pro", athletes: 41, mrr: 397, status: "ativo", joinedAt: "Mar 2025" },
+  { id: "c4", name: "André Bastos", avatarUrl: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=128&h=128&fit=crop&crop=faces", credential: "CREF 018903-G/MG", plan: "Starter", athletes: 12, mrr: 197, status: "ativo", joinedAt: "Abr 2025" },
+  { id: "c5", name: "Juliana Fonseca", avatarUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=128&h=128&fit=crop&crop=faces", credential: "CREF 027541-G/PR", plan: "Pro", athletes: 33, mrr: 397, status: "em risco", joinedAt: "Jan 2025" },
+  { id: "c6", name: "Run Tribe Assessoria", avatarUrl: undefined, credential: "CNPJ 42.801.334/0001-99", plan: "Assessoria", athletes: 340, mrr: 897, status: "ativo", joinedAt: "Out 2024" },
 ];
 
 export const adminRecentSubscriptions = [
@@ -938,24 +1122,17 @@ export const adminRecentSubscriptions = [
 
 export const coachRosterStats = {
   totalSlots: 50,
-  usedSlots: 38,
+  usedSlots: 1,
   planName: "Pro",
-  mrr: 14_260,
-  mrrGrowth: 0.11,
-  churn30d: 1,
-  newAthletes30d: 4,
-  pendingInvoices: 2,
+  mrr: 290,
+  mrrGrowth: 0,
+  churn30d: 0,
+  newAthletes30d: 0,
+  pendingInvoices: 0,
 };
 
-export const athleteRosterList = [
-  { id: "ath-1", name: "Camila Andrade", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "10 jul 2026", monthlyFee: 290, joinedAt: "Jan 2025" },
-  { id: "ath-2", name: "Bruno Lacerda", plan: "Pace Run Pro — Atleta", status: "risco" as const, billingStatus: "em dia" as const, nextBilling: "14 jul 2026", monthlyFee: 290, joinedAt: "Mar 2025" },
-  { id: "ath-3", name: "Marina Sales", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "01 jul 2026", monthlyFee: 350, joinedAt: "Nov 2024" },
-  { id: "ath-4", name: "Felipe Tannous", plan: "Pace Run Pro — Elite", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "20 jul 2026", monthlyFee: 490, joinedAt: "Set 2024" },
-  { id: "ath-5", name: "Renata Vidal", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "05 jul 2026", monthlyFee: 290, joinedAt: "Abr 2025" },
-  { id: "ath-6", name: "Diego Martins", plan: "Pace Run Pro — Atleta", status: "inativo" as const, billingStatus: "inadimplente" as const, nextBilling: "—", monthlyFee: 290, joinedAt: "Jun 2025" },
-  { id: "ath-7", name: "Ana Beatriz Lima", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "08 jul 2026", monthlyFee: 290, joinedAt: "Fev 2025" },
-  { id: "ath-8", name: "Thiago Ferraz", plan: "Pace Run Pro — Atleta", status: "ativo" as const, billingStatus: "em dia" as const, nextBilling: "22 jul 2026", monthlyFee: 290, joinedAt: "Mai 2025" },
+export const athleteRosterList: AthleteRosterItem[] = [
+  { id: "ath-1", name: "Camila Andrade", plan: "Pace Run Pro — Atleta", status: "ativo", billingStatus: "em dia", nextBilling: "10 jul 2026", monthlyFee: 290, joinedAt: "Jan 2025" },
 ];
 
 export const paymentHistory = [
@@ -1079,9 +1256,9 @@ export const b2cPlans = [
   {
     id: "mensal",
     name: "Mensal",
-    price: 197,
-    pricePerMonth: 197,
-    totalPrice: 197,
+    price: 149.9,
+    pricePerMonth: 149.9,
+    totalPrice: 149.9,
     months: 1,
     discountPct: 0,
     badge: null,
@@ -1091,9 +1268,9 @@ export const b2cPlans = [
   {
     id: "trimestral",
     name: "Trimestral",
-    price: 167,
-    pricePerMonth: 167,
-    totalPrice: 501,
+    price: 127.9,
+    pricePerMonth: 127.9,
+    totalPrice: 383.7,
     months: 3,
     discountPct: 15,
     badge: "15% OFF",
@@ -1103,9 +1280,9 @@ export const b2cPlans = [
   {
     id: "semestral",
     name: "Semestral",
-    price: 147,
-    pricePerMonth: 147,
-    totalPrice: 882,
+    price: 112.9,
+    pricePerMonth: 112.9,
+    totalPrice: 677.4,
     months: 6,
     discountPct: 25,
     badge: "25% OFF",
@@ -1115,9 +1292,9 @@ export const b2cPlans = [
   {
     id: "anual",
     name: "Anual",
-    price: 127,
-    pricePerMonth: 127,
-    totalPrice: 1524,
+    price: 97.9,
+    pricePerMonth: 97.9,
+    totalPrice: 1174.8,
     months: 12,
     discountPct: 35,
     badge: "Melhor custo",
@@ -1141,126 +1318,170 @@ export const b2cIncludes = [
 
 export const b2bPlans = [
   {
+    id: "b2b-free",
+    name: "Grátis",
+    price: 0,
+    maxAthletes: 1,
+    maxCoaches: 1,
+    highlight: false,
+    badge: "Grátis para sempre",
+    features: [
+      "1 atleta",
+      "1 treinador",
+      "Prescrição de treino básica",
+      "Check-in semanal",
+      "Acesso ao app do atleta",
+      "Suporte por e-mail",
+    ],
+  },
+  {
     id: "b2b-starter",
     name: "Starter",
-    price: 89,
+    price: 97,
     maxAthletes: 20,
-    maxCoaches: 2,
+    maxCoaches: 1,
     highlight: false,
     badge: null,
     features: [
       "Até 20 atletas",
-      "Até 2 treinadores",
-      "Prescrição corrida e força",
-      "Check-in inteligente",
-      "Relatórios PDF",
-      "1 integração (Strava ou Garmin)",
+      "1 treinador",
+      "Prescrição de corrida com VDOT",
+      "Periodização automática",
+      "Calendário do atleta",
+      "Check-in semanal",
+      "Relatórios de performance",
       "Suporte por e-mail",
     ],
   },
   {
     id: "b2b-pro",
     name: "Pro",
-    price: 189,
-    maxAthletes: 50,
-    maxCoaches: 5,
+    price: 197,
+    maxAthletes: 80,
+    maxCoaches: 3,
     highlight: true,
     badge: "Mais popular",
     features: [
-      "Até 50 atletas",
-      "Até 5 treinadores",
+      "Até 80 atletas",
+      "Até 3 treinadores",
       "Tudo do Starter",
-      "Motor de prescrição inteligente com IA",
-      "Todas as integrações",
-      "Liberação semanal automatizada",
-      "Relatórios Excel e CSV",
+      "Treino de força para corredores",
+      "Check-ins com IA e alertas automáticos",
+      "Central de alertas inteligentes",
+      "Relatórios PDF profissionais",
+      "Painel financeiro do roster",
       "Suporte WhatsApp",
     ],
   },
   {
-    id: "b2b-premium",
-    name: "Premium",
-    price: 389,
-    maxAthletes: 150,
-    maxCoaches: 15,
+    id: "b2b-assessoria",
+    name: "Assessoria",
+    price: 397,
+    maxAthletes: 250,
+    maxCoaches: 10,
     highlight: false,
     badge: null,
     features: [
-      "Até 150 atletas",
-      "Até 15 treinadores",
+      "Até 250 atletas",
+      "Até 10 treinadores",
       "Tudo do Pro",
-      "Painel financeiro do roster",
-      "Link de convite por treinador",
-      "Relatórios PDF estilo IronGuides",
+      "CRM de retenção",
+      "Painel financeiro multi-treinador",
+      "Link de convite personalizado",
       "API básica para integrações",
-      "Gerente de conta",
+      "Gerente de conta dedicado",
+      "Suporte prioritário",
     ],
   },
   {
     id: "b2b-unlimited",
-    name: "Ilimitado",
+    name: "White Label",
     price: 997,
     maxAthletes: null,
     maxCoaches: null,
     highlight: false,
-    badge: "White-label",
+    badge: "Sob consulta",
     features: [
-      "Atletas e treinadores ilimitados",
-      "Tudo do Premium",
-      "White-label (domínio e logo próprios)",
-      "API completa para integrações",
-      "Painel administrativo multi-treinador",
-      "SLA 99,9% com suporte 24h",
+      "Atletas ilimitados",
+      "Treinadores ilimitados",
+      "Tudo do Assessoria",
+      "Marca própria (logo e domínio)",
+      "App com a identidade da sua assessoria",
+      "API completa",
+      "SLA 99,9% com suporte 24 h",
       "Onboarding dedicado",
       "Contrato anual com desconto",
     ],
   },
 ];
 
+// Retorna o plano B2B recomendado para uma assessoria/treinador com base
+// no número de atletas informado, escolhendo o menor plano que comporta
+// esse total (ou o plano Ilimitado, se nenhum limite for suficiente).
+export function getRecommendedB2BPlan(athleteCount: number) {
+  return (
+    b2bPlans.find((p) => p.maxAthletes === null || athleteCount <= p.maxAthletes) ??
+    b2bPlans[b2bPlans.length - 1]
+  );
+}
+
 // ── Super Admin ──────────────────────────────────────────────────────────
 
 export const superAdminStats = {
-  totalMrr: 63_480,
-  mrrGrowth: 0.138,
-  b2cAthletes: 312,
-  b2cMrr: 51_264,
-  b2bAssessorias: 48,
-  b2bMrr: 12_216,
-  pendingApproval: 3,
-  churned30d: 8,
-  newSignups30d: 34,
-  totalRevenue12m: 689_040,
-  mrrSeries: [
-    { month: "Jan", b2c: 34_100, b2b: 6_800 },
-    { month: "Fev", b2c: 37_500, b2b: 7_400 },
-    { month: "Mar", b2c: 39_800, b2b: 8_100 },
-    { month: "Abr", b2c: 42_600, b2b: 9_200 },
-    { month: "Mai", b2c: 47_400, b2b: 10_800 },
-    { month: "Jun", b2c: 51_264, b2b: 12_216 },
-  ],
+  totalMrr: 0,
+  mrrGrowth: 0,
+  b2cAthletes: 0,
+  b2cMrr: 0,
+  b2bAssessorias: 0,
+  b2bMrr: 0,
+  pendingApproval: 0,
+  churned30d: 0,
+  newSignups30d: 0,
+  totalRevenue12m: 0,
+  mrrSeries: [] as { month: string; b2c: number; b2b: number }[],
 };
 
-export const assessoriaList = [
-  { id: "asc-1", name: "Run Tribe Assessoria", city: "São Paulo, SP", plan: "b2b-unlimited", coaches: 8, athletes: 340, mrr: 997, status: "ativo" as const, approvedAt: "Out 2024", contact: "contato@runtribe.com.br" },
-  { id: "asc-2", name: "Pace & Cia Esportes", city: "Belo Horizonte, MG", plan: "b2b-pro", coaches: 4, athletes: 47, mrr: 189, status: "ativo" as const, approvedAt: "Jan 2025", contact: "admin@paceecia.com.br" },
-  { id: "asc-3", name: "Runners BH", city: "Belo Horizonte, MG", plan: "b2b-premium", coaches: 7, athletes: 118, mrr: 389, status: "ativo" as const, approvedAt: "Fev 2025", contact: "suporte@runnersbh.com" },
-  { id: "asc-4", name: "Ultra Training SP", city: "São Paulo, SP", plan: "b2b-pro", coaches: 3, athletes: 38, mrr: 189, status: "ativo" as const, approvedAt: "Mar 2025", contact: "contato@ultratraining.com.br" },
-  { id: "asc-5", name: "Maratonistas do Sul", city: "Porto Alegre, RS", plan: "b2b-starter", coaches: 1, athletes: 14, mrr: 89, status: "ativo" as const, approvedAt: "Abr 2025", contact: "admin@maratonistassul.com.br" },
-  { id: "asc-6", name: "Sport Life Corridas", city: "Curitiba, PR", plan: "b2b-starter", coaches: 2, athletes: 19, mrr: 89, status: "pendente" as const, approvedAt: "—", contact: "contato@sportlife.com.br" },
-  { id: "asc-7", name: "Run Fast Academy", city: "Rio de Janeiro, RJ", plan: "b2b-pro", coaches: 4, athletes: 0, mrr: 189, status: "pendente" as const, approvedAt: "—", contact: "admin@runfast.com.br" },
-  { id: "asc-8", name: "Fortaleza Runners", city: "Fortaleza, CE", plan: "b2b-premium", coaches: 6, athletes: 0, mrr: 389, status: "pendente" as const, approvedAt: "—", contact: "suporte@fortalezarunners.com.br" },
-];
+export interface AssessoriaItem {
+  id: string;
+  name: string;
+  city: string;
+  plan: string;
+  coaches: number;
+  athletes: number;
+  mrr: number;
+  status: "ativo" | "pendente" | "suspenso";
+  approvedAt: string;
+  contact: string;
+  healthScore: number;      // 0–100
+  churnRisk: "baixo" | "medio" | "alto";
+  lastLoginDays: number;    // dias desde último login do treinador principal
+  prescribedLast7d: number; // treinos prescritos nos últimos 7 dias
+  activeAthletes: number;   // atletas com check-in na última semana
+}
 
-export const b2cAthletesList = [
-  { id: "b2c-1", name: "Lucas Ferreira", city: "São Paulo, SP", plan: "anual", startDate: "Jan 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 127 },
-  { id: "b2c-2", name: "Priscila Nunes", city: "Belo Horizonte, MG", plan: "semestral", startDate: "Mar 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 147 },
-  { id: "b2c-3", name: "Gustavo Almeida", city: "Rio de Janeiro, RJ", plan: "mensal", startDate: "Mai 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 197 },
-  { id: "b2c-4", name: "Fernanda Costa", city: "Curitiba, PR", plan: "trimestral", startDate: "Abr 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 167 },
-  { id: "b2c-5", name: "Roberto Lima", city: "Porto Alegre, RS", plan: "anual", startDate: "Fev 2025", coachAssigned: "Ricardo Pace + Equipe", status: "ativo" as const, mrr: 127 },
-  { id: "b2c-6", name: "Tatiane Souza", city: "Salvador, BA", plan: "mensal", startDate: "Jun 2025", coachAssigned: "Ricardo Pace + Equipe", status: "pendente" as const, mrr: 197 },
-];
+export const assessoriaList: AssessoriaItem[] = [];
+
+export const b2cAthletesList: {
+  id: string; name: string; avatarUrl: string; city: string; plan: string;
+  startDate: string; coachAssigned: string; status: "ativo" | "pendente"; mrr: number;
+}[] = [];
 
 export const pendingApprovals = assessoriaList.filter((a) => a.status === "pendente");
+
+export type PendenciaType = "white-label-setup" | "cobranca-falha" | "pix-expirado" | "fraude";
+
+export interface PendenciaItem {
+  id: string;
+  type: PendenciaType;
+  title: string;
+  description: string;
+  assessoria: string;
+  contact: string;
+  value?: number;
+  createdAt: string;
+}
+
+export const pendencias: PendenciaItem[] = [];
 
 // ── Smart Alerts ─────────────────────────────────────────────────────────
 
@@ -1276,108 +1497,12 @@ export interface SmartAlert {
   title: string;
   description: string;
   metric?: string;
+  recommendation?: string;
   daysAgo: number;
   read: boolean;
 }
 
-export const smartAlerts: SmartAlert[] = [
-  {
-    id: "al-1",
-    athleteId: "a-2",
-    athleteName: "Carlos Mendonça",
-    severity: "critico",
-    category: "ausencia",
-    title: "Sem treino há 6 dias",
-    description: "Carlos não registrou nenhum treino desde 03/06. Último check-in indicou fadiga 8/10.",
-    metric: "6 dias sem atividade",
-    daysAgo: 1,
-    read: false,
-  },
-  {
-    id: "al-2",
-    athleteId: "a-5",
-    athleteName: "Fernanda Lima",
-    severity: "critico",
-    category: "dor",
-    title: "Dor persistente acima de 7 (3 dias seguidos)",
-    description: "Fernanda reportou dor ≥ 7/10 nos últimos 3 check-ins. Protocolo de redução de volume recomendado.",
-    metric: "Dor média: 7.4/10",
-    daysAgo: 0,
-    read: false,
-  },
-  {
-    id: "al-3",
-    athleteId: "a-3",
-    athleteName: "Rodrigo Farias",
-    severity: "critico",
-    category: "overtraining",
-    title: "Risco de overtraining detectado",
-    description: "Carga acumulada 34% acima da média das últimas 4 semanas. RPE médio 8.2 nos últimos 5 treinos.",
-    metric: "Carga: +34% acima do normal",
-    daysAgo: 1,
-    read: false,
-  },
-  {
-    id: "al-4",
-    athleteId: "a-1",
-    athleteName: "Camila Andrade",
-    severity: "atencao",
-    category: "fc",
-    title: "FC média em Z2 crescendo",
-    description: "A frequência cardíaca média nos treinos de zona 2 aumentou 12% nos últimos 10 dias, sugerindo fadiga acumulada ou necessidade de deload.",
-    metric: "FC Z2: +12% vs. média anterior",
-    daysAgo: 2,
-    read: false,
-  },
-  {
-    id: "al-5",
-    athleteId: "a-6",
-    athleteName: "Beatriz Santos",
-    severity: "atencao",
-    category: "adesao",
-    title: "Queda de adesão — 58% na última semana",
-    description: "Beatriz realizou apenas 3 de 5 treinos programados. Adesão caiu de 86% para 58% em 7 dias.",
-    metric: "Adesão: 58% (-28pp)",
-    daysAgo: 2,
-    read: false,
-  },
-  {
-    id: "al-6",
-    athleteId: "a-4",
-    athleteName: "Paulo Henrique",
-    severity: "atencao",
-    category: "volume",
-    title: "Volume semanal 31% abaixo da meta",
-    description: "Paulo completou 22 km dos 32 km programados para esta semana. Prova em 6 semanas.",
-    metric: "Volume: 22/32 km (-31%)",
-    daysAgo: 1,
-    read: false,
-  },
-  {
-    id: "al-7",
-    athleteId: "a-7",
-    athleteName: "Ana Cristina",
-    severity: "info",
-    category: "desempenho",
-    title: "Melhora de pace — novo PR em treino",
-    description: "Ana registrou seu melhor pace em treino intervalado: 4:12/km no tiro de 1.000m — melhora de 8s vs. última avaliação.",
-    metric: "Pace: 4:12/km (PR)",
-    daysAgo: 0,
-    read: true,
-  },
-  {
-    id: "al-8",
-    athleteId: "a-8",
-    athleteName: "Marcos Vieira",
-    severity: "info",
-    category: "fadiga",
-    title: "Fadiga elevada pós-treino longo",
-    description: "Marcos reportou fadiga 8/10 no dia seguinte ao longão de 22 km. Dentro do esperado — verificar próximos check-ins.",
-    metric: "Fadiga: 8/10 pós-longão",
-    daysAgo: 1,
-    read: true,
-  },
-];
+export const smartAlerts: SmartAlert[] = [];
 
 // ── Tênis tracker ─────────────────────────────────────────────────────────────
 export interface Shoe {
@@ -1385,12 +1510,13 @@ export interface Shoe {
   name: string;
   brand: string;
   model: string;
+  imageUrl?: string;   // base64 or URL
   kmAccumulated: number;
   maxKm: number;
   dateAdded: string;   // ISO date
   color: string;       // for the accent dot
   active: boolean;
-  imageEmoji: string;  // shoe emoji
+  imageEmoji: string;  // shoe emoji fallback
 }
 
 export const shoesList: Shoe[] = [
@@ -1498,122 +1624,7 @@ export interface WeeklyAthleteAnalysis {
   recommendation: string;
 }
 
-export const weeklyAnalyses: WeeklyAthleteAnalysis[] = [
-  {
-    athleteId: "a-1",
-    athleteName: "Camila Andrade",
-    weekLabel: "02–08 Jun 2025",
-    metrics: [
-      { label: "Volume", value: 52, prev: 47, unit: "km", delta: 10.6 },
-      { label: "Sessões", value: 5, prev: 5, unit: "", delta: 0 },
-      { label: "Pace médio", value: 305, prev: 312, unit: "s/km", delta: -2.2 },
-      { label: "FC média", value: 148, prev: 151, unit: "bpm", delta: -2.0 },
-      { label: "Carga", value: 820, prev: 732, unit: "UA", delta: 12.0 },
-    ],
-    highlights: [
-      "Carga 12% acima da semana anterior — monitorar sinais de fadiga",
-      "Pace médio melhorou 7 s/km em relação às últimas 3 semanas",
-    ],
-    riskLevel: "low",
-    adherence: 100,
-    recommendation: "Manter volume. Inserir um dia de trote leve se FC de repouso subir.",
-  },
-  {
-    athleteId: "a-2",
-    athleteName: "Bruno Silva",
-    weekLabel: "02–08 Jun 2025",
-    metrics: [
-      { label: "Volume", value: 38, prev: 44, unit: "km", delta: -13.6 },
-      { label: "Sessões", value: 4, prev: 5, unit: "", delta: -20.0 },
-      { label: "Pace médio", value: 348, prev: 340, unit: "s/km", delta: 2.4 },
-      { label: "FC média", value: 163, prev: 158, unit: "bpm", delta: 3.2 },
-      { label: "Carga", value: 612, prev: 710, unit: "UA", delta: -13.8 },
-    ],
-    highlights: [
-      "Aderência abaixo de 75% — faltou 1 sessão de corrida programada",
-      "FC média crescente pode indicar fadiga acumulada",
-    ],
-    riskLevel: "medium",
-    adherence: 72,
-    recommendation: "Entrar em contato para entender causa das faltas. Revisar carga se FC continuar elevada.",
-  },
-  {
-    athleteId: "a-3",
-    athleteName: "Marina Costa",
-    weekLabel: "02–08 Jun 2025",
-    metrics: [
-      { label: "Volume", value: 64, prev: 58, unit: "km", delta: 10.3 },
-      { label: "Sessões", value: 6, prev: 6, unit: "", delta: 0 },
-      { label: "Pace médio", value: 298, prev: 304, unit: "s/km", delta: -2.0 },
-      { label: "FC média", value: 145, prev: 147, unit: "bpm", delta: -1.4 },
-      { label: "Carga", value: 918, prev: 862, unit: "UA", delta: 6.5 },
-    ],
-    highlights: [
-      "Semana de volume recorde — 64 km completados com consistência",
-      "FC média estável apesar do aumento de volume",
-    ],
-    riskLevel: "low",
-    adherence: 95,
-    recommendation: "Excelente semana. Programar semana de deload na próxima para evitar overtraining.",
-  },
-  {
-    athleteId: "a-4",
-    athleteName: "Pedro Alves",
-    weekLabel: "02–08 Jun 2025",
-    metrics: [
-      { label: "Volume", value: 35, prev: 42, unit: "km", delta: -16.7 },
-      { label: "Sessões", value: 3, prev: 5, unit: "", delta: -40.0 },
-      { label: "Pace médio", value: 372, prev: 358, unit: "s/km", delta: 3.9 },
-      { label: "FC média", value: 168, prev: 160, unit: "bpm", delta: 5.0 },
-      { label: "Carga", value: 580, prev: 750, unit: "UA", delta: -22.7 },
-    ],
-    highlights: [
-      "Apenas 3 de 5 sessões realizadas — queda brusca de aderência",
-      "FC média 5% acima do normal — possível sinal de fadiga ou doença",
-    ],
-    riskLevel: "high",
-    adherence: 60,
-    recommendation: "Contatar atleta imediatamente. Suspender sessões intensas até avaliação do estado de saúde.",
-  },
-  {
-    athleteId: "a-5",
-    athleteName: "Fernanda Lima",
-    weekLabel: "02–08 Jun 2025",
-    metrics: [
-      { label: "Volume", value: 48, prev: 45, unit: "km", delta: 6.7 },
-      { label: "Sessões", value: 5, prev: 5, unit: "", delta: 0 },
-      { label: "Pace médio", value: 315, prev: 321, unit: "s/km", delta: -1.9 },
-      { label: "FC média", value: 152, prev: 154, unit: "bpm", delta: -1.3 },
-      { label: "Carga", value: 745, prev: 698, unit: "UA", delta: 6.7 },
-    ],
-    highlights: [
-      "Progressão saudável de volume — +6,7% dentro da faixa recomendada",
-      "Melhora consistente de pace nas últimas 3 semanas",
-    ],
-    riskLevel: "low",
-    adherence: 88,
-    recommendation: "Continuar com a progressão atual. Longão do sábado pode ser aumentado para 22 km.",
-  },
-  {
-    athleteId: "a-6",
-    athleteName: "Rafael Souza",
-    weekLabel: "02–08 Jun 2025",
-    metrics: [
-      { label: "Volume", value: 41, prev: 50, unit: "km", delta: -18.0 },
-      { label: "Sessões", value: 4, prev: 6, unit: "", delta: -33.3 },
-      { label: "Pace médio", value: 332, prev: 325, unit: "s/km", delta: 2.2 },
-      { label: "FC média", value: 160, prev: 155, unit: "bpm", delta: 3.2 },
-      { label: "Carga", value: 640, prev: 830, unit: "UA", delta: -22.9 },
-    ],
-    highlights: [
-      "Volume 18% abaixo do planejado — prova a 4 semanas, risco de subpreparação",
-      "Queda de 2 sessões em relação à semana anterior sem justificativa registrada",
-    ],
-    riskLevel: "high",
-    adherence: 65,
-    recommendation: "Verificar comprometimento do atleta. Se saudável, ajustar plano para compensar volume perdido.",
-  },
-];
+export const weeklyAnalyses: WeeklyAthleteAnalysis[] = [];
 
 // ── CRM ────────────────────────────────────────────────────────────────────
 export type LeadStage = "novo" | "contato" | "proposta" | "negociacao" | "ganho" | "perdido";

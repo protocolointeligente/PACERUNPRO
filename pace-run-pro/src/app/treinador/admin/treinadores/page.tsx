@@ -5,7 +5,10 @@ import { adminCoaches } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useCoachRole } from "@/context/coach-role-context";
+import { canAccess } from "@/lib/coach-permissions";
+import { AccessRestricted } from "@/components/shared/access-restricted";
 import { cn } from "@/lib/utils";
 
 const planFilters = ["Todos", "Starter", "Pro", "Assessoria"] as const;
@@ -31,8 +34,13 @@ function getInitials(name: string): string {
 }
 
 export default function AdminTreinadoresPage() {
+  const { role } = useCoachRole();
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState<PlanFilter>("Todos");
+
+  if (!canAccess(role, "admin")) {
+    return <AccessRestricted feature="Admin — Treinadores" currentRole={role} requiredRoles={["owner"]} />;
+  }
 
   const filtered = adminCoaches.filter((coach) => {
     const matchesSearch =
@@ -50,7 +58,7 @@ export default function AdminTreinadoresPage() {
         <Badge variant="primary" className="mb-2">
           Painel Administrativo
         </Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
           Treinadores
         </h1>
         <p className="text-sm text-text-muted">
@@ -65,7 +73,7 @@ export default function AdminTreinadoresPage() {
           placeholder="Buscar por nome ou credencial..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-white placeholder-text-muted focus:border-primary/60 focus:outline-none sm:max-w-sm"
+          className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-text placeholder-text-muted focus:border-primary/60 focus:outline-none sm:max-w-sm"
         />
         <div className="flex flex-wrap gap-2">
           {planFilters.map((plan) => (
@@ -76,7 +84,7 @@ export default function AdminTreinadoresPage() {
                 "rounded-full border px-4 py-1.5 text-xs font-medium transition-colors",
                 planFilter === plan
                   ? "border-primary/60 bg-primary/10 text-primary"
-                  : "border-border bg-transparent text-text-muted hover:border-primary/40 hover:text-white"
+                  : "border-border bg-transparent text-text-muted hover:border-primary/40 hover:text-text"
               )}
             >
               {plan}
@@ -108,15 +116,16 @@ export default function AdminTreinadoresPage() {
               filtered.map((coach) => (
                 <div
                   key={coach.id}
-                  className="flex flex-col gap-4 px-4 py-4 sm:grid sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] sm:items-center sm:gap-4 sm:px-6"
+                  className="flex flex-col gap-2.5 px-4 py-4 sm:grid sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] sm:items-center sm:gap-4 sm:px-6"
                 >
                   {/* Treinador */}
                   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9 flex-shrink-0">
+                      <AvatarImage src={coach.avatarUrl} alt={coach.name} />
                       <AvatarFallback>{getInitials(coach.name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-white">
+                      <p className="truncate text-sm font-medium text-text">
                         {coach.name}
                       </p>
                       <p className="truncate text-xs text-text-muted">
@@ -125,39 +134,42 @@ export default function AdminTreinadoresPage() {
                     </div>
                   </div>
 
-                  {/* Plano */}
-                  <div>
-                    <Badge variant={getPlanVariant(coach.plan)}>{coach.plan}</Badge>
-                  </div>
+                  {/* Meta row: inline on mobile, grid cells on sm+ */}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:[display:contents]">
+                    {/* Plano */}
+                    <div>
+                      <Badge variant={getPlanVariant(coach.plan)}>{coach.plan}</Badge>
+                    </div>
 
-                  {/* Atletas */}
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold text-white">
-                      {coach.athletes}
-                    </span>
-                    <span className="text-xs text-text-muted hidden sm:inline">atletas</span>
-                  </div>
+                    {/* Atletas */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold text-text">
+                        {coach.athletes}
+                      </span>
+                      <span className="text-xs text-text-muted">atletas</span>
+                    </div>
 
-                  {/* MRR */}
-                  <div>
-                    <span className="text-sm font-semibold text-success">
-                      R$ {coach.mrr}
-                    </span>
-                    <span className="text-xs text-text-muted">/mês</span>
-                  </div>
+                    {/* MRR */}
+                    <div>
+                      <span className="text-sm font-semibold text-success">
+                        R$ {coach.mrr}
+                      </span>
+                      <span className="text-xs text-text-muted">/mês</span>
+                    </div>
 
-                  {/* Status */}
-                  <div>
-                    <Badge variant={getStatusVariant(coach.status)}>
-                      {coach.status}
-                    </Badge>
-                  </div>
+                    {/* Status */}
+                    <div>
+                      <Badge variant={getStatusVariant(coach.status)}>
+                        {coach.status}
+                      </Badge>
+                    </div>
 
-                  {/* Ações */}
-                  <div>
-                    <Button variant="secondary" size="sm">
-                      Ver atletas
-                    </Button>
+                    {/* Ações */}
+                    <div>
+                      <Button variant="secondary" size="sm">
+                        Ver atletas
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))

@@ -60,7 +60,7 @@ export function OptionGrid({
               <span className={cn("text-xl", selected ? "text-primary" : "text-text-muted")}>{opt.icon}</span>
             )}
             <span className="flex-1">
-              <span className="block text-sm font-semibold text-white">{opt.label}</span>
+              <span className="block text-sm font-semibold text-text">{opt.label}</span>
               {opt.description && <span className="mt-0.5 block text-xs text-text-muted">{opt.description}</span>}
             </span>
             <span

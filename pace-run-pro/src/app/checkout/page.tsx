@@ -7,10 +7,11 @@ import { Check, Copy, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { b2cPlans, b2cIncludes } from "@/lib/mock-data";
+import { formatBRL } from "@/lib/utils";
 
 // ── Shared input style ────────────────────────────────────────────────────
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 // ── Step indicator ────────────────────────────────────────────────────────
 function StepIndicator({ current, total }: { current: number; total: number }) {
@@ -52,17 +53,17 @@ function PlanSummaryCard({ planId }: { planId: string }) {
       <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-muted">
         Plano selecionado
       </p>
-      <h4 className="font-display text-lg font-bold text-white">{plan.name}</h4>
+      <h4 className="font-display text-lg font-bold text-text">{plan.name}</h4>
       <p className="text-xs text-text-muted">{plan.description}</p>
       <div className="mt-3 flex items-end gap-1">
-        <span className="font-display text-2xl font-extrabold text-white">
-          R$ {plan.pricePerMonth}
+        <span className="font-display text-2xl font-extrabold text-text">
+          R$ {formatBRL(plan.pricePerMonth)}
         </span>
         <span className="mb-0.5 text-sm text-text-muted">/mês</span>
       </div>
       {plan.months > 1 && (
         <p className="mt-1 text-xs text-text-muted">
-          Total: R$ {plan.totalPrice} em {plan.months}x
+          Total: R$ {formatBRL(plan.totalPrice)} em {plan.months}x
         </p>
       )}
       {plan.discountPct > 0 && (
@@ -99,8 +100,8 @@ function PaymentToggle({
           className={[
             "flex-1 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all",
             value === o.id
-              ? "border-primary/60 bg-primary/10 text-white"
-              : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-white",
+              ? "border-primary/60 bg-primary/10 text-primary"
+              : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text",
           ].join(" ")}
         >
           {o.label}
@@ -155,10 +156,10 @@ function CheckoutContent() {
     return (
       <div className="flex flex-col items-center gap-6 py-24 text-center">
         <div className="flex h-20 w-20 items-center justify-center rounded-full gradient-primary shadow-2xl shadow-primary/40">
-          <Zap className="h-10 w-10 text-white animate-pulse" fill="white" />
+          <Zap className="h-10 w-10 text-text animate-pulse" fill="white" />
         </div>
         <div>
-          <h2 className="font-display text-2xl font-extrabold text-white">
+          <h2 className="font-display text-2xl font-extrabold text-text">
             Processando...
           </h2>
           <p className="mt-2 text-sm text-text-muted">
@@ -176,7 +177,7 @@ function CheckoutContent() {
       {/* ── Step 1: Plan selection ── */}
       {step === 1 && (
         <div>
-          <h1 className="mt-8 font-display text-3xl font-extrabold text-white">
+          <h1 className="mt-8 font-display text-3xl font-extrabold text-text">
             Escolha seu plano
           </h1>
           <p className="mt-2 text-sm text-text-muted">
@@ -208,7 +209,7 @@ function CheckoutContent() {
                 )}
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-display text-base font-bold text-white">
+                    <h3 className="font-display text-base font-bold text-text">
                       {p.name}
                     </h3>
                     <p className="mt-0.5 text-xs text-text-muted">
@@ -217,19 +218,19 @@ function CheckoutContent() {
                   </div>
                   {selectedPlan === p.id && (
                     <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary">
-                      <Check className="h-3 w-3 text-white" />
+                      <Check className="h-3 w-3 text-text" />
                     </div>
                   )}
                 </div>
                 <div className="mt-4 flex items-end gap-1">
-                  <span className="font-display text-2xl font-extrabold text-white">
-                    R$ {p.pricePerMonth}
+                  <span className="font-display text-2xl font-extrabold text-text">
+                    R$ {formatBRL(p.pricePerMonth)}
                   </span>
                   <span className="mb-0.5 text-sm text-text-muted">/mês</span>
                 </div>
                 {p.months > 1 && (
                   <p className="mt-1 text-xs text-text-muted">
-                    Total: R$ {p.totalPrice} em {p.months}x
+                    Total: R$ {formatBRL(p.totalPrice)} em {p.months}x
                   </p>
                 )}
                 {p.discountPct > 0 && (
@@ -243,7 +244,7 @@ function CheckoutContent() {
 
           {/* Includes checklist */}
           <div className="mt-8 rounded-2xl border border-border bg-card p-6">
-            <p className="mb-4 text-sm font-semibold text-white">
+            <p className="mb-4 text-sm font-semibold text-text">
               Todos os planos incluem:
             </p>
             <ul className="space-y-2">
@@ -273,7 +274,7 @@ function CheckoutContent() {
       {/* ── Step 2: Payment ── */}
       {step === 2 && (
         <div>
-          <h1 className="mt-8 font-display text-3xl font-extrabold text-white">
+          <h1 className="mt-8 font-display text-3xl font-extrabold text-text">
             Finalizar assinatura
           </h1>
           <p className="mt-2 text-sm text-text-muted">
@@ -284,25 +285,25 @@ function CheckoutContent() {
             <div className="space-y-6 lg:col-span-2">
               {/* Order summary */}
               <div className="rounded-2xl border border-border bg-card p-6">
-                <p className="mb-4 text-sm font-semibold text-white">
+                <p className="mb-4 text-sm font-semibold text-text">
                   Resumo do pedido
                 </p>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-text-muted">Plano</span>
-                    <span className="font-medium text-white">{plan.name}</span>
+                    <span className="font-medium text-text">{plan.name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-muted">Valor mensal</span>
-                    <span className="font-medium text-white">
-                      R$ {plan.pricePerMonth}/mês
+                    <span className="font-medium text-text">
+                      R$ {formatBRL(plan.pricePerMonth)}/mês
                     </span>
                   </div>
                   {plan.months > 1 && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">Total cobrado hoje</span>
-                      <span className="font-bold text-white">
-                        R$ {plan.totalPrice}
+                      <span className="font-bold text-text">
+                        R$ {formatBRL(plan.totalPrice)}
                       </span>
                     </div>
                   )}
@@ -314,7 +315,7 @@ function CheckoutContent() {
 
               {/* Payment method */}
               <div className="space-y-4">
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-text">
                   Forma de pagamento
                 </p>
                 <PaymentToggle
@@ -469,7 +470,7 @@ function CheckoutContent() {
 // ── Page wrapper ──────────────────────────────────────────────────────────
 export default function CheckoutPage() {
   return (
-    <div className="min-h-dvh bg-background text-white">
+    <div className="min-h-dvh bg-background text-text">
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
@@ -477,7 +478,7 @@ export default function CheckoutPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
               <Zap className="h-5 w-5 text-white" fill="white" />
             </div>
-            <span className="font-display text-lg font-extrabold tracking-wide text-white">
+            <span className="font-display text-lg font-extrabold tracking-wide text-text">
               PACE RUN <span className="gradient-text">PRO</span>
             </span>
           </Link>

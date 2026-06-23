@@ -66,6 +66,18 @@ export interface AthleteListItem {
   lastCheckIn?: string;
   weeklyLoad: number;
   raceDate?: string;
+  vdot?: number;
+}
+
+export interface AthleteRosterItem {
+  id: string;
+  name: string;
+  plan: string;
+  status: "ativo" | "risco" | "inativo";
+  billingStatus: "em dia" | "inadimplente";
+  nextBilling: string;
+  monthlyFee: number;
+  joinedAt: string;
 }
 
 export interface ExerciseLibraryItem {
@@ -73,12 +85,62 @@ export interface ExerciseLibraryItem {
   name: string;
   category: string;
   muscles: string[];
-  imageUrl?: string;
+  gifUrl?: string | null;
+  imageUrl?: string | null;
   description: string;
-  execution: string;
-  mistakes: string;
+  execution?: string;
+  mistakes?: string;
   sets: number;
   reps: string;
   rest: string;
   rpe: number;
+}
+
+export interface WorkoutTemplateExercise {
+  libraryId: string;
+  name: string;
+  sets: number;
+  reps: string;
+  rest: string;
+  rpe: number;
+}
+
+export interface WorkoutTemplateSession {
+  label: string;
+  exercises: WorkoutTemplateExercise[];
+}
+
+export interface WorkoutTemplate {
+  id: string;
+  name: string;
+  description: string;
+  division: string;
+  targetLevel: string;
+  focus: string;
+  sessions: WorkoutTemplateSession[];
+  createdAt: string;
+  isCustom?: boolean;
+}
+
+export interface RunTemplateSession {
+  dayLabel: string;
+  title: string;
+  type: "corrida" | "forca" | "descanso";
+  zone?: "E" | "M" | "T" | "I" | "R";
+  distanceKm?: number;
+  intervals?: string;
+  description: string;
+}
+
+export interface RunWorkoutTemplate {
+  id: string;
+  name: string;
+  description: string;
+  targetLevel: string;
+  weeklyKm: number;
+  sessionsPerWeek: number;
+  focus: string;
+  sessions: RunTemplateSession[];
+  createdAt: string;
+  isCustom?: boolean;
 }

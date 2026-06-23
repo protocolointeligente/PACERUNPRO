@@ -51,6 +51,7 @@ model User {
   passwordHash  String?
   name          String
   avatarUrl     String?
+  bannerUrl     String?
   image         String?
   role          UserRole @default(ATHLETE)
   phone         String?
@@ -71,6 +72,9 @@ model User {
   feedLikes     FeedLike[]
   accounts      Account[]
   sessions      Session[]
+  vouchersCreated     Voucher[] @relation("VouchersCreated")
+  billingSettings     BillingSettings?
+  workoutLogComments  WorkoutLogComment[]
 
   @@map("users")
 }
@@ -148,6 +152,8 @@ model Athlete {
   races              Race[]
   achievements       Achievement[]
   teamMemberships    TeamMember[]
+  loadParams         AthleteLoadParams?
+  planPurchases      PlanPurchase[]
 
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -161,12 +167,24 @@ model Coach {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   credential   String?  // ex.: CREF 014626-G/MG
   bio          String?
+  publicBio    String?  // texto exibido na página pública da assessoria
   specialties  String[]
+  slug         String?  @unique  // ex.: "ricardo-pace" → /p/ricardo-pace
+  logoUrl      String?
+  whatsapp     String?
 
-  athletes     Athlete[]
-  teams        Team[]
-  trainingPlans TrainingPlan[]
-  exercises    Exercise[]
+  plans             CoachPlan[]
+  athletes          Athlete[]
+  teams             Team[]
+  trainingPlans     TrainingPlan[]
+  exercises         Exercise[]
+  strengthTemplates CoachStrengthTemplate[]
+  runTemplates      CoachRunTemplate[]
+  leads             Lead[]
+  expenses          Expense[]
+  zoneModels        CoachZoneModel[]
+  planProducts      PlanProduct[]
+  sharedTemplates   SharedWorkoutTemplate[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -214,8 +232,8 @@ model TrainingPlan {
   id          String   @id @default(cuid())
   athleteId   String
   athlete     Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  coachId     String
-  coach       Coach    @relation(fields: [coachId], references: [id])
+  coachId     String?
+  coach       Coach?   @relation(fields: [coachId], references: [id])
 
   name        String
   goal        Goal
@@ -300,6 +318,9 @@ model Workout {
   cooldown      String?
   notes         String?
 
+  structured    Boolean  @default(false)  // treino com blocos estruturados
+  blocks        Json?                     // WorkoutBlock[] — ver lib/workout-blocks.ts
+
   targetPaceSecPerKm Int?
   targetHrZone       String?
   targetRpe          Int?
@@ -320,10 +341,14 @@ model Workout {
 
 model WorkoutLog {
   id           String   @id @default(cuid())
-  workoutId    String
-  workout      Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  workoutId    String?
+  workout      Workout? @relation(fields: [workoutId], references: [id], onDelete: SetNull)
   athleteId    String
   athlete      Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  // Source tracking
+  source          String   @default("manual") // manual | strava | garmin | polar | coros | apple
+  stravaActivityId String?  @unique
 
   startedAt    DateTime?
   finishedAt   DateTime?
@@ -341,9 +366,25 @@ model WorkoutLog {
   rpe          Int?
   feeling      String?
 
+  comments     WorkoutLogComment[]
+
   createdAt    DateTime @default(now())
 
   @@map("workout_logs")
+}
+
+model WorkoutLogComment {
+  id           String     @id @default(cuid())
+  workoutLogId String
+  workoutLog   WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text         String
+
+  createdAt    DateTime   @default(now())
+
+  @@index([workoutLogId])
+  @@map("workout_log_comments")
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -681,4 +722,354 @@ model Payment {
   createdAt      DateTime      @default(now())
 
   @@map("payments")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Vouchers de desconto
+// ────────────────────────────────────────────────────────────────────────────
+
+enum VoucherType {
+  PERCENT      // desconto percentual (1-100) sobre a mensalidade
+  FREE_MONTHS  // número de meses grátis
+}
+
+enum VoucherAudience {
+  B2C // planos de atleta
+  B2B // planos de assessoria/treinador
+  ALL
+}
+
+model Voucher {
+  id          String          @id @default(cuid())
+  code        String          @unique
+  type        VoucherType
+  value       Int             // percentual (1-100) ou nº de meses grátis
+  audience    VoucherAudience @default(ALL)
+  maxUses     Int?            // null = uso ilimitado
+  usedCount   Int             @default(0)
+  expiresAt   DateTime?
+  active      Boolean         @default(true)
+  note        String?         // descrição interna (ex.: "Black Friday 2026")
+
+  createdById String
+  createdBy   User            @relation("VouchersCreated", fields: [createdById], references: [id])
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("vouchers")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Planos de venda da assessoria (o que o coach oferece para seus atletas)
+// ────────────────────────────────────────────────────────────────────────────
+
+enum PlanPeriod {
+  MENSAL
+  TRIMESTRAL
+  SEMESTRAL
+  ANUAL
+}
+
+model CoachPlan {
+  id          String     @id @default(cuid())
+  coachId     String
+  coach       Coach      @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  priceCents  Int                     // preço em centavos
+  period      PlanPeriod @default(MENSAL)
+  features    String[]
+  active      Boolean    @default(true)
+  highlight   Boolean    @default(false) // destaque no plano mais popular
+  maxSlots    Int?                    // null = vagas ilimitadas
+  usedSlots   Int        @default(0)
+  sortOrder   Int        @default(0)
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("coach_plans")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Configurações financeiras da assessoria (recebimento de atletas)
+// ────────────────────────────────────────────────────────────────────────────
+
+enum ReceivingMethod {
+  PIX
+  PAGBANK
+  MERCADOPAGO
+  STRIPE
+}
+
+model BillingSettings {
+  id              String           @id @default(cuid())
+  userId          String           @unique
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Dados fiscais
+  razaoSocial     String?
+  cpfCnpj         String?
+  responsavel     String?
+
+  // Conta de recebimento
+  receivingMethod ReceivingMethod?
+  pixKey          String?
+  bankName        String?
+  bankAgency      String?
+  bankAccount     String?
+  bankAccountType String?          // corrente | poupanca
+
+  // Status de conexão com gateways externos
+  pagbankConnected      Boolean @default(false)
+  mercadopagoConnected  Boolean @default(false)
+  stripeConnected       Boolean @default(false)
+
+  // Módulo de cobrança automática de atletas (plano Assessoria+)
+  autoChargeEnabled     Boolean @default(false)
+  autoChargeDayOfMonth  Int?    @default(5)   // dia do vencimento mensal
+  gracePeriodDays       Int?    @default(3)   // dias antes de notificar
+  blockAfterDays        Int?    @default(15)  // dias de atraso para bloquear acesso
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("billing_settings")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Biblioteca de equipe compartilhada
+// ────────────────────────────────────────────────────────────────────────────
+
+enum TemplateScope {
+  PERSONAL
+  TEAM
+}
+
+enum TemplateCategory {
+  CORRIDA
+  FORCA
+  MOBILIDADE
+  FUNCIONAL
+}
+
+model SharedWorkoutTemplate {
+  id          String           @id @default(cuid())
+  coachId     String
+  coach       Coach            @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  category    TemplateCategory @default(CORRIDA)
+  workoutType WorkoutType?
+  scope       TemplateScope    @default(PERSONAL)
+  tags        String[]
+
+  objective   String?
+  warmup      String?
+  mainSet     String?
+  cooldown    String?
+  notes       String?
+  structured  Boolean          @default(false)
+  blocks      Json?
+
+  targetPaceSecPerKm Int?
+  targetHrZone       String?
+  targetRpe          Int?
+  targetDistanceKm   Float?
+  targetDurationMin  Int?
+
+  usedCount   Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([coachId])
+  @@index([scope])
+  @@map("shared_workout_templates")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Templates customizados dos treinadores
+// ────────────────────────────────────────────────────────────────────────────
+
+model CoachStrengthTemplate {
+  id          String   @id @default(cuid())
+  coachId     String
+  coach       Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  division    String?
+  targetLevel String   @default("Iniciante")
+  focus       String   @default("forca")
+  sessions    Json     // WorkoutTemplateSession[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("coach_strength_templates")
+}
+
+model CoachRunTemplate {
+  id              String   @id @default(cuid())
+  coachId         String
+  coach           Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  name            String
+  description     String?
+  targetLevel     String   @default("Iniciante")
+  weeklyKm        Float    @default(0)
+  sessionsPerWeek Int      @default(3)
+  focus           String   @default("aerobico")
+  sessions        Json     // RunTemplateSession[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("coach_run_templates")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Carga de treino (CTL/ATL/TSB — modelo de Banister)
+// ────────────────────────────────────────────────────────────────────────────
+
+model AthleteLoadParams {
+  id                      String   @id @default(cuid())
+  athleteId               String   @unique
+  athlete                 Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  // Corrida
+  thresholdPaceSecPerKm   Int?     // pace de limiar em seg/km (ex: 300 = 5:00/km)
+
+  // Ciclismo
+  ftpWatts                Int?     // FTP em watts
+
+  // Natação
+  swimThresholdSecPer100m Int?     // pace de limiar em seg/100 m
+
+  // FC (TRIMP)
+  hrMax                   Int?     // FC máxima
+  hrRest                  Int?     // FC repouso
+
+  updatedAt               DateTime @updatedAt
+
+  @@map("athlete_load_params")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// CRM de leads
+// ────────────────────────────────────────────────────────────────────────────
+
+model Lead {
+  id              String   @id @default(cuid())
+  coachId         String
+  coach           Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  name            String
+  email           String?
+  phone           String?
+  source          String   @default("quiz") // quiz | instagram | indicacao | site | evento | whatsapp
+  stage           String   @default("novo") // novo | contato | proposta | negociacao | ganho | perdido
+  notes           String?
+  monthlyFeeCents Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("leads")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Modelos de zona de treino (configuração por treinador)
+// ────────────────────────────────────────────────────────────────────────────
+
+model CoachZoneModel {
+  id        String   @id @default(cuid())
+  coachId   String
+  coach     Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  name      String                       // ex: "Corrida Avançada"
+  sport     String   @default("CORRIDA") // CORRIDA | CICLISMO | NATACAO | FORCA | GERAL
+  method    String   @default("FC_MAXIMA") // FC_MAXIMA | LIMIAR | FTP | PACE | RPE
+  zoneCount Int      @default(5)
+  zones     Json     @default("[]")      // ZoneDef[] — ver lib/zone-models.ts
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("coach_zone_models")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Loja de planilhas — coach publica, atleta independente compra
+// ────────────────────────────────────────────────────────────────────────────
+
+model PlanProduct {
+  id            String    @id @default(cuid())
+  coachId       String
+  coach         Coach     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  title         String
+  slug          String    @unique
+  description   String    @default("")
+  sport         String    @default("CORRIDA") // CORRIDA | CICLISMO | NATACAO | FORCA | GERAL
+  level         String    @default("Intermediário")
+  durationWeeks Int       @default(12)
+  weeklyHoursMin Float?
+  weeklyHoursMax Float?
+  goal          String    @default("PERFORMANCE")
+  priceCents    Int       @default(0) // em centavos BRL
+  currency      String    @default("BRL")
+  coverUrl      String?
+  published     Boolean   @default(false)
+  featured      Boolean   @default(false)
+  purchases     Int       @default(0)
+  rating        Float?
+  ratingCount   Int       @default(0)
+  included      String[]  // bullet list of what's included
+  planContent   Json?     // PlanWeek[] — semanas e treinos do plano
+
+  planPurchases PlanPurchase[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([coachId])
+  @@map("plan_products")
+}
+
+model PlanPurchase {
+  id              String      @id @default(cuid())
+  productId       String
+  product         PlanProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  athleteId       String
+  athlete         Athlete     @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  pricePaidCents  Int         @default(0)
+  currency        String      @default("BRL")
+  status          String      @default("pending") // pending | paid | refunded
+  stripeSessionId String?
+
+  createdAt       DateTime    @default(now())
+
+  @@unique([productId, athleteId])
+  @@map("plan_purchases")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Despesas da assessoria
+// ────────────────────────────────────────────────────────────────────────────
+
+model Expense {
+  id          String   @id @default(cuid())
+  coachId     String
+  coach       Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  description String
+  amountCents Int
+  category    String   @default("outros") // software | marketing | pessoal | equipamento | fornecedor | outros
+  supplier    String?
+  date        DateTime @default(now())
+  recurring   Boolean  @default(false)
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@map("expenses")
 }

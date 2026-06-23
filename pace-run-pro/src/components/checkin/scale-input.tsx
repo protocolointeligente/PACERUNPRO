@@ -18,7 +18,7 @@ export function ScaleInput({ label, value, onChange, emojis, lowLabel, highLabel
   return (
     <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm font-semibold text-white">{label}</span>
+        <span className="text-sm font-semibold text-text">{label}</span>
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-card-hover text-lg">{emojis[emojiIndex]}</span>
       </div>
 
@@ -31,7 +31,7 @@ export function ScaleInput({ label, value, onChange, emojis, lowLabel, highLabel
             aria-label={`${label}: ${n}`}
             className={cn(
               "h-8 flex-1 rounded-md border text-[11px] font-semibold transition-all",
-              n <= value ? "text-white" : "border-border bg-background text-text-muted/50"
+              n <= value ? "text-text" : "border-border bg-background text-text-muted/50"
             )}
             style={n <= value ? { backgroundColor: accent, borderColor: accent } : undefined}
           >
@@ -41,7 +41,7 @@ export function ScaleInput({ label, value, onChange, emojis, lowLabel, highLabel
       </div>
       <div className="mt-1.5 flex justify-between text-[11px] text-text-muted">
         <span>{lowLabel}</span>
-        <span className="font-display text-sm font-bold text-white">{value}/10</span>
+        <span className="font-display text-sm font-bold text-text">{value}/10</span>
         <span>{highLabel}</span>
       </div>
     </div>

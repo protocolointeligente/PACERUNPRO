@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/auth-guard";
 
 export async function POST(req: NextRequest) {
+  const session = await getSession();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+
   const { messages, athleteContext } = await req.json();
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) {
     return NextResponse.json({
       reply: getMockReply(messages[messages.length - 1]?.content ?? ""),
@@ -16,23 +22,23 @@ ${JSON.stringify(athleteContext, null, 2)}
 
 Responda sempre em português brasileiro. Seja objetiva, prática e motivadora. Use terminologia de corrida. Limite respostas a 3-4 parágrafos. Não ofereça diagnósticos médicos.`;
 
-  const resp = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: messages.map((m: { role: string; content: string }) => ({
-        role: m.role,
-        content: m.content,
-      })),
-    }),
-  });
+  const contents = messages.map((m: { role: string; content: string }) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
+
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents,
+        generationConfig: { maxOutputTokens: 1024 },
+      }),
+    }
+  );
 
   if (!resp.ok) {
     return NextResponse.json(
@@ -42,7 +48,9 @@ Responda sempre em português brasileiro. Seja objetiva, prática e motivadora. 
   }
 
   const data = await resp.json();
-  const reply = data.content?.[0]?.text ?? "Não consegui processar sua pergunta agora.";
+  const reply =
+    (data.candidates?.[0]?.content?.parts?.[0]?.text as string | undefined) ??
+    "Não consegui processar sua pergunta agora.";
   return NextResponse.json({ reply });
 }
 

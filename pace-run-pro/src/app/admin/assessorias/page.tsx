@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Building2, CheckCircle2, Users, DollarSign, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { SectionHeader } from "@/components/shared/section-header";
-import { assessoriaList } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const fadeUp = {
@@ -21,29 +20,55 @@ const fadeUp = {
   }),
 };
 
+interface AssessoriaItem {
+  id: string;
+  name: string;
+  city: string;
+  plan: string;
+  coaches: number;
+  athletes: number;
+  mrr: number;
+  status: "ativo" | "pendente" | "suspenso";
+  contact: string;
+  healthScore: number;
+  churnRisk: "baixo" | "medio" | "alto";
+  lastLoginDays: number;
+  prescribedLast7d: number;
+}
+
 const planBadgeVariant = (plan: string) => {
-  if (plan === "b2b-unlimited") return "danger" as const;
-  if (plan === "b2b-premium") return "warning" as const;
-  if (plan === "b2b-pro") return "primary" as const;
+  if (plan.includes("white") || plan.includes("unlimited")) return "danger" as const;
+  if (plan.includes("assessoria") || plan.includes("premium")) return "warning" as const;
+  if (plan.includes("pro")) return "primary" as const;
   return "outline" as const;
 };
 
 const planLabel = (plan: string) => {
   const map: Record<string, string> = {
-    "b2b-starter": "Starter",
-    "b2b-pro": "Pro",
-    "b2b-premium": "Premium",
-    "b2b-unlimited": "Ilimitado",
+    "starter": "Starter",
+    "pro": "Pro",
+    "assessoria": "Assessoria",
+    "white-label": "White Label",
   };
   return map[plan] ?? plan;
 };
 
+function HealthBadge({ score }: { score: number }) {
+  const cls = score >= 75 ? "text-success border-success/40" : score >= 50 ? "text-warning border-warning/40" : "text-danger border-danger/40";
+  if (score === 0) return null;
+  return (
+    <span className={`inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-xs font-bold ${cls}`}>
+      {score}<span className="font-normal opacity-60">/100</span>
+    </span>
+  );
+}
+
 const planFilters = [
   { id: "all", label: "Todos" },
-  { id: "b2b-starter", label: "Starter" },
-  { id: "b2b-pro", label: "Pro" },
-  { id: "b2b-premium", label: "Premium" },
-  { id: "b2b-unlimited", label: "Ilimitado" },
+  { id: "starter", label: "Starter" },
+  { id: "pro", label: "Pro" },
+  { id: "assessoria", label: "Assessoria" },
+  { id: "white-label", label: "White Label" },
 ];
 
 const statusFilters = [
@@ -52,22 +77,89 @@ const statusFilters = [
   { id: "pendente", label: "Pendentes" },
 ];
 
+const PLAN_OPTIONS: { value: string; label: string }[] = [
+  { value: "FREE",    label: "Free (b2b-free)"         },
+  { value: "ATHLETE", label: "Starter (b2b-starter)"   },
+  { value: "COACH",   label: "Pro (b2b-pro)"           },
+  { value: "TEAM",    label: "Unlimited (b2b-unlimited)" },
+];
+
+function EditPlanButton({ coachId, currentPlan }: { coachId: string; currentPlan: string }) {
+  const [open, setOpen] = useState(false);
+  const [plan, setPlan] = useState("TEAM");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/set-plan", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coachId, plan }),
+      });
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => { setSaved(false); setOpen(false); }, 1500);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
+        Editar plano
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <select
+        value={plan}
+        onChange={(e) => setPlan(e.target.value)}
+        className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-text focus:outline-none"
+      >
+        {PLAN_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+      <Button size="sm" onClick={handleSave} disabled={saving}>
+        {saved ? "Salvo!" : saving ? "…" : "Salvar"}
+      </Button>
+      <button onClick={() => setOpen(false)} className="text-xs text-text-muted hover:text-text">✕</button>
+    </div>
+  );
+}
+
 export default function AssessoriasPage() {
+  const [assessoriaList, setAssessoriaList] = useState<AssessoriaItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
 
+  useEffect(() => {
+    fetch("/api/admin/coaches")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: AssessoriaItem[]) => setAssessoriaList(data))
+      .catch(() => null)
+      .finally(() => setLoading(false));
+  }, []);
+
   const stats = useMemo(() => {
     const active = assessoriaList.filter(
-      (a) => a.status === "ativo" || approvedIds.has(a.id)
+      (a) => a.status === "ativo" || approvedIds.has(a.id),
     );
     const pending = assessoriaList.filter(
-      (a) => a.status === "pendente" && !approvedIds.has(a.id)
+      (a) => a.status === "pendente" && !approvedIds.has(a.id),
     );
     const mrr = assessoriaList.reduce((acc, a) => acc + a.mrr, 0);
     return { total: assessoriaList.length, active: active.length, pending: pending.length, mrr };
-  }, [approvedIds]);
+  }, [assessoriaList, approvedIds]);
 
   const filtered = useMemo(() => {
     return assessoriaList.filter((a) => {
@@ -81,7 +173,22 @@ export default function AssessoriasPage() {
       const matchStatus = statusFilter === "all" || effectiveStatus === statusFilter;
       return matchSearch && matchPlan && matchStatus;
     });
-  }, [search, planFilter, statusFilter, approvedIds]);
+  }, [assessoriaList, search, planFilter, statusFilter, approvedIds]);
+
+  const handleApprove = async (id: string) => {
+    try {
+      const res = await fetch("/api/admin/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessoriaId: id, action: "approve" }),
+      });
+      if (res.ok) {
+        setApprovedIds((prev) => new Set([...prev, id]));
+      }
+    } catch {
+      // network error — do not update UI
+    }
+  };
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -94,7 +201,7 @@ export default function AssessoriasPage() {
       >
         <div>
           <Badge variant="primary" className="mb-2">Assessorias</Badge>
-          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
             Gestão de assessorias
           </h1>
         </div>
@@ -108,9 +215,9 @@ export default function AssessoriasPage() {
         animate="show"
         className="grid grid-cols-2 gap-3 sm:grid-cols-4"
       >
-        <StatCard label="Total" value={`${stats.total}`} icon={Building2} accent="primary" />
-        <StatCard label="Ativas" value={`${stats.active}`} icon={CheckCircle2} accent="success" />
-        <StatCard label="Pendentes" value={`${stats.pending}`} icon={Clock} accent="danger" />
+        <StatCard label="Total" value={loading ? "…" : `${stats.total}`} icon={Building2} accent="primary" />
+        <StatCard label="Ativas" value={loading ? "…" : `${stats.active}`} icon={CheckCircle2} accent="success" />
+        <StatCard label="Pendentes" value={loading ? "…" : `${stats.pending}`} icon={Clock} accent="danger" />
         <StatCard label="MRR B2B" value={`R$${stats.mrr.toLocaleString("pt-BR")}`} icon={DollarSign} accent="info" />
       </motion.div>
 
@@ -127,7 +234,7 @@ export default function AssessoriasPage() {
           placeholder="Buscar assessoria ou cidade…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-white placeholder:text-text-muted focus:border-primary/50 focus:outline-none sm:max-w-sm"
+          className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary/50 focus:outline-none sm:max-w-sm"
         />
         <div className="flex flex-wrap gap-2">
           {planFilters.map((f) => (
@@ -138,7 +245,7 @@ export default function AssessoriasPage() {
                 "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                 planFilter === f.id
                   ? "border-primary/50 bg-primary/15 text-primary"
-                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-white"
+                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text",
               )}
             >
               {f.label}
@@ -154,7 +261,7 @@ export default function AssessoriasPage() {
                 "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                 statusFilter === f.id
                   ? "border-primary/50 bg-primary/15 text-primary"
-                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-white"
+                  : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text",
               )}
             >
               {f.label}
@@ -174,76 +281,74 @@ export default function AssessoriasPage() {
           title="Assessorias"
           subtitle={`${filtered.length} resultado(s)`}
         />
-        <div className="space-y-3">
-          {filtered.map((a) => {
-            const effectiveStatus =
-              a.status === "pendente" && approvedIds.has(a.id) ? "ativo" : a.status;
-            return (
-              <Card key={a.id}>
-                <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback>
-                        {a.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .slice(0, 2)
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-semibold text-white">
-                        {a.name}
-                      </p>
-                      <p className="text-xs text-text-muted">{a.city}</p>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((a) => {
+              const effectiveStatus =
+                a.status === "pendente" && approvedIds.has(a.id) ? "ativo" : a.status;
+              return (
+                <Card key={a.id}>
+                  <CardContent className="p-4 space-y-3">
+                    {/* Row 1: Identity + status */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="h-10 w-10 shrink-0">
+                          <AvatarFallback>
+                            {a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-text">{a.name}</p>
+                          <p className="truncate text-xs text-text-muted">{a.city}</p>
+                        </div>
+                      </div>
+                      <div className="shrink-0 flex items-center gap-2">
+                        <Badge variant={effectiveStatus === "ativo" ? "success" : "warning"}>
+                          {effectiveStatus === "ativo" ? "Ativo" : "Pendente"}
+                        </Badge>
+                        <HealthBadge score={a.healthScore} />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Badge variant={planBadgeVariant(a.plan)}>
-                      {planLabel(a.plan)}
-                    </Badge>
-                    <div className="flex items-center gap-1 text-xs text-text-muted">
-                      <Users className="h-3.5 w-3.5" />
-                      <span>{a.coaches} treinadores</span>
+                    {/* Row 2: Plan + athletes + MRR */}
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
+                      <Badge variant={planBadgeVariant(a.plan)}>{planLabel(a.plan)}</Badge>
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3 w-3" />{a.coaches} trein. · {a.athletes} atletas
+                      </span>
+                      <span className="font-semibold text-text ml-auto">R${a.mrr}/mês</span>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-text-muted">
-                      <Users className="h-3.5 w-3.5" />
-                      <span>{a.athletes} atletas</span>
+
+                    {/* Row 3: Actions */}
+                    <div className="flex flex-wrap gap-2 pt-1 border-t border-border/40">
+                      {effectiveStatus === "pendente" && (
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={() => handleApprove(a.id)}
+                        >
+                          Aprovar
+                        </Button>
+                      )}
+                      <EditPlanButton coachId={a.id} currentPlan={a.plan} />
                     </div>
-                    <span className="text-sm font-semibold text-white">
-                      R${a.mrr}/mês
-                    </span>
-                    <Badge variant={effectiveStatus === "ativo" ? "success" : "warning"}>
-                      {effectiveStatus === "ativo" ? "Ativo" : "Pendente"}
-                    </Badge>
-                    <Button variant="secondary" size="sm">
-                      Detalhe
-                    </Button>
-                    {effectiveStatus === "pendente" && (
-                      <Button
-                        variant="success"
-                        size="sm"
-                        onClick={() =>
-                          setApprovedIds((prev) => new Set([...prev, a.id]))
-                        }
-                      >
-                        Aprovar
-                      </Button>
-                    )}
-                  </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+            {filtered.length === 0 && (
+              <Card>
+                <CardContent className="p-6 text-center text-sm text-text-muted">
+                  Nenhuma assessoria encontrada.
                 </CardContent>
               </Card>
-            );
-          })}
-          {filtered.length === 0 && (
-            <Card>
-              <CardContent className="p-6 text-center text-sm text-text-muted">
-                Nenhuma assessoria encontrada.
-              </CardContent>
-            </Card>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </motion.div>
     </div>
   );

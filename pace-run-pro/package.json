@@ -35,12 +35,11 @@
     "pg": "^8.21.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-qr-code": "^2.2.0",
     "recharts": "^3.8.1",
+    "stripe": "^22.2.3",
     "tailwind-merge": "^3.6.0",
     "zustand": "^5.0.14"
-  },
-  "prisma": {
-    "seed": "npx ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -53,6 +52,7 @@
     "eslint-config-next": "^15.5.19",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5"
   }
 }

@@ -2,19 +2,21 @@
 
 import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Zap, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 // ── Shared input style ────────────────────────────────────────────────────
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 // ── Inner content (reads searchParams) ───────────────────────────────────
 function LoginContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "";
+  // Validate callbackUrl to prevent open-redirect attacks
+  const raw = searchParams.get("callbackUrl") ?? "";
+  const callbackUrl = raw.startsWith("/") ? raw : "";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,18 +41,13 @@ function LoginContent() {
       return;
     }
 
-    // Fetch session to get role
-    const { getSession } = await import("next-auth/react");
-    const session = await getSession();
-    const role = (session?.user as { role?: string })?.role;
-
-    if (role === "ADMIN") router.push("/admin/dashboard");
-    else if (role === "COACH") router.push("/treinador/dashboard");
-    else router.push(callbackUrl || "/aluno/dashboard");
+    // Full page navigation so the server picks up the new session cookie
+    // and each layout applies role-based routing (COACH → /treinador, ADMIN → /admin)
+    window.location.assign(callbackUrl || "/atleta/dashboard");
   }
 
   function handleGoogle() {
-    signIn("google", { callbackUrl: callbackUrl || "/aluno/dashboard" });
+    signIn("google", { callbackUrl: callbackUrl || "/atleta/dashboard" });
   }
 
   return (
@@ -58,7 +55,10 @@ function LoginContent() {
       <div className="rounded-2xl border border-border bg-card p-8 shadow-2xl shadow-black/40">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="font-display text-3xl font-extrabold text-white">
+          <div className="mb-5 flex justify-center">
+            <Logo size={40} />
+          </div>
+          <h1 className="font-display text-2xl font-extrabold text-text">
             Entrar na sua conta
           </h1>
           <p className="mt-2 text-sm text-text-muted">
@@ -70,7 +70,7 @@ function LoginContent() {
         <button
           type="button"
           onClick={handleGoogle}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-card py-3 text-sm font-semibold text-white hover:border-primary/40 hover:bg-card-hover transition-colors"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-card py-3 text-sm font-semibold text-text hover:border-primary/40 hover:bg-card-hover transition-colors"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5">
             <path
@@ -134,7 +134,7 @@ function LoginContent() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
                 aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
               >
                 {showPassword ? (
@@ -173,12 +173,12 @@ function LoginContent() {
         {/* Forgot password */}
         <p className="mt-4 text-center text-sm text-text-muted">
           Esqueceu a senha?{" "}
-          <a
-            href="#"
+          <Link
+            href="/recuperar-senha"
             className="font-semibold text-primary hover:text-primary/80 transition-colors"
           >
             Recuperar
-          </a>
+          </Link>
         </p>
 
         {/* Divider */}
@@ -198,13 +198,13 @@ function LoginContent() {
         {/* Legal small print */}
         <p className="mt-6 text-center text-xs text-text-muted/60">
           Ao entrar, você concorda com nossos{" "}
-          <a href="#" className="underline hover:text-text-muted transition-colors">
+          <Link href="/termos" className="underline hover:text-text-muted transition-colors">
             Termos de Uso
-          </a>{" "}
+          </Link>{" "}
           e{" "}
-          <a href="#" className="underline hover:text-text-muted transition-colors">
+          <Link href="/privacidade" className="underline hover:text-text-muted transition-colors">
             Política de Privacidade
-          </a>
+          </Link>
           .
         </p>
       </div>
@@ -219,13 +219,8 @@ export default function LoginPage() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
-              <Zap className="h-5 w-5 text-white" fill="white" />
-            </div>
-            <span className="font-display text-lg font-extrabold tracking-wide text-white">
-              PACE RUN <span className="gradient-text">PRO</span>
-            </span>
+          <Link href="/">
+            <Logo size={32} />
           </Link>
         </div>
       </nav>

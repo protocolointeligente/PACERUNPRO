@@ -4,14 +4,34 @@ import { NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
 
+const PROTECTED_API_PREFIXES = [
+  "/api/coach/",
+  "/api/atleta/",
+  "/api/athlete/",
+  "/api/admin/",
+  "/api/integrations/",
+  "/api/checkins",
+  "/api/treinador/",
+];
+
 export default auth((req) => {
   const { nextUrl } = req;
   const session = req.auth;
   const isLoggedIn = !!session;
+  const role = (session?.user as { role?: string } | undefined)?.role;
+
+  // Defense-in-depth for API routes: unauthenticated → 401 JSON
+  if (nextUrl.pathname.startsWith("/api/")) {
+    const isProtectedApi = PROTECTED_API_PREFIXES.some((p) => nextUrl.pathname.startsWith(p));
+    if (isProtectedApi && !isLoggedIn) {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
 
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
   const isCoachRoute = nextUrl.pathname.startsWith("/treinador");
-  const isAthleteRoute = nextUrl.pathname.startsWith("/aluno");
+  const isAthleteRoute = nextUrl.pathname.startsWith("/atleta");
   const isProtected = isAdminRoute || isCoachRoute || isAthleteRoute;
 
   if (!isLoggedIn && isProtected) {
@@ -20,19 +40,21 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  const role = (session?.user as { role?: string } | undefined)?.role;
-
   if (isLoggedIn && isAdminRoute && role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/aluno/dashboard", nextUrl));
+    return NextResponse.redirect(new URL("/atleta/dashboard", nextUrl));
   }
 
   if (isLoggedIn && isCoachRoute && !["COACH", "ADMIN"].includes(role ?? "")) {
-    return NextResponse.redirect(new URL("/aluno/dashboard", nextUrl));
+    return NextResponse.redirect(new URL("/atleta/dashboard", nextUrl));
+  }
+
+  if (isLoggedIn && isAthleteRoute && role === "COACH") {
+    return NextResponse.redirect(new URL("/treinador/dashboard", nextUrl));
   }
 
   return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/aluno/:path*", "/treinador/:path*", "/admin/:path*"],
+  matcher: ["/atleta/:path*", "/treinador/:path*", "/admin/:path*", "/api/:path*"],
 };

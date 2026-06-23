@@ -10,7 +10,7 @@ export function BottomNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-[#070b18]/90 backdrop-blur-xl lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-[#070b18]/90 backdrop-blur-xl lg:hidden print:hidden">
       <div className="mx-auto flex max-w-2xl items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)]">
         {items.map((item) => {
           const active = pathname?.startsWith(item.href);
@@ -27,7 +27,7 @@ export function BottomNav({ items }: { items: NavItem[] }) {
                 />
               )}
               <item.icon className={cn("h-5 w-5 transition-colors", active ? "text-primary" : "text-text-muted")} />
-              <span className={cn(active ? "text-white" : "")}>{item.label}</span>
+              <span className={cn(active ? "text-text" : "")}>{item.label}</span>
             </Link>
           );
         })}

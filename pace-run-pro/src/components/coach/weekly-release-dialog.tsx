@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { weekWorkouts, TYPE_LABELS } from "@/lib/mock-data";
+import { weekWorkouts, TYPE_LABELS, getSubtypeColor } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const dayLabels = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
@@ -86,7 +86,7 @@ export function WeeklyReleaseDialog({ athleteName }: { athleteName: string }) {
                 {scope === opt.id ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
               </span>
               <div>
-                <p className="text-sm font-semibold text-white">{opt.label}</p>
+                <p className="text-sm font-semibold text-text">{opt.label}</p>
                 <p className="mt-0.5 text-xs text-text-muted">{opt.description}</p>
               </div>
             </button>
@@ -107,35 +107,44 @@ export function WeeklyReleaseDialog({ athleteName }: { athleteName: string }) {
                 >
                   <input type="checkbox" checked={checked} onChange={() => toggle(w.id)} className="h-4 w-4 accent-primary" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-semibold text-white">{w.title}</p>
+                    <p className="truncate text-xs font-semibold text-text">{w.title}</p>
                     <p className="text-[11px] text-text-muted">{dayLabels[i] ?? ""} · {TYPE_LABELS[w.type]}</p>
                   </div>
-                  <Badge variant="outline" className="shrink-0">{w.subtype ?? TYPE_LABELS[w.type]}</Badge>
+                  {(() => {
+                    const color = getSubtypeColor(w.type, w.subtype);
+                    return (
+                      <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="shrink-0 border">
+                        {w.subtype ?? TYPE_LABELS[w.type]}
+                      </Badge>
+                    );
+                  })()}
                 </label>
               );
             })}
           </div>
         )}
 
-        <div className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-4">
-          <p className="text-xs text-text-muted">
-            <span className="font-semibold text-white">{releasedCount}</span> {releasedCount === 1 ? "treino será liberado" : "treinos serão liberados"}
-          </p>
-          <div className="flex gap-2">
-            <DialogClose asChild>
-              <Button variant="ghost">Cancelar</Button>
-            </DialogClose>
-            <Button onClick={() => setConfirmed(true)}>Confirmar liberação</Button>
-          </div>
+        <div className="mt-5 border-t border-border pt-4">
+          {confirmed ? (
+            <div className="flex items-center gap-2.5 rounded-xl border border-success/30 bg-success/5 p-3.5 text-sm text-text-muted">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+              Liberação confirmada para <span className="font-semibold text-text">{athleteName}</span>. O restante do
+              ciclo continua bloqueado até a próxima liberação.
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-text-muted">
+                <span className="font-semibold text-text">{releasedCount}</span> {releasedCount === 1 ? "treino será liberado" : "treinos serão liberados"}
+              </p>
+              <div className="flex gap-2">
+                <DialogClose asChild>
+                  <Button variant="ghost">Cancelar</Button>
+                </DialogClose>
+                <Button onClick={() => setConfirmed(true)}>Confirmar liberação</Button>
+              </div>
+            </div>
+          )}
         </div>
-
-        {confirmed && (
-          <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-success/30 bg-success/5 p-3.5 text-sm text-text-muted">
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
-            Liberação confirmada para <span className="font-semibold text-white">{athleteName}</span>. O restante do
-            ciclo continua bloqueado até a próxima liberação.
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );

@@ -1,20 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Download, FileSpreadsheet, FileText, FileType2, Sparkles } from "lucide-react";
+import { CheckCircle2, Download, FileSpreadsheet, FileText, FileType2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { athleteList, coachOverview, reportsList } from "@/lib/mock-data";
+import type { AthleteListItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-white outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted";
 
 const reportTypes = [
-  { id: "individual", label: "Relatório individual do atleta", description: "Evolução, treinos, check-ins e testes — PDF premium estilo IronGuides." },
+  { id: "individual", label: "Relatório individual do atleta", description: "Evolução, treinos, check-ins e testes do atleta no período selecionado." },
   { id: "carga-equipe", label: "Carga da equipe", description: "Volume, RPE médio e adesão de todos os atletas no período." },
   { id: "avaliacao-fisica", label: "Avaliação física & testes", description: "VO2máx, VAM, limiar, RAST e composição corporal." },
   { id: "checkins", label: "Exportação de check-ins", description: "Histórico bruto de RPE, dor, sono, fadiga e humor para análise externa." },
@@ -25,7 +25,7 @@ type ReportTypeId = (typeof reportTypes)[number]["id"];
 const periods = ["Últimos 7 dias", "Últimos 30 dias", "Mês atual", "Ciclo completo", "Personalizado"];
 
 const formats = [
-  { id: "PDF", label: "PDF premium", description: "Layout estilo IronGuides, pronto para enviar ao atleta", icon: FileText, accent: "text-danger bg-danger/15" },
+  { id: "PDF", label: "PDF", description: "Relatório formatado, pronto para enviar ao atleta", icon: FileText, accent: "text-danger bg-danger/15" },
   { id: "Excel", label: "Excel (.xlsx)", description: "Planilhas dinâmicas para análise detalhada", icon: FileSpreadsheet, accent: "text-success bg-success/15" },
   { id: "CSV", label: "CSV", description: "Dados brutos para importar em outras ferramentas", icon: FileType2, accent: "text-info bg-info/15" },
 ] as const;
@@ -35,13 +35,21 @@ type FormatId = (typeof formats)[number]["id"];
 const formatBadge: Record<string, "danger" | "success" | "info"> = { PDF: "danger", Excel: "success", CSV: "info" };
 
 export default function ReportsPage() {
+  const [athletes, setAthletes] = useState<AthleteListItem[]>([]);
+  useEffect(() => {
+    fetch("/api/coach/athletes")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: AthleteListItem[]) => setAthletes(data))
+      .catch(() => null);
+  }, []);
+
   const [scope, setScope] = useState<string>("equipe");
   const [reportType, setReportType] = useState<ReportTypeId>("individual");
   const [period, setPeriod] = useState(periods[1]);
   const [format, setFormat] = useState<FormatId>("PDF");
   const [generated, setGenerated] = useState(false);
 
-  const athlete = useMemo(() => athleteList.find((a) => a.id === scope), [scope]);
+  const athlete = useMemo(() => athletes.find((a) => a.id === scope), [athletes, scope]);
   const needsAthlete = reportType === "individual" || reportType === "avaliacao-fisica";
 
   function generate() {
@@ -190,10 +198,10 @@ export default function ReportsPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
         <Badge variant="primary" className="mb-2">Relatórios</Badge>
-        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Relatórios e exportações</h1>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Relatórios e exportações</h1>
         <p className="mt-1.5 text-sm text-text-muted">
-          Gere relatórios em PDF premium no estilo IronGuides, planilhas Excel ou exportações CSV para acompanhar a
-          evolução individual e da equipe — prontos para enviar aos seus atletas ou analisar offline.
+          Gere relatórios em PDF, planilhas Excel ou exportações CSV para acompanhar a evolução individual e da equipe —
+          prontos para enviar aos seus atletas ou analisar offline.
         </p>
       </div>
 
@@ -202,7 +210,7 @@ export default function ReportsPage() {
         <div className="space-y-5">
           <Card>
             <CardContent className="space-y-4 p-5">
-              <h3 className="font-display text-sm font-semibold text-white">Tipo de relatório</h3>
+              <h3 className="font-display text-sm font-semibold text-text">Tipo de relatório</h3>
               <div className="grid gap-2.5 sm:grid-cols-2">
                 {reportTypes.map((t) => (
                   <button
@@ -216,7 +224,7 @@ export default function ReportsPage() {
                       reportType === t.id ? "border-primary/60 bg-primary/15" : "border-border bg-card-hover/30 hover:border-primary/30"
                     )}
                   >
-                    <p className="text-sm font-semibold text-white">{t.label}</p>
+                    <p className="text-sm font-semibold text-text">{t.label}</p>
                     <p className="mt-0.5 text-[11px] text-text-muted">{t.description}</p>
                   </button>
                 ))}
@@ -227,7 +235,7 @@ export default function ReportsPage() {
           {needsAthlete && (
             <Card>
               <CardContent className="p-5">
-                <h3 className="mb-3 font-display text-sm font-semibold text-white">Atleta</h3>
+                <h3 className="mb-3 font-display text-sm font-semibold text-text">Atleta</h3>
                 <select
                   value={scope}
                   onChange={(e) => {
@@ -236,9 +244,9 @@ export default function ReportsPage() {
                   }}
                   className={inputClass}
                 >
-                  <option value="equipe" className="bg-card text-white">Selecione um atleta…</option>
-                  {athleteList.map((a) => (
-                    <option key={a.id} value={a.id} className="bg-card text-white">
+                  <option value="equipe" className="bg-card text-text">Selecione um atleta…</option>
+                  {athletes.map((a) => (
+                    <option key={a.id} value={a.id} className="bg-card text-text">
                       {a.name} — {a.goal}
                     </option>
                   ))}
@@ -249,7 +257,7 @@ export default function ReportsPage() {
 
           <Card>
             <CardContent className="space-y-4 p-5">
-              <h3 className="font-display text-sm font-semibold text-white">Período &amp; formato</h3>
+              <h3 className="font-display text-sm font-semibold text-text">Período &amp; formato</h3>
               <label className="block max-w-sm">
                 <span className={labelClass}>Período</span>
                 <select
@@ -261,7 +269,7 @@ export default function ReportsPage() {
                   className={inputClass}
                 >
                   {periods.map((p) => (
-                    <option key={p} value={p} className="bg-card text-white">{p}</option>
+                    <option key={p} value={p} className="bg-card text-text">{p}</option>
                   ))}
                 </select>
               </label>
@@ -286,7 +294,7 @@ export default function ReportsPage() {
                         <span className={cn("mb-2 flex h-9 w-9 items-center justify-center rounded-lg", f.accent)}>
                           <Icon className="h-4.5 w-4.5" />
                         </span>
-                        <p className="text-sm font-semibold text-white">{f.label}</p>
+                        <p className="text-sm font-semibold text-text">{f.label}</p>
                         <p className="mt-0.5 text-[11px] text-text-muted">{f.description}</p>
                       </button>
                     );
@@ -305,20 +313,20 @@ export default function ReportsPage() {
                       <div className="flex items-center gap-2.5 text-sm text-text-muted">
                         <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
                         <span>
-                          Relatório <span className="font-semibold text-white">{reportTypes.find((t) => t.id === reportType)?.label}</span>{" "}
-                          {needsAthlete && athlete ? <>de <span className="font-semibold text-white">{athlete.name}</span> </> : null}
-                          gerado em <span className="font-semibold text-white">{format}</span> · {period.toLowerCase()}.
+                          Relatório <span className="font-semibold text-text">{reportTypes.find((t) => t.id === reportType)?.label}</span>{" "}
+                          {needsAthlete && athlete ? <>de <span className="font-semibold text-text">{athlete.name}</span> </> : null}
+                          gerado em <span className="font-semibold text-text">{format}</span> · {period.toLowerCase()}.
                         </span>
                       </div>
                       <div className="mt-3 flex gap-2">
                         <button
                           onClick={downloadReport}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 border border-primary/30 px-3.5 py-2 text-sm font-semibold text-white hover:bg-primary/25 transition-colors"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 border border-primary/30 px-3.5 py-2 text-sm font-semibold text-primary hover:bg-primary/25 transition-colors"
                         >
                           <Download className="h-4 w-4" />
                           {format === "PDF" ? "Abrir PDF" : `Baixar ${format}`}
                         </button>
-                        <button onClick={() => setGenerated(false)} className="px-3 py-2 text-sm text-text-muted hover:text-white transition-colors">
+                        <button onClick={() => setGenerated(false)} className="px-3 py-2 text-sm text-text-muted hover:text-text transition-colors">
                           Novo relatório
                         </button>
                       </div>
@@ -332,32 +340,19 @@ export default function ReportsPage() {
 
         {/* Sidebar */}
         <div className="space-y-5">
-          <Card className="border-primary/30 bg-gradient-to-br from-primary/12 to-card">
-            <CardContent className="p-5">
-              <h3 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold text-white">
-                <Sparkles className="h-4 w-4 text-primary" /> PDF premium estilo IronGuides
-              </h3>
-              <p className="text-xs text-text-muted">
-                Layout editorial com identidade visual da Pace Run Pro — capa com dados do atleta e do treinador
-                ({coachOverview.name}, {coachOverview.credential}), gráficos de evolução, resumo de check-ins, recordes
-                pessoais e recomendações para o próximo ciclo.
-              </p>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardContent className="space-y-3 p-5 text-xs text-text-muted">
               <div className="flex items-center justify-between">
                 <span>Atletas monitorados</span>
-                <span className="font-semibold text-white">{coachOverview.athletesCount}</span>
+                <span className="font-semibold text-text">{athletes.length}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Treinos prescritos / semana</span>
-                <span className="font-semibold text-white">{coachOverview.prescribedThisWeek}</span>
+                <span className="font-semibold text-text">—</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Carga atual da equipe</span>
-                <span className="font-semibold text-white">{Math.round(coachOverview.teamLoad * 100)}%</span>
+                <span className="font-semibold text-text">—</span>
               </div>
             </CardContent>
           </Card>
@@ -366,29 +361,9 @@ export default function ReportsPage() {
 
       {/* Recent reports */}
       <div>
-        <h3 className="mb-3 font-display text-sm font-semibold text-white">Relatórios recentes</h3>
+        <h3 className="mb-3 font-display text-sm font-semibold text-text">Relatórios recentes</h3>
         <div className="space-y-2.5">
-          {reportsList.map((r) => (
-            <Card key={r.id}>
-              <CardContent className="flex items-center justify-between gap-3 p-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-card-hover text-text-muted">
-                    <FileText className="h-4.5 w-4.5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-white">{r.name}</p>
-                    <p className="text-xs text-text-muted">{r.period}</p>
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-3">
-                  <Badge variant={formatBadge[r.type]}>{r.type}</Badge>
-                  <Button size="sm" variant="secondary">
-                    <Download className="h-3.5 w-3.5" /> Baixar
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          <p className="py-4 text-center text-sm text-text-muted">Nenhum relatório gerado ainda.</p>
         </div>
       </div>
     </div>

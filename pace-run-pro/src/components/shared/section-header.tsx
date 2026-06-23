@@ -15,7 +15,7 @@ export function SectionHeader({
   return (
     <div className="mb-4 flex items-end justify-between gap-3">
       <div>
-        <h2 className="font-display text-lg font-semibold text-white sm:text-xl">{title}</h2>
+        <h2 className="font-display text-lg font-semibold text-text sm:text-xl">{title}</h2>
         {subtitle && <p className="mt-0.5 text-sm text-text-muted">{subtitle}</p>}
       </div>
       {href && (
