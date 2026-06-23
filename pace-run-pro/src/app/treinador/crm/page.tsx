@@ -191,25 +191,34 @@ function NewLeadForm({ onClose, onAdd }: { onClose: () => void; onAdd: (lead: Cr
   const [source, setSource] = useState<CrmLead["source"]>("instagram");
   const [value, setValue] = useState("290");
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const initials = name.trim().split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-    const today = new Date().toISOString().slice(0, 10);
-    onAdd({
-      id: `lead-${Date.now()}`,
-      name: name.trim(),
-      email,
-      phone,
-      source,
-      stage: "novo",
-      value: Number(value) || 290,
-      notes,
-      createdAt: today,
-      lastContact: today,
-      avatar: initials || "??",
-    });
-    onClose();
+    setSaving(true);
+    try {
+      const monthlyFeeCents = Math.round((Number(value) || 290) * 100);
+      const res = await fetch("/api/coach/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email || null,
+          phone: phone || null,
+          source,
+          stage: "novo",
+          notes: notes || null,
+          monthlyFeeCents,
+        }),
+      });
+      if (res.ok) {
+        const apiLead = (await res.json()) as ApiLead;
+        onAdd(apiLeadToCrmLead(apiLead));
+        onClose();
+      }
+    } finally {
+      setSaving(false);
+    }
   }
 
   const inputCls = "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none";
@@ -265,7 +274,9 @@ function NewLeadForm({ onClose, onAdd }: { onClose: () => void; onAdd: (lead: Cr
         </div>
         <div className="flex gap-2 pt-1">
           <Button type="button" variant="ghost" className="flex-1" onClick={onClose}>Cancelar</Button>
-          <button type="submit" className="gradient-primary flex-1 rounded-xl px-4 py-2 text-sm font-semibold text-white">Adicionar</button>
+          <button type="submit" disabled={saving} className="gradient-primary flex-1 rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+            {saving ? "Salvando…" : "Adicionar"}
+          </button>
         </div>
       </form>
     </motion.div>

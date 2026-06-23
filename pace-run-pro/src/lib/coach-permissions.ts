@@ -55,7 +55,7 @@ const coreNav: NavItem[] = [
 
   // — Prescrição —
   { href: "/treinador/prescricao/periodizacao", label: "Periodização",     icon: CalendarDays, sectionStart: "Prescrição" },
-  { href: "/treinador/prescricao/corrida",      label: "Corrida & VDOT",   icon: Activity    },
+  { href: "/treinador/prescricao/corrida",      label: "Prescrever corrida", icon: Activity  },
   { href: "/treinador/prescricao/forca",        label: "Força",            icon: Dumbbell    },
   { href: "/treinador/minha-loja",              label: "Minha loja",       icon: ShoppingBag },
   { href: "/treinador/biblioteca",              label: "Biblioteca",       icon: BookOpen    },

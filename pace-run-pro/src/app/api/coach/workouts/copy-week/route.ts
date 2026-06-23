@@ -128,8 +128,18 @@ export async function POST(req: NextRequest) {
   }
 
   let created = 0;
+  let skipped = 0;
   for (const athleteId of validTargets) {
+    // Collect dates already occupied for this athlete in the target week
+    const occupiedWorkouts = await prisma.workout.findMany({
+      where: { date: { gte: weekStart, lte: weekEnd }, week: { plan: { athleteId, coachId: coach.id } } },
+      select: { date: true },
+    });
+    const occupiedDates = new Set(occupiedWorkouts.map((w) => w.date.toISOString()));
+
     for (const wo of sourceWorkouts) {
+      if (occupiedDates.has(wo.date.toISOString())) { skipped++; continue; }
+
       const week = await findOrCreatePlanAndWeek(athleteId, coach.id, wo.date);
       await prisma.workout.create({
         data: {
@@ -156,5 +166,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ created, workouts: sourceWorkouts.length, athletes: validTargets.length });
+  return NextResponse.json({ created, skipped, workouts: sourceWorkouts.length, athletes: validTargets.length });
 }

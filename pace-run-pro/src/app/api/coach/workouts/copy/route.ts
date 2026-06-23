@@ -117,7 +117,15 @@ export async function POST(req: NextRequest) {
   }
 
   let created = 0;
+  let skipped = 0;
   for (const athleteId of validTargets) {
+    // Skip if this athlete already has a workout on the same date
+    const existing = await prisma.workout.findFirst({
+      where: { date: source.date, week: { plan: { athleteId, coachId: coach.id } } },
+      select: { id: true },
+    });
+    if (existing) { skipped++; continue; }
+
     const week = await findOrCreatePlanAndWeek(athleteId, coach.id, source.date);
     await prisma.workout.create({
       data: {
@@ -143,5 +151,5 @@ export async function POST(req: NextRequest) {
     created++;
   }
 
-  return NextResponse.json({ created });
+  return NextResponse.json({ created, skipped });
 }
