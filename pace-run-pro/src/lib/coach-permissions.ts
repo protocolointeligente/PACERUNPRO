@@ -20,6 +20,7 @@ import {
   User,
   Zap,
   BookOpen,
+  Layers,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -62,6 +63,7 @@ const coreNav: NavItem[] = [
 
   // — Acompanhamento —
   { href: "/treinador/atletas",         label: "Atletas",         icon: Users,      sectionStart: "Acompanhamento" },
+  { href: "/treinador/grupos",          label: "Grupos",          icon: Layers      },
   { href: "/treinador/alertas",         label: "Alertas",         icon: Bell        },
   { href: "/treinador/analise-semanal", label: "Análise semanal", icon: BarChart2   },
   { href: "/treinador/relatorios",      label: "Relatórios",      icon: FileBarChart},

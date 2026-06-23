@@ -148,8 +148,11 @@ function SourceBadge({ source }: { source: CrmLead["source"] }) {
   );
 }
 
-function LeadCard({ lead, onAdvance }: { lead: CrmLead; onAdvance: () => void }) {
+function LeadCard({ lead, onAdvance, onConvert }: { lead: CrmLead; onAdvance: () => void; onConvert: () => void }) {
   const canAdvance = lead.stage !== "ganho" && lead.stage !== "perdido";
+  const isWon = lead.stage === "ganho";
+  const isConverted = lead.notes?.includes("[Convertido em atleta]") ?? false;
+
   return (
     <motion.div
       layout
@@ -179,6 +182,20 @@ function LeadCard({ lead, onAdvance }: { lead: CrmLead; onAdvance: () => void })
           Mover
           <ArrowRight className="h-3 w-3" />
         </button>
+      )}
+      {isWon && !isConverted && (
+        <button
+          onClick={onConvert}
+          className="flex w-full items-center justify-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 py-1 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20"
+        >
+          <Users className="h-3 w-3" />
+          Converter em atleta
+        </button>
+      )}
+      {isWon && isConverted && (
+        <span className="flex w-full items-center justify-center gap-1 rounded-lg border border-emerald-600/20 bg-emerald-900/20 py-1 text-xs text-emerald-500">
+          Atleta criado
+        </span>
       )}
     </motion.div>
   );
@@ -327,6 +344,26 @@ function CrmContent() {
     }).catch(() => null);
   }
 
+  async function convertLead(id: string) {
+    const res = await fetch("/api/coach/leads/convert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ leadId: id }),
+    }).catch(() => null);
+    if (res?.ok) {
+      setLeads((prev) =>
+        prev.map((l) =>
+          l.id === id
+            ? { ...l, stage: "ganho" as LeadStage, notes: (l.notes ? l.notes + "\n" : "") + "[Convertido em atleta]" }
+            : l
+        )
+      );
+    } else {
+      const body = await res?.json().catch(() => ({})) as { error?: string };
+      alert(body?.error ?? "Erro ao converter lead em atleta.");
+    }
+  }
+
   function updateLeadStage(id: string, stage: LeadStage) {
     setLeads((prev) => prev.map((l) => l.id === id ? { ...l, stage } : l));
     void fetch("/api/coach/leads", {
@@ -471,7 +508,7 @@ function CrmContent() {
                   <div className="space-y-2">
                     <AnimatePresence>
                       {stageLeads.map((lead) => (
-                        <LeadCard key={lead.id} lead={lead} onAdvance={() => advanceLead(lead.id)} />
+                        <LeadCard key={lead.id} lead={lead} onAdvance={() => advanceLead(lead.id)} onConvert={() => convertLead(lead.id)} />
                       ))}
                     </AnimatePresence>
                     {stageLeads.length === 0 && (
@@ -495,7 +532,7 @@ function CrmContent() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border">
-                        {["Nome", "Origem", "Estágio", "Valor", "Último contato", "Notas"].map((h) => (
+                        {["Nome", "Origem", "Estágio", "Valor", "Último contato", "Notas", ""].map((h) => (
                           <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                             {h}
                           </th>
@@ -544,6 +581,20 @@ function CrmContent() {
                             <td className="px-4 py-3 text-sm text-text-muted">{formatDate(lead.lastContact)}</td>
                             <td className="max-w-[200px] px-4 py-3 text-xs text-text-muted">
                               <span className="line-clamp-2">{lead.notes}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              {lead.stage === "ganho" && !lead.notes?.includes("[Convertido em atleta]") && (
+                                <button
+                                  onClick={() => convertLead(lead.id)}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-400 hover:bg-emerald-500/20 transition-colors whitespace-nowrap"
+                                >
+                                  <Users className="h-3 w-3" />
+                                  Converter
+                                </button>
+                              )}
+                              {lead.notes?.includes("[Convertido em atleta]") && (
+                                <span className="text-xs text-emerald-500">Atleta criado</span>
+                              )}
                             </td>
                           </motion.tr>
                         ))}

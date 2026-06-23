@@ -9,6 +9,13 @@ const PLAN_MAP: Record<string, string> = {
   TEAM: "assessoria",
 };
 
+const PLAN_MRR: Record<string, number> = {
+  FREE: 0,
+  ATHLETE: 197,
+  COACH: 397,
+  TEAM: 997,
+};
+
 const STATUS_MAP: Record<string, string> = {
   ACTIVE: "ativo",
   TRIAL: "pendente",
@@ -90,7 +97,7 @@ export async function GET() {
       coaches: 1,
       athletes: athleteCount,
       activeAthletes,
-      mrr: 0,
+      mrr: sub ? (PLAN_MRR[sub.plan] ?? 0) : 0,
       status,
       approvedAt: coach.createdAt.toISOString(),
       contact: coach.user.email,
