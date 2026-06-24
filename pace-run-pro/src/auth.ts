@@ -80,9 +80,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Token refresh: re-read role from DB so changes take effect without re-login
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true },
+          select: { role: true, email: true },
         });
-        if (dbUser) token.role = dbUser.role;
+        if (dbUser) {
+          let role = dbUser.role;
+
+          // Bootstrap on refresh: if ADMIN_EMAILS is set and the DB still has a
+          // non-admin role for this email, promote and persist immediately.
+          if (role !== "ADMIN" && dbUser.email) {
+            const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+              .split(",")
+              .map((e) => e.trim().toLowerCase())
+              .filter(Boolean);
+            if (adminEmails.includes(dbUser.email.toLowerCase())) {
+              role = "ADMIN" as UserRole;
+              await prisma.user.update({
+                where: { id: token.id as string },
+                data: { role: "ADMIN" },
+              });
+            }
+          }
+
+          token.role = role;
+        }
       }
       return token;
     },
