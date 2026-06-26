@@ -154,6 +154,7 @@ model Athlete {
   teamMemberships    TeamMember[]
   loadParams         AthleteLoadParams?
   planPurchases      PlanPurchase[]
+  recoveryLogs       RecoveryLog[]
 
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -1064,6 +1065,27 @@ model PlanPurchase {
 
   @@unique([productId, athleteId])
   @@map("plan_purchases")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Histórico de recuperação (série temporal do recovery score)
+// ────────────────────────────────────────────────────────────────────────────
+
+model RecoveryLog {
+  id            String   @id @default(cuid())
+  athleteId     String
+  athlete       Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  date          DateTime @default(now())
+  score         Float    // 0–1 (calculado a partir de check-in: sono, fadiga, humor, dor)
+  ctl           Float?   // CTL no momento do registro
+  atl           Float?   // ATL no momento do registro
+  tsb           Float?   // TSB no momento do registro
+
+  createdAt     DateTime @default(now())
+
+  @@index([athleteId, date])
+  @@map("recovery_logs")
 }
 
 // ────────────────────────────────────────────────────────────────────────────

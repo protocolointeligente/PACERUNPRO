@@ -61,7 +61,7 @@ export function SplitsChart({ splits }: { splits: Split[] }) {
           />
           <Tooltip
             contentStyle={tooltipStyle}
-            formatter={(value: number) => [secToPace(value), "Pace"]}
+            formatter={(value) => [secToPace(Number(value)), "Pace"]}
           />
           <Line
             type="monotone"
