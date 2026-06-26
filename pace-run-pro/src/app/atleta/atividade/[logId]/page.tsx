@@ -4,6 +4,7 @@ import { ArrowLeft, Clock, Gauge, HeartPulse, Flame, Mountain, BarChart2 } from 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { WorkoutLogComments } from "@/components/workout-log-comments";
+import { SplitsChart } from "@/components/charts/splits-chart";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-guard";
 
@@ -43,6 +44,7 @@ export default async function AtividadePage({ params }: { params: Promise<{ logI
     include: {
       workout: { select: { title: true, type: true, objective: true, notes: true, date: true } },
     },
+    // splits is a Json field — selected automatically via include
   });
   if (!log) notFound();
 
@@ -50,6 +52,17 @@ export default async function AtividadePage({ params }: { params: Promise<{ logI
   const date = new Date(log.workout?.date ?? log.finishedAt ?? log.createdAt).toLocaleDateString("pt-BR", {
     weekday: "long", day: "2-digit", month: "long", year: "numeric",
   });
+
+  type SplitEntry = { km: number; pace: string; elev?: number };
+  let splits: SplitEntry[] = [];
+  if (log.splits) {
+    try {
+      const raw = log.splits as unknown;
+      splits = Array.isArray(raw) ? (raw as SplitEntry[]) : [];
+    } catch {
+      splits = [];
+    }
+  }
 
   const stats = [
     log.distanceKm != null && {
@@ -102,6 +115,16 @@ export default async function AtividadePage({ params }: { params: Promise<{ logI
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Splits chart */}
+      {splits.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted">Pace por km</p>
+            <SplitsChart splits={splits} />
+          </CardContent>
+        </Card>
       )}
 
       {/* Coach notes */}
