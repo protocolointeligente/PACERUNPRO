@@ -144,6 +144,9 @@ model Athlete {
   adherenceRate      Float           @default(0) // 0–1
   recoveryScore      Float           @default(0) // 0–1
 
+  parqAccepted       Boolean         @default(false)
+  parqAcceptedAt     DateTime?
+
   metrics            Metric[]
   checkins           CheckIn[]
   performanceTests   PerformanceTest[]

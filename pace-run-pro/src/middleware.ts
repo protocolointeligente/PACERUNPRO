@@ -53,7 +53,10 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/treinador/dashboard", nextUrl));
   }
 
-  return NextResponse.next();
+  // Forward pathname so server-layout components can read it via headers()
+  const res = NextResponse.next();
+  res.headers.set("x-pathname", nextUrl.pathname);
+  return res;
 });
 
 export const config = {
