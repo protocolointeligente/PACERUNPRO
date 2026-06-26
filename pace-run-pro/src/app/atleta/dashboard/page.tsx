@@ -12,7 +12,8 @@ import {
   TrendingUp,
   UserCircle,
 } from "lucide-react";
-import { formStatus, FORM_LABELS } from "@/lib/training-load";
+import { ResponsiveContainer, LineChart, Line, Tooltip } from "recharts";
+import { formStatus, FORM_LABELS, type LoadDay } from "@/lib/training-load";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,7 @@ export default function AthleteDashboard() {
   const [workoutsLoading, setWorkoutsLoading] = useState(true);
   const [loadTsb, setLoadTsb] = useState<number | null>(null);
   const [loadCtl, setLoadCtl] = useState<number | null>(null);
+  const [loadSeries, setLoadSeries] = useState<LoadDay[]>([]);
 
   useEffect(() => {
     setGreeting(getGreeting());
@@ -71,10 +73,13 @@ export default function AthleteDashboard() {
   useEffect(() => {
     fetch("/api/atleta/training-load")
       .then((r) => r.ok ? r.json() : null)
-      .then((d: { latest?: { tsb: number; ctl: number } | null } | null) => {
+      .then((d: { latest?: { tsb: number; ctl: number } | null; series?: LoadDay[] } | null) => {
         if (d?.latest) {
           setLoadTsb(d.latest.tsb);
           setLoadCtl(d.latest.ctl);
+        }
+        if (d?.series?.length) {
+          setLoadSeries(d.series.slice(-14));
         }
       })
       .catch(() => null);
@@ -216,6 +221,24 @@ export default function AthleteDashboard() {
                     <span>CTL {loadCtl?.toFixed(0)}</span>
                     <span>TSB {loadTsb >= 0 ? "+" : ""}{loadTsb.toFixed(0)}</span>
                   </div>
+                  {loadSeries.length > 2 && (
+                    <div className="h-10 w-full opacity-70">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={loadSeries}>
+                          <Tooltip
+                            content={({ active, payload }) =>
+                              active && payload?.[0] ? (
+                                <span className="rounded bg-card px-1.5 py-0.5 text-[10px] text-text-muted shadow">
+                                  CTL {Number(payload[0].value).toFixed(0)}
+                                </span>
+                              ) : null
+                            }
+                          />
+                          <Line type="monotone" dataKey="ctl" dot={false} strokeWidth={1.5} stroke="currentColor" className="text-primary" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

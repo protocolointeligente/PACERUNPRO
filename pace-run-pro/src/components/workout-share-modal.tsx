@@ -68,6 +68,8 @@ export function WorkoutShareModal({
     const subParts = [
       metrics.pace && `${metrics.pace} /km`,
       metrics.duration,
+      metrics.avgHr && `${metrics.avgHr} bpm`,
+      metrics.elevation && `↑${metrics.elevation}m`,
     ].filter(Boolean);
     ctx.fillText(subParts.join("  ·  "), 540, 1220);
 
@@ -199,16 +201,19 @@ export function WorkoutShareModal({
     keyMetrics.push({ label: "Pace", value: `${metrics.pace} /km` });
   }
   keyMetrics.push({ label: "Duração", value: metrics.duration });
-  if (metrics.exerciseCount && keyMetrics.length < 3) {
-    keyMetrics.push({
-      label: "Exercícios",
-      value: String(metrics.exerciseCount),
-    });
+  if (metrics.avgHr) {
+    keyMetrics.push({ label: "FC média", value: `${metrics.avgHr} bpm` });
   }
-  if (metrics.calories && keyMetrics.length < 3) {
+  if (metrics.elevation && keyMetrics.length < 4) {
+    keyMetrics.push({ label: "Elevação", value: `↑${metrics.elevation}m` });
+  }
+  if (metrics.exerciseCount && keyMetrics.length < 4) {
+    keyMetrics.push({ label: "Exercícios", value: String(metrics.exerciseCount) });
+  }
+  if (metrics.calories && keyMetrics.length < 4) {
     keyMetrics.push({ label: "kcal", value: String(metrics.calories) });
   }
-  const displayMetrics = keyMetrics.slice(0, 3);
+  const displayMetrics = keyMetrics.slice(0, 4);
 
   return (
     <AnimatePresence>
@@ -251,16 +256,16 @@ export function WorkoutShareModal({
                 </div>
               </div>
 
-              <div className="mt-4 flex gap-3">
+              <div className={`mt-4 grid gap-2 ${displayMetrics.length > 3 ? "grid-cols-4" : "grid-cols-3"}`}>
                 {displayMetrics.map((m) => (
                   <div
                     key={m.label}
-                    className="flex flex-1 flex-col items-center rounded-xl border border-border bg-background/50 py-2.5 px-1"
+                    className="flex flex-col items-center rounded-xl border border-border bg-background/50 py-2.5 px-1"
                   >
-                    <span className="font-stat text-base font-bold text-text leading-tight">
+                    <span className="font-stat text-sm font-bold text-text leading-tight">
                       {m.value}
                     </span>
-                    <span className="text-[11px] text-text-muted mt-0.5">
+                    <span className="text-[10px] text-text-muted mt-0.5 text-center">
                       {m.label}
                     </span>
                   </div>
