@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
+import { iaTreinadoraLimiter } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rl = iaTreinadoraLimiter(req);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Limite de mensagens atingido. Aguarde um momento antes de enviar mais." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   const session = await getSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
@@ -16,11 +25,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const systemPrompt = `Você é a IA Treinadora do PACE RUN PRO, uma assistente especializada em corrida de rua e triathlon para atletas brasileiros. Você tem acesso ao contexto do atleta:
-
-${JSON.stringify(athleteContext, null, 2)}
-
-Responda sempre em português brasileiro. Seja objetiva, prática e motivadora. Use terminologia de corrida. Limite respostas a 3-4 parágrafos. Não ofereça diagnósticos médicos.`;
+  const systemPrompt = `Você é a IA Treinadora do PACE RUN PRO, uma assistente especializada em corrida de rua e triathlon para atletas brasileiros. Você tem acesso ao contexto do atleta:\n\n${JSON.stringify(athleteContext, null, 2)}\n\nResponda sempre em português brasileiro. Seja objetiva, prática e motivadora. Use terminologia de corrida. Limite respostas a 3-4 parágrafos. Não ofereça diagnósticos médicos.`;
 
   const contents = messages.map((m: { role: string; content: string }) => ({
     role: m.role === "assistant" ? "model" : "user",

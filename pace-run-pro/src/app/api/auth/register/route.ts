@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { authRegisterLimiter } from "@/lib/rate-limit";
 
 function recommendPlanId(athleteCount: number): string {
   if (athleteCount <= 1) return "b2b-free";
@@ -11,6 +12,14 @@ function recommendPlanId(athleteCount: number): string {
 }
 
 export async function POST(req: NextRequest) {
+  const rl = authRegisterLimiter(req);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Muitas tentativas de cadastro. Aguarde alguns minutos e tente novamente." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   try {
     const { name, email, password, phone, city, goal, role, studentCount, coachId } = await req.json();
     if (!name || !email || !password) {

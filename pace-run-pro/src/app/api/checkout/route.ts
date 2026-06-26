@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { createPixOrder, createCreditCardOrder } from "@/lib/pagbank";
+import { checkoutLimiter } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rl = checkoutLimiter(req);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Muitas tentativas de pagamento. Aguarde um momento e tente novamente." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   const session = await getSession();
 
   const body = (await req.json()) as {
