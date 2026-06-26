@@ -256,16 +256,18 @@ export type CheckInRecord = {
 };
 
 export interface CheckInRuleResult {
-  action: "bloquear_intenso" | "reduzir_volume" | "ajustar_treino" | "ok";
-  severity: "info" | "warning" | "danger";
+  action: "bloquear_treino" | "substituir_regenerativo" | "reduzir_intensidade" | "bloquear_intenso" | "reduzir_volume" | "ajustar_treino" | "ok";
+  severity: "critical" | "danger" | "warning" | "info";
   title: string;
   message: string;
-  suggestion?: string; // treino alternativo sugerido quando bloqueado
+  suggestion?: string;
 }
 
 /**
  * Regras do check-in inteligente (Hooper-aware):
- *  - dor > 7 → orienta treino regenerativo (não apenas bloqueia)
+ *  - dor >= 8 → bloqueia treino + encaminhamento médico obrigatório + notifica treinador
+ *  - dor 6–7 → substitui treino intenso por regenerativo
+ *  - dor 4–5 → reduz intensidade com aviso
  *  - fadiga alta (>=7) por 3 dias seguidos → reduz volume com justificativa
  *  - RPE acima do planejado por 2 sessões seguidas → sugere ajuste de pace
  */
@@ -275,13 +277,29 @@ export function evaluateCheckInRules(history: CheckInRecord[]): CheckInRuleResul
 
   const latest = history[history.length - 1];
 
-  if (latest.pain > 7) {
+  if (latest.pain >= 8) {
     results.push({
-      action: "bloquear_intenso",
+      action: "bloquear_treino",
+      severity: "critical",
+      title: "Dor intensa — interrompa os treinos",
+      message: `Dor intensa (${latest.pain}/10): recomendamos interromper os treinos e consultar um profissional de saúde antes de retornar.`,
+      suggestion: "Procure avaliação médica ou fisioterapêutica antes de retornar ao treinamento. Seu treinador foi notificado.",
+    });
+  } else if (latest.pain >= 6) {
+    results.push({
+      action: "substituir_regenerativo",
       severity: "danger",
-      title: "Dor acima do limite seguro",
-      message: `Dor relatada (${latest.pain}/10) está acima de 7. Treinos intensos não são recomendados hoje.`,
-      suggestion: "Substituir por 20-30 min de mobilidade articular ou caminhada leve (RPE 3-4). Sinalize ao treinador se a dor persistir.",
+      title: "Dor elevada — substituir por regenerativo",
+      message: `Dor relatada (${latest.pain}/10). Treinos intensos substituídos por sessão regenerativa hoje.`,
+      suggestion: "Realize 20–30 min de mobilidade articular ou caminhada muito leve (RPE 2–3). Sinalize ao treinador se a dor persistir.",
+    });
+  } else if (latest.pain >= 4) {
+    results.push({
+      action: "reduzir_intensidade",
+      severity: "warning",
+      title: "Dor moderada — reduzir intensidade",
+      message: `Dor relatada (${latest.pain}/10). Reduza a intensidade do treino de hoje.`,
+      suggestion: "Substitua treinos intensos por rodagem leve (RPE 4–5). Observe a evolução e informe ao treinador se a dor aumentar.",
     });
   }
 

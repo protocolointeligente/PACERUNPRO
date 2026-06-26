@@ -158,6 +158,7 @@ export default function CheckInPage() {
   }
 
   const severityStyles = {
+    critical: { badge: "danger" as const, icon: AlertTriangle },
     danger: { badge: "danger" as const, icon: AlertTriangle },
     warning: { badge: "warning" as const, icon: AlertTriangle },
     info: { badge: "info" as const, icon: Info },
