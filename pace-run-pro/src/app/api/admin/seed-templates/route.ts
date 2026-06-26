@@ -250,6 +250,82 @@ const TEMPLATES = [
       week(12, "COL 5km", D, "TR 20min", D, DPRP, P, D),
     ],
   },
+  // ── 21 KM Meia Maratona — 16 semanas ───────────────────────────────────────
+  {
+    slug: "run-21k-evo-16",
+    title: "Meia Maratona — Evolução (16 semanas)",
+    description: "Periodização completa de 16 semanas para completar ou melhorar o tempo na meia maratona.",
+    targetLevel: "Intermediário",
+    weeklyKm: 55,
+    sessionsPerWeek: 4,
+    focus: "resistencia",
+    durationWeeks: 16,
+    goal: "VINTE_E_UM_KM",
+    phases: ["Base", "Construção", "Específico", "Polimento"],
+    included: ["16 semanas de periodização por blocos", "Longões progressivos até 19 km", "Treinos de limiar e ritmo de prova", "3 semanas de deload", "Taper adequado"],
+    weeks: [
+      // Bloco 1 — Base (sem 1-4)
+      week(1,  "COL 6km",      D, "TI 6x400m Ra3", "COL 6km",    D,    "TL 10km 70%", D),
+      week(2,  "TF 35min",     D, "TI 6x500m Ra4", "TE 8km 78%", D,    "TL 11km 72%", D),
+      week(3,  "COL 7km",      D, "TI 8x400m Ra3", "TE 9km 80%", D,    "TL 12km 72%", D),
+      week(4,  "TR 30min",     D, "COL 6km",        D,            D,    "TL 10km 68%", D),   // deload
+      // Bloco 2 — Construção (sem 5-8)
+      week(5,  "TI 6x600m Ra4",D, "TE 9km 80%",    "COL 7km",    D,    "TL 13km 74%", D),
+      week(6,  "TF 45min",     D, "TI 8x500m Ra3", "TE 10km 82%",D,    "TL 14km 74%", D),
+      week(7,  "TI 8x600m Ra3",D, "TE 10km 83%",   "COL 8km",    D,    "TL 15km 75%", D),
+      week(8,  "TR 30min",     D, "COL 7km",        D,            D,    "TL 13km 70%", D),   // deload
+      // Bloco 3 — Específico (sem 9-12)
+      week(9,  "TI 6x800m Ra4",D, "TE 11km 84%",   "COL 8km",    D,    "TL 16km 75%", D),
+      week(10, "TF 50min",     D, "TI 8x600m Ra3", "TE 11km 85%",D,    "TL 17km 75%", D),
+      week(11, "TI 8x700m Ra4",D, "TE 12km 85%",   "COL 9km",    D,    "TL 18km 76%", D),
+      week(12, "TR 35min",     D, "COL 8km",        D,            D,    "TL 15km 72%", D),   // deload
+      // Bloco 4 — Polimento / Taper (sem 13-16)
+      week(13, "TI 6x800m Ra4",D, "TE 12km 86%",   "COL 8km",    D,    "TL 19km 76%", D),
+      week(14, "TF 40min",     D, "TE 10km 82%",   "COL 7km",    D,    "TL 16km 73%", D),   // taper inicio
+      week(15, "COL 6km",      D, "TI 4x400m Ra3", D,            D,    "TL 12km 70%", D),   // taper final
+      week(16, "COL 5km",      D, "TR 20min",       D,            DPRP, P,             D),
+    ],
+  },
+  // ── 42 KM Maratona — 20 semanas ─────────────────────────────────────────────
+  {
+    slug: "run-42k-evo-20",
+    title: "Maratona — Evolução (20 semanas)",
+    description: "Preparação completa de 20 semanas para completar a maratona com segurança e desempenho.",
+    targetLevel: "Avançado",
+    weeklyKm: 70,
+    sessionsPerWeek: 4,
+    focus: "resistencia",
+    durationWeeks: 20,
+    goal: "QUARENTA_E_DOIS_KM",
+    phases: ["Base", "Construção", "Específico", "Polimento"],
+    included: ["20 semanas de periodização completa", "Longões progressivos até 32 km", "Treinos de ritmo de maratona", "4 semanas de deload planejadas", "Taper de 3 semanas"],
+    weeks: [
+      // Bloco 1 — Base (sem 1-5)
+      week(1,  "COL 7km",      D, "TI 6x400m Ra3", "COL 7km",     D,    "TL 12km 70%", D),
+      week(2,  "TF 40min",     D, "TI 6x500m Ra4", "TE 9km 76%",  D,    "TL 14km 70%", D),
+      week(3,  "COL 8km",      D, "TI 8x400m Ra3", "TE 10km 78%", D,    "TL 15km 72%", D),
+      week(4,  "TI 6x600m Ra4",D, "TE 10km 79%",   "COL 8km",     D,    "TL 16km 72%", D),
+      week(5,  "TR 35min",     D, "COL 7km",        D,             D,    "TL 13km 68%", D),  // deload
+      // Bloco 2 — Construção (sem 6-10)
+      week(6,  "TI 8x500m Ra3",D, "TE 11km 80%",   "COL 8km",     D,    "TL 17km 74%", D),
+      week(7,  "TF 50min",     D, "TI 8x600m Ra3", "TE 12km 80%", D,    "TL 19km 74%", D),
+      week(8,  "TI 8x600m Ra3",D, "TE 12km 82%",   "COL 9km",     D,    "TL 21km 75%", D),
+      week(9,  "TF 55min",     D, "TI 10x500m Ra3","TE 13km 82%", D,    "TL 23km 75%", D),
+      week(10, "TR 35min",     D, "COL 8km",        D,             D,    "TL 19km 70%", D),  // deload
+      // Bloco 3 — Específico (sem 11-15)
+      week(11, "TI 8x700m Ra4",D, "TE 13km 84%",   "COL 10km",    D,    "TL 25km 75%", D),
+      week(12, "TF 60min",     D, "TI 10x600m Ra3","TE 14km 84%", D,    "TL 27km 75%", D),
+      week(13, "TI 10x600m Ra3",D,"TE 14km 85%",   "COL 10km",    D,    "TL 29km 76%", D),
+      week(14, "TF 60min",     D, "TI 8x700m Ra3", "TE 15km 85%", D,    "TL 31km 76%", D),
+      week(15, "TR 40min",     D, "COL 9km",        D,             D,    "TL 25km 72%", D),  // deload
+      // Bloco 4 — Polimento / Taper (sem 16-20)
+      week(16, "TI 6x800m Ra4",D, "TE 15km 85%",   "COL 10km",    D,    "TL 32km 76%", D),  // pico
+      week(17, "TF 50min",     D, "TE 12km 80%",   "COL 9km",     D,    "TL 26km 74%", D),  // taper 1
+      week(18, "TI 6x600m Ra3",D, "TE 10km 78%",   "COL 8km",     D,    "TL 20km 72%", D),  // taper 2
+      week(19, "COL 7km",      D, "TI 4x400m Ra3", D,             D,    "TL 14km 70%", D),  // taper 3
+      week(20, "COL 5km",      D, "TR 20min",       D,             DPRP, P,             D),
+    ],
+  },
 ];
 
 export async function POST() {
