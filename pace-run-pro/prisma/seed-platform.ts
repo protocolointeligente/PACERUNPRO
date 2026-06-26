@@ -329,7 +329,7 @@ async function main() {
     const existing = await prisma.coachStrengthTemplate.findFirst({ where: { coachId: coach.id, name: tpl.name } });
     if (!existing) {
       await prisma.coachStrengthTemplate.create({
-        data: { coachId: coach.id, name: tpl.name, description: tpl.description, division: tpl.division, targetLevel: tpl.targetLevel, focus: tpl.focus, sessions: tpl.sessions },
+        data: { coachId: coach.id, name: tpl.name, description: tpl.description, division: tpl.division, targetLevel: tpl.targetLevel, focus: tpl.focus, sessions: tpl.sessions as never },
       });
       console.log(`  ✓ ${tpl.name}`);
     } else {

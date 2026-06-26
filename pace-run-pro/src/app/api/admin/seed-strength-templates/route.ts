@@ -392,7 +392,7 @@ export async function POST() {
           division: tpl.division,
           targetLevel: tpl.targetLevel,
           focus: tpl.focus,
-          sessions: tpl.sessions,
+          sessions: tpl.sessions as never,
         },
       });
       results.push({ name: tpl.name, id: updated.id });
@@ -405,7 +405,7 @@ export async function POST() {
           division: tpl.division,
           targetLevel: tpl.targetLevel,
           focus: tpl.focus,
-          sessions: tpl.sessions,
+          sessions: tpl.sessions as never,
         },
       });
       results.push({ name: tpl.name, id: created.id });

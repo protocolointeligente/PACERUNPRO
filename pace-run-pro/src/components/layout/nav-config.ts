@@ -53,6 +53,7 @@ export const athleteMoreNav: NavItem[] = [
   { href: "/atleta/atividade", label: "Atividades", icon: CheckSquare },
   { href: "/atleta/testes", label: "Testes de performance", icon: Activity },
   { href: "/atleta/planos", label: "Planos & periodização", icon: ClipboardList },
+  { href: "/atleta/biblioteca", label: "Minha biblioteca", icon: BookOpen },
   { href: "/atleta/previsao", label: "Previsão & estratégia", icon: Target },
   { href: "/atleta/ia-treinadora", label: "IA Treinadora", icon: Bot },
   { href: "/atleta/tenis", label: "Tênis tracker", icon: Shirt },

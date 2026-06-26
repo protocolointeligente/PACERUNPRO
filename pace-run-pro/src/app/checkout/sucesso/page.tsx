@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, ShoppingBag } from "lucide-react";
+import { BookOpen, CheckCircle2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 function SucessoContent() {
@@ -37,8 +37,11 @@ function SucessoContent() {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link href="/atleta/dashboard">
-            <Button className="w-full sm:w-auto">Ir para o painel</Button>
+          <Link href="/atleta/biblioteca">
+            <Button className="w-full sm:w-auto gap-1.5">
+              <BookOpen className="h-4 w-4" />
+              Ativar meu plano
+            </Button>
           </Link>
           <Link href="/loja">
             <Button variant="outline" className="w-full sm:w-auto gap-1.5">
