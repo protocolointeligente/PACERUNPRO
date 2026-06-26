@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import type { WorkoutSummary } from "@/lib/types";
 
 interface CalendarEvent {
-  date: string; // YYYY-MM-DD
+  date: string;
   type: string;
   title: string;
   subtype?: string;
@@ -121,20 +121,19 @@ export default function CalendarPage() {
   const monthLabel = reference.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   const grid = useMemo(() => buildMonthGrid(reference), [reference]);
 
-  // Fetch workouts for the viewed month (+ 7-day buffer on each side to cover week tab)
   useEffect(() => {
     const year = reference.getFullYear();
     const month = reference.getMonth();
     const from = new Date(year, month, -6).toISOString().slice(0, 10);
     const to = new Date(year, month + 1, 7).toISOString().slice(0, 10);
-    fetch(`/api/athlete/workouts?from=${from}&to=${to}`)
+    fetch(`/api/atleta/workouts?from=${from}&to=${to}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data: WorkoutRow[]) => setWorkouts(Array.isArray(data) ? data : []))
       .catch(() => null);
   }, [monthOffset]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    fetch("/api/athlete/races")
+    fetch("/api/atleta/races")
       .then((r) => r.json())
       .then((d: RaceRow[]) => setRaces(Array.isArray(d) ? d : []))
       .catch(() => [])
@@ -155,7 +154,7 @@ export default function CalendarPage() {
     races.map((r) => ({
       date: r.date.slice(0, 10),
       type: "prova" as const,
-      title: `🏅 ${r.name}`,
+      title: `🍅 ${r.name}`,
       subtype: `${r.distanceKm}K`,
     })),
     [races]
@@ -173,10 +172,9 @@ export default function CalendarPage() {
     return map;
   }, [allEvents]);
 
-  // Current week's workouts (Mon–Sun containing today)
   const currentWeekWorkouts = useMemo((): WorkoutSummary[] => {
     const now = new Date();
-    const dow = (now.getDay() + 6) % 7; // Mon = 0
+    const dow = (now.getDay() + 6) % 7;
     const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow);
     const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
     return workouts
@@ -208,7 +206,7 @@ export default function CalendarPage() {
     if (!distKm) return;
     setSavingRace(true);
     try {
-      const res = await fetch("/api/athlete/races", {
+      const res = await fetch("/api/atleta/races", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: raceName, date: raceDate, distanceKm: distKm, goalTime: raceGoalTime || undefined, location: raceLocation || undefined }),
@@ -225,7 +223,7 @@ export default function CalendarPage() {
   }
 
   async function deleteRace(id: string) {
-    await fetch(`/api/athlete/races/${id}`, { method: "DELETE" });
+    await fetch(`/api/atleta/races/${id}`, { method: "DELETE" });
     setRaces((prev) => prev.filter((r) => r.id !== id));
   }
 
@@ -257,7 +255,6 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {/* Legend */}
       <div className="flex flex-wrap gap-2">
         {calendarLegend.map((l) => (
           <span key={l.type} className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs text-text-muted">
@@ -271,7 +268,6 @@ export default function CalendarPage() {
         </span>
       </div>
 
-      {/* Race modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4" onClick={() => setShowModal(false)}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -365,7 +361,6 @@ export default function CalendarPage() {
           <TabsTrigger value="agenda">Agenda</TabsTrigger>
         </TabsList>
 
-        {/* Month view */}
         <TabsContent value="mes">
           <Card>
             <CardContent className="p-3 sm:p-5">
@@ -395,7 +390,7 @@ export default function CalendarPage() {
                           </span>
                           <div className="flex flex-1 flex-col gap-1 overflow-hidden">
                             {dayEvents.slice(0, 2).map((e, idx) => {
-                              const isRace = e.type === "prova" && e.title.startsWith("🏅");
+                              const isRace = e.type === "prova" && e.title.startsWith("🍅");
                               const color = isRace ? "#f97316" : getSubtypeColor(e.type, e.subtype);
                               return (
                                 <span
@@ -421,7 +416,6 @@ export default function CalendarPage() {
           </Card>
         </TabsContent>
 
-        {/* Week view */}
         <TabsContent value="semana">
           <div className="space-y-3">
             {currentWeekWorkouts.length === 0 ? (
@@ -439,7 +433,6 @@ export default function CalendarPage() {
           </div>
         </TabsContent>
 
-        {/* Agenda view */}
         <TabsContent value="agenda">
           <div className="space-y-5">
             {allEvents.length === 0 ? (
@@ -459,7 +452,7 @@ export default function CalendarPage() {
                     </p>
                     <div className="space-y-2">
                       {items.map((e, idx) => {
-                        const isRace = e.type === "prova" && e.title.startsWith("🏅");
+                        const isRace = e.type === "prova" && e.title.startsWith("🍅");
                         const color = isRace ? "#f97316" : getSubtypeColor(e.type, e.subtype);
                         return (
                           <Card key={idx}>
@@ -470,7 +463,7 @@ export default function CalendarPage() {
                                 </span>
                               </span>
                               <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-text">{e.title.replace("🏅 ", "")}</p>
+                                <p className="truncate text-sm font-semibold text-text">{e.title.replace("🍅 ", "")}</p>
                                 <span className="flex items-center gap-1 text-xs text-text-muted">
                                   <Clock className="h-3 w-3" /> {isRace ? "Prova" : TYPE_LABELS[e.type]}
                                 </span>
@@ -498,7 +491,7 @@ function buildMonthGrid(reference: Date) {
   const month = reference.getMonth();
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  const startWeekday = (firstDay.getDay() + 6) % 7; // Monday = 0
+  const startWeekday = (firstDay.getDay() + 6) % 7;
   const totalCells = Math.ceil((startWeekday + lastDay.getDate()) / 7) * 7;
 
   const grid: (Date | null)[] = [];
