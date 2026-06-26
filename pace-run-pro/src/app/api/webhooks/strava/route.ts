@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { StravaApiError, fetchStravaActivity, refreshStravaToken } from "@/lib/integrations/strava";
+import { decrypt, encrypt } from "@/lib/encryption";
 
 // Strava sends a GET to verify the webhook subscription
 export async function GET(request: NextRequest) {
@@ -17,7 +18,6 @@ export async function GET(request: NextRequest) {
 
 // Strava sends POST for new/updated activities
 export async function POST(request: NextRequest) {
-  // Validate secret embedded in webhook URL (registered with ?secret=TOKEN)
   const secret = new URL(request.url).searchParams.get("secret");
   const expectedSecret = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN;
   if (expectedSecret && secret !== expectedSecret) {
@@ -33,12 +33,10 @@ export async function POST(request: NextRequest) {
 
   const { object_type, object_id, aspect_type, owner_id } = body;
 
-  // Only process new activity events
   if (object_type !== "activity" || aspect_type !== "create") {
     return NextResponse.json({ status: "ignored" });
   }
 
-  // Find the connected device by Strava athlete ID
   const device = await prisma.connectedDevice.findFirst({
     where: { provider: "STRAVA", externalId: String(owner_id) },
     include: { user: { include: { athlete: true } } },
@@ -51,18 +49,20 @@ export async function POST(request: NextRequest) {
 
   const athlete = device.user.athlete;
 
-  // Fetch full activity, refreshing token if needed
-  let accessToken = device.accessToken;
+  let accessToken = decrypt(device.accessToken);
   let activity;
   try {
     activity = await fetchStravaActivity(String(object_id), accessToken);
   } catch (err) {
     if (err instanceof StravaApiError && err.status === 401 && device.refreshToken) {
-      const refreshed = await refreshStravaToken(device.refreshToken);
+      const refreshed = await refreshStravaToken(decrypt(device.refreshToken));
       accessToken = refreshed.access_token;
       await prisma.connectedDevice.update({
         where: { id: device.id },
-        data: { accessToken: refreshed.access_token, refreshToken: refreshed.refresh_token },
+        data: {
+          accessToken: encrypt(refreshed.access_token),
+          refreshToken: encrypt(refreshed.refresh_token),
+        },
       });
       activity = await fetchStravaActivity(String(object_id), accessToken);
     } else {
@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Find a workout scheduled for the same calendar day
   const activityDate = new Date(activity.start_date);
   const dayStart = new Date(activityDate);
   dayStart.setUTCHours(0, 0, 0, 0);
@@ -120,7 +119,6 @@ export async function POST(request: NextRequest) {
       }),
     ]);
 
-    // Recalculate adherenceRate for last 28 days
     const since28d = new Date();
     since28d.setDate(since28d.getDate() - 28);
 

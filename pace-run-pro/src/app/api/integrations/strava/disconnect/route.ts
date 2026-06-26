@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { deauthorizeStrava } from "@/lib/integrations/strava";
+import { decrypt } from "@/lib/encryption";
 
 export async function POST() {
   const session = await getSession();
@@ -14,7 +15,7 @@ export async function POST() {
   });
 
   if (device?.accessToken) {
-    await deauthorizeStrava(device.accessToken);
+    await deauthorizeStrava(decrypt(device.accessToken));
   }
 
   await prisma.connectedDevice.deleteMany({

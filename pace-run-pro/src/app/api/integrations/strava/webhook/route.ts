@@ -5,10 +5,10 @@ import {
   fetchStravaActivity,
   refreshStravaToken,
 } from "@/lib/integrations/strava";
+import { decrypt, encrypt } from "@/lib/encryption";
 
 const VERIFY_TOKEN = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN ?? "pace-run-pro-strava";
 
-// Strava sends GET to verify the subscription endpoint
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const mode      = searchParams.get("hub.mode");
@@ -21,7 +21,6 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ error: "forbidden" }, { status: 403 });
 }
 
-// Strava sends POST for every new activity
 export async function POST(request: NextRequest) {
   const body = await request.json() as {
     object_type: string;
@@ -31,7 +30,6 @@ export async function POST(request: NextRequest) {
     event_time: number;
   };
 
-  // Only handle new activity creation
   if (body.object_type !== "activity" || body.aspect_type !== "create") {
     return NextResponse.json({ ok: true });
   }
@@ -39,14 +37,12 @@ export async function POST(request: NextRequest) {
   const stravaAthleteId = String(body.owner_id);
   const stravaActivityId = String(body.object_id);
 
-  // Skip if already processed
   const existing = await prisma.workoutLog.findUnique({
     where: { stravaActivityId },
     select: { id: true },
   });
   if (existing) return NextResponse.json({ ok: true });
 
-  // Find connected device by Strava athlete ID
   const device = await prisma.connectedDevice.findFirst({
     where: { provider: "STRAVA", externalId: stravaAthleteId },
   });
@@ -58,7 +54,7 @@ export async function POST(request: NextRequest) {
   });
   if (!athlete) return NextResponse.json({ ok: true });
 
-  let accessToken = device.accessToken;
+  let accessToken = decrypt(device.accessToken);
 
   try {
     let activity;
@@ -66,11 +62,14 @@ export async function POST(request: NextRequest) {
       activity = await fetchStravaActivity(stravaActivityId, accessToken);
     } catch (err) {
       if (err instanceof StravaApiError && err.status === 401 && device.refreshToken) {
-        const refreshed = await refreshStravaToken(device.refreshToken);
+        const refreshed = await refreshStravaToken(decrypt(device.refreshToken));
         accessToken = refreshed.access_token;
         await prisma.connectedDevice.update({
           where: { id: device.id },
-          data: { accessToken: refreshed.access_token, refreshToken: refreshed.refresh_token },
+          data: {
+            accessToken: encrypt(refreshed.access_token),
+            refreshToken: encrypt(refreshed.refresh_token),
+          },
         });
         activity = await fetchStravaActivity(stravaActivityId, accessToken);
       } else {
