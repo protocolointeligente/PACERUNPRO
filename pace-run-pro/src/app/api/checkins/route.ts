@@ -20,7 +20,7 @@ export async function GET() {
   });
 
   // Fetch targetRpe from scheduled workouts for each check-in date
-  let rpeByDate = new Map<string, number | null>();
+  const rpeByDate = new Map<string, number | null>();
   if (rows.length > 0) {
     const dates = rows.map((r) => r.date);
     const minDate = dates.reduce((a, b) => (a < b ? a : b));
