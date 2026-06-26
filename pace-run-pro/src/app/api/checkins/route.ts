@@ -19,6 +19,25 @@ export async function GET() {
     select: { date: true, rpe: true, pain: true, sleep: true, fatigue: true, mood: true },
   });
 
+  // Fetch targetRpe from scheduled workouts for each check-in date
+  let rpeByDate = new Map<string, number | null>();
+  if (rows.length > 0) {
+    const dates = rows.map((r) => r.date);
+    const minDate = dates.reduce((a, b) => (a < b ? a : b));
+    const maxDate = dates.reduce((a, b) => (a > b ? a : b));
+    const workouts = await prisma.workout.findMany({
+      where: {
+        week: { plan: { athleteId: athlete.id } },
+        date: { gte: minDate, lte: new Date(maxDate.getTime() + 86_400_000) },
+      },
+      select: { date: true, targetRpe: true },
+    });
+    for (const w of workouts) {
+      const d = w.date.toISOString().slice(0, 10);
+      if (!rpeByDate.has(d)) rpeByDate.set(d, w.targetRpe ?? null);
+    }
+  }
+
   return NextResponse.json(
     rows.map((c) => ({
       date: c.date.toISOString().slice(0, 10),
@@ -27,7 +46,7 @@ export async function GET() {
       sleep: c.sleep ?? 0,
       fatigue: c.fatigue ?? 0,
       mood: c.mood ?? 0,
-      plannedRpe: 7,
+      plannedRpe: rpeByDate.get(c.date.toISOString().slice(0, 10)) ?? null,
     })),
   );
 }
@@ -57,15 +76,15 @@ export async function POST(req: NextRequest) {
 
   const { rpe, pain, sleep, fatigue, mood, notes } = body;
 
-  // Sinaliza risco automaticamente
+  // Sinaliza risco ao treinador: dor >= 6, fadiga >= 8 ou RPE >= 9
   const flagged =
-    (pain != null && pain >= 7) ||
+    (pain != null && pain >= 6) ||
     (fatigue != null && fatigue >= 8) ||
     (rpe != null && rpe >= 9);
 
   const flagReason = flagged
     ? [
-        pain != null && pain >= 7 ? `dor ${pain}/10` : null,
+        pain != null && pain >= 8 ? `dor intensa ${pain}/10 — encaminhamento médico recomendado` : pain != null && pain >= 6 ? `dor ${pain}/10` : null,
         fatigue != null && fatigue >= 8 ? `fadiga ${fatigue}/10` : null,
         rpe != null && rpe >= 9 ? `RPE ${rpe}/10` : null,
       ]

@@ -35,7 +35,7 @@ export function vo2From2400m(durationSec: number) {
   return 3.5 * (2400 / (minutes * 60)) * 3.6 * 1.5 + 10;
 }
 
-// ── Velocidade Aeróbica Máxima (VAM) ───────────────────────────────────
+// ── Velocidade Aeróbica Máxima (VAM) ────────────────────────────────────────
 
 /** VAM a partir de distância (m) e tempo (s) — velocidade média do esforço máximo. */
 export function vamFromDistanceTime(distanceM: number, durationSec: number) {
@@ -53,7 +53,7 @@ export function vo2FromVam(vamKmh: number) {
   return vamKmh * 3.5;
 }
 
-// ── RAST (Running-based Anaerobic Sprint Test) ──────────────────────────
+// ── RAST (Running-based Anaerobic Sprint Test) ──────────────────────────────
 
 export interface RastSplit {
   timeSec: number;
@@ -82,7 +82,7 @@ export function calculateRast(splits: RastSplit[], massKg: number, distanceM = 3
   return { powers, peakPowerW, minPowerW, avgPowerW, fatigueIndexWPerS };
 }
 
-// ── Limiar anaeróbico (estimativa de campo — Conconi/Pace de limiar) ────
+// ── Limiar anaeróbico (estimativa de campo — Conconi/Pace de limiar) ────────
 
 /** Estima o pace de limiar a partir do pace dos últimos 20–30 min de um teste contínuo. */
 export function thresholdPaceFromTest(distanceM: number, durationSec: number) {
@@ -91,7 +91,7 @@ export function thresholdPaceFromTest(distanceM: number, durationSec: number) {
   return Math.round(paceSecPerKm * 1.0);
 }
 
-// ── Zonas de frequência cardíaca (Karvonen) ───────────────────────────
+// ── Zonas de frequência cardíaca (Karvonen) ─────────────────────────────────
 
 export interface HrZone {
   zone: number;
@@ -115,7 +115,7 @@ export function calculateHrZones(maxHr: number, restingHr = 60): HrZone[] {
   }));
 }
 
-// ── FC máxima estimada (Tanaka 2001) ────────────────────────────────
+// ── FC máxima estimada (Tanaka 2001) ────────────────────────────────────────
 
 /**
  * Estima FC máxima pelo método de Tanaka (2001): 208 − 0.7 × idade.
@@ -126,7 +126,7 @@ export function maxHrTanaka(age: number): number {
   return Math.round(208 - 0.7 * age);
 }
 
-// ── Estimativa de 1RM (força) ──────────────────────────────────────
+// ── Estimativa de 1RM (força) ─────────────────────────────────────────────────
 
 export interface OneRMResult {
   epley: number;    // Epley (1985) — mais usada, superestima em ≥12 reps
@@ -172,7 +172,7 @@ export function zoneLoadsFrom1RM(oneRmKg: number): Record<string, { pct: number;
   };
 }
 
-// ── Hooper Index ───────────────────────────────────────────────────
+// ── Hooper Index ─────────────────────────────────────────────────────────────
 
 export interface HooperInput {
   sleep: number;    // 0-10 (10 = péssimo, 0 = excelente — escala invertida)
@@ -227,7 +227,7 @@ export function calculateHooperIndex(input: HooperInput): HooperResult {
   return { score, normalized: Math.round(normalized * 10) / 10, classification, color, recommendation };
 }
 
-// ── Carga de treino (TRIMP simplificado) ─────────────────────────────
+// ── Carga de treino (TRIMP simplificado) ────────────────────────────────────
 
 /** Carga = duração (min) × RPE (sessão) — método de Foster. */
 export function sessionLoad(durationMin: number, rpe: number) {
@@ -243,7 +243,7 @@ export function weeklyLoadStatus(currentLoad: number, previousAvgLoad: number) {
   return { ratio, label: "Estável", color: "success" as const };
 }
 
-// ── Motor de check-in inteligente ───────────────────────────────────
+// ── Motor de check-in inteligente ───────────────────────────────────────────
 
 export type CheckInRecord = {
   date: string;
@@ -256,16 +256,18 @@ export type CheckInRecord = {
 };
 
 export interface CheckInRuleResult {
-  action: "bloquear_intenso" | "reduzir_volume" | "ajustar_treino" | "ok";
-  severity: "info" | "warning" | "danger";
+  action: "bloquear_treino" | "substituir_regenerativo" | "reduzir_intensidade" | "bloquear_intenso" | "reduzir_volume" | "ajustar_treino" | "ok";
+  severity: "critical" | "danger" | "warning" | "info";
   title: string;
   message: string;
-  suggestion?: string; // treino alternativo sugerido quando bloqueado
+  suggestion?: string;
 }
 
 /**
  * Regras do check-in inteligente (Hooper-aware):
- *  - dor > 7 → orienta treino regenerativo (não apenas bloqueia)
+ *  - dor >= 8 → bloqueia treino + encaminhamento médico obrigatório + notifica treinador
+ *  - dor 6–7 → substitui treino intenso por regenerativo
+ *  - dor 4–5 → reduz intensidade com aviso
  *  - fadiga alta (>=7) por 3 dias seguidos → reduz volume com justificativa
  *  - RPE acima do planejado por 2 sessões seguidas → sugere ajuste de pace
  */
@@ -275,13 +277,29 @@ export function evaluateCheckInRules(history: CheckInRecord[]): CheckInRuleResul
 
   const latest = history[history.length - 1];
 
-  if (latest.pain > 7) {
+  if (latest.pain >= 8) {
     results.push({
-      action: "bloquear_intenso",
+      action: "bloquear_treino",
+      severity: "critical",
+      title: "Dor intensa — interrompa os treinos",
+      message: `Dor intensa (${latest.pain}/10): recomendamos interromper os treinos e consultar um profissional de saúde antes de retornar.`,
+      suggestion: "Procure avaliação médica ou fisioterapêutica antes de retornar ao treinamento. Seu treinador foi notificado.",
+    });
+  } else if (latest.pain >= 6) {
+    results.push({
+      action: "substituir_regenerativo",
       severity: "danger",
-      title: "Dor acima do limite seguro",
-      message: `Dor relatada (${latest.pain}/10) está acima de 7. Treinos intensos não são recomendados hoje.`,
-      suggestion: "Substituir por 20-30 min de mobilidade articular ou caminhada leve (RPE 3-4). Sinalize ao treinador se a dor persistir.",
+      title: "Dor elevada — substituir por regenerativo",
+      message: `Dor relatada (${latest.pain}/10). Treinos intensos substituídos por sessão regenerativa hoje.`,
+      suggestion: "Realize 20–30 min de mobilidade articular ou caminhada muito leve (RPE 2–3). Sinalize ao treinador se a dor persistir.",
+    });
+  } else if (latest.pain >= 4) {
+    results.push({
+      action: "reduzir_intensidade",
+      severity: "warning",
+      title: "Dor moderada — reduzir intensidade",
+      message: `Dor relatada (${latest.pain}/10). Reduza a intensidade do treino de hoje.`,
+      suggestion: "Substitua treinos intensos por rodagem leve (RPE 4–5). Observe a evolução e informe ao treinador se a dor aumentar.",
     });
   }
 
