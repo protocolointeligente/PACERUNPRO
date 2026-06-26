@@ -269,6 +269,7 @@ model TrainingWeek {
   workouts     Workout[]
 
   @@unique([planId, weekNumber])
+  @@index([planId, weekNumber])
   @@map("training_weeks")
 }
 
@@ -336,6 +337,7 @@ model Workout {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  @@index([weekId, date])
   @@map("workouts")
 }
 
@@ -370,6 +372,8 @@ model WorkoutLog {
 
   createdAt    DateTime @default(now())
 
+  @@index([athleteId, startedAt])
+  @@index([workoutId])
   @@map("workout_logs")
 }
 
@@ -512,6 +516,7 @@ model PerformanceTest {
 
   createdAt   DateTime @default(now())
 
+  @@index([athleteId, date])
   @@map("performance_tests")
 }
 
@@ -535,8 +540,12 @@ model CheckIn {
   flagged    Boolean  @default(false)
   flagReason String?
 
+  // Hooper Index — estresse percebido (0-10); combina com sleep+fatigue+mood = score composto
+  stress     Int?
+
   createdAt  DateTime @default(now())
 
+  @@index([athleteId, date])
   @@map("checkins")
 }
 
@@ -553,6 +562,7 @@ model Metric {
   vo2max    Float?
   notes     String?
 
+  @@index([athleteId, date])
   @@map("metrics")
 }
 
@@ -668,6 +678,7 @@ model ConnectedDevice {
   lastSyncAt   DateTime?
 
   @@unique([userId, provider])
+  @@index([userId])
   @@map("connected_devices")
 }
 
@@ -976,6 +987,7 @@ model Lead {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  @@index([coachId, stage])
   @@map("leads")
 }
 
