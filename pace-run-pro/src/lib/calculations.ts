@@ -17,15 +17,13 @@ export function vo2FromCooper(distanceM: number) {
 /** Teste de 5 minutos (Balke adaptado): distância em metros → VO2máx estimado. */
 export function vo2From5MinTest(distanceM: number) {
   const kmh = distanceM / 1000 / (5 / 60);
-  return 3.5 * kmh + 3.5 * 0.2; // base aeróbica + custo de deslocamento
+  return 3.5 * kmh + 3.5 * 0.2;
 }
 
 /** Teste de 3 km: tempo em segundos → VO2máx estimado (fórmula de campo). */
 export function vo2From3km(durationSec: number) {
   const minutes = durationSec / 60;
   const kmh = 3 / (minutes / 60);
-  // Custo de O₂ do corrida: ≈3.5 ml/kg/min por km/h (Léger & Mercier, 1983)
-  // Em esforço máximo de 3km, velocidade ≈ vVO₂máx → VO₂máx ≈ 3.5 × v
   return kmh * 3.5;
 }
 
@@ -37,18 +35,15 @@ export function vo2From2400m(durationSec: number) {
 
 // ── Velocidade Aeróbica Máxima (VAM) ────────────────────────────────────────
 
-/** VAM a partir de distância (m) e tempo (s) — velocidade média do esforço máximo. */
 export function vamFromDistanceTime(distanceM: number, durationSec: number) {
-  return (distanceM / 1000) / (durationSec / 3600); // km/h
+  return (distanceM / 1000) / (durationSec / 3600);
 }
 
-/** Converte VAM (km/h) para pace alvo em segundos por km. */
 export function paceFromKmh(kmh: number) {
   if (kmh <= 0) return 0;
   return Math.round(3600 / kmh);
 }
 
-/** VO2máx estimado a partir da VAM (Léger & Mercier). */
 export function vo2FromVam(vamKmh: number) {
   return vamKmh * 3.5;
 }
@@ -67,12 +62,11 @@ export interface RastResult {
   fatigueIndexWPerS: number;
 }
 
-/** RAST: 6 tiros de 35 m — calcula potência (W) por tiro e índice de fadiga. */
 export function calculateRast(splits: RastSplit[], massKg: number, distanceM = 35): RastResult {
   const powers = splits.map((s) => {
     const velocity = distanceM / s.timeSec;
     const acceleration = velocity / s.timeSec;
-    return massKg * acceleration * velocity; // P = m·a·v (Watts)
+    return massKg * acceleration * velocity;
   });
   const peakPowerW = Math.max(...powers);
   const minPowerW = Math.min(...powers);
@@ -82,12 +76,10 @@ export function calculateRast(splits: RastSplit[], massKg: number, distanceM = 3
   return { powers, peakPowerW, minPowerW, avgPowerW, fatigueIndexWPerS };
 }
 
-// ── Limiar anaeróbico (estimativa de campo — Conconi/Pace de limiar) ────────
+// ── Limiar anaeróbico ─────────────────────────────────────────────────────────
 
-/** Estima o pace de limiar a partir do pace dos últimos 20–30 min de um teste contínuo. */
 export function thresholdPaceFromTest(distanceM: number, durationSec: number) {
   const paceSecPerKm = durationSec / (distanceM / 1000);
-  // ajuste de campo: limiar ≈ 97–100% do pace médio de um esforço de ~30min
   return Math.round(paceSecPerKm * 1.0);
 }
 
@@ -115,13 +107,6 @@ export function calculateHrZones(maxHr: number, restingHr = 60): HrZone[] {
   }));
 }
 
-// ── FC máxima estimada (Tanaka 2001) ────────────────────────────────────────
-
-/**
- * Estima FC máxima pelo método de Tanaka (2001): 208 − 0.7 × idade.
- * Mais precisa que 220-idade para adultos (erro padrão ±7 bpm vs ±12 bpm).
- * Referência: Tanaka H et al., J Am Coll Cardiol, 2001.
- */
 export function maxHrTanaka(age: number): number {
   return Math.round(208 - 0.7 * age);
 }
@@ -129,23 +114,17 @@ export function maxHrTanaka(age: number): number {
 // ── Estimativa de 1RM (força) ─────────────────────────────────────────────────
 
 export interface OneRMResult {
-  epley: number;    // Epley (1985) — mais usada, superestima em ≥12 reps
-  brzycki: number;  // Brzycki (1993) — mais precisa para ≤10 reps
-  lombardi: number; // Lombardi (1989)
-  average: number;  // média das três fórmulas
+  epley: number;
+  brzycki: number;
+  lombardi: number;
+  average: number;
 }
 
-/**
- * Estima 1RM a partir de carga (kg) e número de repetições realizadas.
- * Recomendação: usar entre 3–10 repetições para maior precisão.
- * Nunca use para crianças, iniciantes na primeira semana ou em exercícios técnicos.
- */
 export function estimate1RM(weightKg: number, reps: number): OneRMResult {
   if (reps <= 0 || weightKg <= 0) return { epley: 0, brzycki: 0, lombardi: 0, average: 0 };
   if (reps === 1) return { epley: weightKg, brzycki: weightKg, lombardi: weightKg, average: weightKg };
 
   const epley = weightKg * (1 + reps / 30);
-  // Brzycki pode ser negativo para reps >= 37; clamp para evitar
   const brzycki = reps < 37 ? weightKg * (36 / (37 - reps)) : epley;
   const lombardi = weightKg * Math.pow(reps, 0.1);
   const average = (epley + brzycki + lombardi) / 3;
@@ -158,10 +137,6 @@ export function estimate1RM(weightKg: number, reps: number): OneRMResult {
   };
 }
 
-/**
- * Converte 1RM em percentuais de carga por zona de hipertrofia/força.
- * Retorna carga recomendada (kg) para cada objetivo.
- */
 export function zoneLoadsFrom1RM(oneRmKg: number): Record<string, { pct: number; kg: number; reps: string }> {
   return {
     forca_maxima:   { pct: 90, kg: Math.round(oneRmKg * 0.90), reps: "1-3" },
@@ -175,25 +150,20 @@ export function zoneLoadsFrom1RM(oneRmKg: number): Record<string, { pct: number;
 // ── Hooper Index ─────────────────────────────────────────────────────────────
 
 export interface HooperInput {
-  sleep: number;    // 0-10 (10 = péssimo, 0 = excelente — escala invertida)
-  stress: number;   // 0-10
-  fatigue: number;  // 0-10
-  pain: number;     // 0-10 (DOMS / dor muscular)
+  sleep: number;
+  stress: number;
+  fatigue: number;
+  pain: number;
 }
 
 export interface HooperResult {
-  score: number;         // 0-40 (soma dos 4 componentes)
-  normalized: number;    // 0-10 (normalizado)
+  score: number;
+  normalized: number;
   classification: "excelente" | "bom" | "moderado" | "ruim" | "critico";
   color: string;
   recommendation: string;
 }
 
-/**
- * Calcula o Hooper Index — score composto de bem-estar subjetivo.
- * Baseado em Hooper & Mackinnon (1995): sono + estresse + fadiga + DOMS.
- * Score baixo = bem-estar elevado.
- */
 export function calculateHooperIndex(input: HooperInput): HooperResult {
   const score = input.sleep + input.stress + input.fatigue + input.pain;
   const normalized = score / 4;
@@ -229,7 +199,6 @@ export function calculateHooperIndex(input: HooperInput): HooperResult {
 
 // ── Carga de treino (TRIMP simplificado) ────────────────────────────────────
 
-/** Carga = duração (min) × RPE (sessão) — método de Foster. */
 export function sessionLoad(durationMin: number, rpe: number) {
   return Math.round(durationMin * rpe);
 }
@@ -252,7 +221,7 @@ export type CheckInRecord = {
   sleep: number;
   fatigue: number;
   mood: number;
-  plannedRpe?: number;
+  plannedRpe?: number | null;
 };
 
 export interface CheckInRuleResult {
