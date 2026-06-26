@@ -1,6 +1,8 @@
 // CTL/ATL/TSB — Banister Impulse-Response model
 // TSS (Training Stress Score) estimated from workout data.
 // Multi-sport ready: running, cycling, swimming, strength.
+// EWMA (Exponentially Weighted Moving Average) included as scientifically
+// preferred alternative to fixed-window ACWR (Williams et al., 2017).
 
 export interface LoadParams {
   thresholdPaceSecPerKm?: number | null;
@@ -87,7 +89,7 @@ export function estimateTSS(workout: WorkoutForLoad, params?: LoadParams | null)
   return Math.round(tss);
 }
 
-// ── CTL/ATL/TSB time series ───────────────────────────────────────────────────
+// ── CTL/ATL/TSB time series ─────────────────────────────────────────────
 
 const DECAY_CTL = Math.exp(-1 / 42); // ~0.9762 — 42-day time constant
 const DECAY_ATL = Math.exp(-1 / 7);  // ~0.8668 — 7-day time constant
@@ -153,7 +155,7 @@ function sortedDateRange(dateSet: Set<string>, outputDays: number): string[] {
   return dates;
 }
 
-// ── Spike & form detection ────────────────────────────────────────────────────
+// ── Spike & form detection ────────────────────────────────────────────
 
 export interface LoadAlert {
   type: "spike" | "overreaching" | "detraining";
@@ -201,7 +203,157 @@ export function detectAlerts(series: LoadDay[]): LoadAlert[] {
   return alerts;
 }
 
-// ── Form label ────────────────────────────────────────────────────────────────
+// ── TRIMP de Banister (com dados de FC) ──────────────────────────────
+
+/**
+ * Calcula TRIMP de Banister quando dados de frequência cardíaca estão disponíveis.
+ * Mais preciso que Foster Session RPE porque usa dados fisiológicos reais.
+ * Referência: Banister EW et al., 1975. Morton RH et al., 1990.
+ *
+ * Quando avgHr/maxHr/hrRest não estão disponíveis, retorna null e o caller
+ * deve usar Foster sessionLoad() como fallback.
+ */
+export function trimpBanister(
+  durationMin: number,
+  avgHr: number,
+  maxHr: number,
+  hrRest: number,
+  sex: "M" | "F" = "M",
+): number | null {
+  if (durationMin <= 0 || avgHr <= 0 || maxHr <= 0 || hrRest <= 0) return null;
+  if (maxHr <= hrRest) return null;
+
+  const hrReserve = maxHr - hrRest;
+  const hrRatio = (avgHr - hrRest) / hrReserve;
+  if (hrRatio <= 0) return null;
+
+  // Coeficiente beta: 1.92 para homens, 1.67 para mulheres (Banister 1991)
+  const beta = sex === "F" ? 1.67 : 1.92;
+  const trimp = durationMin * hrRatio * 0.64 * Math.exp(beta * hrRatio);
+  return Math.round(trimp * 10) / 10;
+}
+
+/**
+ * Calcula TRIMP com fallback automático:
+ *  1. TRIMP de Banister se avgHr, maxHr e hrRest disponíveis
+ *  2. Foster Session RPE (durationMin × rpe) como fallback
+ */
+export function trimpWithFallback(
+  durationMin: number,
+  options: {
+    avgHr?: number | null;
+    maxHr?: number | null;
+    hrRest?: number | null;
+    rpe?: number | null;
+    sex?: "M" | "F";
+  },
+): { value: number; method: "banister" | "foster" } {
+  const banister = options.avgHr && options.maxHr && options.hrRest
+    ? trimpBanister(durationMin, options.avgHr, options.maxHr, options.hrRest, options.sex ?? "M")
+    : null;
+
+  if (banister !== null) return { value: banister, method: "banister" };
+
+  const foster = Math.round(durationMin * (options.rpe ?? 6));
+  return { value: foster, method: "foster" };
+}
+
+// ── EWMA — Exponentially Weighted Moving Average ─────────────────────────
+
+/**
+ * Alternativa ao ACWR clássico com janelas fixas.
+ * EWMA elimina o "artifício de janela" e é matematicamente equivalente
+ * ao modelo de Banister quando as constantes de tempo são bem calibradas.
+ * Referências: Williams et al. (2017), Menaspa (2017).
+ *
+ * Lambdas padrão: acuteDecay ≈ 0.866 (7d), chronicDecay ≈ 0.976 (42d)
+ */
+export interface EWMADay {
+  date: string;
+  tss: number;
+  ewmaAcute: number;   // fadiga de curto prazo
+  ewmaChronic: number; // fitness de longo prazo
+  ewmaRatio: number;   // acute/chronic — análogo ao ACWR
+}
+
+export function computeEWMASeries(
+  dailyTss: Map<string, number>,
+  acuteLambda = Math.exp(-1 / 7),   // default: 7-day time constant
+  chronicLambda = Math.exp(-1 / 42), // default: 42-day time constant
+  outputDays = 90,
+): EWMADay[] {
+  if (dailyTss.size === 0) return [];
+
+  const dateSet = new Set(dailyTss.keys());
+  const allDates = sortedDateRange(dateSet, outputDays);
+
+  let ewmaAcute = 0;
+  let ewmaChronic = 0;
+  const result: EWMADay[] = [];
+
+  for (const date of allDates) {
+    const tss = dailyTss.get(date) ?? 0;
+    // EWMA update: new = lambda × old + (1 - lambda) × today
+    ewmaAcute = acuteLambda * ewmaAcute + (1 - acuteLambda) * tss;
+    ewmaChronic = chronicLambda * ewmaChronic + (1 - chronicLambda) * tss;
+
+    const ratio = ewmaChronic > 0 ? ewmaAcute / ewmaChronic : 1;
+
+    result.push({
+      date,
+      tss,
+      ewmaAcute: Math.round(ewmaAcute * 10) / 10,
+      ewmaChronic: Math.round(ewmaChronic * 10) / 10,
+      ewmaRatio: Math.round(ratio * 100) / 100,
+    });
+  }
+
+  return result.slice(-outputDays);
+}
+
+/**
+ * Classifica o risco de lesão pelo ratio EWMA (análogo ao ACWR).
+ * Baseado em Gabbett (2016) com limites revisados por Impellizzeri et al. (2020).
+ */
+export function ewmaRiskLevel(ratio: number): {
+  level: "low" | "moderate" | "high" | "very_high";
+  label: string;
+  color: string;
+  recommendation: string;
+} {
+  if (ratio < 0.8) {
+    return {
+      level: "low",
+      label: "Carga baixa",
+      color: "#38bdf8",
+      recommendation: "Carga abaixo do habitual. Risco de destreino. Considere aumentar volume gradualmente.",
+    };
+  }
+  if (ratio <= 1.3) {
+    return {
+      level: "moderate",
+      label: "Zona ótima",
+      color: "#22C55E",
+      recommendation: "Carga na zona ótima de adaptação. Mantenha o plano.",
+    };
+  }
+  if (ratio <= 1.5) {
+    return {
+      level: "high",
+      label: "Atenção",
+      color: "#F59E0B",
+      recommendation: "Ratio elevado. Monitore sintomas de fadiga e reduza volume se necessário.",
+    };
+  }
+  return {
+    level: "very_high",
+    label: "Alto risco",
+    color: "#EF4444",
+    recommendation: "Ratio crítico — risco aumentado de lesão. Reduza carga imediatamente.",
+  };
+}
+
+// ── Form label ───────────────────────────────────────────────────────────────
 
 export type FormStatus = "peaking" | "optimal" | "training" | "fatigued" | "overreaching" | "detraining";
 

@@ -1,9 +1,10 @@
 /**
  * Cálculos do "motor de prescrição inteligente":
- * testes de performance (VO2máx, VAM, limiar) e regras de check-in.
+ * testes de performance (VO2máx, VAM, limiar), força (1RM), frequência cardíaca
+ * e regras de check-in com Hooper Index.
  * Fórmulas consolidadas da literatura de fisiologia do exercício
- * (Cooper, Daniels/Gilbert, Balke, RAST de Lacour) usadas como
- * estimativas de campo — não substituem avaliação laboratorial.
+ * (Cooper, Daniels/Gilbert, Balke, RAST de Lacour, Epley, Brzycki, Tanaka) usadas
+ * como estimativas de campo — não substituem avaliação laboratorial.
  */
 
 // ── Estimativas de VO2máx por distância/tempo ──────────────────────────────
@@ -23,7 +24,9 @@ export function vo2From5MinTest(distanceM: number) {
 export function vo2From3km(durationSec: number) {
   const minutes = durationSec / 60;
   const kmh = 3 / (minutes / 60);
-  return kmh * 3.5 - 11.5 + 35;
+  // Custo de O₂ do corrida: ≈3.5 ml/kg/min por km/h (Léger & Mercier, 1983)
+  // Em esforço máximo de 3km, velocidade ≈ vVO₂máx → VO₂máx ≈ 3.5 × v
+  return kmh * 3.5;
 }
 
 /** Teste de 2400 m (12 min Cooper reverso): tempo em segundos → VO2máx. */
@@ -32,7 +35,7 @@ export function vo2From2400m(durationSec: number) {
   return 3.5 * (2400 / (minutes * 60)) * 3.6 * 1.5 + 10;
 }
 
-// ── Velocidade Aeróbica Máxima (VAM) ────────────────────────────────────────
+// ── Velocidade Aeróbica Máxima (VAM) ───────────────────────────────────
 
 /** VAM a partir de distância (m) e tempo (s) — velocidade média do esforço máximo. */
 export function vamFromDistanceTime(distanceM: number, durationSec: number) {
@@ -50,7 +53,7 @@ export function vo2FromVam(vamKmh: number) {
   return vamKmh * 3.5;
 }
 
-// ── RAST (Running-based Anaerobic Sprint Test) ──────────────────────────────
+// ── RAST (Running-based Anaerobic Sprint Test) ──────────────────────────
 
 export interface RastSplit {
   timeSec: number;
@@ -79,7 +82,7 @@ export function calculateRast(splits: RastSplit[], massKg: number, distanceM = 3
   return { powers, peakPowerW, minPowerW, avgPowerW, fatigueIndexWPerS };
 }
 
-// ── Limiar anaeróbico (estimativa de campo — Conconi/Pace de limiar) ────────
+// ── Limiar anaeróbico (estimativa de campo — Conconi/Pace de limiar) ────
 
 /** Estima o pace de limiar a partir do pace dos últimos 20–30 min de um teste contínuo. */
 export function thresholdPaceFromTest(distanceM: number, durationSec: number) {
@@ -88,7 +91,7 @@ export function thresholdPaceFromTest(distanceM: number, durationSec: number) {
   return Math.round(paceSecPerKm * 1.0);
 }
 
-// ── Zonas de frequência cardíaca (Karvonen) ─────────────────────────────────
+// ── Zonas de frequência cardíaca (Karvonen) ───────────────────────────
 
 export interface HrZone {
   zone: number;
@@ -112,7 +115,119 @@ export function calculateHrZones(maxHr: number, restingHr = 60): HrZone[] {
   }));
 }
 
-// ── Carga de treino (TRIMP simplificado) ────────────────────────────────────
+// ── FC máxima estimada (Tanaka 2001) ────────────────────────────────
+
+/**
+ * Estima FC máxima pelo método de Tanaka (2001): 208 − 0.7 × idade.
+ * Mais precisa que 220-idade para adultos (erro padrão ±7 bpm vs ±12 bpm).
+ * Referência: Tanaka H et al., J Am Coll Cardiol, 2001.
+ */
+export function maxHrTanaka(age: number): number {
+  return Math.round(208 - 0.7 * age);
+}
+
+// ── Estimativa de 1RM (força) ──────────────────────────────────────
+
+export interface OneRMResult {
+  epley: number;    // Epley (1985) — mais usada, superestima em ≥12 reps
+  brzycki: number;  // Brzycki (1993) — mais precisa para ≤10 reps
+  lombardi: number; // Lombardi (1989)
+  average: number;  // média das três fórmulas
+}
+
+/**
+ * Estima 1RM a partir de carga (kg) e número de repetições realizadas.
+ * Recomendação: usar entre 3–10 repetições para maior precisão.
+ * Nunca use para crianças, iniciantes na primeira semana ou em exercícios técnicos.
+ */
+export function estimate1RM(weightKg: number, reps: number): OneRMResult {
+  if (reps <= 0 || weightKg <= 0) return { epley: 0, brzycki: 0, lombardi: 0, average: 0 };
+  if (reps === 1) return { epley: weightKg, brzycki: weightKg, lombardi: weightKg, average: weightKg };
+
+  const epley = weightKg * (1 + reps / 30);
+  // Brzycki pode ser negativo para reps >= 37; clamp para evitar
+  const brzycki = reps < 37 ? weightKg * (36 / (37 - reps)) : epley;
+  const lombardi = weightKg * Math.pow(reps, 0.1);
+  const average = (epley + brzycki + lombardi) / 3;
+
+  return {
+    epley: Math.round(epley * 10) / 10,
+    brzycki: Math.round(brzycki * 10) / 10,
+    lombardi: Math.round(lombardi * 10) / 10,
+    average: Math.round(average * 10) / 10,
+  };
+}
+
+/**
+ * Converte 1RM em percentuais de carga por zona de hipertrofia/força.
+ * Retorna carga recomendada (kg) para cada objetivo.
+ */
+export function zoneLoadsFrom1RM(oneRmKg: number): Record<string, { pct: number; kg: number; reps: string }> {
+  return {
+    forca_maxima:   { pct: 90, kg: Math.round(oneRmKg * 0.90), reps: "1-3" },
+    forca:          { pct: 80, kg: Math.round(oneRmKg * 0.80), reps: "4-6" },
+    hipertrofia:    { pct: 70, kg: Math.round(oneRmKg * 0.70), reps: "8-12" },
+    resistencia:    { pct: 60, kg: Math.round(oneRmKg * 0.60), reps: "15-20" },
+    resistencia_leve: { pct: 50, kg: Math.round(oneRmKg * 0.50), reps: "20+" },
+  };
+}
+
+// ── Hooper Index ───────────────────────────────────────────────────
+
+export interface HooperInput {
+  sleep: number;    // 0-10 (10 = péssimo, 0 = excelente — escala invertida)
+  stress: number;   // 0-10
+  fatigue: number;  // 0-10
+  pain: number;     // 0-10 (DOMS / dor muscular)
+}
+
+export interface HooperResult {
+  score: number;         // 0-40 (soma dos 4 componentes)
+  normalized: number;    // 0-10 (normalizado)
+  classification: "excelente" | "bom" | "moderado" | "ruim" | "critico";
+  color: string;
+  recommendation: string;
+}
+
+/**
+ * Calcula o Hooper Index — score composto de bem-estar subjetivo.
+ * Baseado em Hooper & Mackinnon (1995): sono + estresse + fadiga + DOMS.
+ * Score baixo = bem-estar elevado.
+ */
+export function calculateHooperIndex(input: HooperInput): HooperResult {
+  const score = input.sleep + input.stress + input.fatigue + input.pain;
+  const normalized = score / 4;
+
+  let classification: HooperResult["classification"];
+  let color: string;
+  let recommendation: string;
+
+  if (normalized <= 2) {
+    classification = "excelente";
+    color = "#22C55E";
+    recommendation = "Condições ideais para treino de alta intensidade.";
+  } else if (normalized <= 4) {
+    classification = "bom";
+    color = "#84cc16";
+    recommendation = "Boas condições. Mantenha o plano conforme prescrito.";
+  } else if (normalized <= 6) {
+    classification = "moderado";
+    color = "#F59E0B";
+    recommendation = "Atenção: reduza a intensidade em 15-20% e monitore a resposta.";
+  } else if (normalized <= 8) {
+    classification = "ruim";
+    color = "#f97316";
+    recommendation = "Evite treinos intensos hoje. Prefira mobilidade ou recuperativo.";
+  } else {
+    classification = "critico";
+    color = "#EF4444";
+    recommendation = "Dia de descanso obrigatório. Sinalize ao treinador imediatamente.";
+  }
+
+  return { score, normalized: Math.round(normalized * 10) / 10, classification, color, recommendation };
+}
+
+// ── Carga de treino (TRIMP simplificado) ─────────────────────────────
 
 /** Carga = duração (min) × RPE (sessão) — método de Foster. */
 export function sessionLoad(durationMin: number, rpe: number) {
@@ -128,7 +243,7 @@ export function weeklyLoadStatus(currentLoad: number, previousAvgLoad: number) {
   return { ratio, label: "Estável", color: "success" as const };
 }
 
-// ── Motor de check-in inteligente ───────────────────────────────────────────
+// ── Motor de check-in inteligente ───────────────────────────────────
 
 export type CheckInRecord = {
   date: string;
@@ -145,13 +260,14 @@ export interface CheckInRuleResult {
   severity: "info" | "warning" | "danger";
   title: string;
   message: string;
+  suggestion?: string; // treino alternativo sugerido quando bloqueado
 }
 
 /**
- * Regras do check-in inteligente:
- *  - dor > 7 → bloqueia treino intenso
- *  - fadiga alta (>=7) por 3 dias seguidos → reduz volume
- *  - RPE acima do planejado por 2 sessões seguidas → sugere ajuste
+ * Regras do check-in inteligente (Hooper-aware):
+ *  - dor > 7 → orienta treino regenerativo (não apenas bloqueia)
+ *  - fadiga alta (>=7) por 3 dias seguidos → reduz volume com justificativa
+ *  - RPE acima do planejado por 2 sessões seguidas → sugere ajuste de pace
  */
 export function evaluateCheckInRules(history: CheckInRecord[]): CheckInRuleResult[] {
   const results: CheckInRuleResult[] = [];
@@ -164,7 +280,8 @@ export function evaluateCheckInRules(history: CheckInRecord[]): CheckInRuleResul
       action: "bloquear_intenso",
       severity: "danger",
       title: "Dor acima do limite seguro",
-      message: `Dor relatada (${latest.pain}/10) está acima de 7. Treinos intensos foram bloqueados automaticamente — recomenda-se sessão regenerativa ou avaliação com profissional de saúde.`,
+      message: `Dor relatada (${latest.pain}/10) está acima de 7. Treinos intensos não são recomendados hoje.`,
+      suggestion: "Substituir por 20-30 min de mobilidade articular ou caminhada leve (RPE 3-4). Sinalize ao treinador se a dor persistir.",
     });
   }
 
@@ -174,7 +291,8 @@ export function evaluateCheckInRules(history: CheckInRecord[]): CheckInRuleResul
       action: "reduzir_volume",
       severity: "warning",
       title: "Fadiga elevada por 3 dias seguidos",
-      message: "Fadiga ≥ 7 nos últimos 3 check-ins. Volume da semana foi reduzido automaticamente em ~20% para favorecer a recuperação.",
+      message: "Fadiga ≥ 7 nos últimos 3 check-ins. Volume desta semana reduzido ~20% para favorecer a recuperação.",
+      suggestion: "Priorize sono, hidratação e nutrição. Substitua treinos intensos por rodagens leves (Z1) até os índices normalizarem.",
     });
   }
 
@@ -187,7 +305,8 @@ export function evaluateCheckInRules(history: CheckInRecord[]): CheckInRuleResul
       action: "ajustar_treino",
       severity: "info",
       title: "Esforço acima do planejado",
-      message: "RPE percebido ficou acima do planejado em 2 sessões seguidas. O sistema sugere ajustar o pace alvo das próximas sessões — o treinador pode revisar a sugestão.",
+      message: "RPE percebido ficou acima do planejado em 2 sessões seguidas.",
+      suggestion: "Reduza o pace alvo em 5-8 seg/km nas próximas sessões. O treinador será notificado para revisar a periodização.",
     });
   }
 
