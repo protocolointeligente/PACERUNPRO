@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
+import { iaTreinadoraLimiter } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rl = iaTreinadoraLimiter(req);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Limite de mensagens atingido. Aguarde um momento antes de enviar mais." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   const session = await getSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
