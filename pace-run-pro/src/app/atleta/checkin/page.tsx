@@ -117,7 +117,6 @@ export default function CheckInPage() {
     }, "image/png");
   }
 
-  // Shoe list is empty until a dedicated /api/athlete/shoes endpoint is implemented
   const activeShoes: Array<{ id: string; brand: string; model: string; kmAccumulated: number; color: string; imageEmoji: string }> = [];
   const selectedShoe = activeShoes.find((s) => s.id === selectedShoeId);
 
@@ -129,7 +128,7 @@ export default function CheckInPage() {
 
   const draftHistory: CheckInRecord[] = [
     ...checkInHistory.map((c) => ({ date: c.date, rpe: c.rpe, pain: c.pain, sleep: c.sleep, fatigue: c.fatigue, mood: c.mood, plannedRpe: c.plannedRpe })),
-    { date: "hoje", rpe: values.rpe, pain: values.pain, sleep: values.sleep, fatigue: values.fatigue, mood: values.mood, plannedRpe: 7 },
+    { date: "hoje", rpe: values.rpe, pain: values.pain, sleep: values.sleep, fatigue: values.fatigue, mood: values.mood, plannedRpe: undefined },
   ];
   const ruleResults = evaluateCheckInRules(draftHistory);
 
@@ -144,7 +143,6 @@ export default function CheckInPage() {
       });
       if (res.ok) {
         setSaved(true);
-        // Refresh history to include the new check-in
         const updated: CheckInRecord[] = await fetch("/api/checkins").then((r) => r.ok ? r.json() : []).catch(() => []);
         setCheckInHistory(updated);
       } else {
@@ -177,7 +175,6 @@ export default function CheckInPage() {
         </p>
       </div>
 
-      {/* Post-workout share card */}
       {lastWorkout && (
         <Card>
           <CardContent className="p-4 sm:p-5">
@@ -300,7 +297,6 @@ export default function CheckInPage() {
         </Card>
       </div>
 
-      {/* Live intelligent feedback */}
       <AnimatePresence>
         {saved && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
@@ -316,7 +312,7 @@ export default function CheckInPage() {
             {ruleResults.map((r, i) => {
               const cfg = severityStyles[r.severity];
               return (
-                <Card key={i} className={`border-${r.severity === "danger" ? "danger" : r.severity === "warning" ? "warning" : "info"}/30`}>
+                <Card key={i} className={`border-${r.severity === "critical" || r.severity === "danger" ? "danger" : r.severity === "warning" ? "warning" : "info"}/30`}>
                   <CardContent className="flex items-start gap-3 p-4">
                     <Badge variant={cfg.badge} className="mt-0.5 shrink-0">
                       <cfg.icon className="h-3 w-3" />
@@ -324,6 +320,7 @@ export default function CheckInPage() {
                     <div>
                       <p className="text-sm font-semibold text-text">{r.title}</p>
                       <p className="mt-0.5 text-sm text-text-muted">{r.message}</p>
+                      {r.suggestion && <p className="mt-1 text-xs text-text-muted italic">{r.suggestion}</p>}
                     </div>
                   </CardContent>
                 </Card>
@@ -348,7 +345,6 @@ export default function CheckInPage() {
         </Button>
       </div>
 
-      {/* History */}
       <div>
         <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-text">
           <History className="h-4 w-4 text-text-muted" />
