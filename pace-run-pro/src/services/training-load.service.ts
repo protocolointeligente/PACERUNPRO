@@ -62,16 +62,13 @@ export async function computeAthleteLoad(athleteId: string): Promise<AthleteLoad
  * Records the athlete's current recovery score in RecoveryLog
  * alongside the current CTL/ATL/TSB snapshot.
  * Call after a check-in is saved.
- *
- * Requires: `prisma migrate dev` after adding RecoveryLog to schema.prisma.
  */
 export async function logRecoveryScore(
   athleteId: string,
   score: number,
   load?: { ctl: number; atl: number; tsb: number } | null,
 ): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (prisma as any).recoveryLog.create({
+  await prisma.recoveryLog.create({
     data: {
       athleteId,
       score,
