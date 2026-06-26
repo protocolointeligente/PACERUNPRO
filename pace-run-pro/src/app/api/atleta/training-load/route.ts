@@ -3,6 +3,10 @@ import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { estimateTSS, computeLoadSeries, detectAlerts } from "@/lib/training-load";
 
+// In-memory LRU cache: athleteId → { data, expiresAt }
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const cache = new Map<string, { data: unknown; expiresAt: number }>();
+
 export async function GET() {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "ATHLETE") {
@@ -14,6 +18,11 @@ export async function GET() {
     select: { id: true, loadParams: true },
   });
   if (!athlete) return NextResponse.json(null);
+
+  const cached = cache.get(athlete.id);
+  if (cached && cached.expiresAt > Date.now()) {
+    return NextResponse.json(cached.data);
+  }
 
   const workouts = await prisma.workout.findMany({
     where: {
@@ -51,5 +60,8 @@ export async function GET() {
   const alerts = detectAlerts(series);
   const latest = series[series.length - 1];
 
-  return NextResponse.json({ series, alerts, latest: latest ?? null });
+  const result = { series, alerts, latest: latest ?? null };
+  cache.set(athlete.id, { data: result, expiresAt: Date.now() + CACHE_TTL_MS });
+
+  return NextResponse.json(result);
 }
