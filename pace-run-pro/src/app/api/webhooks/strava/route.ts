@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { StravaApiError, fetchStravaActivity, refreshStravaToken } from "@/lib/integrations/strava";
+import { decrypt, encrypt } from "@/lib/encryption";
 
 // Strava sends a GET to verify the webhook subscription
 export async function GET(request: NextRequest) {
@@ -52,17 +53,20 @@ export async function POST(request: NextRequest) {
   const athlete = device.user.athlete;
 
   // Fetch full activity, refreshing token if needed
-  let accessToken = device.accessToken;
+  let accessToken = decrypt(device.accessToken);
   let activity;
   try {
     activity = await fetchStravaActivity(String(object_id), accessToken);
   } catch (err) {
     if (err instanceof StravaApiError && err.status === 401 && device.refreshToken) {
-      const refreshed = await refreshStravaToken(device.refreshToken);
+      const refreshed = await refreshStravaToken(decrypt(device.refreshToken));
       accessToken = refreshed.access_token;
       await prisma.connectedDevice.update({
         where: { id: device.id },
-        data: { accessToken: refreshed.access_token, refreshToken: refreshed.refresh_token },
+        data: {
+          accessToken: encrypt(refreshed.access_token),
+          refreshToken: encrypt(refreshed.refresh_token),
+        },
       });
       activity = await fetchStravaActivity(String(object_id), accessToken);
     } else {

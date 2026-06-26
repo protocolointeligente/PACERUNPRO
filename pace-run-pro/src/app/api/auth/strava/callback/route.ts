@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { exchangeStravaCode } from "@/lib/integrations/strava";
+import { encrypt } from "@/lib/encryption";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -33,15 +34,15 @@ export async function GET(request: NextRequest) {
       where: { userId_provider: { userId: session.user.id, provider: "STRAVA" } },
       update: {
         externalId,
-        accessToken: token.access_token,
-        refreshToken: token.refresh_token,
+        accessToken: encrypt(token.access_token),
+        refreshToken: token.refresh_token ? encrypt(token.refresh_token) : null,
       },
       create: {
         userId: session.user.id,
         provider: "STRAVA",
         externalId,
-        accessToken: token.access_token,
-        refreshToken: token.refresh_token,
+        accessToken: encrypt(token.access_token),
+        refreshToken: token.refresh_token ? encrypt(token.refresh_token) : null,
       },
     });
   } catch (err) {

@@ -7,6 +7,7 @@ import {
   refreshStravaToken,
   type StravaActivity,
 } from "@/lib/integrations/strava";
+import { decrypt, encrypt } from "@/lib/encryption";
 
 function stravaTypeToWorkoutType(type: string): string {
   switch (type) {
@@ -73,18 +74,21 @@ export async function POST() {
   });
   if (!athlete) return NextResponse.json({ error: "athlete_not_found" }, { status: 404 });
 
-  let accessToken = device.accessToken;
+  let accessToken = decrypt(device.accessToken);
 
   let activities: StravaActivity[];
   try {
     activities = await fetchStravaActivities(accessToken, 30);
   } catch (err) {
     if (err instanceof StravaApiError && err.status === 401 && device.refreshToken) {
-      const refreshed = await refreshStravaToken(device.refreshToken);
+      const refreshed = await refreshStravaToken(decrypt(device.refreshToken));
       accessToken = refreshed.access_token;
       await prisma.connectedDevice.update({
         where: { id: device.id },
-        data: { accessToken: refreshed.access_token, refreshToken: refreshed.refresh_token },
+        data: {
+          accessToken: encrypt(refreshed.access_token),
+          refreshToken: encrypt(refreshed.refresh_token),
+        },
       });
       activities = await fetchStravaActivities(accessToken, 30);
     } else {

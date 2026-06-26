@@ -5,6 +5,7 @@ import {
   fetchStravaActivity,
   refreshStravaToken,
 } from "@/lib/integrations/strava";
+import { decrypt, encrypt } from "@/lib/encryption";
 
 const VERIFY_TOKEN = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN ?? "pace-run-pro-strava";
 
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
   });
   if (!athlete) return NextResponse.json({ ok: true });
 
-  let accessToken = device.accessToken;
+  let accessToken = decrypt(device.accessToken);
 
   try {
     let activity;
@@ -66,11 +67,14 @@ export async function POST(request: NextRequest) {
       activity = await fetchStravaActivity(stravaActivityId, accessToken);
     } catch (err) {
       if (err instanceof StravaApiError && err.status === 401 && device.refreshToken) {
-        const refreshed = await refreshStravaToken(device.refreshToken);
+        const refreshed = await refreshStravaToken(decrypt(device.refreshToken));
         accessToken = refreshed.access_token;
         await prisma.connectedDevice.update({
           where: { id: device.id },
-          data: { accessToken: refreshed.access_token, refreshToken: refreshed.refresh_token },
+          data: {
+            accessToken: encrypt(refreshed.access_token),
+            refreshToken: encrypt(refreshed.refresh_token),
+          },
         });
         activity = await fetchStravaActivity(stravaActivityId, accessToken);
       } else {
