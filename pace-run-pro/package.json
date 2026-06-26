@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed:platform": "tsx prisma/seed-platform.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
