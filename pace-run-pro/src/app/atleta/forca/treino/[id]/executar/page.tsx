@@ -63,7 +63,7 @@ interface ExerciseJsonEntry {
 }
 
 function normName(n: string) {
-  return n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return n.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
 function playBeep() {
@@ -92,7 +92,7 @@ function formatCountdown(seconds: number): string {
 }
 
 const RPE_COLORS = [
-  "", // index 0 unused
+  "",
   "border-success/30 bg-success/10 text-success hover:bg-success/20",
   "border-success/30 bg-success/10 text-success hover:bg-success/20",
   "border-success/30 bg-success/10 text-success hover:bg-success/20",
@@ -127,7 +127,7 @@ export default function StrengthExecPage() {
     async function load() {
       try {
         const [wRes, exRes] = await Promise.all([
-          fetch(`/api/athlete/forca/${id}`),
+          fetch(`/api/atleta/forca/${id}`),
           fetch("/exercises.json"),
         ]);
         const wData: WorkoutData = wRes.ok ? await wRes.json() : null;
@@ -215,7 +215,6 @@ export default function StrengthExecPage() {
         setPhase("working");
       });
     } else {
-      // Last set — ask for RPE
       setPhase("rpe");
     }
   }, [currentSet, totalSets, exercise, startRest]);
@@ -264,7 +263,6 @@ export default function StrengthExecPage() {
     );
   }
 
-  // ── Done screen ──────────────────────────────────────────────────────────────
   if (phase === "done") {
     const elapsedSec = Math.floor((Date.now() - startTimeRef.current) / 1000);
     const totalDuration = `${Math.floor(elapsedSec / 60)}min ${elapsedSec % 60}s`;
@@ -312,17 +310,14 @@ export default function StrengthExecPage() {
     );
   }
 
-  // ── Progress ring params ─────────────────────────────────────────────────────
   const progressPct = (exerciseIdx / exercises.length) * 100;
   const restProgressPct = restTotal > 0 ? ((restTotal - restRemaining) / restTotal) * 100 : 0;
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (restProgressPct / 100) * circumference;
 
-  // ── Main execution screen ────────────────────────────────────────────────────
   return (
     <div className="mx-auto max-w-lg space-y-5 pb-8">
-      {/* Back */}
       <Link
         href={`/atleta/forca/treino/${id}`}
         className="flex items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-text"
@@ -331,7 +326,6 @@ export default function StrengthExecPage() {
         Voltar
       </Link>
 
-      {/* Progress bar */}
       <div>
         <div className="mb-1.5 flex items-center justify-between text-xs text-text-muted">
           <span>Exercício {exerciseIdx + 1} de {exercises.length}</span>
@@ -347,7 +341,6 @@ export default function StrengthExecPage() {
         </div>
       </div>
 
-      {/* Exercise card */}
       <AnimatePresence mode="wait">
         <motion.div
           key={exerciseIdx}
@@ -357,7 +350,6 @@ export default function StrengthExecPage() {
           transition={{ duration: 0.3 }}
         >
           <Card className="overflow-hidden border-primary/20">
-            {/* Large GIF */}
             <div className="relative h-72 w-full bg-card-hover">
               {exercise.gifUrl ? (
                 <img
@@ -384,7 +376,6 @@ export default function StrengthExecPage() {
             <CardContent className="p-5">
               <h2 className="font-display text-xl font-bold text-text">{exercise.name}</h2>
 
-              {/* Stats */}
               <div className="mt-3 flex flex-wrap gap-2 text-xs text-text-muted">
                 <span className="flex items-center gap-1.5 rounded-lg border border-border bg-card-hover/60 px-2.5 py-1.5">
                   <Repeat className="h-3.5 w-3.5 text-primary" />
@@ -402,9 +393,7 @@ export default function StrengthExecPage() {
                 )}
               </div>
 
-              {/* Phase area */}
               <AnimatePresence mode="wait">
-                {/* WORKING */}
                 {phase === "working" && (
                   <motion.div
                     key="working"
@@ -455,7 +444,6 @@ export default function StrengthExecPage() {
                   </motion.div>
                 )}
 
-                {/* RESTING */}
                 {phase === "resting" && (
                   <motion.div
                     key="resting"
@@ -520,7 +508,6 @@ export default function StrengthExecPage() {
                   </motion.div>
                 )}
 
-                {/* RPE */}
                 {phase === "rpe" && (
                   <motion.div
                     key="rpe"
@@ -576,7 +563,6 @@ export default function StrengthExecPage() {
                   </motion.div>
                 )}
 
-                {/* BETWEEN */}
                 {phase === "between" && (
                   <motion.div
                     key="between"
@@ -618,7 +604,6 @@ export default function StrengthExecPage() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Remaining pills */}
       {remainingExercises.length > 0 && (
         <div>
           <p className="mb-2.5 text-xs uppercase tracking-wider text-text-muted">Próximos exercícios</p>
