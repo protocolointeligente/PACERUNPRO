@@ -56,6 +56,7 @@ export default function ProfilePage() {
   }
   const [activeTab, setActiveTab] = useState("dados");
   const [races, setRaces] = useState<Array<{ id: string; name: string; date: string; distanceKm: number; resultTime?: string | null }>>([]);
+  const [achievements, setAchievements] = useState<Array<{ id: string; title: string; description?: string | null; icon?: string | null; earnedAt: string }>>([]);
   const [stravaConnected, setStravaConnected] = useState(false);
   const [stravaLastSync, setStravaLastSync] = useState<string | null>(null);
   const [stravaLoading, setStravaLoading] = useState<"sync" | "disconnect" | null>(null);
@@ -248,6 +249,11 @@ export default function ProfilePage() {
       .then((r) => r.ok ? r.json() : [])
       .then((data: Array<{ id: string; name: string; date: string; distanceKm: number; resultTime?: string | null }>) => setRaces(data))
       .catch(() => null);
+
+    fetch("/api/atleta/achievements")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: Array<{ id: string; title: string; description?: string | null; icon?: string | null; earnedAt: string }>) => setAchievements(data))
+      .catch(() => null);
   }, []);
 
   async function handleStravaSync() {
@@ -339,6 +345,7 @@ export default function ProfilePage() {
         <TabsList>
           <TabsTrigger value="dados">Dados pessoais</TabsTrigger>
           <TabsTrigger value="objetivos">Objetivos &amp; histórico</TabsTrigger>
+          <TabsTrigger value="conquistas">Conquistas</TabsTrigger>
           <TabsTrigger value="dispositivos">Dispositivos</TabsTrigger>
           <TabsTrigger value="config">Configurações</TabsTrigger>
         </TabsList>
@@ -408,6 +415,39 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
+        </TabsContent>
+
+        {/* Achievements */}
+        <TabsContent value="conquistas">
+          {achievements.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
+                <Award className="h-10 w-10 text-text-muted/40" />
+                <p className="text-sm text-text-muted">Nenhuma conquista ainda. Continue treinando!</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {achievements.map((a) => (
+                <Card key={a.id}>
+                  <CardContent className="flex items-start gap-3 p-4">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-warning/15 text-2xl">
+                      {a.icon ?? "🏅"}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-text">{a.title}</p>
+                      {a.description && (
+                        <p className="mt-0.5 text-xs text-text-muted">{a.description}</p>
+                      )}
+                      <p className="mt-1.5 text-[11px] text-text-muted">
+                        {new Date(a.earnedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* Devices */}
