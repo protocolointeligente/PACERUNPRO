@@ -23,6 +23,7 @@ import { Progress } from "@/components/ui/progress";
 import { SectionHeader } from "@/components/shared/section-header";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { cn } from "@/lib/utils";
+import { CoachOnboardingSteps } from "@/components/coach/onboarding-steps";
 
 export interface AthleteRow {
   id: string;
@@ -157,6 +158,9 @@ export default function CoachDashboard({
 
   return (
     <div className="mx-auto max-w-6xl space-y-7">
+      {/* Onboarding tour — shown only to new coaches */}
+      <CoachOnboardingSteps athleteCount={athleteCount} />
+
       {/* Greeting */}
       <motion.div variants={fadeUp} initial="hidden" animate="show"
         className="flex flex-wrap items-center justify-between gap-4">
