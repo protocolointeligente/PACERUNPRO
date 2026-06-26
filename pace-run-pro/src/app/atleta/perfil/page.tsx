@@ -23,15 +23,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// Static integration metadata (connected status fetched from /api/integrations/status)
 const INTEGRATIONS_LIST = [
   { id: "strava", name: "Strava", description: "Compartilhe e importe atividades automaticamente." },
   { id: "garmin", name: "Garmin Connect", description: "Sincronize treinos, FC e GPS automaticamente." },
   { id: "coros", name: "Coros", description: "Importe sessões de corrida e métricas de desempenho." },
-  { id: "polar", name: "Polar Flow", description: "Sincronize dados de freqüência cardíaca e treinos." },
+  { id: "polar", name: "Polar Flow", description: "Sincronize dados de frequência cardíaca e treinos." },
   { id: "apple", name: "Apple Watch / HealthKit", description: "Sincronize treinos e dados de saúde do iPhone." },
 ];
 const SOURCE_LABELS: Record<string, string> = { strava: "Strava", garmin: "Garmin", polar: "Polar", coros: "Coros", apple: "Apple Watch", manual: "Manual" };
 const SOURCE_COLORS: Record<string, string> = { strava: "#FC4C02", garmin: "#00B9FF", polar: "#E63946", coros: "#1A1A2E", apple: "#555555", manual: "#94a3b8" };
+void SOURCE_LABELS;
+void SOURCE_COLORS;
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 
@@ -39,6 +42,7 @@ const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 export default function ProfilePage() {
+  // Profile data loaded from API
   const [profile, setProfile] = useState<{
     name?: string; city?: string; state?: string; phone?: string;
     avatarUrl?: string | null; bannerUrl?: string | null;
@@ -54,6 +58,7 @@ export default function ProfilePage() {
   }
   const [activeTab, setActiveTab] = useState("dados");
   const [races, setRaces] = useState<Array<{ id: string; name: string; date: string; distanceKm: number; resultTime?: string | null }>>([]);
+  const [achievements, setAchievements] = useState<Array<{ id: string; title: string; description?: string | null; icon?: string | null; earnedAt: string }>>([]);
   const [stravaConnected, setStravaConnected] = useState(false);
   const [stravaLastSync, setStravaLastSync] = useState<string | null>(null);
   const [stravaLoading, setStravaLoading] = useState<"sync" | "disconnect" | null>(null);
@@ -61,6 +66,7 @@ export default function ProfilePage() {
   const [comingSoonId, setComingSoonId] = useState<string | null>(null);
   const [settingsMsg, setSettingsMsg] = useState<string | null>(null);
 
+  // Avatar & banner upload
   const [avatarSrc, setAvatarSrc] = useState("");
   const [bannerSrc, setBannerSrc] = useState("");
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -129,6 +135,7 @@ export default function ProfilePage() {
     }
   }
 
+  // Edit profile modal state
   const [editOpen, setEditOpen] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editName, setEditName] = useState("");
@@ -244,6 +251,11 @@ export default function ProfilePage() {
       .then((r) => r.ok ? r.json() : [])
       .then((data: Array<{ id: string; name: string; date: string; distanceKm: number; resultTime?: string | null }>) => setRaces(data))
       .catch(() => null);
+
+    fetch("/api/atleta/achievements")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: Array<{ id: string; title: string; description?: string | null; icon?: string | null; earnedAt: string }>) => setAchievements(data))
+      .catch(() => null);
   }, []);
 
   async function handleStravaSync() {
@@ -286,7 +298,9 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
+      {/* Header */}
       <Card className="overflow-hidden">
+        {/* Banner */}
         <div className="relative h-28">
           {bannerSrc
             ? <img src={bannerSrc} alt="" className="h-full w-full object-cover" />
@@ -301,6 +315,7 @@ export default function ProfilePage() {
         </div>
         <CardContent className="-mt-12 relative z-10 bg-card flex flex-wrap items-end justify-between gap-4 p-5 sm:p-6">
           <div className="flex items-end gap-4">
+            {/* Avatar with camera overlay */}
             <div className="relative">
               <Avatar className="h-24 w-24 border-4 border-card">
                 <AvatarImage src={avatarSrc || profile.avatarUrl || ""} alt={profile.name ?? ""} />
@@ -332,10 +347,12 @@ export default function ProfilePage() {
         <TabsList>
           <TabsTrigger value="dados">Dados pessoais</TabsTrigger>
           <TabsTrigger value="objetivos">Objetivos &amp; histórico</TabsTrigger>
+          <TabsTrigger value="conquistas">Conquistas</TabsTrigger>
           <TabsTrigger value="dispositivos">Dispositivos</TabsTrigger>
           <TabsTrigger value="config">Configurações</TabsTrigger>
         </TabsList>
 
+        {/* Personal data */}
         <TabsContent value="dados">
           <Card>
             <CardContent className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
@@ -347,6 +364,7 @@ export default function ProfilePage() {
           </Card>
         </TabsContent>
 
+        {/* Goals & history */}
         <TabsContent value="objetivos">
           <div className="space-y-4">
             <Card>
@@ -401,8 +419,43 @@ export default function ProfilePage() {
           </div>
         </TabsContent>
 
+        {/* Achievements */}
+        <TabsContent value="conquistas">
+          {achievements.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
+                <Award className="h-10 w-10 text-text-muted/40" />
+                <p className="text-sm text-text-muted">Nenhuma conquista ainda. Continue treinando!</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {achievements.map((a) => (
+                <Card key={a.id}>
+                  <CardContent className="flex items-start gap-3 p-4">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-warning/15 text-2xl">
+                      {a.icon ?? "🏅"}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-text">{a.title}</p>
+                      {a.description && (
+                        <p className="mt-0.5 text-xs text-text-muted">{a.description}</p>
+                      )}
+                      <p className="mt-1.5 text-[11px] text-text-muted">
+                        {new Date(a.earnedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Devices */}
         <TabsContent value="dispositivos">
           <div className="space-y-6">
+            {/* Status banner */}
             {banner && (
               <div
                 className={cn(
@@ -429,6 +482,7 @@ export default function ProfilePage() {
               </div>
             )}
 
+            {/* Integration cards */}
             <div className="grid gap-3 sm:grid-cols-2">
               {INTEGRATIONS_LIST.map((d) => {
                 const isStrava = d.id === "strava";
@@ -530,6 +584,7 @@ export default function ProfilePage() {
               })}
             </div>
 
+            {/* Synced activities */}
             <div>
               <h3 className="mb-3 font-display text-sm font-semibold text-text">
                 Atividades sincronizadas
@@ -551,6 +606,7 @@ export default function ProfilePage() {
           </div>
         </TabsContent>
 
+        {/* Settings */}
         <TabsContent value="config">
           <div className="space-y-4">
             <Card>
@@ -626,6 +682,7 @@ export default function ProfilePage() {
         </TabsContent>
       </Tabs>
 
+      {/* Edit profile modal */}
       {editOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setEditOpen(false)} />
@@ -708,7 +765,3 @@ function SettingsLink({ icon: Icon, label, danger, onClick }: { icon: React.Comp
     </button>
   );
 }
-
-// Suppress unused import warning — SOURCE_LABELS/SOURCE_COLORS kept for future use
-void SOURCE_LABELS;
-void SOURCE_COLORS;
