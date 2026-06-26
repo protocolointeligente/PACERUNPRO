@@ -45,7 +45,7 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
   const [workout, setWorkout] = useState<WorkoutData | null>(null);
 
   useEffect(() => {
-    fetch(`/api/athlete/workouts/${id}`)
+    fetch(`/api/atleta/workouts/${id}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data: WorkoutData | null) => setWorkout(data))
       .catch(() => null);
@@ -186,7 +186,7 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
       // storage unavailable (private browsing or permissions)
     }
     // Save workout log to the database
-    fetch(`/api/athlete/workouts/${id}`, {
+    fetch(`/api/atleta/workouts/${id}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

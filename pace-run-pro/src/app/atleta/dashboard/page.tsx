@@ -69,7 +69,7 @@ export default function AthleteDashboard() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/athlete/training-load")
+    fetch("/api/atleta/training-load")
       .then((r) => r.ok ? r.json() : null)
       .then((d: { latest?: { tsb: number; ctl: number } | null } | null) => {
         if (d?.latest) {
@@ -81,7 +81,7 @@ export default function AthleteDashboard() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/athlete/workouts")
+    fetch("/api/atleta/workouts")
       .then((r) => r.ok ? r.json() : [])
       .then((data: WorkoutEntry[]) => {
         const todayLocal = new Date().toLocaleDateString("sv");

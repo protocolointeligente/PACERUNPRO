@@ -151,7 +151,7 @@ export default function PlansPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/athlete/plan")
+    fetch("/api/atleta/plan")
       .then((r) => (r.ok ? r.json() : null))
       .then((data: { plan: PlanData | null } | null) => { if (data?.plan) setPlan(data.plan); })
       .catch(() => null)

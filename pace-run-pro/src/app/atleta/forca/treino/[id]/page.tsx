@@ -52,7 +52,7 @@ export default function StrengthTreinoPreviewPage() {
   const [gifMap, setGifMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetch(`/api/athlete/forca/${id}`)
+    fetch(`/api/atleta/forca/${id}`)
       .then((r) => r.ok ? r.json() : null)
       .then(setWorkout)
       .catch(() => setWorkout(null));

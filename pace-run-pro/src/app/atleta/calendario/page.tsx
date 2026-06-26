@@ -127,14 +127,14 @@ export default function CalendarPage() {
     const month = reference.getMonth();
     const from = new Date(year, month, -6).toISOString().slice(0, 10);
     const to = new Date(year, month + 1, 7).toISOString().slice(0, 10);
-    fetch(`/api/athlete/workouts?from=${from}&to=${to}`)
+    fetch(`/api/atleta/workouts?from=${from}&to=${to}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data: WorkoutRow[]) => setWorkouts(Array.isArray(data) ? data : []))
       .catch(() => null);
   }, [monthOffset]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    fetch("/api/athlete/races")
+    fetch("/api/atleta/races")
       .then((r) => r.json())
       .then((d: RaceRow[]) => setRaces(Array.isArray(d) ? d : []))
       .catch(() => [])
@@ -208,7 +208,7 @@ export default function CalendarPage() {
     if (!distKm) return;
     setSavingRace(true);
     try {
-      const res = await fetch("/api/athlete/races", {
+      const res = await fetch("/api/atleta/races", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: raceName, date: raceDate, distanceKm: distKm, goalTime: raceGoalTime || undefined, location: raceLocation || undefined }),
@@ -225,7 +225,7 @@ export default function CalendarPage() {
   }
 
   async function deleteRace(id: string) {
-    await fetch(`/api/athlete/races/${id}`, { method: "DELETE" });
+    await fetch(`/api/atleta/races/${id}`, { method: "DELETE" });
     setRaces((prev) => prev.filter((r) => r.id !== id));
   }
 

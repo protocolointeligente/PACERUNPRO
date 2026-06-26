@@ -127,7 +127,7 @@ export default function StrengthExecPage() {
     async function load() {
       try {
         const [wRes, exRes] = await Promise.all([
-          fetch(`/api/athlete/forca/${id}`),
+          fetch(`/api/atleta/forca/${id}`),
           fetch("/exercises.json"),
         ]);
         const wData: WorkoutData = wRes.ok ? await wRes.json() : null;

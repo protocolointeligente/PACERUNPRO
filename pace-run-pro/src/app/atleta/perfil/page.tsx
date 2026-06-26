@@ -244,7 +244,7 @@ export default function ProfilePage() {
       })
       .catch(() => {});
 
-    fetch("/api/athlete/races")
+    fetch("/api/atleta/races")
       .then((r) => r.ok ? r.json() : [])
       .then((data: Array<{ id: string; name: string; date: string; distanceKm: number; resultTime?: string | null }>) => setRaces(data))
       .catch(() => null);

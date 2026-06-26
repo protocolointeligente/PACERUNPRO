@@ -72,14 +72,14 @@ export default function StrengthPage() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/athlete/forca/hoje")
+    fetch("/api/atleta/forca/hoje")
       .then((r) => (r.ok ? r.json() : null))
       .then((data: TodayWorkout | null) => setTodayWorkout(data))
       .catch(() => setTodayWorkout(null));
   }, []);
 
   useEffect(() => {
-    fetch("/api/athlete/workouts")
+    fetch("/api/atleta/workouts")
       .then((r) => r.ok ? r.json() : [])
       .then((data: UpcomingWorkout[]) => {
         setUpcomingWorkouts(data.filter((w) => w.type === "forca"));
