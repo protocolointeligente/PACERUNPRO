@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -20,29 +21,32 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
-import { weeklyAnalyses } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
-const myAnalysis = weeklyAnalyses[0];
+interface WeeklyMetric {
+  label: string;
+  value: number;
+  prev: number;
+  unit: string;
+  delta: number;
+}
 
-const dailyVolume = [
-  { day: "Seg", km: 8 },
-  { day: "Ter", km: 0 },
-  { day: "Qua", km: 12 },
-  { day: "Qui", km: 0 },
-  { day: "Sex", km: 15 },
-  { day: "Sáb", km: 22 },
-  { day: "Dom", km: 0 },
-];
-
-function formatPaceDisplay(sec: number) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${s.toString().padStart(2, "0")}/km`;
+interface WeeklyData {
+  weekLabel: string;
+  metrics: WeeklyMetric[];
+  dailyVolume: { day: string; km: number }[];
+  adherence: number;
+  riskLevel: "low" | "medium" | "high";
+  highlights: string[];
+  recommendation: string;
 }
 
 function formatMetricValue(label: string, value: number) {
-  if (label === "Pace médio") return formatPaceDisplay(value);
+  if (label === "Pace médio") {
+    const m = Math.floor(value / 60);
+    const s = value % 60;
+    return `${m}:${String(s).padStart(2, "0")}/km`;
+  }
   if (label === "FC média") return `${value} bpm`;
   if (label === "Carga") return `${value} UA`;
   if (label === "Sessões") return `${value}`;
@@ -54,15 +58,13 @@ function DeltaIndicator({ delta, unit }: { delta: number; unit: string }) {
   const improved = isPace ? delta < 0 : delta > 0;
   const isNeutral = delta === 0;
 
-  if (isNeutral) {
-    return <span className="text-xs text-text-muted">Igual</span>;
-  }
+  if (isNeutral) return <span className="text-xs text-text-muted">Igual</span>;
 
   return (
     <span
       className={cn(
         "inline-flex items-center gap-0.5 text-xs font-semibold",
-        improved ? "text-success" : "text-danger"
+        improved ? "text-success" : "text-danger",
       )}
     >
       {improved ? (
@@ -87,7 +89,49 @@ const fadeUp = (delay: number) => ({
   transition: { delay, duration: 0.4, ease: "easeOut" as const },
 });
 
+function SkeletonBlock({ className }: { className?: string }) {
+  return <div className={cn("animate-pulse rounded-xl bg-card-hover", className)} />;
+}
+
 export default function MinhaSemanPage() {
+  const [data, setData] = useState<WeeklyData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/atleta/analise-semanal")
+      .then((r) => r.json())
+      .then((d) => setData(d))
+      .catch(() => null)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-7">
+        <div className="space-y-2">
+          <SkeletonBlock className="h-5 w-32" />
+          <SkeletonBlock className="h-8 w-48" />
+          <SkeletonBlock className="h-4 w-40" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <SkeletonBlock key={i} className="h-24" />
+          ))}
+        </div>
+        <SkeletonBlock className="h-52" />
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="mx-auto max-w-3xl py-20 text-center text-text-muted">
+        <BarChart2 className="mx-auto mb-3 h-10 w-10" />
+        <p>Não foi possível carregar a análise semanal.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-7">
       <motion.div {...fadeUp(0)}>
@@ -100,13 +144,16 @@ export default function MinhaSemanPage() {
             <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
               Minha Semana
             </h1>
-            <p className="mt-1 text-sm text-text-muted">{myAnalysis.weekLabel}</p>
+            <p className="mt-1 text-sm text-text-muted">{data.weekLabel}</p>
           </div>
         </div>
       </motion.div>
 
-      <motion.div {...fadeUp(0.08)} className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {myAnalysis.metrics.map((metric) => (
+      <motion.div
+        {...fadeUp(0.08)}
+        className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+      >
+        {data.metrics.map((metric) => (
           <Card key={metric.label}>
             <CardContent className="p-3.5 space-y-1.5">
               <p className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-text-muted">
@@ -116,7 +163,9 @@ export default function MinhaSemanPage() {
                 )}
               </p>
               <p className="font-display text-lg font-bold text-text leading-tight">
-                {formatMetricValue(metric.label, metric.value)}
+                {metric.value === 0 && metric.label !== "Carga"
+                  ? "—"
+                  : formatMetricValue(metric.label, metric.value)}
               </p>
               <div className="flex items-center gap-1.5">
                 <DeltaIndicator delta={metric.delta} unit={metric.unit} />
@@ -134,7 +183,7 @@ export default function MinhaSemanPage() {
               Volume por dia (km)
             </h2>
             <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={dailyVolume} barCategoryGap="30%">
+              <BarChart data={data.dailyVolume} barCategoryGap="30%">
                 <XAxis
                   dataKey="day"
                   tick={{ fill: "#64748b", fontSize: 11 }}
@@ -159,7 +208,7 @@ export default function MinhaSemanPage() {
                   formatter={(v) => [`${v} km`, "Volume"]}
                 />
                 <Bar dataKey="km" radius={[6, 6, 0, 0]}>
-                  {dailyVolume.map((entry, index) => (
+                  {data.dailyVolume.map((entry, index) => (
                     <Cell
                       key={index}
                       fill={entry.km > 0 ? "#8b5cf6" : "#1e293b"}
@@ -173,9 +222,11 @@ export default function MinhaSemanPage() {
       </motion.div>
 
       <motion.div {...fadeUp(0.2)}>
-        <h2 className="font-display text-base font-semibold text-text mb-3">Destaques da semana</h2>
+        <h2 className="font-display text-base font-semibold text-text mb-3">
+          Destaques da semana
+        </h2>
         <div className="space-y-3">
-          {myAnalysis.highlights.map((highlight, i) => (
+          {data.highlights.map((highlight, i) => (
             <div
               key={i}
               className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4"
@@ -191,7 +242,12 @@ export default function MinhaSemanPage() {
               <CheckCircle2 className="h-4 w-4 text-success" />
             </span>
             <p className="text-sm text-text-muted leading-relaxed">
-              Aderência de {myAnalysis.adherence}% — você completou todos os treinos da semana.
+              Aderência de {data.adherence}%
+              {data.adherence >= 85
+                ? " — você completou todos os treinos da semana."
+                : data.adherence >= 70
+                ? " — quase lá, continue assim!"
+                : " — tente completar mais treinos na próxima semana."}
             </p>
           </div>
         </div>
@@ -200,9 +256,11 @@ export default function MinhaSemanPage() {
       <motion.div {...fadeUp(0.26)}>
         <div className="rounded-2xl border border-primary/25 bg-primary/8 p-5">
           <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">
-            Recomendação do treinador
+            Recomendação da semana
           </p>
-          <p className="text-sm text-text-muted leading-relaxed">{myAnalysis.recommendation}</p>
+          <p className="text-sm text-text-muted leading-relaxed">
+            {data.recommendation}
+          </p>
         </div>
       </motion.div>
     </div>

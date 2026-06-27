@@ -21,7 +21,21 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type CrmLead, type LeadStage } from "@/lib/mock-data";
+type LeadStage = "novo" | "contato" | "proposta" | "negociacao" | "ganho" | "perdido";
+
+interface CrmLead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  source: "instagram" | "indicacao" | "site" | "evento" | "whatsapp";
+  stage: LeadStage;
+  value: number;
+  notes: string;
+  createdAt: string;
+  lastContact: string;
+  avatar: string;
+}
 import { cn } from "@/lib/utils";
 
 const fadeUp = {

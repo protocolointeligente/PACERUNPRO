@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart2,
@@ -11,15 +11,59 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { weeklyAnalyses, type WeeklyAthleteAnalysis } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
-const WEEKS = [
-  "19–25 Mai 2025",
-  "26 Mai–01 Jun 2025",
-  "02–08 Jun 2025",
-  "09–15 Jun 2025",
-];
+// ── Types (formerly from mock-data) ──────────────────────────────────────────
+type RiskLevel = "low" | "medium" | "high";
+
+interface WeeklyMetric {
+  label: string;
+  value: number;
+  prev: number;
+  unit: string;
+  delta: number;
+}
+
+interface AthleteAnalysis {
+  athleteId: string;
+  athleteName: string;
+  weekLabel: string;
+  metrics: WeeklyMetric[];
+  highlights: string[];
+  riskLevel: RiskLevel;
+  adherence: number;
+  recommendation: string;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getMondayOf(weeksAgo: number): Date {
+  const today = new Date();
+  const dow = today.getDay();
+  const toMonday = dow === 0 ? -6 : 1 - dow;
+  const d = new Date(today);
+  d.setDate(today.getDate() + toMonday - weeksAgo * 7);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function toIso(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+function formatWeekLabel(start: Date) {
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  return `${fmt(start)} – ${fmt(end)} ${start.getFullYear()}`;
+}
+
+// Last 4 weeks (index 0 = most recent)
+const WEEKS = Array.from({ length: 4 }, (_, i) => {
+  const start = getMondayOf(i);
+  return { start, label: formatWeekLabel(start) };
+});
 
 type RiskFilter = "todos" | "high" | "medium" | "low";
 
@@ -30,38 +74,28 @@ const RISK_FILTERS: { value: RiskFilter; label: string }[] = [
   { value: "low", label: "Baixo risco" },
 ];
 
-const riskLabel: Record<WeeklyAthleteAnalysis["riskLevel"], string> = {
+const riskLabel: Record<RiskLevel, string> = {
   high: "Alto risco",
   medium: "Médio risco",
   low: "Baixo risco",
 };
 
-const riskColors: Record<WeeklyAthleteAnalysis["riskLevel"], string> = {
+const riskColors: Record<RiskLevel, string> = {
   high: "border-danger/40 bg-danger/10 text-danger",
   medium: "border-warning/40 bg-warning/10 text-warning",
   low: "border-success/40 bg-success/10 text-success",
 };
 
-function formatPaceDisplay(sec: number) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${s.toString().padStart(2, "0")}/km`;
-}
-
 function DeltaChip({ delta, unit }: { delta: number; unit: string }) {
   const isPace = unit === "s/km";
   const improved = isPace ? delta < 0 : delta > 0;
-  const isNeutral = delta === 0;
-
-  if (isNeutral) {
-    return <span className="text-xs text-text-muted">—</span>;
-  }
+  if (delta === 0) return <span className="text-xs text-text-muted">—</span>;
 
   return (
     <span
       className={cn(
         "inline-flex items-center gap-0.5 text-xs font-semibold",
-        improved ? "text-success" : "text-danger"
+        improved ? "text-success" : "text-danger",
       )}
     >
       {improved ? (
@@ -76,18 +110,9 @@ function DeltaChip({ delta, unit }: { delta: number; unit: string }) {
 
 function AdherenceBar({ adherence }: { adherence: number }) {
   const color =
-    adherence >= 85
-      ? "bg-success"
-      : adherence >= 70
-      ? "bg-warning"
-      : "bg-danger";
-
+    adherence >= 85 ? "bg-success" : adherence >= 70 ? "bg-warning" : "bg-danger";
   const textColor =
-    adherence >= 85
-      ? "text-success"
-      : adherence >= 70
-      ? "text-warning"
-      : "text-danger";
+    adherence >= 85 ? "text-success" : adherence >= 70 ? "text-warning" : "text-danger";
 
   return (
     <div className="space-y-1">
@@ -105,16 +130,29 @@ function AdherenceBar({ adherence }: { adherence: number }) {
   );
 }
 
+function SkeletonCard() {
+  return (
+    <div className="animate-pulse rounded-2xl border border-border bg-card p-5 space-y-4">
+      <div className="h-4 w-32 rounded bg-card-hover" />
+      <div className="h-2 w-full rounded-full bg-card-hover" />
+      <div className="grid grid-cols-3 gap-2">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="h-16 rounded-xl bg-card-hover" />
+        ))}
+      </div>
+      <div className="h-3 w-48 rounded bg-card-hover" />
+    </div>
+  );
+}
+
 function AthleteCard({
   analysis,
   index,
 }: {
-  analysis: WeeklyAthleteAnalysis;
+  analysis: AthleteAnalysis;
   index: number;
 }) {
-  const volumeMetric = analysis.metrics[0];
-  const sessionsMetric = analysis.metrics[1];
-  const paceMetric = analysis.metrics[2];
+  const [vol, sess, pace] = analysis.metrics;
 
   return (
     <motion.div
@@ -134,7 +172,7 @@ function AthleteCard({
             <span
               className={cn(
                 "shrink-0 rounded-xl border px-2.5 py-0.5 text-xs font-semibold",
-                riskColors[analysis.riskLevel]
+                riskColors[analysis.riskLevel],
               )}
             >
               {riskLabel[analysis.riskLevel]}
@@ -146,24 +184,22 @@ function AthleteCard({
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-xl bg-card-hover p-2.5 space-y-1">
               <p className="text-[10px] text-text-muted uppercase tracking-wide">Volume</p>
-              <p className="text-sm font-bold text-text">
-                {volumeMetric.value} km
-              </p>
-              <DeltaChip delta={volumeMetric.delta} unit={volumeMetric.unit} />
+              <p className="text-sm font-bold text-text">{vol?.value ?? 0} km</p>
+              {vol && <DeltaChip delta={vol.delta} unit={vol.unit} />}
             </div>
             <div className="rounded-xl bg-card-hover p-2.5 space-y-1">
               <p className="text-[10px] text-text-muted uppercase tracking-wide">Sessões</p>
-              <p className="text-sm font-bold text-text">
-                {sessionsMetric.value}
-              </p>
-              <DeltaChip delta={sessionsMetric.delta} unit={sessionsMetric.unit} />
+              <p className="text-sm font-bold text-text">{sess?.value ?? 0}</p>
+              {sess && <DeltaChip delta={sess.delta} unit={sess.unit} />}
             </div>
             <div className="rounded-xl bg-card-hover p-2.5 space-y-1">
               <p className="text-[10px] text-text-muted uppercase tracking-wide">Pace médio</p>
               <p className="text-sm font-bold text-text">
-                {formatPaceDisplay(paceMetric.value)}
+                {pace?.value
+                  ? `${Math.floor(pace.value / 60)}:${String(pace.value % 60).padStart(2, "0")}/km`
+                  : "—"}
               </p>
-              <DeltaChip delta={paceMetric.delta} unit={paceMetric.unit} />
+              {pace && <DeltaChip delta={pace.delta} unit={pace.unit} />}
             </div>
           </div>
 
@@ -189,19 +225,36 @@ function AthleteCard({
 }
 
 export default function AnaliseSemanalPage() {
-  const [weekIndex, setWeekIndex] = useState(2);
+  const [weekIndex, setWeekIndex] = useState(0);
   const [riskFilter, setRiskFilter] = useState<RiskFilter>("todos");
+  const [analyses, setAnalyses] = useState<AthleteAnalysis[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchWeek = useCallback((idx: number) => {
+    setLoading(true);
+    const weekStart = toIso(WEEKS[idx].start);
+    fetch(`/api/coach/analise-semanal?weekStart=${weekStart}`)
+      .then((r) => r.json())
+      .then((d) => setAnalyses(d.analyses ?? []))
+      .catch(() => setAnalyses([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetchWeek(weekIndex);
+  }, [weekIndex, fetchWeek]);
 
   const filtered =
-    riskFilter === "todos"
-      ? weeklyAnalyses
-      : weeklyAnalyses.filter((a) => a.riskLevel === riskFilter);
+    riskFilter === "todos" ? analyses : analyses.filter((a) => a.riskLevel === riskFilter);
 
-  const avgAdherence = weeklyAnalyses.length > 0
-    ? Math.round(weeklyAnalyses.reduce((acc, a) => acc + a.adherence, 0) / weeklyAnalyses.length)
-    : 0;
-  const highRiskCount = weeklyAnalyses.filter((a) => a.riskLevel === "high").length;
-  const totalVolume = weeklyAnalyses.reduce((acc, a) => acc + a.metrics[0].value, 0);
+  const avgAdherence =
+    analyses.length > 0
+      ? Math.round(analyses.reduce((s, a) => s + a.adherence, 0) / analyses.length)
+      : 0;
+  const highRiskCount = analyses.filter((a) => a.riskLevel === "high").length;
+  const totalVolume = Math.round(
+    analyses.reduce((s, a) => s + (a.metrics[0]?.value ?? 0), 0) * 10,
+  ) / 10;
 
   return (
     <div className="mx-auto max-w-6xl space-y-7">
@@ -225,19 +278,21 @@ export default function AnaliseSemanalPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setWeekIndex((i) => Math.max(0, i - 1))}
-              disabled={weekIndex === 0}
+              onClick={() => setWeekIndex((i) => Math.min(WEEKS.length - 1, i + 1))}
+              disabled={weekIndex === WEEKS.length - 1}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-text-muted transition-all hover:border-primary/40 hover:text-text disabled:opacity-40"
+              aria-label="Semana anterior"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <span className="flex-1 text-center text-sm font-semibold text-text sm:min-w-[170px] sm:flex-none">
-              {WEEKS[weekIndex]}
+              {WEEKS[weekIndex].label}
             </span>
             <button
-              onClick={() => setWeekIndex((i) => Math.min(WEEKS.length - 1, i + 1))}
-              disabled={weekIndex === WEEKS.length - 1}
+              onClick={() => setWeekIndex((i) => Math.max(0, i - 1))}
+              disabled={weekIndex === 0}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-text-muted transition-all hover:border-primary/40 hover:text-text disabled:opacity-40"
+              aria-label="Próxima semana"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -253,9 +308,7 @@ export default function AnaliseSemanalPage() {
       >
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="text-xs text-text-muted">Atletas analisados</p>
-          <p className="mt-1 font-display text-2xl font-bold text-text">
-            {weeklyAnalyses.length}
-          </p>
+          <p className="mt-1 font-display text-2xl font-bold text-text">{analyses.length}</p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="text-xs text-text-muted">Aderência média</p>
@@ -285,7 +338,7 @@ export default function AnaliseSemanalPage() {
               "rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition-all",
               riskFilter === f.value
                 ? "border-primary/60 bg-primary/15 text-primary"
-                : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text"
+                : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text",
             )}
           >
             {f.label}
@@ -295,7 +348,11 @@ export default function AnaliseSemanalPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <AnimatePresence mode="popLayout">
-          {filtered.length === 0 ? (
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))
+          ) : filtered.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0 }}
@@ -304,7 +361,11 @@ export default function AnaliseSemanalPage() {
               className="col-span-2 flex flex-col items-center gap-3 py-16 text-center"
             >
               <BarChart2 className="h-10 w-10 text-text-muted" />
-              <p className="text-sm text-text-muted">Nenhum atleta neste filtro.</p>
+              <p className="text-sm text-text-muted">
+                {analyses.length === 0
+                  ? "Nenhum atleta com dados para esta semana."
+                  : "Nenhum atleta neste filtro."}
+              </p>
             </motion.div>
           ) : (
             filtered.map((analysis, index) => (
