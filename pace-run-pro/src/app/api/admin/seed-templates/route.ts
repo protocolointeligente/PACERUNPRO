@@ -20,7 +20,7 @@ function parseWorkout(raw: string, dayOfWeek: number, weekNum: number): object |
 
   // Parse distance (e.g. "TL 12km 75%", "TI 8x400m Ra3", "TF 45min")
   let type = "CORRIDA";
-  let title = raw;
+  const title = raw;
   let targetDistanceKm: number | undefined;
   let targetDurationMin: number | undefined;
   let targetRpe = 6;
