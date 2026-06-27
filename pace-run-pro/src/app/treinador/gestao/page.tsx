@@ -11,8 +11,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { coachRosterStats, athleteRosterList, paymentHistory } from "@/lib/mock-data";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
+
+interface RosterStats {
+  usedSlots: number;
+  totalSlots: number;
+  planName: string;
+  newAthletes30d: number;
+  inactiveCount: number;
+  recentAthletes: { name: string; status: string; joinedAt: string }[];
+}
 
 interface ExpenseRow {
   id: string;
@@ -49,6 +58,10 @@ function GestaoContent() {
   const [inviteEnabled, setInviteEnabled] = useState(true);
   const [copied, setCopied] = useState(false);
   const [slug, setSlug] = useState<string | null>(null);
+  const [rosterStats, setRosterStats] = useState<RosterStats>({
+    usedSlots: 0, totalSlots: 30, planName: "Treinador", newAthletes30d: 0, inactiveCount: 0, recentAthletes: [],
+  });
+  const [loadingRoster, setLoadingRoster] = useState(true);
 
   const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
   const [loadingExpenses, setLoadingExpenses] = useState(true);
@@ -70,6 +83,14 @@ function GestaoContent() {
       .then((r) => r.json())
       .then((d: { slug?: string | null }) => { if (d.slug) setSlug(d.slug); })
       .catch(() => null);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/coach/gestao/stats")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: RosterStats | null) => { if (d) setRosterStats(d); })
+      .catch(() => null)
+      .finally(() => setLoadingRoster(false));
   }, []);
 
   useEffect(() => {
@@ -120,12 +141,8 @@ function GestaoContent() {
     });
   }
 
-  const slotPct = (coachRosterStats.usedSlots / coachRosterStats.totalSlots) * 100;
+  const slotPct = (rosterStats.usedSlots / rosterStats.totalSlots) * 100;
   const totalExpensesMonth = expenses.reduce((acc, e) => acc + e.amountCents, 0);
-
-  const revenueByAthlete = [...athleteRosterList]
-    .filter((a) => a.billingStatus === "em dia")
-    .sort((a, b) => b.monthlyFee - a.monthlyFee);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -155,30 +172,30 @@ function GestaoContent() {
               <StatCard
                 icon={<Users className="h-4 w-4" />}
                 label="Slots usados"
-                value={`${coachRosterStats.usedSlots}/${coachRosterStats.totalSlots}`}
+                value={loadingRoster ? "…" : `${rosterStats.usedSlots}/${rosterStats.totalSlots}`}
                 color="text-info"
                 bgColor="bg-info/15"
               />
               <StatCard
-                icon={<TrendingUp className="h-4 w-4" />}
-                label="MRR da base"
-                value={`R$ ${coachRosterStats.mrr.toLocaleString("pt-BR")}`}
-                color="text-success"
-                bgColor="bg-success/15"
-              />
-              <StatCard
                 icon={<UserPlus className="h-4 w-4" />}
                 label="Novos 30d"
-                value={`+${coachRosterStats.newAthletes30d}`}
+                value={loadingRoster ? "…" : `+${rosterStats.newAthletes30d}`}
                 color="text-primary"
                 bgColor="bg-primary/15"
               />
               <StatCard
                 icon={<AlertTriangle className="h-4 w-4" />}
-                label="Inadimplentes"
-                value={String(coachRosterStats.pendingInvoices)}
-                color="text-danger"
-                bgColor="bg-danger/15"
+                label="Inativos"
+                value={loadingRoster ? "…" : String(rosterStats.inactiveCount)}
+                color="text-warning"
+                bgColor="bg-warning/15"
+              />
+              <StatCard
+                icon={<TrendingUp className="h-4 w-4" />}
+                label="Plano"
+                value={loadingRoster ? "…" : rosterStats.planName}
+                color="text-success"
+                bgColor="bg-success/15"
               />
             </div>
 
@@ -187,31 +204,35 @@ function GestaoContent() {
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-text-muted">
-                    Capacidade do plano <span className="font-semibold text-text">{coachRosterStats.planName}</span>
+                    Capacidade do plano <span className="font-semibold text-text">{rosterStats.planName}</span>
                   </span>
                   <span className="font-display font-bold text-text">
-                    {coachRosterStats.usedSlots} / {coachRosterStats.totalSlots} atletas
+                    {rosterStats.usedSlots} / {rosterStats.totalSlots} atletas
                   </span>
                 </div>
                 <Progress value={slotPct} />
                 <p className="text-xs text-text-muted">
-                  {coachRosterStats.totalSlots - coachRosterStats.usedSlots} slots disponíveis
+                  {rosterStats.totalSlots - rosterStats.usedSlots} slots disponíveis
                 </p>
               </CardContent>
             </Card>
 
             {/* Athlete list */}
             <div className="space-y-2">
-              {athleteRosterList.map((athlete) => (
-                <Card key={athlete.id}>
-                  <CardContent className="flex items-center gap-3 p-3 sm:p-4">
-                    {/* Name + plan */}
-                    <div className="min-w-0 flex-1 space-y-0.5">
-                      <p className="truncate font-display text-sm font-semibold text-text">
-                        {athlete.name}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <p className="text-xs text-text-muted">{athlete.plan}</p>
+              {loadingRoster ? (
+                <p className="py-6 text-center text-sm text-text-muted">Carregando atletas…</p>
+              ) : rosterStats.recentAthletes.length === 0 ? (
+                <p className="py-6 text-center text-sm text-text-muted">
+                  Nenhum atleta ainda. Compartilhe seu link de convite para adicionar atletas.
+                </p>
+              ) : (
+                rosterStats.recentAthletes.map((athlete, i) => (
+                  <Card key={i}>
+                    <CardContent className="flex items-center gap-3 p-3 sm:p-4">
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <p className="truncate font-display text-sm font-semibold text-text">
+                          {athlete.name}
+                        </p>
                         <Badge
                           variant={
                             athlete.status === "ativo"
@@ -224,127 +245,47 @@ function GestaoContent() {
                         >
                           {athlete.status}
                         </Badge>
-                        <Badge
-                          variant={athlete.billingStatus === "em dia" ? "success" : "danger"}
-                          className="text-[10px]"
-                        >
-                          {athlete.billingStatus}
-                        </Badge>
                       </div>
-                    </div>
-
-                    {/* Billing info + joined — visible based on screen size */}
-                    <div className="hidden text-right sm:block">
-                      <p className="text-sm font-semibold text-text">
-                        R$ {athlete.monthlyFee}/mês
-                      </p>
-                      <p className="text-xs text-text-muted">Próx. {athlete.nextBilling}</p>
-                    </div>
-                    <div className="hidden text-right lg:block">
-                      <p className="text-xs text-text-muted">Desde {athlete.joinedAt}</p>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex shrink-0 gap-2">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => {
-                          window.location.href = `/treinador/atletas/${athlete.id}`;
-                        }}
-                      >
-                        Ver
-                      </Button>
-                      {athlete.billingStatus === "inadimplente" && (
-                        <Button size="sm" variant="danger">
-                          Cobrar
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      <div className="hidden text-right lg:block">
+                        <p className="text-xs text-text-muted">
+                          Desde {new Date(athlete.joinedAt).toLocaleDateString("pt-BR")}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+              {rosterStats.usedSlots > 10 && (
+                <p className="text-center text-xs text-text-muted pt-1">
+                  Mostrando 10 de {rosterStats.usedSlots} atletas.{" "}
+                  <Link href="/treinador/atletas" className="text-primary hover:underline">Ver todos</Link>
+                </p>
+              )}
             </div>
           </div>
         </TabsContent>
 
-        {/* ── Tab 2: Financeiro ──────────────────────────────────────────── */}
+        {/* ── Tab 2: Receitas ───────────────────────────────────────────── */}
         <TabsContent value="financeiro">
-          <div className="space-y-4">
-            {/* MRR card */}
-            <Card>
-              <CardContent className="p-5">
-                <p className="text-xs uppercase tracking-wider text-text-muted">
-                  Receita Recorrente Mensal (MRR)
+          <Card>
+            <CardContent className="flex flex-col items-center gap-5 py-12 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <TrendingUp className="h-7 w-7" />
+              </div>
+              <div>
+                <p className="font-display text-lg font-bold text-text">Receitas da loja</p>
+                <p className="mt-1.5 max-w-xs text-sm text-text-muted">
+                  Acompanhe suas vendas de planilhas, receita total, histórico de transações e
+                  ranking por produto no painel de receitas dedicado.
                 </p>
-                <p className="mt-1 font-display text-3xl font-bold text-text">
-                  R$ {coachRosterStats.mrr.toLocaleString("pt-BR")}
-                  <span className="ml-1 text-base font-normal text-text-muted">/mês</span>
-                </p>
-                <p className="mt-1 text-sm text-success">
-                  +{Math.round(coachRosterStats.mrrGrowth * 100)}% vs mês anterior
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Revenue breakdown */}
-            <Card>
-              <CardContent className="p-5 space-y-3">
-                <h3 className="font-display text-sm font-semibold text-text">
-                  Receita por atleta
-                </h3>
-                <div className="space-y-2">
-                  {revenueByAthlete.map((athlete) => (
-                    <div
-                      key={athlete.id}
-                      className="flex items-center justify-between rounded-lg border border-border bg-card-hover/30 px-3 py-2.5"
-                    >
-                      <span className="text-sm text-text">{athlete.name}</span>
-                      <span className="font-display text-sm font-semibold text-success">
-                        R$ {athlete.monthlyFee}/mês
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Payment history */}
-            <Card>
-              <CardContent className="p-5 space-y-3">
-                <h3 className="font-display text-sm font-semibold text-text">
-                  Histórico de pagamentos da plataforma
-                </h3>
-                <div className="space-y-2">
-                  {paymentHistory.map((payment) => (
-                    <div
-                      key={payment.id}
-                      className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card-hover/30 px-3 py-2.5"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-text">{payment.description}</p>
-                        <p className="text-xs text-text-muted">
-                          {payment.period} · {payment.date}
-                        </p>
-                      </div>
-                      <span className="font-display text-sm font-semibold text-text">
-                        R$ {payment.amount.toLocaleString("pt-BR")}
-                      </span>
-                      <Badge variant={payment.status === "pago" ? "success" : "warning"}>
-                        {payment.status}
-                      </Badge>
-                      <Button size="sm" variant="outline">
-                        Nota fiscal
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-text-muted">
-                  Os repasses são processados automaticamente via Pagar.me · Próximo repasse: 15 jun 2026
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+              <Link href="/treinador/receitas">
+                <Button variant="primary" className="gap-2">
+                  <TrendingUp className="h-4 w-4" /> Ver painel de receitas
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ── Tab 3: Despesas ───────────────────────────────────────────── */}
@@ -352,15 +293,9 @@ function GestaoContent() {
           <div className="space-y-4">
             {/* Summary */}
             <div className="grid gap-3 sm:grid-cols-3">
-              <StatCard icon={<Receipt className="h-4 w-4" />} label="Despesas (total)" value={`R$ ${(totalExpensesMonth / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} color="text-danger" bgColor="bg-danger/15" />
-              <StatCard icon={<TrendingUp className="h-4 w-4" />} label="MRR" value={`R$ ${coachRosterStats.mrr.toLocaleString("pt-BR")}`} color="text-success" bgColor="bg-success/15" />
-              <StatCard
-                icon={<TrendingUp className="h-4 w-4" />}
-                label="Resultado líquido"
-                value={`R$ ${((coachRosterStats.mrr * 100 - totalExpensesMonth) / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
-                color={(coachRosterStats.mrr * 100 - totalExpensesMonth) >= 0 ? "text-success" : "text-danger"}
-                bgColor={(coachRosterStats.mrr * 100 - totalExpensesMonth) >= 0 ? "bg-success/15" : "bg-danger/15"}
-              />
+              <StatCard icon={<Receipt className="h-4 w-4" />} label="Despesas cadastradas" value={`R$ ${(totalExpensesMonth / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} color="text-danger" bgColor="bg-danger/15" />
+              <StatCard icon={<Users className="h-4 w-4" />} label="Atletas ativos" value={String(rosterStats.usedSlots - rosterStats.inactiveCount)} color="text-success" bgColor="bg-success/15" />
+              <StatCard icon={<TrendingUp className="h-4 w-4" />} label="Receitas da loja" value="Ver →" color="text-primary" bgColor="bg-primary/15" />
             </div>
 
             {/* Add expense */}
