@@ -112,7 +112,7 @@ export function computeLoadSeries(
 
   // Build a sorted list of all dates from the earliest in the map to today
   const dateSet = new Set(dailyTss.keys());
-  const allDates = sortedDateRange(dateSet, outputDays);
+  const allDates = sortedDateRange(dateSet);
 
   let ctl = 0;
   let atl = 0;
@@ -135,7 +135,7 @@ export function computeLoadSeries(
   return result.slice(-outputDays);
 }
 
-function sortedDateRange(dateSet: Set<string>, outputDays: number): string[] {
+function sortedDateRange(dateSet: Set<string>): string[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -285,7 +285,7 @@ export function computeEWMASeries(
   if (dailyTss.size === 0) return [];
 
   const dateSet = new Set(dailyTss.keys());
-  const allDates = sortedDateRange(dateSet, outputDays);
+  const allDates = sortedDateRange(dateSet);
 
   let ewmaAcute = 0;
   let ewmaChronic = 0;

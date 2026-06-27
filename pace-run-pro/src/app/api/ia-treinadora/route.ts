@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
     })),
   };
 
-  const apiKey = process.env.GOOGLE_AI_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ reply: getMockReply(messages[messages.length - 1]?.content ?? "") });
   }
@@ -144,23 +144,25 @@ ${JSON.stringify(athleteContext, null, 2)}
 
 Responda sempre em português brasileiro. Seja objetiva, prática e motivadora. Use terminologia de corrida. Limite respostas a 3-4 parágrafos. Não ofereça diagnósticos médicos. Use os dados reais (carga CTL/ATL/TSB, check-ins recentes, treinos recentes) para personalizar suas recomendações ao atleta ${athlete.user.name}.`;
 
-  const contents = messages.map((m: { role: string; content: string }) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
+  const claudeMessages = messages.map((m: { role: string; content: string }) => ({
+    role: m.role as "user" | "assistant",
+    content: m.content,
   }));
 
-  const resp = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents,
-        generationConfig: { maxOutputTokens: 1024 },
-      }),
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
     },
-  );
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: claudeMessages,
+    }),
+  });
 
   if (!resp.ok) {
     return NextResponse.json({ reply: getMockReply(messages[messages.length - 1]?.content ?? "") });
@@ -168,7 +170,7 @@ Responda sempre em português brasileiro. Seja objetiva, prática e motivadora. 
 
   const data = await resp.json();
   const reply =
-    (data.candidates?.[0]?.content?.parts?.[0]?.text as string | undefined) ??
+    (data.content?.[0]?.text as string | undefined) ??
     "Não consegui processar sua pergunta agora.";
   return NextResponse.json({ reply });
 }
