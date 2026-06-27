@@ -211,7 +211,7 @@ export default function MinhaSemanPage() {
                   {data.dailyVolume.map((entry, index) => (
                     <Cell
                       key={index}
-                      fill={entry.km > 0 ? "#8b5cf6" : "#1e293b"}
+                      fill={entry.km > 0 ? "#C6F24E" : "#1e293b"}
                     />
                   ))}
                 </Bar>

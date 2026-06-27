@@ -64,7 +64,7 @@ export default function AdminDashboardPage() {
         <Card>
           <CardContent className="p-5">
             <h2 className="mb-4 font-display text-base font-semibold text-text">MRR mensal (R$)</h2>
-            <BarTrend data={mrrSeriesForChart} dataKey="mrr" color="#8b5cf6" />
+            <BarTrend data={mrrSeriesForChart} dataKey="mrr" color="#C6F24E" />
           </CardContent>
         </Card>
 

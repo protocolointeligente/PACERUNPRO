@@ -40,7 +40,7 @@ const WORKOUT_TYPE_LABELS: Record<string, string> = {
 const WORKOUT_TYPE_COLORS: Record<string, string> = {
   RODAGEM_LEVE: "#84cc16",
   INTERVALADO_CURTO: "#ef4444",
-  INTERVALADO_LONGO: "#f97316",
+  INTERVALADO_LONGO: "#FFB020",
   TEMPO_RUN: "#eab308",
   FARTLEK: "#a78bfa",
   PROGRESSIVO: "#38bdf8",
@@ -49,8 +49,8 @@ const WORKOUT_TYPE_COLORS: Record<string, string> = {
   SUBIDA: "#fb923c",
   TECNICA: "#06b6d4",
   PROVA: "#ec4899",
-  FORCA: "#8b5cf6",
-  FUNCIONAL: "#a855f7",
+  FORCA: "#46E0C8",
+  FUNCIONAL: "#46E0C8",
   MOBILIDADE: "#84cc16",
   RECUPERACAO: "#94a3b8",
 };

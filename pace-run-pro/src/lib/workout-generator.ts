@@ -101,7 +101,7 @@ export const ZONE_COLORS: Record<TrainingZoneId, string> = {
   E: "#84cc16",
   M: "#38bdf8",
   T: "#eab308",
-  I: "#f97316",
+  I: "#FFB020",
   R: "#ef4444",
 };
 

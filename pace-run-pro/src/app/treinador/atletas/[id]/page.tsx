@@ -313,7 +313,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
               <CardContent className="p-5">
                 <h3 className="mb-3 font-display text-sm font-semibold text-text">Evolução do peso (kg)</h3>
                 {weightSeries.length > 0
-                  ? <AreaTrend data={weightSeries} dataKey="kg" color="#a855f7" unit=" kg" />
+                  ? <AreaTrend data={weightSeries} dataKey="kg" color="#46E0C8" unit=" kg" />
                   : <p className="py-8 text-center text-sm text-text-muted">Nenhum dado de peso ainda.</p>}
               </CardContent>
             </Card>

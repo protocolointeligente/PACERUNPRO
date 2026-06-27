@@ -12,7 +12,7 @@ interface ScaleInputProps {
   accent?: string;
 }
 
-export function ScaleInput({ label, value, onChange, emojis, lowLabel, highLabel, accent = "#8b5cf6" }: ScaleInputProps) {
+export function ScaleInput({ label, value, onChange, emojis, lowLabel, highLabel, accent = "#C6F24E" }: ScaleInputProps) {
   const emojiIndex = Math.min(emojis.length - 1, Math.floor((value / 10) * emojis.length));
 
   return (

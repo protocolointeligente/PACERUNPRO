@@ -110,7 +110,7 @@ const HOW_IT_WORKS = [
     icon: CalendarDays,
     title: "Monte o plano semanal",
     desc: "Prescreva corrida e força com VDOT, zonas e carga calculada automaticamente.",
-    color: "#7c3aed",
+    color: "#C6F24E",
   },
   {
     step: "03",
@@ -224,7 +224,7 @@ function HeroDashboardMock() {
             <div className="grid grid-cols-2 gap-1.5">
               {[
                 { label: "Criar treino", accent: "#2563EB" },
-                { label: "Criar semana", accent: "#7c3aed" },
+                { label: "Criar semana", accent: "#C6F24E" },
                 { label: "Prescrever força", accent: "#0891b2" },
                 { label: "Usar modelo", accent: "#059669" },
               ].map((a) => (
@@ -258,8 +258,8 @@ function HeroDashboardMock() {
             </p>
             <div className="space-y-1.5">
               {[
-                { label: "Sem treino esta semana", value: "3 atletas", color: "#f97316" },
-                { label: "Check-ins com alerta", value: "2", color: "#f97316" },
+                { label: "Sem treino esta semana", value: "3 atletas", color: "#FFB020" },
+                { label: "Check-ins com alerta", value: "2", color: "#FFB020" },
                 { label: "Treinos cumpridos", value: "18 / 21", color: "#22c55e" },
                 { label: "Atletas totais", value: "24", color: "#60a5fa" },
               ].map((item) => (
@@ -341,7 +341,7 @@ function PrescriptionMock() {
           >
             <div
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ background: "linear-gradient(135deg, #2563eb, #4f46e5)" }}
+              style={{ background: "linear-gradient(135deg, #2563eb, #3FA7FF)" }}
             >
               {a.initials}
             </div>
@@ -825,7 +825,7 @@ export default function LandingPage() {
               >
                 <CardContent className="p-7">
                   <div className="mb-5 flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #2563eb, #4f46e5)" }}>
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #2563eb, #3FA7FF)" }}>
                       {t.avatar}
                     </div>
                     <div>

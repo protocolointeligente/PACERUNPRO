@@ -117,7 +117,7 @@ export default function EvolutionPage() {
 
         <ChartCard title="Volume mensal" description="Total de quilômetros por mês" trend="up" trendLabel="Recorde em maio: 168 km">
           {evolucao.monthlyVolume.length > 0
-            ? <BarTrend data={evolucao.monthlyVolume} dataKey="km" color="#8b5cf6" unit=" km" />
+            ? <BarTrend data={evolucao.monthlyVolume} dataKey="km" color="#C6F24E" unit=" km" />
             : <EmptyChart />}
         </ChartCard>
 
@@ -157,13 +157,13 @@ export default function EvolutionPage() {
           tooltip="Mostra o pace mais rápido que você conseguiu manter por cada intervalo de tempo. Quanto mais baixo o valor, melhor. Útil para identificar seu perfil de esforço: atletas de sprint têm melhor pace nos tempos curtos; maratonistas sustentam bem os tempos longos."
         >
           {peakPace.length > 0
-            ? <BarTrend data={peakPace} dataKey="paceSec" color="#f97316" reverse formatValue={(v) => formatPace(v)} />
+            ? <BarTrend data={peakPace} dataKey="paceSec" color="#FFB020" reverse formatValue={(v) => formatPace(v)} />
             : <EmptyChart />}
         </ChartCard>
 
         <ChartCard title="Evolução do peso" description="Peso corporal ao longo dos meses (kg)" trend="down" trendLabel="-2.8 kg desde janeiro">
           {evolucao.weightHistory.length > 0
-            ? <AreaTrend data={evolucao.weightHistory} dataKey="kg" color="#a855f7" unit=" kg" />
+            ? <AreaTrend data={evolucao.weightHistory} dataKey="kg" color="#46E0C8" unit=" kg" />
             : <EmptyChart />}
         </ChartCard>
 

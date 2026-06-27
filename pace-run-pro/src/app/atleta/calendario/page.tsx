@@ -43,8 +43,8 @@ interface RaceRow {
 
 const calendarLegend = [
   { type: "corrida", color: "#38bdf8", label: "Corrida" },
-  { type: "forca", color: "#8b5cf6", label: "Força" },
-  { type: "funcional", color: "#a855f7", label: "Funcional" },
+  { type: "forca", color: "#46E0C8", label: "Força" },
+  { type: "funcional", color: "#46E0C8", label: "Funcional" },
   { type: "mobilidade", color: "#84cc16", label: "Mobilidade" },
   { type: "recuperacao", color: "#94a3b8", label: "Recuperação" },
 ];
@@ -60,8 +60,8 @@ const TYPE_LABELS: Record<string, string> = {
 
 const TYPE_COLORS: Record<string, string> = {
   corrida: "#38bdf8",
-  forca: "#8b5cf6",
-  funcional: "#a855f7",
+  forca: "#46E0C8",
+  funcional: "#46E0C8",
   mobilidade: "#84cc16",
   recuperacao: "#94a3b8",
   prova: "#facc15",
@@ -76,7 +76,7 @@ const RUN_SUBTYPE_COLORS: Record<string, string> = {
   "Fartlek": "#a78bfa",
   "Tempo Run": "#eab308",
   "Subida": "#fb923c",
-  "Intervalado longo": "#f97316",
+  "Intervalado longo": "#FFB020",
   "Intervalado curto": "#ef4444",
 };
 
@@ -399,7 +399,7 @@ export default function CalendarPage() {
                           <div className="flex flex-1 flex-col gap-1 overflow-hidden">
                             {dayEvents.slice(0, 2).map((e, idx) => {
                               const isRace = e.type === "prova" && e.title.startsWith("🏅");
-                              const color = isRace ? "#f97316" : getSubtypeColor(e.type, e.subtype);
+                              const color = isRace ? "#FFB020" : getSubtypeColor(e.type, e.subtype);
                               return (
                                 <span
                                   key={idx}
@@ -463,7 +463,7 @@ export default function CalendarPage() {
                     <div className="space-y-2">
                       {items.map((e, idx) => {
                         const isRace = e.type === "prova" && e.title.startsWith("🏅");
-                        const color = isRace ? "#f97316" : getSubtypeColor(e.type, e.subtype);
+                        const color = isRace ? "#FFB020" : getSubtypeColor(e.type, e.subtype);
                         return (
                           <Card key={idx}>
                             <CardContent className="flex items-center gap-3 p-3.5">

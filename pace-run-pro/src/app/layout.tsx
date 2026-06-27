@@ -1,35 +1,48 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Sora, Montserrat } from "next/font/google";
+import { Archivo, JetBrains_Mono } from "next/font/google";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CookieConsent } from "@/components/cookie-consent";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+// PACERUNPRO — Archivo (display/UI) + JetBrains Mono (pace/dados)
+const archivo = Archivo({
+  variable: "--font-archivo",
+  weight: ["400", "500", "600", "700", "800", "900"],
   subsets: ["latin"],
+  display: "swap",
 });
 
-const sora = Sora({
-  variable: "--font-sora",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  weight: ["400", "500", "700"],
   subsets: ["latin"],
-});
-
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
-  weight: ["600", "700", "800"],
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Pace Run Pro — Treine com propósito. Evolua todos os dias.",
+  title: "PACERUNPRO — Sistema operacional de performance para treinadores de corrida.",
   description:
-    "Plataforma profissional para treinadores de corrida, assessorias esportivas, personal trainers e corredores. Prescrição inteligente, periodização, força e funcional, testes de performance e gestão de atletas em um só lugar.",
+    "Plataforma profissional para treinadores de corrida, assessorias esportivas e corredores. Prescrição, periodização, força e funcional, testes de performance e gestão de atletas — com dados claros e cara de produto premium.",
+  icons: {
+    icon: [{ url: "/favicon-32.png", sizes: "32x32", type: "image/png" }],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  openGraph: {
+    images: [{ url: "/brand/pace-run-pro-logo.png", width: 1200, height: 630, alt: "PACERUNPRO" }],
+    siteName: "PACERUNPRO",
+    type: "website",
+    locale: "pt_BR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/brand/pace-run-pro-logo.png"],
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#07030f" },
-    { media: "(prefers-color-scheme: light)", color: "#f8f6fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0C0F" },
+    { media: "(prefers-color-scheme: light)", color: "#F4F3EE" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -45,7 +58,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${sora.variable} ${montserrat.variable} h-full`}
+      className={`${archivo.variable} ${jetbrainsMono.variable} h-full`}
       suppressHydrationWarning
     >
       <head>

@@ -35,8 +35,8 @@ const SUBTYPE_LABEL: Record<string, string> = {
 
 const TYPE_COLORS: Record<string, string> = {
   corrida: "#38bdf8",
-  forca: "#8b5cf6",
-  funcional: "#a855f7",
+  forca: "#46E0C8",
+  funcional: "#46E0C8",
   mobilidade: "#84cc16",
   recuperacao: "#94a3b8",
   prova: "#facc15",

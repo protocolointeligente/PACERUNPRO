@@ -18,9 +18,9 @@
 
   --radius-2xl: 1.25rem;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
-  --font-stat: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-stat: var(--font-mono), ui-monospace, "JetBrains Mono", monospace;
 
   --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
   --animate-float: float 6s ease-in-out infinite;
@@ -29,37 +29,39 @@
   --animate-fade-scale-in: fade-scale-in 300ms ease-out;
 }
 
-/* ── PACE RUN PRO brand palette ─────────────────────────────────────────────
-   Primary  : #7C3AED  (violet — inteligência / performance)
-   Orange   : #FF6B35  (laranja — CTA / ação / corrida)
-   Dark bg  : #06070A  (quase preto neutro)
-   Light bg : #F8FAFC  (branco frio)
+/* ── PACERUNPRO · Performance Operating System ──────────────────────────────
+   Identidade premium / técnica / minimalista / autoridade.
+   Ink (#0A0C0F) + bone (#ECEAE3) + uma única cor de assinatura: Volt (#C6F24E).
+   Cores semânticas = zonas de treino / status. Texto SOBRE o lime é sempre escuro.
    ───────────────────────────────────────────────────────────────────────── */
 
 :root {
-  --bg: #06070A;
-  --card: #0D1117;
-  --card-hover: #111827;
-  --border: #1F2937;
-  --primary: #7C3AED;      /* violet — inteligência */
-  --secondary: #8B5CF6;    /* violet claro */
-  --accent: #FF6B35;       /* laranja — CTA / corrida */
-  --violet: #A78BFA;       /* violet pastel */
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --info: #38bdf8;
-  --text: #F8FAFC;
-  --text-muted: #94A3B8;
+  --bg: #0A0C0F;
+  --card: #14171C;
+  --card-hover: #1A1E24;
+  --border: #1F242B;
+  --primary: #C6F24E;      /* Volt — cor de assinatura (CTAs, foco, dados-chave) */
+  --secondary: #A6D43B;    /* Volt escuro */
+  --accent: #46E0C8;       /* Teal — dado secundário / gráficos */
+  --violet: #C6F24E;       /* compat: agora Volt (sem roxo na nova marca) */
+  --success: #46E0A0;
+  --warning: #FFB020;
+  --danger: #FF5A4D;
+  --info: #3FA7FF;
+  --text: #ECEAE3;         /* bone (off-white quente) */
+  --text-muted: #9AA0A6;   /* steel */
+
+  /* cor de texto a usar SOBRE superfícies da cor de assinatura */
+  --on-primary: #0A0C0F;
 }
 
 .light {
-  --bg: #F8FAFC;
+  --bg: #F4F3EE;
   --card: #FFFFFF;
-  --card-hover: #F1F5F9;
-  --border: #E2E8F0;
-  --text: #0F172A;
-  --text-muted: #64748B;
+  --card-hover: #ECEAE3;
+  --border: #E2E0D8;
+  --text: #14171C;
+  --text-muted: #5C636B;
 }
 
 @keyframes pulse-soft {
@@ -75,8 +77,8 @@
   100% { background-position: 200% 0; }
 }
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
-  50% { box-shadow: 0 0 28px 10px rgba(124, 58, 237, 0.45); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(198, 242, 78, 0); }
+  50% { box-shadow: 0 0 28px 10px rgba(198, 242, 78, 0.35); }
 }
 @keyframes fade-scale-in {
   from { opacity: 0; transform: scale(0.95); }
@@ -97,18 +99,24 @@ html.light {
 
 body {
   background:
-    radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(124, 58, 237, 0.15), transparent 60%),
-    radial-gradient(ellipse 700px 500px at 100% 30%, rgba(255, 107, 53, 0.07), transparent 55%),
+    radial-gradient(ellipse 1100px 560px at 50% -12%, rgba(198, 242, 78, 0.10), transparent 60%),
+    radial-gradient(ellipse 680px 480px at 100% 26%, rgba(70, 224, 200, 0.05), transparent 55%),
     var(--color-background);
   color: var(--color-text);
   font-family: var(--font-sans);
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
+  letter-spacing: -0.005em;
 }
 
 .light body {
   background: var(--color-background);
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--on-primary);
 }
 
 ::-webkit-scrollbar {
@@ -127,32 +135,38 @@ body {
 }
 
 .glass {
-  background: rgba(13, 17, 23, 0.70);
+  background: rgba(20, 23, 28, 0.70);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(31, 41, 55, 0.8);
+  border: 1px solid rgba(31, 36, 43, 0.8);
 }
 
 .light .glass {
   background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid rgba(226, 224, 216, 0.9);
 }
 
+/* títulos com leve realce — bone para Volt, sutil (a marca evita gradientes pesados) */
 .gradient-text {
-  background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #FF6B35 100%);
+  background: linear-gradient(100deg, #ECEAE3 0%, #ECEAE3 55%, #C6F24E 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-/* laranja para CTAs — texto branco em cima */
+/* CTA primário = Volt sólido com texto escuro (sempre legível) */
 .gradient-primary {
-  background: linear-gradient(135deg, #FF6B35 0%, #E85A20 60%, #FF8C5A 100%);
+  background: linear-gradient(135deg, #D4FF5E 0%, #C6F24E 55%, #A6D43B 100%);
+  color: var(--on-primary) !important;
+}
+.gradient-primary * {
+  color: var(--on-primary) !important;
 }
 
-/* violeta para destaques de inteligência */
+/* destaque de dados / inteligência — agora teal→volt em vez de roxo */
 .gradient-violet {
-  background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 60%, #8B5CF6 100%);
+  background: linear-gradient(135deg, #46E0C8 0%, #6BE6A0 55%, #C6F24E 100%);
+  color: var(--on-primary) !important;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -161,14 +175,4 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
 }

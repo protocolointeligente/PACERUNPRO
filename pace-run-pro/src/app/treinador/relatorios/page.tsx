@@ -101,26 +101,26 @@ export default function ReportsPage() {
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 40px; }
   @media print { body { padding: 20px; } .no-print { display: none; } }
-  .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #8b5cf6; padding-bottom: 20px; margin-bottom: 28px; }
-  .logo { font-size: 22px; font-weight: 900; letter-spacing: 1px; color: #8b5cf6; }
+  .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #C6F24E; padding-bottom: 20px; margin-bottom: 28px; }
+  .logo { font-size: 22px; font-weight: 900; letter-spacing: 1px; color: #C6F24E; }
   .logo span { color: #1a1a2e; }
   .meta { text-align: right; font-size: 12px; color: #666; }
   h1 { font-size: 20px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
-  .badge { display: inline-block; background: #8b5cf6; color: #fff; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: 16px; }
+  .badge { display: inline-block; background: #C6F24E; color: #0A0C0F; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: 16px; }
   .section { margin-top: 24px; }
-  .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #8b5cf6; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 14px; }
+  .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #C6F24E; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 14px; }
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .stat-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; }
   .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 4px; }
   .stat-value { font-size: 20px; font-weight: 800; color: #1a1a2e; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { background: #f5f3ff; color: #8b5cf6; font-weight: 700; text-align: left; padding: 9px 12px; }
+  th { background: #f5f3ff; color: #C6F24E; font-weight: 700; text-align: left; padding: 9px 12px; }
   td { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; }
   tr:last-child td { border-bottom: none; }
   .bar-bg { background: #f0ebff; border-radius: 4px; height: 8px; }
-  .bar-fill { background: #8b5cf6; border-radius: 4px; height: 8px; }
+  .bar-fill { background: #C6F24E; border-radius: 4px; height: 8px; }
   .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #999; display: flex; justify-content: space-between; }
-  .print-btn { position: fixed; top: 20px; right: 20px; background: #8b5cf6; color: #fff; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
+  .print-btn { position: fixed; top: 20px; right: 20px; background: #C6F24E; color: #0A0C0F; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
 </style>
 </head>
 <body>

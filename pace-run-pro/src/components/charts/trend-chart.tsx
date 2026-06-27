@@ -30,7 +30,7 @@ const tooltipStyle = {
 export function AreaTrend({
   data,
   dataKey,
-  color = "#8b5cf6",
+  color = "#C6F24E",
   unit = "",
   formatValue,
 }: {
@@ -99,7 +99,7 @@ export function LineTrend({
 export function BarTrend({
   data,
   dataKey,
-  color = "#a855f7",
+  color = "#C6F24E",
   unit = "",
   reverse = false,
   formatValue,

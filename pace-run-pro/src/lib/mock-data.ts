@@ -11,8 +11,8 @@ import type {
 
 export const TYPE_COLORS: Record<string, string> = {
   corrida: "#38bdf8",
-  forca: "#8b5cf6",
-  funcional: "#a855f7",
+  forca: "#C6F24E",
+  funcional: "#46E0C8",
   mobilidade: "#84cc16",
   recuperacao: "#94a3b8",
   prova: "#facc15",
@@ -37,7 +37,7 @@ export const RUN_SUBTYPE_COLORS: Record<string, string> = {
   "Fartlek": "#a78bfa",
   "Tempo Run": "#eab308",
   "Subida": "#fb923c",
-  "Intervalado longo": "#f97316",
+  "Intervalado longo": "#FFB020",
   "Intervalado curto": "#ef4444",
   "Prova": "#ec4899",
 };
@@ -1043,7 +1043,7 @@ export const landingFeatures = [
   },
   {
     persona: "Treinador",
-    color: "#8b5cf6",
+    color: "#C6F24E",
     items: [
       { icon: "🧠", title: "Prescrição inteligente com IA", description: "Sugestões de pace, volume e RPE baseadas no perfil de cada atleta." },
       { icon: "🚨", title: "Alertas de risco automáticos", description: "Saiba antes do atleta se algo vai sair dos trilhos." },
@@ -1540,7 +1540,7 @@ export const shoesList: Shoe[] = [
     kmAccumulated: 312,
     maxKm: 700,
     dateAdded: "2026-01-10",
-    color: "#8b5cf6",
+    color: "#C6F24E",
     active: true,
     imageEmoji: "👟",
   },
@@ -2126,7 +2126,7 @@ export interface WhiteLabelConfig {
 export const whiteLabelConfig: WhiteLabelConfig = {
   assessoriaName: "Assessoria Pace Run",
   logoEmoji: "⚡",
-  primaryColor: "#8b5cf6",
+  primaryColor: "#C6F24E",
   accentColor: "#06b6d4",
   customDomain: "app.pacerunpro.com.br",
   planName: "Business",

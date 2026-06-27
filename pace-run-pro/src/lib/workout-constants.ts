@@ -1,7 +1,7 @@
 export const TYPE_COLORS: Record<string, string> = {
   corrida: "#38bdf8",
-  forca: "#8b5cf6",
-  funcional: "#a855f7",
+  forca: "#46E0C8",
+  funcional: "#46E0C8",
   mobilidade: "#84cc16",
   recuperacao: "#94a3b8",
   prova: "#facc15",
@@ -25,7 +25,7 @@ export const RUN_SUBTYPE_COLORS: Record<string, string> = {
   "Fartlek": "#a78bfa",
   "Tempo Run": "#eab308",
   "Subida": "#fb923c",
-  "Intervalado longo": "#f97316",
+  "Intervalado longo": "#FFB020",
   "Intervalado curto": "#ef4444",
   "Prova": "#ec4899",
 };

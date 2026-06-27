@@ -1,23 +1,39 @@
-import Image from "next/image";
-
 interface LogoProps {
-  /** "mark" = só ícone quadrado | "horizontal" = ícone + wordmark (padrão) */
+  /** "mark" = só símbolo | "horizontal" = símbolo + wordmark (padrão) */
   variant?: "mark" | "horizontal";
-  /** Altura do ícone em px (default: 36) */
+  /** Altura do símbolo em px (default: 36) */
   size?: number;
   className?: string;
 }
 
+/**
+ * PACERUNPRO — símbolo "P + linhas de pace".
+ * Vetorial e inline: usa os tokens da marca (--text / --primary),
+ * então acompanha tema claro/escuro automaticamente.
+ */
 export function Logo({ variant = "horizontal", size = 36, className = "" }: LogoProps) {
   const Icon = (
-    <Image
-      src="/icons/logo-mark.png"
-      alt="Pace Run Pro"
+    <svg
       width={size}
       height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      role="img"
+      aria-label="PACERUNPRO"
       style={{ flexShrink: 0 }}
-      priority
-    />
+    >
+      <rect x="13" y="12" width="9" height="40" rx="4" fill="var(--text)" />
+      <path
+        d="M21 12 H31 A13 13 0 0 1 31 38 H21"
+        stroke="var(--text)"
+        strokeWidth="9"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <rect x="44" y="17" width="14" height="4" rx="2" fill="var(--primary)" />
+      <rect x="42" y="25" width="16" height="4" rx="2" fill="var(--primary)" />
+      <rect x="44" y="33" width="14" height="4" rx="2" fill="var(--primary)" />
+    </svg>
   );
 
   if (variant === "mark") return <span className={className}>{Icon}</span>;
@@ -29,13 +45,14 @@ export function Logo({ variant = "horizontal", size = 36, className = "" }: Logo
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       {Icon}
       <span className="flex flex-col leading-none">
-        <span className={`font-display ${textSize} font-extrabold tracking-wide text-text`}>
-          PACE RUN{" "}
-          <span style={{ color: "#7C3AED" }}>PRO</span>
+        <span className={`font-display ${textSize} font-extrabold tracking-[0.06em] text-text`}>
+          PACERUN<span style={{ color: "var(--primary)" }}>PRO</span>
         </span>
         {size >= 36 && (
-          <span className={`${subSize} uppercase tracking-[0.18em] font-medium`} style={{ color: "#888888" }}>
-            Para quem vive a corrida
+          <span
+            className={`${subSize} uppercase tracking-[0.18em] font-medium text-text-muted mt-1`}
+          >
+            Sistema de performance
           </span>
         )}
       </span>

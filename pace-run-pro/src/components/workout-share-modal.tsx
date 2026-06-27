@@ -114,9 +114,9 @@ export function WorkoutShareModal({
         img.src = photoDataUrl;
       } else {
         const grad = ctx.createLinearGradient(0, 0, 1080, 1920);
-        grad.addColorStop(0, "#14101f");
+        grad.addColorStop(0, "#14171C");
         grad.addColorStop(0.5, "#0d0814");
-        grad.addColorStop(1, "#07030f");
+        grad.addColorStop(1, "#0A0C0F");
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 1080, 1920);
         drawOverlay(ctx, canvas, statFont, resolve);
@@ -173,7 +173,7 @@ export function WorkoutShareModal({
         caption ||
         `${activityType === "corrida" ? "Treino de corrida" : "Treino de força"} concluído! 💪`,
       photoGradient:
-        "linear-gradient(135deg, #14101f 0%, #1c1530 50%, #07030f 100%)",
+        "linear-gradient(135deg, #14171C 0%, #1A1E24 50%, #0A0C0F 100%)",
       photoDataUrl: photoDataUrl || undefined,
       metrics: {
         distance: metrics.distance ?? 0,
@@ -286,7 +286,7 @@ export function WorkoutShareModal({
                   style={{
                     background: photoDataUrl
                       ? undefined
-                      : "linear-gradient(160deg, #14101f 0%, #07030f 100%)",
+                      : "linear-gradient(160deg, #14171C 0%, #0A0C0F 100%)",
                   }}
                 >
                   {photoDataUrl && (
@@ -408,7 +408,7 @@ export function WorkoutShareModal({
                 className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white"
                 style={{
                   background:
-                    "linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)",
+                    "linear-gradient(135deg, #C6F24E 0%, #A6D43B 100%)",
                 }}
               >
                 <span>🚀</span> Postar na comunidade

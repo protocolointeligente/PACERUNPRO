@@ -169,7 +169,7 @@ export default function ReceitasPage() {
           </CardHeader>
           <CardContent className="pt-2">
             {chartData.some((m) => m.value > 0) ? (
-              <BarTrend data={chartData} dataKey="value" color="#f97316" unit=" R$" />
+              <BarTrend data={chartData} dataKey="value" color="#FFB020" unit=" R$" />
             ) : (
               <div className="flex h-[140px] items-center justify-center text-sm text-text-muted">
                 Nenhuma venda registrada ainda.

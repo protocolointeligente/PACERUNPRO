@@ -93,7 +93,7 @@ export const TRAINING_ZONES: TrainingZone[] = [
     description: "Tiros de 3-5 min — maximiza o consumo de VO2máx.",
     intensityMin: 0.95,
     intensityMax: 1.0,
-    color: "#f97316",
+    color: "#FFB020",
   },
   {
     id: "R",

@@ -105,7 +105,7 @@ export function calculateHrZones(maxHr: number, restingHr = 60): HrZone[] {
   const reserve = maxHr - restingHr;
   const bounds = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
   const names = ["Recuperação", "Aeróbico leve", "Aeróbico", "Limiar", "VO2máx"];
-  const colors = ["#38bdf8", "#84cc16", "#facc15", "#f97316", "#ef4444"];
+  const colors = ["#38bdf8", "#84cc16", "#facc15", "#FFB020", "#ef4444"];
   return names.map((name, i) => ({
     zone: i + 1,
     name,
@@ -216,7 +216,7 @@ export function calculateHooperIndex(input: HooperInput): HooperResult {
     recommendation = "Atenção: reduza a intensidade em 15-20% e monitore a resposta.";
   } else if (normalized <= 8) {
     classification = "ruim";
-    color = "#f97316";
+    color = "#FFB020";
     recommendation = "Evite treinos intensos hoje. Prefira mobilidade ou recuperativo.";
   } else {
     classification = "critico";

@@ -225,7 +225,7 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
   if (targetPaceSec && comparePace) {
     const diff = comparePace - targetPaceSec;
     if (Math.abs(diff) <= 5) paceStatus = { label: "Na meta", color: "#22c55e" };
-    else if (diff > 5) paceStatus = { label: "Mais lento que a meta", color: "#f97316" };
+    else if (diff > 5) paceStatus = { label: "Mais lento que a meta", color: "#FFB020" };
     else paceStatus = { label: "Mais rápido que a meta", color: "#38bdf8" };
   }
 
@@ -312,7 +312,7 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
             <motion.path
               d={routePath}
               fill="none"
-              stroke="#8b5cf6"
+              stroke="#C6F24E"
               strokeWidth="4"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -322,7 +322,7 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
             />
           ) : (
             /* Dot while waiting for first GPS fix */
-            <circle cx="200" cy="120" r="6" fill="#8b5cf6" opacity="0.6" />
+            <circle cx="200" cy="120" r="6" fill="#C6F24E" opacity="0.6" />
           )}
         </svg>
         <div className="absolute left-4 top-4 flex items-center gap-2">

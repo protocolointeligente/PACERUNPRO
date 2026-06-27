@@ -38,7 +38,7 @@ const PHASE_DESCRIPTIONS: Record<string, string> = {
 
 const PHASE_COLORS: Record<string, string> = {
   BASE: "#38bdf8",
-  CONSTRUCAO: "#8b5cf6",
+  CONSTRUCAO: "#C6F24E",
   ESPECIFICO: "#f59e0b",
   POLIMENTO: "#10b981",
   COMPETICAO: "#ef4444",
@@ -108,7 +108,7 @@ function derivePhases(weeks: PlanWeek[]): DerivedPhase[] {
     weeks: g.start === g.end ? `Semana ${g.start}` : `Semanas ${g.start}–${g.end}`,
     description: PHASE_DESCRIPTIONS[g.phase] ?? "",
     current: new Date(g.startDate) <= today && today <= new Date(g.endDate),
-    color: PHASE_COLORS[g.phase] ?? "#8b5cf6",
+    color: PHASE_COLORS[g.phase] ?? "#C6F24E",
   }));
 }
 

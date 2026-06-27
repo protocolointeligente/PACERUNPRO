@@ -12,7 +12,7 @@ import { evaluateCheckInRules, type CheckInRecord } from "@/lib/calculations";
 import { cn, formatDuration, formatPace } from "@/lib/utils";
 
 const fields = [
-  { key: "rpe", label: "RPE — esforço percebido", emojis: ["😴", "🙂", "😊", "😅", "🥵"], low: "Muito leve", high: "Esforço máximo", accent: "#8b5cf6" },
+  { key: "rpe", label: "RPE — esforço percebido", emojis: ["😴", "🙂", "😊", "😅", "🥵"], low: "Muito leve", high: "Esforço máximo", accent: "#C6F24E" },
   { key: "pain", label: "Dor / desconforto", emojis: ["🟢", "🟡", "🟠", "🔴", "⛔"], low: "Sem dor", high: "Dor intensa", accent: "#ef4444" },
   { key: "sleep", label: "Qualidade do sono", emojis: ["😩", "😐", "🙂", "😴", "😌"], low: "Péssimo", high: "Excelente", accent: "#38bdf8" },
   { key: "fatigue", label: "Fadiga", emojis: ["⚡", "🙂", "😐", "🥱", "🔋"], low: "Sem fadiga", high: "Exausto(a)", accent: "#facc15" },
