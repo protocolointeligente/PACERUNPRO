@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { createPixOrder, createCreditCardOrder } from "@/lib/pagbank";
 import { checkoutLimiter } from "@/lib/rate-limit";
+import { prisma } from "@/lib/prisma";
+
+// Canonical B2C plan prices — source of truth on the server
+const B2C_PLAN_PRICES: Record<string, number> = {
+  mensal:     14990,  // R$ 149,90 × 1 month
+  trimestral: 38370,  // R$ 127,90 × 3 months
+  semestral:  67740,  // R$ 112,90 × 6 months
+  anual:     117480,  // R$  97,90 × 12 months
+};
 
 export async function POST(req: NextRequest) {
   const rl = checkoutLimiter(req);
@@ -18,7 +27,7 @@ export async function POST(req: NextRequest) {
     method: string;
     planId: string;
     planName: string;
-    amountCents: number;
+    voucherCode?: string;
     customerName: string;
     customerEmail: string;
     customerCpf: string;
@@ -29,11 +38,39 @@ export async function POST(req: NextRequest) {
     cardCvv?: string;
   };
 
-  const { method, planId, planName, amountCents, customerName, customerEmail, customerCpf } = body;
+  const { method, planId, planName, voucherCode, customerName, customerEmail, customerCpf } = body;
 
-  if (!method || !planId || !amountCents || !customerName || !customerEmail) {
+  if (!method || !planId || !customerName || !customerEmail) {
     return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
   }
+
+  // Server-side price computation — never trust client-sent amounts
+  const basePriceCents = B2C_PLAN_PRICES[planId];
+  if (!basePriceCents) {
+    return NextResponse.json({ error: "Plano inválido." }, { status: 400 });
+  }
+
+  let discountPct = 0;
+  let usedVoucherId: string | null = null;
+
+  if (voucherCode?.trim()) {
+    const voucher = await prisma.voucher.findUnique({
+      where: { code: voucherCode.trim().toUpperCase() },
+    });
+    if (
+      voucher &&
+      voucher.active &&
+      voucher.type === "PERCENT" &&
+      (voucher.audience === "ALL" || voucher.audience === "B2C") &&
+      (!voucher.expiresAt || voucher.expiresAt > new Date()) &&
+      (voucher.maxUses === null || voucher.usedCount < voucher.maxUses)
+    ) {
+      discountPct = voucher.value;
+      usedVoucherId = voucher.id;
+    }
+  }
+
+  const amountCents = Math.round(basePriceCents * (1 - discountPct / 100));
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Faça login antes de prosseguir com o pagamento." }, { status: 401 });
@@ -65,6 +102,10 @@ export async function POST(req: NextRequest) {
         planName,
         notificationUrl,
       });
+      // Track voucher usage (fire-and-forget)
+      if (usedVoucherId) {
+        prisma.voucher.update({ where: { id: usedVoucherId }, data: { usedCount: { increment: 1 } } }).catch(() => null);
+      }
       return NextResponse.json(result);
     }
 
@@ -91,6 +132,9 @@ export async function POST(req: NextRequest) {
         cardHolderName: cardName,
         notificationUrl,
       });
+      if (usedVoucherId) {
+        prisma.voucher.update({ where: { id: usedVoucherId }, data: { usedCount: { increment: 1 } } }).catch(() => null);
+      }
       return NextResponse.json(result);
     }
 

@@ -223,7 +223,6 @@ function AssinarContent() {
     setCheckoutLoading(true);
     setCheckoutError("");
     try {
-      const amountCents = Math.round(discountedTotal * 100);
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -231,7 +230,7 @@ function AssinarContent() {
           method: paymentMethod,
           planId: selectedPlan,
           planName: plan.name,
-          amountCents,
+          voucherCode: coupon?.code ?? undefined,
           customerName: nome,
           customerEmail: email,
           customerCpf: cpf,
