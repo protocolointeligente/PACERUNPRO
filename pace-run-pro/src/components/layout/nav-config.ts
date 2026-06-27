@@ -72,6 +72,7 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
   { href: "/treinador/minha-loja", label: "Minha loja de treinos", icon: ShoppingBag },
   { href: "/treinador/gestao",        label: "Gestão & vendas",        icon: DollarSign  },
+  { href: "/treinador/receitas",     label: "Receitas da loja",       icon: TrendingUp  },
   { href: "/treinador/planos-venda", label: "Meus planos",            icon: PackagePlus },
   { href: "/treinador/financeiro",   label: "Config. financeiras",    icon: Wallet      },
   { href: "/treinador/minha-pagina", label: "Minha página pública",   icon: Globe       },
