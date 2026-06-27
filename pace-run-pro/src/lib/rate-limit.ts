@@ -89,3 +89,15 @@ export const checkoutLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 10 requests per minute
   key: "checkout",
 });
+
+export const forgotPasswordLimiter = createRateLimiter({
+  limit: 3,
+  windowMs: 15 * 60 * 1000, // 3 requests per 15 minutes
+  key: "auth:forgot-password",
+});
+
+export const voucherValidateLimiter = createRateLimiter({
+  limit: 10,
+  windowMs: 60 * 1000, // 10 requests per minute
+  key: "voucher:validate",
+});

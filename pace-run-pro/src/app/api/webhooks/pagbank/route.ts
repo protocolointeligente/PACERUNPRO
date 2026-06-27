@@ -4,10 +4,22 @@ import { prisma } from "@/lib/prisma";
 import { SubscriptionPlan } from "@prisma/client";
 
 function planIdToEnum(planId: string): SubscriptionPlan {
+  // B2C athlete plans
+  if (planId === "mensal" || planId === "trimestral" || planId === "semestral" || planId === "anual") {
+    return SubscriptionPlan.ATHLETE;
+  }
+  // B2B coach / assessoria plans
   if (planId === "b2b-free" || planId === "b2b-starter" || planId === "starter") {
     return SubscriptionPlan.COACH;
   }
   return SubscriptionPlan.TEAM; // b2b-pro, b2b-assessoria, b2b-unlimited
+}
+
+function planDurationDays(planId: string): number {
+  if (planId === "trimestral") return 90;
+  if (planId === "semestral") return 180;
+  if (planId === "anual") return 365;
+  return 30; // mensal + all B2B plans
 }
 
 export async function POST(req: NextRequest) {
@@ -87,10 +99,21 @@ export async function POST(req: NextRequest) {
 
   const [userId, planId] = parts;
 
+  // Detect payment method from charge object
+  let paymentMethod = "pix";
+  if (Array.isArray(charges)) {
+    const paid = charges.find((c: { status?: string }) => c.status === "PAID");
+    const paymentResponse = (paid as Record<string, unknown>)?.payment_response as Record<string, unknown> | undefined;
+    const paymentMethodType = (paid as Record<string, unknown>)?.payment_method as string | undefined;
+    if (paymentMethodType === "CREDIT_CARD" || paymentResponse?.type === "CREDIT_CARD") {
+      paymentMethod = "cartao";
+    }
+  }
+
   try {
     const plan = planIdToEnum(planId);
     const renewsAt = new Date();
-    renewsAt.setDate(renewsAt.getDate() + 30);
+    renewsAt.setDate(renewsAt.getDate() + planDurationDays(planId));
 
     const existingSub = await prisma.subscription.findFirst({
       where: { userId },
@@ -119,7 +142,7 @@ export async function POST(req: NextRequest) {
         amountCents,
         currency: "BRL",
         status: "PAID",
-        method: "pix",
+        method: paymentMethod,
         paidAt: new Date(),
       },
     });

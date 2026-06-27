@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { VoucherAudience } from "@prisma/client";
+import { voucherValidateLimiter } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rl = voucherValidateLimiter(req);
+  if (!rl.ok) {
+    return NextResponse.json({ valid: false, error: "Muitas tentativas. Aguarde e tente novamente." }, { status: 429 });
+  }
+
   const { code, audience } = (await req.json()) as { code?: string; audience?: VoucherAudience };
   if (!code) {
     return NextResponse.json({ valid: false, error: "Informe um código." }, { status: 400 });

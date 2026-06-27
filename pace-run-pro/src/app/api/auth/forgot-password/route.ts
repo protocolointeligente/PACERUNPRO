@@ -2,10 +2,19 @@ import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
+import { forgotPasswordLimiter } from "@/lib/rate-limit";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
 
 export async function POST(request: NextRequest) {
+  const rl = forgotPasswordLimiter(request);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { message: "Se este e-mail estiver cadastrado, você receberá um link para redefinir a senha." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   try {
     const { email } = await request.json();
     if (!email || typeof email !== "string") {

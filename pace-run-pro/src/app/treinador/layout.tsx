@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth-guard";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import TreinadorLayoutClient from "./_layout-client";
 
@@ -25,16 +26,23 @@ export default async function TreinadorLayout({ children }: { children: React.Re
       subscriptions: {
         orderBy: { startedAt: "desc" },
         take: 1,
-        select: { plan: true, status: true },
+        select: { plan: true, status: true, renewsAt: true },
       },
     },
   }).catch(() => null);
 
   const sub = user?.subscriptions?.[0];
-  const planId =
-    sub?.status === "ACTIVE" || sub?.status === "TRIAL"
-      ? subPlanToBillingPlan(sub.plan)
-      : "b2b-free";
+  const now = new Date();
+  const isExpired = sub?.renewsAt != null && sub.renewsAt < now;
+  const isActiveOrTrial = (sub?.status === "ACTIVE" || sub?.status === "TRIAL") && !isExpired;
+  const planId = isActiveOrTrial ? subPlanToBillingPlan(sub!.plan) : "b2b-free";
+
+  const hdrs = await headers();
+  const pathname = hdrs.get("x-pathname") ?? "";
+  const RENEWAL_EXEMPT = ["/treinador/planos", "/treinador/perfil"];
+  if (isExpired && !RENEWAL_EXEMPT.some((p) => pathname.startsWith(p))) {
+    redirect("/treinador/planos");
+  }
 
   return (
     <TreinadorLayoutClient

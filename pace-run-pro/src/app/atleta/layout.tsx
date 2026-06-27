@@ -53,8 +53,27 @@ export default async function AtletaLayout({ children }: { children: React.React
           _count: { select: { performanceTests: true } },
         },
       },
+      subscriptions: {
+        orderBy: { startedAt: "desc" },
+        take: 1,
+        select: { status: true, renewsAt: true },
+      },
     },
   }).catch(() => null);
+
+  // Enforce subscription expiry for athlete accounts
+  const SUBSCRIPTION_EXEMPT_PREFIXES = [
+    "/atleta/parq",
+    "/atleta/teste-inicial",
+    "/atleta/perfil",
+    "/atleta/assinar",
+  ];
+  const sub = user?.subscriptions?.[0];
+  const now = new Date();
+  const subExpired = sub?.renewsAt != null && sub.renewsAt < now && sub.status === "ACTIVE";
+  if (subExpired && !SUBSCRIPTION_EXEMPT_PREFIXES.some((p) => pathname.startsWith(p))) {
+    redirect("/assinar");
+  }
 
   const isExempt = GATE_EXEMPT_PREFIXES.some((p) => pathname.startsWith(p));
 

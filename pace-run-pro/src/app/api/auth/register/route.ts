@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { authRegisterLimiter } from "@/lib/rate-limit";
+import { SubscriptionPlan } from "@prisma/client";
 
 function recommendPlanId(athleteCount: number): string {
   if (athleteCount <= 1) return "b2b-free";
@@ -69,6 +70,14 @@ export async function POST(req: NextRequest) {
       },
       select: { id: true, email: true, name: true, role: true },
     });
+
+    if (isCoach) {
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 14);
+      await prisma.subscription.create({
+        data: { userId: user.id, plan: SubscriptionPlan.COACH, status: "TRIAL", renewsAt: trialEnd },
+      });
+    }
 
     const recommendedPlanId = isCoach ? recommendPlanId(Number(studentCount) || 1) : null;
 

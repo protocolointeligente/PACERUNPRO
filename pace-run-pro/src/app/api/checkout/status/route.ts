@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 
 const PAGBANK_BASE_URL =
   process.env.PAGBANK_ENV === "production"
@@ -6,6 +7,11 @@ const PAGBANK_BASE_URL =
     : "https://sandbox.api.pagseguro.com";
 
 export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const orderId = searchParams.get("orderId");
 
