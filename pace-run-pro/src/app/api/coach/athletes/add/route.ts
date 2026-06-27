@@ -47,6 +47,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Este e-mail já está em uso por outra conta." }, { status: 409 });
     }
 
+    // Enforce athlete slot limit based on coach's active subscription
+    const coachUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        subscriptions: {
+          orderBy: { startedAt: "desc" },
+          take: 1,
+          select: { plan: true, status: true, renewsAt: true },
+        },
+      },
+    });
+    const sub = coachUser?.subscriptions?.[0];
+    const planIsActive = sub && (sub.status === "ACTIVE" || sub.status === "TRIAL") && (!sub.renewsAt || sub.renewsAt > new Date());
+    const SLOT_LIMITS: Record<string, number> = { FREE: 1, ATHLETE: 20, COACH: 80, TEAM: 250 };
+    const maxSlots = planIsActive ? (SLOT_LIMITS[sub!.plan] ?? 1) : 1;
+
+    const currentCount = await prisma.athlete.count({ where: { coachId: coach.id } });
+    if (currentCount >= maxSlots) {
+      return NextResponse.json({ error: `Limite de atletas atingido para seu plano (${maxSlots}). Faça upgrade para adicionar mais atletas.` }, { status: 403 });
+    }
+
     // Generate a temporary password
     const tempPassword = randomBytes(8).toString("hex");
     const passwordHash = await bcrypt.hash(tempPassword, 12);

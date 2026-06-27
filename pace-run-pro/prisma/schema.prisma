@@ -160,9 +160,12 @@ model Athlete {
   planPurchases      PlanPurchase[]
   recoveryLogs       RecoveryLog[]
 
+  shoes              Shoe[]
+
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  @@index([coachId])
   @@map("athletes")
 }
 
@@ -728,6 +731,7 @@ model Subscription {
 
   payments  Payment[]
 
+  @@index([userId])
   @@map("subscriptions")
 }
 
@@ -1068,21 +1072,28 @@ model PlanProduct {
   @@map("plan_products")
 }
 
-model PlanPurchase {
-  id              String      @id @default(cuid())
-  productId       String
-  product         PlanProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
-  athleteId       String
-  athlete         Athlete     @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+enum PlanPurchaseStatus {
+  PENDING
+  PAID
+  REFUNDED
+}
 
-  pricePaidCents  Int         @default(0)
-  currency        String      @default("BRL")
-  status          String      @default("pending") // pending | paid | refunded
+model PlanPurchase {
+  id              String            @id @default(cuid())
+  productId       String
+  product         PlanProduct       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  athleteId       String
+  athlete         Athlete           @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  pricePaidCents  Int               @default(0)
+  currency        String            @default("BRL")
+  status          PlanPurchaseStatus @default(PENDING)
   stripeSessionId String?
 
-  createdAt       DateTime    @default(now())
+  createdAt       DateTime          @default(now())
 
   @@unique([productId, athleteId])
+  @@index([athleteId])
   @@map("plan_purchases")
 }
 
@@ -1125,4 +1136,29 @@ model Expense {
   createdAt   DateTime @default(now())
 
   @@map("expenses")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Tênis / sapatilhas do atleta
+// ────────────────────────────────────────────────────────────────────────────
+
+model Shoe {
+  id            String   @id @default(cuid())
+  athleteId     String
+  athlete       Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  name          String
+  brand         String
+  model         String
+  color         String   @default("blue")
+  imageEmoji    String   @default("👟")
+  imageUrl      String?
+  kmAccumulated Float    @default(0)
+  maxKm         Float    @default(700)
+  active        Boolean  @default(true)
+  dateAdded     DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([athleteId])
+  @@map("shoes")
 }

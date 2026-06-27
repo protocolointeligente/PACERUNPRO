@@ -24,7 +24,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
     });
     if (athlete) {
       const existing = await prisma.planPurchase.findFirst({
-        where: { productId: product.id, athleteId: athlete.id, status: "paid" },
+        where: { productId: product.id, athleteId: athlete.id, status: "PAID" },
       });
       alreadyOwned = !!existing;
     }

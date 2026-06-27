@@ -10,6 +10,11 @@ export async function PATCH(req: NextRequest) {
   if (!dataUrl?.startsWith("data:image/")) {
     return NextResponse.json({ error: "Imagem inválida" }, { status: 400 });
   }
+  const mime = dataUrl.split(";")[0].replace("data:", "");
+  const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  if (mime.includes("svg") || !ALLOWED_MIME_TYPES.includes(mime)) {
+    return NextResponse.json({ error: "Tipo de imagem não permitido" }, { status: 400 });
+  }
   // ~2 MB limit (base64 inflates by ~1.37×, so 2.7M chars ≈ 2 MB)
   if (dataUrl.length > 2_800_000) {
     return NextResponse.json({ error: "Imagem muito grande (máx 2 MB)" }, { status: 413 });

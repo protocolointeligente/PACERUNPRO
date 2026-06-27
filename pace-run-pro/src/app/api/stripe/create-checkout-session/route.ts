@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   // Check if already purchased
   const existing = await prisma.planPurchase.findFirst({
-    where: { productId, athleteId: athlete.id, status: "paid" },
+    where: { productId, athleteId: athlete.id, status: "PAID" },
   });
   if (existing) {
     return NextResponse.json({ error: "Você já adquiriu este plano" }, { status: 409 });
@@ -42,8 +42,8 @@ export async function POST(req: NextRequest) {
   if (product.priceCents === 0) {
     await prisma.planPurchase.upsert({
       where: { productId_athleteId: { productId, athleteId: athlete.id } },
-      update: { status: "paid", pricePaidCents: 0 },
-      create: { productId, athleteId: athlete.id, pricePaidCents: 0, currency: "BRL", status: "paid" },
+      update: { status: "PAID", pricePaidCents: 0 },
+      create: { productId, athleteId: athlete.id, pricePaidCents: 0, currency: "BRL", status: "PAID" },
     });
     await prisma.planProduct.update({ where: { id: productId }, data: { purchases: { increment: 1 } } });
     return NextResponse.json({ free: true, redirectUrl: "/checkout/sucesso?free=1" });
@@ -54,8 +54,8 @@ export async function POST(req: NextRequest) {
   // Create pending purchase record
   const purchase = await prisma.planPurchase.upsert({
     where: { productId_athleteId: { productId, athleteId: athlete.id } },
-    update: { status: "pending", pricePaidCents: product.priceCents },
-    create: { productId, athleteId: athlete.id, pricePaidCents: product.priceCents, currency: "BRL", status: "pending" },
+    update: { status: "PENDING", pricePaidCents: product.priceCents },
+    create: { productId, athleteId: athlete.id, pricePaidCents: product.priceCents, currency: "BRL", status: "PENDING" },
   });
 
   // Create Stripe Checkout Session

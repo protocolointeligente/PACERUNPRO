@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -57,6 +57,13 @@ export default function TenisPage() {
   const [newImageUrl, setNewImageUrl] = useState<string | undefined>(undefined);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    fetch("/api/atleta/shoes")
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d.shoes)) setShoes(d.shoes); })
+      .catch(() => undefined);
+  }, []);
+
   async function handleShoeImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -65,27 +72,35 @@ export default function TenisPage() {
     e.target.value = "";
   }
 
-  function addShoe() {
+  async function addShoe() {
     if (!newBrand || !newModel) return;
-    const shoe: Shoe = {
-      id: `sh-${Date.now()}`,
+    const newShoe = {
       name: newName || "Novo tênis",
       brand: newBrand,
       model: newModel,
+      maxKm: Number(newMaxKm) || 700,
       imageUrl: newImageUrl,
-      kmAccumulated: 0,
-      maxKm: parseInt(newMaxKm) || 700,
-      dateAdded: new Date().toISOString().slice(0, 10),
-      color: "#8b5cf6",
-      active: true,
+      color: "blue",
       imageEmoji: "👟",
     };
-    setShoes((prev) => [shoe, ...prev]);
-    setNewName(""); setNewBrand(""); setNewModel(""); setNewMaxKm("700"); setNewImageUrl(undefined);
-    setShowAdd(false);
+    const res = await fetch("/api/atleta/shoes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newShoe),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setShoes((prev) => [data.shoe, ...prev]);
+      setNewName(""); setNewBrand(""); setNewModel(""); setNewMaxKm("700"); setNewImageUrl(undefined); setShowAdd(false);
+    }
   }
 
-  function retireShoe(id: string) {
+  async function retireShoe(id: string) {
+    await fetch("/api/atleta/shoes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, active: false }),
+    });
     setShoes((prev) =>
       prev.map((s) => (s.id === id ? { ...s, active: false } : s))
     );

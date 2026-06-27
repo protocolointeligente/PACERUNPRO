@@ -66,7 +66,7 @@ export async function GET() {
   if (!athlete) return NextResponse.json({ purchases: [] });
 
   const purchases = await prisma.planPurchase.findMany({
-    where: { athleteId: athlete.id, status: "paid" },
+    where: { athleteId: athlete.id, status: "PAID" },
     include: {
       product: {
         select: {
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
     where: { id: purchaseId },
     include: { product: { select: { title: true, goal: true, durationWeeks: true, planContent: true } } },
   });
-  if (!purchase || purchase.athleteId !== athlete.id || purchase.status !== "paid") {
+  if (!purchase || purchase.athleteId !== athlete.id || purchase.status !== "PAID") {
     return NextResponse.json({ error: "Compra não encontrada ou não paga" }, { status: 404 });
   }
 

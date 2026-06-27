@@ -41,6 +41,7 @@ export default async function CoachDashboardPage() {
       name: true,
       coach: {
         select: {
+          id: true,
           credential: true,
           athletes: {
             select: {
@@ -58,6 +59,27 @@ export default async function CoachDashboardPage() {
     },
   });
 
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const recentLogs = user?.coach?.id
+    ? await prisma.workoutLog.findMany({
+        where: {
+          athlete: { coachId: user.coach.id },
+          startedAt: { gte: sevenDaysAgo },
+        },
+        select: { athleteId: true, durationSec: true, rpe: true },
+      })
+    : [];
+
+  const loadByAthlete = new Map<string, number>();
+  for (const log of recentLogs) {
+    const dur = (log.durationSec ?? 0) / 60;
+    const rpe = Math.min(log.rpe ?? 5, 10);
+    const existing = loadByAthlete.get(log.athleteId) ?? 0;
+    loadByAthlete.set(log.athleteId, existing + Math.round(dur * rpe));
+  }
+
   const rawAthletes = user?.coach?.athletes ?? [];
   const athletes: AthleteRow[] = rawAthletes.map((a) => ({
     id: a.id,
@@ -66,7 +88,7 @@ export default async function CoachDashboardPage() {
     level: LEVEL_LABELS[a.level] ?? "Iniciante",
     status: (a.status ?? "ativo") as "ativo" | "risco" | "inativo",
     adherence: a.adherenceRate ?? 0,
-    weeklyLoad: 0,
+    weeklyLoad: loadByAthlete.get(a.id) ?? 0,
     lastCheckIn: formatLastCheckIn(a.checkins[0]?.date),
   }));
 

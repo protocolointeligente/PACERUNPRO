@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { authRegisterLimiter } from "@/lib/rate-limit";
 import { SubscriptionPlan } from "@prisma/client";
+import { sendEmail } from "@/lib/email";
 
 function recommendPlanId(athleteCount: number): string {
   if (athleteCount <= 1) return "b2b-free";
@@ -77,6 +78,18 @@ export async function POST(req: NextRequest) {
       await prisma.subscription.create({
         data: { userId: user.id, plan: SubscriptionPlan.COACH, status: "TRIAL", renewsAt: trialEnd },
       });
+      sendEmail({
+        to: email,
+        subject: "Bem-vindo ao PACE RUN PRO — seu trial de 14 dias começa agora!",
+        html: `
+    <p>Olá, ${name}!</p>
+    <p>Sua conta de treinador no <strong>PACE RUN PRO</strong> foi criada com sucesso.</p>
+    <p>Você tem <strong>14 dias de trial gratuito</strong> para explorar todas as funcionalidades da plataforma.</p>
+    <p>Acesse agora: <a href="${process.env.NEXTAUTH_URL ?? "https://www.pacerunpro.com.br"}/treinador/dashboard">Acessar painel do treinador</a></p>
+    <p>Qualquer dúvida, responda este e-mail.</p>
+    <p>Boas corridas!<br/>Equipe PACE RUN PRO</p>
+  `,
+      }).catch(() => null); // fire-and-forget
     }
 
     const recommendedPlanId = isCoach ? recommendPlanId(Number(studentCount) || 1) : null;

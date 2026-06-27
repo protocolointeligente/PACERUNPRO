@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -16,7 +16,6 @@ import {
   Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { timelineEvents } from "@/lib/mock-data";
 
 type TimelineEventType = "treino" | "checkin" | "teste" | "prova" | "conquista" | "avaliacao" | "lesao" | "tenis";
 interface TimelineEvent {
@@ -85,11 +84,25 @@ function getBadgeVariant(ev: TimelineEvent) {
 
 export default function TimelinePage() {
   const [filter, setFilter] = useState<FilterValue>("todos");
+  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/atleta/timeline")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.events) setEvents(d.events as TimelineEvent[]);
+      })
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="py-16 text-center text-text-muted">Carregando...</div>;
 
   const filtered =
     filter === "todos"
-      ? timelineEvents
-      : timelineEvents.filter((ev) => ev.type === filter);
+      ? events
+      : events.filter((ev) => ev.type === filter);
 
   const grouped = groupByMonth(filtered);
 

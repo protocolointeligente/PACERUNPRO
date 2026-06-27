@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     await prisma.planPurchase.update({
       where: { id: purchaseId },
       data: {
-        status: "paid",
+        status: "PAID",
         pricePaidCents: session.amount_total ?? 0,
         stripeSessionId: session.id,
       },
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       // Reset pending purchase so they can retry
       await prisma.planPurchase.update({
         where: { id: purchaseId },
-        data: { status: "pending", stripeSessionId: null },
+        data: { status: "PENDING", stripeSessionId: null },
       }).catch(() => null);
     }
   }

@@ -22,7 +22,7 @@ export async function GET() {
   // All paid purchases for this coach's products
   const purchases = await prisma.planPurchase.findMany({
     where: {
-      status: "paid",
+      status: "PAID",
       product: { coachId: coach.id },
     },
     select: {

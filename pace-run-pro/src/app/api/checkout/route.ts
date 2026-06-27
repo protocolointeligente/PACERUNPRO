@@ -102,9 +102,9 @@ export async function POST(req: NextRequest) {
         planName,
         notificationUrl,
       });
-      // Track voucher usage (fire-and-forget)
+      // Track voucher usage (fire-and-forget, atomic)
       if (usedVoucherId) {
-        prisma.voucher.update({ where: { id: usedVoucherId }, data: { usedCount: { increment: 1 } } }).catch(() => null);
+        prisma.$executeRaw`UPDATE vouchers SET "usedCount" = "usedCount" + 1 WHERE id = ${usedVoucherId} AND ("maxUses" IS NULL OR "usedCount" < "maxUses")`.catch(() => null);
       }
       return NextResponse.json(result);
     }
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
         notificationUrl,
       });
       if (usedVoucherId) {
-        prisma.voucher.update({ where: { id: usedVoucherId }, data: { usedCount: { increment: 1 } } }).catch(() => null);
+        prisma.$executeRaw`UPDATE vouchers SET "usedCount" = "usedCount" + 1 WHERE id = ${usedVoucherId} AND ("maxUses" IS NULL OR "usedCount" < "maxUses")`.catch(() => null);
       }
       return NextResponse.json(result);
     }

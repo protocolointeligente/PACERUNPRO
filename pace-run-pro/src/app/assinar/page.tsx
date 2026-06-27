@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { signIn } from "next-auth/react";
 import { Check, CheckCircle, Copy, Loader2, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -152,11 +153,14 @@ function AssinarContent() {
   // Step 2
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
   const [cpf, setCpf] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [cidade, setCidade] = useState("");
   const [objetivo, setObjetivo] = useState("");
   const [dataProva, setDataProva] = useState("");
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerError, setRegisterError] = useState("");
 
   // Step 3 — payment
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cartao");
@@ -186,6 +190,42 @@ function AssinarContent() {
   const discountPct = coupon?.type === "PERCENT" ? coupon.value : 0;
   const discountedMonthly = plan.pricePerMonth * (1 - discountPct / 100);
   const discountedTotal = plan.totalPrice * (1 - discountPct / 100);
+
+  async function handleCreateAccount() {
+    if (!nome.trim() || !email.trim() || !senha.trim()) {
+      setRegisterError("Nome, e-mail e senha são obrigatórios.");
+      return;
+    }
+    if (senha.length < 8) {
+      setRegisterError("A senha deve ter pelo menos 8 caracteres.");
+      return;
+    }
+    setRegisterLoading(true);
+    setRegisterError("");
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: nome, email, password: senha, phone: whatsapp, city: cidade, goal: null, role: "ATHLETE" }),
+      });
+      const data = await res.json();
+      if (!res.ok && res.status !== 409) { // 409 = already exists, that's ok
+        setRegisterError(data.error ?? "Erro ao criar conta. Tente novamente.");
+        return;
+      }
+      // Sign in with credentials
+      const loginRes = await signIn("credentials", { email, password: senha, redirect: false });
+      if (loginRes?.error) {
+        setRegisterError("Erro ao fazer login automático. Tente fazer login manualmente.");
+        return;
+      }
+      setStep(3);
+    } catch {
+      setRegisterError("Não foi possível criar sua conta. Tente novamente.");
+    } finally {
+      setRegisterLoading(false);
+    }
+  }
 
   async function applyCoupon() {
     if (!couponCode.trim()) return;
@@ -438,6 +478,19 @@ function AssinarContent() {
 
               <label className="block">
                 <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  Crie uma senha
+                </span>
+                <input
+                  type="password"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  placeholder="Mínimo 8 caracteres"
+                  className={inputClass}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
                   CPF
                 </span>
                 <input
@@ -528,15 +581,18 @@ function AssinarContent() {
             >
               ← Voltar
             </Button>
-            <Button
-              variant="primary"
-              size="lg"
-              className="flex-1"
-              onClick={() => setStep(3)}
-              disabled={!nome.trim() || !email.trim() || !objetivo}
-            >
-              Continuar →
-            </Button>
+            <div className="flex flex-1 flex-col gap-2">
+              {registerError && <p className="text-sm text-red-500">{registerError}</p>}
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full"
+                onClick={handleCreateAccount}
+                disabled={registerLoading}
+              >
+                {registerLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continuar →"}
+              </Button>
+            </div>
           </div>
         </div>
       )}
