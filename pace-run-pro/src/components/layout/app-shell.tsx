@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Bell, LogOut, Menu, Search } from "lucide-react";
+import { LogOut, Menu, Search } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { NotificationBell } from "@/components/layout/notification-bell";
 import type { NavItem } from "./nav-config";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -224,9 +225,7 @@ export function AppShell({
               <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-primary" />
               {roleLabel}
             </Badge>
-            <button className="relative rounded-lg p-2 text-text-muted hover:bg-card hover:text-text" aria-label="Notificações">
-              <Bell className="h-5 w-5" />
-            </button>
+            <NotificationBell />
             <Avatar className="h-9 w-9 lg:hidden">
               <AvatarImage src={avatarUrl} alt={userName} />
               <AvatarFallback>{userName.slice(0, 2).toUpperCase()}</AvatarFallback>

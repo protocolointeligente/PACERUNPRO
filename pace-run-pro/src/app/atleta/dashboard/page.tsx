@@ -5,12 +5,16 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Activity,
+  Bot,
   CalendarCheck2,
   CalendarClock,
   Dumbbell,
   Footprints,
   TrendingUp,
   UserCircle,
+  Zap,
+  Battery,
+  Flame,
 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, Tooltip } from "recharts";
 import { formStatus, FORM_LABELS, type LoadDay } from "@/lib/training-load";
@@ -161,25 +165,92 @@ export default function AthleteDashboard() {
               </div>
             </CardContent>
           </Card>
-        ) : (
-          <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/8 via-card to-card">
-            <CardContent className="flex flex-col items-center gap-5 p-10 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-                <CalendarClock className="h-8 w-8" />
-              </div>
-              <div>
-                <Badge variant="primary" className="mb-3">Treino de hoje</Badge>
-                <h2 className="font-display text-xl font-bold text-text">
-                  Aguardando prescrição do treinador
-                </h2>
-                <p className="mt-2 max-w-md text-sm text-text-muted">
-                  Seu treinador ainda está preparando seu plano de treinamento personalizado.
-                  Fique de olho — você receberá uma notificação assim que os treinos forem liberados.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        ) : (() => {
+          // TSB-based suggestion when no workout is prescribed (P2 Ação 17)
+          if (loadTsb !== null) {
+            let icon = <Zap className="h-8 w-8" />;
+            let badgeLabel = "Sugestão baseada em TSB";
+            let title = "";
+            let description = "";
+            const href = "/atleta/ia-treinadora";
+            let colorClass = "text-primary";
+            let bgClass = "from-primary/10";
+
+            if (loadTsb > 10) {
+              icon = <Flame className="h-8 w-8" />;
+              title = "Você está em pico de forma — hora de treinar!";
+              description = `TSB ${loadTsb >= 0 ? "+" : ""}${loadTsb.toFixed(0)}: Sua fadiga está baixa e o fitness alto. Ótimo momento para uma sessão de qualidade — intervalados, tempo run ou prova.`;
+              badgeLabel = "Forma excelente";
+              colorClass = "text-success";
+              bgClass = "from-success/10";
+            } else if (loadTsb > 0) {
+              icon = <Zap className="h-8 w-8" />;
+              title = "Forma ótima — sessão de qualidade recomendada";
+              description = `TSB ${loadTsb >= 0 ? "+" : ""}${loadTsb.toFixed(0)}: Bom equilíbrio entre fitness e fadiga. Ideal para rodagem moderada, progressivo ou fartlek.`;
+              badgeLabel = "Ótima forma";
+              colorClass = "text-primary";
+              bgClass = "from-primary/10";
+            } else if (loadTsb > -20) {
+              icon = <Activity className="h-8 w-8" />;
+              title = "Em treino — rodagem leve é o ideal";
+              description = `TSB ${loadTsb.toFixed(0)}: Carga de treino acumulada normal. Opte por ritmo confortável, técnica ou mobilidade.`;
+              badgeLabel = "Em carga de treino";
+              colorClass = "text-info";
+              bgClass = "from-info/10";
+            } else {
+              icon = <Battery className="h-8 w-8" />;
+              title = "Fadiga elevada — dia de recuperação";
+              description = `TSB ${loadTsb.toFixed(0)}: Fadiga acumulada. Seu corpo agradece um dia de descanso, mobilidade ou corrida regenerativa muito leve. Converse com seu treinador.`;
+              badgeLabel = "Recuperação";
+              colorClass = "text-warning";
+              bgClass = "from-warning/10";
+            }
+
+            return (
+              <Card className={`overflow-hidden border-primary/20 bg-gradient-to-br ${bgClass} via-card to-card`}>
+                <CardContent className="flex flex-col items-center gap-5 p-10 text-center">
+                  <div className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-card-hover ${colorClass}`}>
+                    {icon}
+                  </div>
+                  <div>
+                    <Badge variant="primary" className="mb-3">{badgeLabel}</Badge>
+                    <h2 className="font-display text-xl font-bold text-text">{title}</h2>
+                    <p className="mt-2 max-w-md text-sm text-text-muted">{description}</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Link href={href}>
+                      <Button className="gap-1.5">
+                        <Bot className="h-4 w-4" />
+                        Perguntar à IA Treinadora
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // No TSB data — generic waiting state
+          return (
+            <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/8 via-card to-card">
+              <CardContent className="flex flex-col items-center gap-5 p-10 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+                  <CalendarClock className="h-8 w-8" />
+                </div>
+                <div>
+                  <Badge variant="primary" className="mb-3">Treino de hoje</Badge>
+                  <h2 className="font-display text-xl font-bold text-text">
+                    Aguardando prescrição do treinador
+                  </h2>
+                  <p className="mt-2 max-w-md text-sm text-text-muted">
+                    Seu treinador ainda está preparando seu plano de treinamento personalizado.
+                    Fique de olho — você receberá uma notificação assim que os treinos forem liberados.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
       </motion.div>
 
       <div className="grid gap-5 lg:grid-cols-3">

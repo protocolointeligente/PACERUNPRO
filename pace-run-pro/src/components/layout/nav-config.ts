@@ -41,23 +41,25 @@ export interface NavItem {
   sectionStart?: string;
 }
 
+// Bottom nav (5 primary items — most used daily)
 export const athleteNav: NavItem[] = [
   { href: "/atleta/dashboard", label: "Início", icon: LayoutDashboard },
-  { href: "/atleta/calendario", label: "Calendário", icon: CalendarDays },
+  { href: "/atleta/calendario", label: "Treinos", icon: CalendarDays },
+  { href: "/atleta/ia-treinadora", label: "IA Treinadora", icon: Bot },
   { href: "/atleta/evolucao", label: "Evolução", icon: TrendingUp },
-  { href: "/atleta/forca", label: "Força", icon: Dumbbell },
-  { href: "/atleta/comunidade", label: "Comunidade", icon: Trophy },
+  { href: "/atleta/perfil", label: "Perfil", icon: User },
 ];
 
+// Sidebar / drawer secondary items (sectioned for clarity)
 export const athleteMoreNav: NavItem[] = [
-  { href: "/atleta/atividade", label: "Atividades", icon: CheckSquare },
-  { href: "/atleta/testes", label: "Testes de performance", icon: Activity },
-  { href: "/atleta/planos", label: "Planos & periodização", icon: ClipboardList },
-  { href: "/atleta/biblioteca", label: "Minha biblioteca", icon: BookOpen },
-  { href: "/atleta/previsao", label: "Previsão & estratégia", icon: Target },
-  { href: "/atleta/ia-treinadora", label: "IA Treinadora", icon: Bot },
-  { href: "/atleta/tenis", label: "Tênis tracker", icon: Shirt },
-  { href: "/atleta/perfil", label: "Perfil", icon: User },
+  { href: "/atleta/forca",    label: "Força",               icon: Dumbbell,     sectionStart: "Treino"    },
+  { href: "/atleta/atividade",label: "Atividades",          icon: CheckSquare                             },
+  { href: "/atleta/testes",   label: "Testes de performance",icon: Activity,    sectionStart: "Análise"   },
+  { href: "/atleta/planos",   label: "Planos & periodização",icon: ClipboardList                          },
+  { href: "/atleta/previsao", label: "Previsão & estratégia",icon: Target                                 },
+  { href: "/atleta/comunidade",label: "Comunidade",         icon: Trophy,       sectionStart: "Social"    },
+  { href: "/atleta/biblioteca",label: "Minha biblioteca",   icon: BookOpen                                },
+  { href: "/atleta/tenis",    label: "Tênis tracker",       icon: Shirt                                   },
 ];
 
 export const coachNav: NavItem[] = [

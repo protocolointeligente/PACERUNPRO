@@ -7,8 +7,6 @@ import { CheckCircle2, X, UserPlus, CalendarPlus, CreditCard } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const STORAGE_KEY = "coach_onboarding_dismissed";
-
 const STEPS = [
   {
     id: "invite",
@@ -44,64 +42,69 @@ const STEPS = [
 
 type StepId = (typeof STEPS)[number]["id"];
 
-function loadDone(): Set<StepId> {
-  if (typeof window === "undefined") return new Set();
-  try {
-    const raw = localStorage.getItem("coach_onboarding_done");
-    const parsed = JSON.parse(raw ?? "[]") as StepId[];
-    return new Set(parsed);
-  } catch {
-    return new Set();
-  }
-}
-
-function saveDone(done: Set<StepId>) {
-  localStorage.setItem("coach_onboarding_done", JSON.stringify([...done]));
-}
-
 interface CoachOnboardingStepsProps {
   athleteCount: number;
 }
 
 export function CoachOnboardingSteps({ athleteCount }: CoachOnboardingStepsProps) {
-  const [dismissed, setDismissed] = useState(true); // start hidden to avoid flash
+  const [dismissed, setDismissed] = useState(true); // hidden until DB data loads
   const [done, setDone] = useState<Set<StepId>>(new Set());
-  const [mounted, setMounted] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
+  // Load state from DB on mount
   useEffect(() => {
-    const isDismissed = localStorage.getItem(STORAGE_KEY) === "true";
-    const doneSaved = loadDone();
+    fetch("/api/coach/onboarding")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { done?: string[] } | null) => {
+        const doneset = new Set((data?.done ?? []) as StepId[]);
 
-    // Auto-mark "invite" step if athlete already exists
-    if (athleteCount > 0 && !doneSaved.has("invite")) {
-      doneSaved.add("invite");
-      saveDone(doneSaved);
-    }
+        // Auto-mark "invite" if athlete already exists
+        if (athleteCount > 0 && !doneset.has("invite")) {
+          doneset.add("invite");
+          fetch("/api/coach/onboarding", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stepId: "invite" }),
+          }).catch(() => null);
+        }
 
-    setDone(doneSaved);
-    setDismissed(isDismissed || doneSaved.size === STEPS.length);
-    setMounted(true);
+        setDone(doneset);
+        setDismissed(doneset.size >= STEPS.length);
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
   }, [athleteCount]);
 
   const markDone = (id: StepId) => {
     const next = new Set(done);
     next.add(id);
-    saveDone(next);
     setDone(next);
-    if (next.size === STEPS.length) {
-      localStorage.setItem(STORAGE_KEY, "true");
-      setDismissed(true);
-    }
+    if (next.size >= STEPS.length) setDismissed(true);
+
+    fetch("/api/coach/onboarding", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stepId: id }),
+    }).catch(() => null);
   };
 
   const dismiss = () => {
-    localStorage.setItem(STORAGE_KEY, "true");
     setDismissed(true);
+    // Mark all steps done to suppress permanently
+    STEPS.forEach((s) => {
+      if (!done.has(s.id)) {
+        fetch("/api/coach/onboarding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stepId: s.id }),
+        }).catch(() => null);
+      }
+    });
   };
 
   const progress = (done.size / STEPS.length) * 100;
 
-  if (!mounted || dismissed) return null;
+  if (!loaded || dismissed) return null;
 
   return (
     <AnimatePresence>

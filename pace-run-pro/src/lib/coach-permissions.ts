@@ -51,22 +51,23 @@ function planTier(planId: string): number {
   return PLAN_TIER[planId] ?? 0;
 }
 
+// First 5 items become the mobile bottom nav — keep them as the daily-driver actions
 const coreNav: NavItem[] = [
-  { href: "/treinador/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/treinador/dashboard",                label: "Dashboard",  icon: LayoutDashboard },
+  { href: "/treinador/atletas",                  label: "Atletas",    icon: Users           },
+  { href: "/treinador/alertas",                  label: "Alertas",    icon: Bell            },
+  { href: "/treinador/prescricao/periodizacao",  label: "Periodizar", icon: CalendarDays    },
+  { href: "/treinador/analise-semanal",          label: "Análise",    icon: BarChart2       },
+
+  // — Equipe —
+  { href: "/treinador/grupos",                   label: "Grupos",          icon: Layers,      sectionStart: "Equipe"    },
+  { href: "/treinador/relatorios",               label: "Relatórios",      icon: FileBarChart                           },
 
   // — Prescrição —
-  { href: "/treinador/prescricao/periodizacao", label: "Periodização",     icon: CalendarDays, sectionStart: "Prescrição" },
-  { href: "/treinador/prescricao/corrida",      label: "Prescrever corrida", icon: Activity  },
-  { href: "/treinador/prescricao/forca",        label: "Força",            icon: Dumbbell    },
-  { href: "/treinador/minha-loja",              label: "Minha loja",       icon: ShoppingBag },
-  { href: "/treinador/biblioteca",              label: "Biblioteca",       icon: BookOpen    },
-
-  // — Acompanhamento —
-  { href: "/treinador/atletas",         label: "Atletas",         icon: Users,      sectionStart: "Acompanhamento" },
-  { href: "/treinador/grupos",          label: "Grupos",          icon: Layers      },
-  { href: "/treinador/alertas",         label: "Alertas",         icon: Bell        },
-  { href: "/treinador/analise-semanal", label: "Análise semanal", icon: BarChart2   },
-  { href: "/treinador/relatorios",      label: "Relatórios",      icon: FileBarChart},
+  { href: "/treinador/prescricao/corrida",       label: "VDOT / Paces",    icon: Activity,    sectionStart: "Prescrição" },
+  { href: "/treinador/prescricao/forca",         label: "Força",           icon: Dumbbell                               },
+  { href: "/treinador/biblioteca",               label: "Biblioteca",      icon: BookOpen                               },
+  { href: "/treinador/minha-loja",               label: "Minha loja",      icon: ShoppingBag                            },
 ];
 
 // Starter+ (tier ≥ 1)

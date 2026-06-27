@@ -36,10 +36,21 @@ const formatBadge: Record<string, "danger" | "success" | "info"> = { PDF: "dange
 
 export default function ReportsPage() {
   const [athletes, setAthletes] = useState<AthleteListItem[]>([]);
+  const [coachName, setCoachName] = useState("Treinador");
+  const [coachCredential, setCoachCredential] = useState("");
+
   useEffect(() => {
     fetch("/api/coach/athletes")
       .then((r) => r.ok ? r.json() : [])
       .then((data: AthleteListItem[]) => setAthletes(data))
+      .catch(() => null);
+
+    fetch("/api/coach/profile")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { name?: string; credential?: string } | null) => {
+        if (d?.name) setCoachName(d.name);
+        if (d?.credential) setCoachCredential(d.credential);
+      })
       .catch(() => null);
   }, []);
 
@@ -128,7 +139,7 @@ export default function ReportsPage() {
 <div class="header">
   <div class="logo">PACE RUN <span>PRO</span></div>
   <div class="meta">
-    <strong>Treinador Ricardo Pace</strong> — CREF 014626-G/MG<br/>
+    <strong>${coachName}</strong>${coachCredential ? ` — ${coachCredential}` : ""}<br/>
     Gerado em ${today}
   </div>
 </div>

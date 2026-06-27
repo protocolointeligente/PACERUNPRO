@@ -173,13 +173,14 @@ model Coach {
   id           String   @id @default(cuid())
   userId       String   @unique
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  credential   String?  // ex.: CREF 014626-G/MG
-  bio          String?
-  publicBio    String?  // texto exibido na página pública da assessoria
-  specialties  String[]
-  slug         String?  @unique  // ex.: "ricardo-pace" → /p/ricardo-pace
-  logoUrl      String?
-  whatsapp     String?
+  credential      String?   // ex.: CREF 014626-G/MG
+  bio             String?
+  publicBio       String?   // texto exibido na página pública da assessoria
+  specialties     String[]
+  slug            String?   @unique  // ex.: "ricardo-pace" → /p/ricardo-pace
+  logoUrl         String?
+  whatsapp        String?
+  onboardingDone  String[]  @default([])  // completed step ids: ["invite","workout","plan"]
 
   plans             CoachPlan[]
   athletes          Athlete[]

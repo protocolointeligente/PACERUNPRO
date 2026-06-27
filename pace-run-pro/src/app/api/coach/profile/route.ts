@@ -12,7 +12,7 @@ export async function GET() {
       name: true,
       avatarUrl: true,
       bannerUrl: true,
-      coach: { select: { slug: true } },
+      coach: { select: { slug: true, credential: true } },
     },
   });
 
@@ -21,6 +21,7 @@ export async function GET() {
     avatarUrl: user?.avatarUrl ?? null,
     bannerUrl: user?.bannerUrl ?? null,
     slug: user?.coach?.slug ?? null,
+    credential: user?.coach?.credential ?? null,
   });
 }
 
