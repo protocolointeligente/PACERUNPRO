@@ -6,7 +6,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { type ActivityPost, type MonthlyChallenge } from "@/lib/mock-data";
+interface ActivityMetrics { distance: number; pace: string; duration: string; elevation?: number; calories?: number; avgHr?: number; splits?: { km: number; pace: string; elev?: number }[] }
+interface ActivityPost {
+  id: string; athleteName: string; athleteAvatar: string; avatarColor: string;
+  timeAgo: string; caption: string; photoGradient: string;
+  metrics: ActivityMetrics; likes: number;
+  comments: { author: string; text: string; timeAgo: string }[];
+}
+type ChallengeType = "distance" | "sessions" | "elevation" | "speed";
+interface MonthlyChallenge {
+  id: string; month: string; emoji: string; title: string; theme: string;
+  description: string; type: ChallengeType; target: number; unit: string;
+  currentProgress: number; participants: number; prize: string; endsInDays: number;
+  leaderboard: { rank: number; name: string; avatar: string; value: number; isYou?: boolean }[];
+  color: string;
+}
 import { cn } from "@/lib/utils";
 
 interface Club { id: string; name: string; members: number; location: string }

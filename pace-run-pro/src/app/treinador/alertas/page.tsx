@@ -17,7 +17,22 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type SmartAlert, type AlertSeverity } from "@/lib/mock-data";
+type AlertSeverity = "critico" | "atencao" | "info";
+type AlertCategory = "ausencia" | "overtraining" | "dor" | "fadiga" | "adesao" | "volume" | "fc" | "desempenho";
+
+interface SmartAlert {
+  id: string;
+  athleteId: string;
+  athleteName: string;
+  severity: AlertSeverity;
+  category: AlertCategory;
+  title: string;
+  description: string;
+  metric?: string;
+  recommendation?: string;
+  daysAgo: number;
+  read: boolean;
+}
 import { cn } from "@/lib/utils";
 
 interface ExpiringPlan {

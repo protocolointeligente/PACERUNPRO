@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { weekWorkouts, TYPE_LABELS, getSubtypeColor } from "@/lib/mock-data";
+import { TYPE_LABELS, getSubtypeColor } from "@/lib/workout-constants";
+import { weekWorkouts } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const dayLabels = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Clock, MapPin, Lock, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TYPE_LABELS, getSubtypeColor } from "@/lib/mock-data";
+import { TYPE_LABELS, getSubtypeColor } from "@/lib/workout-constants";
 import { formatPace } from "@/lib/utils";
 import type { WorkoutSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";

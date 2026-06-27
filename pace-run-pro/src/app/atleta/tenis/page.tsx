@@ -14,7 +14,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import type { Shoe } from "@/lib/mock-data";
+interface Shoe {
+  id: string; name: string; brand: string; model: string; imageUrl?: string;
+  kmAccumulated: number; maxKm: number; dateAdded: string;
+  color: string; active: boolean; imageEmoji: string;
+}
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 

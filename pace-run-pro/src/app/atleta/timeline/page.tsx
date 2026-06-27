@@ -16,11 +16,13 @@ import {
   Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  timelineEvents,
-  type TimelineEvent,
-  type TimelineEventType,
-} from "@/lib/mock-data";
+import { timelineEvents } from "@/lib/mock-data";
+
+type TimelineEventType = "treino" | "checkin" | "teste" | "prova" | "conquista" | "avaliacao" | "lesao" | "tenis";
+interface TimelineEvent {
+  id: string; date: string; type: TimelineEventType; title: string;
+  subtitle?: string; detail?: string; badge?: string; highlight?: boolean;
+}
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 

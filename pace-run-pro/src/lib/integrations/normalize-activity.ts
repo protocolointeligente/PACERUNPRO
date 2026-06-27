@@ -1,4 +1,21 @@
-import type { SyncedActivity } from "@/lib/mock-data";
+interface SyncedActivity {
+  id: string;
+  source: "strava" | "garmin" | "polar" | "coros" | "apple";
+  sourceActivityId: string;
+  title: string;
+  date: string;
+  distanceKm: number;
+  durationSec: number;
+  avgPaceSecPerKm: number;
+  avgHrBpm: number;
+  maxHrBpm: number;
+  elevationM: number;
+  calories: number;
+  cadenceAvg?: number;
+  sufferScore?: number;
+  matchedWorkoutId?: string;
+  autoCheckInFilled: boolean;
+}
 import { formatPace } from "@/lib/utils";
 
 export interface NormalizedActivity {
