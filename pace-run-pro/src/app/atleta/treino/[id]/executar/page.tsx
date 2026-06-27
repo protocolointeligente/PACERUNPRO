@@ -55,7 +55,8 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
   const [elapsed, setElapsed] = useState(0);
   const [points, setPoints] = useState<GeoPoint[]>([]);
   const [splits, setSplits] = useState<{ km: number; pace: string }[]>([]);
-  const [voiceCue, setVoiceCue] = useState('Aguardando permissão de GPS...');
+  const [showFinishDialog, setShowFinishDialog] = useState(false);
+  const [voiceCue, setVoiceCue] = useState("Toque em Iniciar Treino para começar.");
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>("idle");
   const [gpsErrorMsg, setGpsErrorMsg] = useState<string | null>(null);
 
@@ -115,10 +116,8 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
     );
   }, [handlePosition, handleGeoError]);
 
-  // Request GPS authorization automatically when athlete navigates to this page
-  useEffect(() => {
-    requestGps();
-  }, [requestGps]);
+  // GPS is requested only on explicit user action (requestGps called via button)
+  // Auto-requesting on mount silently fails on iOS Safari
 
   // Continuous position watch — pauses when athlete pauses the workout
   useEffect(() => {
@@ -167,6 +166,7 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
   }
 
   function finish() {
+    setShowFinishDialog(false);
     setRunning(false);
     // Persist real GPS stats so the check-in page can build the share card
     const avgPace = distanceKm > 0.01 && elapsed > 0 ? elapsed / distanceKm : null;
@@ -231,6 +231,45 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
+      {/* Pre-start overlay — shown while GPS is idle (not yet requested) */}
+      {gpsStatus === "idle" && (
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card py-12 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+            <Play className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <h2 className="font-display text-lg font-bold text-text">{workout.title}</h2>
+            <p className="mt-1 text-sm text-text-muted">
+              O treino solicitará acesso ao GPS para registrar distância e rota.
+            </p>
+          </div>
+          <Button size="lg" onClick={requestGps} className="gap-2 px-10">
+            <Play className="h-5 w-5" />
+            Iniciar treino
+          </Button>
+        </div>
+      )}
+
+      {/* Finish confirmation dialog */}
+      {showFinishDialog && (
+        <div role="dialog" aria-modal="true" aria-label="Finalizar treino" className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-card border border-border p-6 space-y-4 shadow-xl">
+            <h2 className="font-display text-lg font-bold text-text">Finalizar treino?</h2>
+            <p className="text-sm text-text-muted">
+              Seu progresso até agora ({distanceKm.toFixed(2)} km · {Math.floor(elapsed / 60)}min) será salvo.
+            </p>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setShowFinishDialog(false)}>
+                Continuar correndo
+              </Button>
+              <Button variant="danger" className="flex-1" onClick={finish}>
+                Sim, finalizar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* GPS permission / error notice */}
       {(gpsStatus === "denied" || gpsStatus === "unsupported" || gpsStatus === "error") && (
         <Card className="border-warning/30 bg-warning/5">
@@ -369,7 +408,7 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
           {running ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
           {running ? "PAUSAR" : "RETOMAR"}
         </Button>
-        <Button size="lg" variant="danger" className="max-w-[200px] flex-1" onClick={finish}>
+        <Button size="lg" variant="danger" className="max-w-[200px] flex-1" onClick={() => setShowFinishDialog(true)}>
           <Square className="h-5 w-5" />
           FINALIZAR
         </Button>

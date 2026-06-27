@@ -225,8 +225,11 @@ export default function CalendarPage() {
   }
 
   async function deleteRace(id: string) {
-    await fetch(`/api/atleta/races/${id}`, { method: "DELETE" });
-    setRaces((prev) => prev.filter((r) => r.id !== id));
+    if (!window.confirm("Excluir esta corrida? Esta ação não pode ser desfeita.")) return;
+    const res = await fetch(`/api/atleta/races/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setRaces((prev) => prev.filter((r) => r.id !== id));
+    }
   }
 
   return (
@@ -245,13 +248,13 @@ export default function CalendarPage() {
               </span>
             )}
           </Button>
-          <button onClick={() => setMonthOffset((m) => m - 1)} className="rounded-lg border border-border p-2 text-text-muted hover:border-primary/40 hover:text-text">
+          <button aria-label="Mês anterior" onClick={() => setMonthOffset((m) => m - 1)} className="rounded-lg border border-border p-2 text-text-muted hover:border-primary/40 hover:text-text">
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <button onClick={() => setMonthOffset(0)} className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-text-muted hover:border-primary/40 hover:text-text">
+          <button aria-label="Voltar para o mês atual" onClick={() => setMonthOffset(0)} className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-text-muted hover:border-primary/40 hover:text-text">
             Hoje
           </button>
-          <button onClick={() => setMonthOffset((m) => m + 1)} className="rounded-lg border border-border p-2 text-text-muted hover:border-primary/40 hover:text-text">
+          <button aria-label="Próximo mês" onClick={() => setMonthOffset((m) => m + 1)} className="rounded-lg border border-border p-2 text-text-muted hover:border-primary/40 hover:text-text">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>

@@ -244,7 +244,7 @@ export default function PlansPage() {
               >
                 <span
                   className="absolute -left-8 top-4 flex h-9 w-9 items-center justify-center rounded-full border-4"
-                  style={{ borderColor: phase.current ? phase.color : "#1e2a40", backgroundColor: phase.current ? `${phase.color}33` : "#0b1220" }}
+                  style={{ borderColor: phase.current ? phase.color : "var(--color-border)", backgroundColor: phase.current ? `${phase.color}33` : "var(--color-card)" }}
                 >
                   {phase.current ? (
                     <span className="h-2.5 w-2.5 animate-pulse-soft rounded-full" style={{ backgroundColor: phase.color }} />

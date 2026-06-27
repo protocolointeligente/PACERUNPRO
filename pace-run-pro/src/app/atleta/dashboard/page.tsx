@@ -116,8 +116,9 @@ export default function AthleteDashboard() {
       {/* Treino do dia */}
       <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show">
         {workoutsLoading ? (
-          <div className="flex items-center justify-center py-16">
+          <div role="status" aria-label="Carregando treinos" className="flex items-center justify-center py-16">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="sr-only">Carregando...</span>
           </div>
         ) : todayWorkout ? (
           <Card className="overflow-hidden border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card">

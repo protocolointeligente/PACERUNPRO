@@ -261,6 +261,25 @@ function AssinarContent() {
     }
   }
 
+  async function handlePixConfirm() {
+    if (!pixResult) return;
+    setCheckoutLoading(true);
+    setCheckoutError("");
+    try {
+      const res = await fetch(`/api/checkout/status?orderId=${pixResult.orderId}`);
+      const data = await res.json();
+      if (data.status === "PAID") {
+        setConfirmed(true);
+      } else {
+        setCheckoutError("Pagamento ainda não identificado. Aguarde alguns segundos e tente novamente.");
+      }
+    } catch {
+      setCheckoutError("Não foi possível verificar o pagamento. Tente novamente.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }
+
   // ── Success screen ──────────────────────────────────────────────────────
   if (confirmed) {
     return (
@@ -625,7 +644,7 @@ function AssinarContent() {
                       </Button>
                     )}
                   </div>
-                  {couponError && <p className="mt-1.5 text-xs text-red-400">{couponError}</p>}
+                  {couponError && <p className="mt-1.5 text-xs text-danger">{couponError}</p>}
                 </div>
               </div>
 
@@ -643,12 +662,13 @@ function AssinarContent() {
 
                 {/* Cartão */}
                 {paymentMethod === "cartao" && (
-                  <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
+                  <form onSubmit={(e) => { e.preventDefault(); handleCheckout(); }} className="space-y-4 rounded-2xl border border-border bg-card p-5">
                     <label className="block">
                       <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
                         Número do cartão
                       </span>
                       <input
+                        autoComplete="cc-number"
                         value={cardNumber}
                         onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
                         placeholder="0000 0000 0000 0000"
@@ -662,6 +682,7 @@ function AssinarContent() {
                         Nome no cartão
                       </span>
                       <input
+                        autoComplete="cc-name"
                         value={cardName}
                         onChange={(e) => setCardName(e.target.value.toUpperCase())}
                         placeholder="EXATAMENTE COMO NO CARTÃO"
@@ -674,6 +695,7 @@ function AssinarContent() {
                           Validade
                         </span>
                         <input
+                          autoComplete="cc-exp"
                           value={cardExpiry}
                           onChange={(e) => setCardExpiry(formatCardExpiry(e.target.value))}
                           placeholder="MM/AA"
@@ -687,6 +709,7 @@ function AssinarContent() {
                           CVV
                         </span>
                         <input
+                          autoComplete="cc-csc"
                           value={cardCvv}
                           onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
                           placeholder="000"
@@ -696,7 +719,7 @@ function AssinarContent() {
                         />
                       </label>
                     </div>
-                  </div>
+                  </form>
                 )}
 
                 {/* PIX */}
@@ -770,7 +793,7 @@ function AssinarContent() {
 
               {/* Error feedback */}
               {checkoutError && (
-                <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
                   {checkoutError}
                 </div>
               )}
@@ -801,14 +824,14 @@ function AssinarContent() {
               variant="primary"
               size="lg"
               className="flex-1 gap-2"
-              onClick={pixResult ? () => setConfirmed(true) : handleCheckout}
+              onClick={pixResult ? handlePixConfirm : handleCheckout}
               disabled={checkoutLoading}
             >
               {checkoutLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               {checkoutLoading
-                ? "Processando…"
+                ? pixResult ? "Verificando pagamento…" : "Processando…"
                 : pixResult
-                ? "Já paguei →"
+                ? "Verificar pagamento"
                 : paymentMethod === "pix"
                 ? "Gerar QR Code PIX"
                 : "Confirmar e assinar"}

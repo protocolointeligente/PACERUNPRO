@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  BookOpen, Clock, Filter, Loader2, Search, ShoppingCart, Star, Trophy, Users,
+  BookOpen, Clock, Filter, Search, ShoppingCart, Star, Trophy, Users,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { SkeletonCard } from "@/components/ui/skeleton";
 
 interface Product {
   id: string;
@@ -225,8 +226,10 @@ export default function LojaPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} className="h-64" />
+          ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-16 text-center">

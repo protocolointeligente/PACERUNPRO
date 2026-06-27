@@ -159,6 +159,9 @@ export default function StrengthPage() {
                         <p className="truncate text-sm font-semibold text-text">{block.exercise.name}</p>
                         <p className="text-xs text-text-muted">{block.exercise.category}</p>
                       </div>
+                      <span className="text-[11px] text-text-muted sm:hidden">
+                        {block.sets}×{block.reps}{block.restSec ? ` · ${block.restSec}s` : ""}
+                      </span>
                       <div className="hidden gap-4 text-xs text-text-muted sm:flex">
                         <span className="flex items-center gap-1">
                           <Repeat className="h-3 w-3" /> {block.sets}× {block.reps}

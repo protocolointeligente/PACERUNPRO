@@ -174,6 +174,7 @@ function WorkoutModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Fechar"
             className="rounded-lg p-1.5 text-text-muted transition-colors hover:bg-card-hover hover:text-text"
           >
             <X className="h-4 w-4" />
@@ -520,7 +521,7 @@ function QuickPrescribeModal({
             </p>
             <p className="mt-0.5 font-display text-base font-bold capitalize text-text">{dateLabel}</p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover hover:text-text">
+          <button onClick={onClose} aria-label="Fechar" className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover hover:text-text">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -661,7 +662,7 @@ function CopyWorkoutModal({
             <p className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Copiar treino</p>
             <p className="mt-0.5 font-display text-base font-bold text-text">{payload.workout.title}</p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover hover:text-text">
+          <button onClick={onClose} aria-label="Fechar" className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover hover:text-text">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -789,7 +790,7 @@ function CopyWeekModal({
               {payload.workoutCount} treino{payload.workoutCount !== 1 ? "s" : ""} de {payload.athlete.name.split(" ")[0]}
             </p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover hover:text-text">
+          <button onClick={onClose} aria-label="Fechar" className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover hover:text-text">
             <X className="h-4 w-4" />
           </button>
         </div>

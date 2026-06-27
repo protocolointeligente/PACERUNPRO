@@ -180,7 +180,7 @@ export function AppShell({
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
-              className="fixed inset-y-0 left-0 z-50 w-72 border-r border-border bg-[#070b18] p-4 lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 w-[min(288px,85vw)] border-r border-border bg-card p-4 lg:hidden"
             >
               <div className="mb-6 px-2 pt-2">
                 <Logo size={30} />

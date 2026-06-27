@@ -18,7 +18,9 @@ export function BottomNav({ items }: { items: NavItem[] }) {
             <Link
               key={item.href}
               href={item.href}
-              className="relative flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium text-text-muted transition-colors"
+              aria-label={item.label}
+              aria-current={active ? "page" : undefined}
+              className="relative flex flex-1 flex-col items-center gap-1 min-h-[56px] py-3 text-xs font-medium text-text-muted transition-colors"
             >
               {active && (
                 <motion.span

@@ -107,7 +107,7 @@ export default async function PublicAssessoriaPage({ params }: { params: Promise
   const initials = profile.name.split(" ").map((n) => n[0]).slice(0, 2).join("");
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-background">
       {/* Header bar */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">

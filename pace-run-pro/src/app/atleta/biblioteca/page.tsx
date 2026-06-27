@@ -46,6 +46,13 @@ const SPORT_LABELS: Record<string, string> = {
   GERAL: "Geral",
 };
 
+const LEVEL_LABELS: Record<string, string> = {
+  INICIANTE: "Iniciante",
+  INTERMEDIARIO: "Intermediário",
+  AVANCADO: "Avançado",
+  ELITE: "Elite",
+};
+
 const GOAL_LABELS: Record<string, string> = {
   CINCO_KM: "5 km",
   DEZ_KM: "10 km",
@@ -102,14 +109,14 @@ function ActivateModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+    <div role="dialog" aria-modal="true" aria-labelledby="activate-modal-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
       <div className="w-full max-w-sm rounded-2xl bg-card border border-border p-6 space-y-4 shadow-xl">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="font-display text-lg font-bold text-text">Ativar plano</h2>
+            <h2 id="activate-modal-title" className="font-display text-lg font-bold text-text">Ativar plano</h2>
             <p className="text-sm text-text-muted mt-0.5">{purchase.product.title}</p>
           </div>
-          <button onClick={onClose} className="text-text-muted hover:text-text p-1">
+          <button onClick={onClose} aria-label="Fechar" className="text-text-muted hover:text-text p-1">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -237,7 +244,7 @@ export default function BibliotecaPage() {
                       <Badge variant="primary" className="text-[10px]">
                         {SPORT_LABELS[p.product.sport] ?? p.product.sport}
                       </Badge>
-                      <Badge variant="outline" className="text-[10px]">{p.product.level}</Badge>
+                      <Badge variant="outline" className="text-[10px]">{LEVEL_LABELS[p.product.level] ?? p.product.level}</Badge>
                       {p.product.goal && (
                         <Badge variant="outline" className="text-[10px]">
                           {GOAL_LABELS[p.product.goal] ?? p.product.goal}

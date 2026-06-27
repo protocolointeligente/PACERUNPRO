@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Award, Camera, Medal, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
+import { SkeletonCard } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
@@ -60,6 +61,23 @@ export default function EvolutionPage() {
       if (url) setBodyPhotos((prev) => prev.map((p, i) => (i === idx ? url : p)));
     };
     reader.readAsDataURL(file);
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-6xl space-y-7">
+        <div className="space-y-2">
+          <SkeletonCard className="h-5 w-24" />
+          <SkeletonCard className="h-8 w-64" />
+          <SkeletonCard className="h-4 w-80" />
+        </div>
+        <div className="grid gap-5 lg:grid-cols-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <SkeletonCard key={i} className="h-52" />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (

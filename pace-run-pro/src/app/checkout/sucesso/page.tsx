@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BookOpen, CheckCircle2, ShoppingBag } from "lucide-react";
+import { BookOpen, CheckCircle2, Loader2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 function SucessoContent() {
@@ -40,7 +40,7 @@ function SucessoContent() {
           <Link href="/atleta/biblioteca">
             <Button className="w-full sm:w-auto gap-1.5">
               <BookOpen className="h-4 w-4" />
-              Ativar meu plano
+              Ver meu plano
             </Button>
           </Link>
           <Link href="/loja">
@@ -57,7 +57,11 @@ function SucessoContent() {
 
 export default function SucessoPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={
+      <div className="flex min-h-dvh items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
       <SucessoContent />
     </Suspense>
   );
