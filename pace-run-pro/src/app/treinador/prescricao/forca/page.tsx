@@ -8,12 +8,16 @@ import {
   CheckCircle2,
   Dumbbell,
   LayoutTemplate,
+  Link2,
+  Loader2,
   Pencil,
   Plus,
   Search,
   Send,
   Trash2,
   Users,
+  Video,
+  X,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -419,6 +423,15 @@ export default function StrengthPrescriptionPage() {
   const [newTplFocus, setNewTplFocus] = useState("Hipertrofia");
   const [savingTemplate, setSavingTemplate] = useState(false);
 
+  // Create exercise modal state
+  const [showCreateExercise, setShowCreateExercise] = useState(false);
+  const [newExName, setNewExName] = useState("");
+  const [newExCategory, setNewExCategory] = useState("Hipertrofia");
+  const [newExDesc, setNewExDesc] = useState("");
+  const [newExVideoUrl, setNewExVideoUrl] = useState("");
+  const [creatingExercise, setCreatingExercise] = useState(false);
+  const [createExError, setCreateExError] = useState("");
+
   useEffect(() => {
     fetch("/api/coach/templates/forca")
       .then((r) => r.ok ? r.json() : [])
@@ -474,6 +487,57 @@ export default function StrengthPrescriptionPage() {
   async function handleDeleteCustomTemplate(id: string) {
     setCustomTemplates((prev) => prev.filter((t) => t.id !== id));
     await fetch(`/api/coach/templates/forca/${id}`, { method: "DELETE" });
+  }
+
+  async function handleCreateExercise() {
+    if (!newExName.trim() || creatingExercise) return;
+    setCreateExError("");
+    setCreatingExercise(true);
+    try {
+      const res = await fetch("/api/coach/exercises", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newExName.trim(),
+          category: newExCategory,
+          description: newExDesc.trim() || undefined,
+          videoUrl: newExVideoUrl.trim() || undefined,
+          videoTitle: newExName.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setCreateExError(err.error ?? "Erro ao criar exercício.");
+        return;
+      }
+      const created = await res.json();
+      // Add to local exerciseDb so it appears immediately in the library
+      const item: ExerciseLibraryItem = {
+        id: created.id,
+        name: created.name,
+        category: created.category,
+        muscles: created.musclesWorked ?? [],
+        gifUrl: created.videoUrl ?? undefined,
+        imageUrl: created.imageUrl ?? undefined,
+        description: created.description ?? "",
+        execution: created.execution ?? "",
+        mistakes: created.commonMistakes ?? "",
+        sets: 3,
+        reps: "10-12",
+        rest: "60s",
+        rpe: 7,
+      };
+      setExerciseDb((prev) => [item, ...prev]);
+      setNewExName("");
+      setNewExCategory("Hipertrofia");
+      setNewExDesc("");
+      setNewExVideoUrl("");
+      setShowCreateExercise(false);
+    } catch {
+      setCreateExError("Erro de conexão. Tente novamente.");
+    } finally {
+      setCreatingExercise(false);
+    }
   }
 
   const skipDivisionEffect = useRef(false);
@@ -1045,9 +1109,19 @@ export default function StrengthPrescriptionPage() {
           <div className="space-y-5">
             <Card>
               <CardContent className="p-5">
-                <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-text">
-                  <Dumbbell className="h-4 w-4 text-primary" /> Biblioteca de exercícios
-                </h3>
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <h3 className="flex items-center gap-2 font-display text-sm font-semibold text-text">
+                    <Dumbbell className="h-4 w-4 text-primary" /> Biblioteca de exercícios
+                  </h3>
+                  <button
+                    onClick={() => setShowCreateExercise(true)}
+                    title="Criar exercício"
+                    className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold text-text-muted transition-colors hover:border-primary/60 hover:text-primary"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Criar
+                  </button>
+                </div>
                 <div className="mb-3 flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
                   <Search className="h-4 w-4 text-text-muted" />
                   <input
@@ -1230,6 +1304,106 @@ export default function StrengthPrescriptionPage() {
           </div>
         </div>
       )}
+
+      {/* Create Exercise Modal */}
+      <AnimatePresence>
+        {showCreateExercise && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowCreateExercise(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className="fixed inset-x-4 top-1/2 z-50 mx-auto max-w-md -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-2xl"
+            >
+              <div className="mb-5 flex items-center justify-between">
+                <h2 className="font-display text-base font-bold text-text">Criar exercício</h2>
+                <button
+                  onClick={() => setShowCreateExercise(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-card-hover hover:text-text"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Nome do exercício *</span>
+                  <input
+                    value={newExName}
+                    onChange={(e) => setNewExName(e.target.value)}
+                    placeholder="Ex: Agachamento búlgaro"
+                    className={inputClass}
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Categoria</span>
+                  <select
+                    value={newExCategory}
+                    onChange={(e) => setNewExCategory(e.target.value)}
+                    className={inputClass}
+                  >
+                    {["Hipertrofia", "Força", "Core", "Mobilidade", "Pliometria", "Prevenção", "Glúteos", "Panturrilhas", "Joelho", "Quadril", "Tornozelo"].map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">Descrição (opcional)</span>
+                  <textarea
+                    value={newExDesc}
+                    onChange={(e) => setNewExDesc(e.target.value)}
+                    placeholder="Breve descrição do exercício e músculos trabalhados…"
+                    rows={3}
+                    className={inputClass + " resize-none"}
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    <Video className="h-3.5 w-3.5" />
+                    Link de vídeo (YouTube, Vimeo…)
+                  </span>
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3.5 py-2.5">
+                    <Link2 className="h-4 w-4 shrink-0 text-text-muted" />
+                    <input
+                      value={newExVideoUrl}
+                      onChange={(e) => setNewExVideoUrl(e.target.value)}
+                      placeholder="https://youtube.com/watch?v=…"
+                      className="w-full bg-transparent text-sm text-text placeholder:text-text-muted/50 outline-none"
+                    />
+                  </div>
+                </label>
+
+                {createExError && (
+                  <p className="text-xs text-danger">{createExError}</p>
+                )}
+
+                <Button
+                  onClick={handleCreateExercise}
+                  disabled={!newExName.trim() || creatingExercise}
+                  className="w-full"
+                >
+                  {creatingExercise ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Criando…</>
+                  ) : (
+                    <><Plus className="h-4 w-4" /> Criar exercício</>
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -86,9 +86,9 @@ const DAY_ABBR: Record<string, string> = {
 
 // km-per-session at week 1, weekly growth, and peak cap — tuned per level
 const LEVEL_KM_CONFIG: Record<Level, { startPerSession: number; weeklyGrowth: number; maxKm: number }> = {
-  Iniciante:     { startPerSession: 2.5, weeklyGrowth: 0.8, maxKm: 30  },
-  Intermediário: { startPerSession: 5.0, weeklyGrowth: 2.0, maxKm: 70  },
-  Avançado:      { startPerSession: 8.0, weeklyGrowth: 3.5, maxKm: 115 },
+  Iniciante:     { startPerSession: 5.0, weeklyGrowth: 2.0, maxKm: 50  },
+  Intermediário: { startPerSession: 8.0, weeklyGrowth: 3.5, maxKm: 90  },
+  Avançado:      { startPerSession: 12.0, weeklyGrowth: 5.0, maxKm: 150 },
 };
 
 function generatePeriodization(totalWeeks: number, sessions: number, level: Level): Week[] {
@@ -1053,8 +1053,8 @@ export default function PeriodizacaoPage() {
                       <p className="text-xs font-semibold text-text-muted uppercase tracking-widest">
                         Tabela de intensidade · VDOT {vdotNum}
                       </p>
-                      <div className="overflow-hidden rounded-lg border border-border">
-                        <table className="w-full text-[11px]">
+                      <div className="overflow-x-auto rounded-lg border border-border">
+                        <table className="w-full min-w-[36rem] text-[11px]">
                           <thead>
                             <tr className="bg-card-hover/40 text-text-muted">
                               <th className="px-2 py-1.5 text-left font-medium">Zona</th>

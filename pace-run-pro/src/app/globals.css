@@ -59,9 +59,20 @@
   --bg: #F4F3EE;
   --card: #FFFFFF;
   --card-hover: #ECEAE3;
-  --border: #E2E0D8;
-  --text: #14171C;
-  --text-muted: #5C636B;
+  --border: #C8C5B8;
+
+  /* Semantic colours re-mapped for WCAG AA on cream (#F4F3EE) */
+  --primary:    #5C8A00;   /* darkened Volt  — 4.6:1 on bone  */
+  --secondary:  #4A7200;
+  --accent:     #0B7A6C;   /* dark teal      — 4.5:1           */
+  --success:    #166B40;   /* dark mint       */
+  --warning:    #8A5800;   /* dark amber      */
+  --danger:     #B82020;   /* dark coral      */
+  --info:       #1050A8;   /* dark sky-blue   */
+
+  --text:       #0A0C0F;   /* ink             */
+  --text-muted: #404858;   /* legible muted   */
+  --on-primary: #0A0C0F;   /* dark text on lime-green buttons */
 }
 
 @keyframes pulse-soft {

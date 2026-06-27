@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { NotificationBell } from "@/components/layout/notification-bell";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { NavItem } from "./nav-config";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -153,14 +154,17 @@ export function AppShell({
                 <p className="truncate text-xs text-text-muted">{userSubtitle}</p>
               </div>
             )}
-            <button
-              onClick={handleLogout}
-              aria-label="Sair"
-              title="Sair"
-              className="shrink-0 rounded-lg p-1.5 text-text-muted transition-colors hover:bg-card hover:text-danger"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
+            <div className="ml-auto flex items-center gap-1">
+              <ThemeToggle inline />
+              <button
+                onClick={handleLogout}
+                aria-label="Sair"
+                title="Sair"
+                className="shrink-0 rounded-lg p-1.5 text-text-muted transition-colors hover:bg-card hover:text-danger"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -183,8 +187,9 @@ export function AppShell({
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
               className="fixed inset-y-0 left-0 z-50 w-[min(288px,85vw)] border-r border-border bg-card p-4 lg:hidden"
             >
-              <div className="mb-6 px-2 pt-2">
+              <div className="mb-6 flex items-center justify-between px-2 pt-2">
                 <Logo size={30} />
+                <ThemeToggle inline />
               </div>
               <nav className="space-y-0.5">
                 {nav.map((item) => renderNavItem(item, () => setMobileOpen(false), true))}

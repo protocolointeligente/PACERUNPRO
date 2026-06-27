@@ -79,9 +79,9 @@ const KM_DISTRIBUTION: Record<number, number[]> = {
 
 // Level-based fallback paces (sec/km) when VDOT not available
 const FALLBACK_PACES: Record<LevelType, Record<TrainingZoneId, number>> = {
-  Iniciante:     { E: 410, M: 375, T: 340, I: 305, R: 275 },
-  Intermediário: { E: 340, M: 305, T: 275, I: 245, R: 215 },
-  Avançado:      { E: 285, M: 255, T: 228, I: 202, R: 180 },
+  Iniciante:     { E: 450, M: 410, T: 370, I: 330, R: 295 },
+  Intermediário: { E: 360, M: 325, T: 292, I: 260, R: 230 },
+  Avançado:      { E: 290, M: 260, T: 232, I: 205, R: 182 },
 };
 
 const ZONE_RPE: Record<TrainingZoneId, number> = { E: 5, M: 6, T: 7, I: 8, R: 9 };

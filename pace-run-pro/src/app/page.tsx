@@ -11,6 +11,7 @@ import {
   Dumbbell,
   Globe,
   HeartPulse,
+  LogIn,
   ShoppingBag,
   Star,
   TrendingUp,
@@ -21,6 +22,7 @@ import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { integrationLogos, testimonials } from "@/lib/mock-data";
 import { PricingSection } from "@/components/landing/pricing-section";
 import { PlatformShowcase } from "@/components/landing/platform-showcase";
@@ -439,16 +441,27 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <ThemeToggle inline />
             <Link
               href="/login"
               className="hidden text-sm font-medium text-text-muted transition-colors hover:text-text md:block"
             >
               Entrar
             </Link>
+            {/* Mobile login icon */}
+            <Link
+              href="/login"
+              aria-label="Entrar"
+              className="flex items-center justify-center rounded-lg p-2 text-text-muted transition-colors hover:bg-card-hover hover:text-text md:hidden"
+            >
+              <LogIn className="h-5 w-5" />
+            </Link>
             <Link href="/cadastro?perfil=treinador">
               <Button size="sm" className="gap-1.5">
-                Começar grátis <ArrowRight className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Começar grátis</span>
+                <span className="sm:hidden">Começar</span>
+                <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </Link>
           </div>

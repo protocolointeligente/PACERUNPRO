@@ -342,13 +342,15 @@ export default function ProfilePage() {
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="dados">Dados pessoais</TabsTrigger>
-          <TabsTrigger value="objetivos">Objetivos &amp; histórico</TabsTrigger>
-          <TabsTrigger value="conquistas">Conquistas</TabsTrigger>
-          <TabsTrigger value="dispositivos">Dispositivos</TabsTrigger>
-          <TabsTrigger value="config">Configurações</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto no-scrollbar -mx-1 px-1">
+          <TabsList className="w-max">
+            <TabsTrigger value="dados">Dados</TabsTrigger>
+            <TabsTrigger value="objetivos">Objetivos</TabsTrigger>
+            <TabsTrigger value="conquistas">Conquistas</TabsTrigger>
+            <TabsTrigger value="dispositivos">Dispositivos</TabsTrigger>
+            <TabsTrigger value="config">Config.</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Personal data */}
         <TabsContent value="dados">
