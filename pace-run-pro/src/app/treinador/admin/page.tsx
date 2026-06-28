@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { BarTrend } from "@/components/charts/trend-chart";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -132,7 +133,7 @@ export default function AdminDashboardPage() {
           ) : (data?.recentActivity ?? []).length === 0 ? (
             <p className="py-6 text-center text-sm text-text-muted">
               Nenhum atleta ainda.{" "}
-              <a href="/treinador/atletas/convidar" className="text-primary hover:underline">Convidar atletas →</a>
+              <Link href="/treinador/atletas/convidar" className="text-primary hover:underline">Convidar atletas →</Link>
             </p>
           ) : (
             <div className="space-y-3">

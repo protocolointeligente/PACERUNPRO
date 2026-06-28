@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { renderToBuffer } = require("@react-pdf/renderer") as { renderToBuffer: (el: unknown) => Promise<Buffer> };
-import { createElement } from "react";
+import { renderToBuffer } from "@react-pdf/renderer";
+import type { DocumentProps } from "@react-pdf/renderer";
+import { createElement, type ReactElement } from "react";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { EvolucaoPDF } from "@/components/pdf/evolucao-pdf";
@@ -98,17 +98,17 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   const generatedAt = now.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
-  const pdfBuffer = await renderToBuffer(
-    createElement(EvolucaoPDF, {
-      athleteName: user?.name ?? "Atleta",
-      generatedAt,
-      selectedVars: vars,
-      data: { weeklyVolume, avgPace, avgHr, trainingLoad: [], weightHistory, vo2History, races: racesFormatted, checkins: checkinsFormatted },
-    })
-  );
+  const element = createElement(EvolucaoPDF, {
+    athleteName: user?.name ?? "Atleta",
+    generatedAt,
+    selectedVars: vars,
+    data: { weeklyVolume, avgPace, avgHr, trainingLoad: [], weightHistory, vo2History, races: racesFormatted, checkins: checkinsFormatted },
+  }) as unknown as ReactElement<DocumentProps>;
+
+  const pdfBuffer = await renderToBuffer(element);
 
   const safeName = (user?.name ?? "atleta").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-  return new NextResponse(pdfBuffer.buffer as ArrayBuffer, {
+  return new NextResponse(new Uint8Array(pdfBuffer).buffer, {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="evolucao-${safeName}.pdf"`,
