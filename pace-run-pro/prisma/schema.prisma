@@ -196,6 +196,7 @@ model Coach {
   zoneModels        CoachZoneModel[]
   planProducts      PlanProduct[]
   sharedTemplates   SharedWorkoutTemplate[]
+  athleteInvites    AthleteInvite[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -662,10 +663,25 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   body      String
+  link      String?
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
   @@map("notifications")
+}
+
+model AthleteInvite {
+  id        String   @id @default(cuid())
+  token     String   @unique @default(cuid())
+  coachId   String
+  coach     Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  email     String?
+  usedAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@map("athlete_invites")
 }
 
 model PushSubscription {

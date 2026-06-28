@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, BellRing, X, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,6 +10,7 @@ interface NotifItem {
   id: string;
   title: string;
   body: string;
+  link?: string | null;
   read: boolean;
   createdAt: string;
 }
@@ -16,6 +18,7 @@ interface NotifItem {
 const POLL_MS = 60_000;
 
 export function NotificationBell() {
+  const router = useRouter();
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState<NotifItem[]>([]);
   const [open, setOpen] = useState(false);
@@ -51,13 +54,31 @@ export function NotificationBell() {
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [open]);
 
-  async function markAllRead() {
+  async function markRead(ids?: string[]) {
     try {
-      await fetch("/api/atleta/notificacoes", { method: "PATCH", credentials: "include" });
-      setUnread(0);
-      setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+      await fetch("/api/atleta/notificacoes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: ids ? JSON.stringify({ ids }) : undefined,
+      });
+      if (ids) {
+        setItems((prev) => prev.map((n) => ids.includes(n.id) ? { ...n, read: true } : n));
+        setUnread((c) => Math.max(0, c - ids.length));
+      } else {
+        setUnread(0);
+        setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+      }
     } catch {
       // silent
+    }
+  }
+
+  async function handleNotifClick(n: NotifItem) {
+    if (!n.read) await markRead([n.id]);
+    setOpen(false);
+    if (n.link) {
+      router.push(n.link);
     }
   }
 
@@ -104,7 +125,7 @@ export function NotificationBell() {
               <div className="flex items-center gap-1">
                 {unread > 0 && (
                   <button
-                    onClick={markAllRead}
+                    onClick={() => markRead()}
                     title="Marcar todas como lidas"
                     className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover hover:text-text"
                   >
@@ -129,21 +150,27 @@ export function NotificationBell() {
               ) : (
                 <ul>
                   {items.map((n) => (
-                    <li
-                      key={n.id}
-                      className={cn(
-                        "flex gap-3 border-b border-border/50 px-4 py-3 last:border-0",
-                        !n.read && "bg-primary/5"
-                      )}
-                    >
-                      <div className="mt-1 flex h-2 w-2 shrink-0 items-center justify-center">
-                        {!n.read && <span className="h-2 w-2 rounded-full bg-primary" />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-text">{n.title}</p>
-                        <p className="mt-0.5 text-[11px] leading-snug text-text-muted">{n.body}</p>
-                      </div>
-                      <span className="shrink-0 text-[10px] text-text-muted/60">{relativeTime(n.createdAt)}</span>
+                    <li key={n.id}>
+                      <button
+                        onClick={() => handleNotifClick(n)}
+                        className={cn(
+                          "flex w-full gap-3 border-b border-border/50 px-4 py-3 text-left last:border-0 transition-colors",
+                          !n.read ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-card-hover",
+                          n.link && "cursor-pointer"
+                        )}
+                      >
+                        <div className="mt-1 flex h-2 w-2 shrink-0 items-center justify-center">
+                          {!n.read && <span className="h-2 w-2 rounded-full bg-primary" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-text">{n.title}</p>
+                          <p className="mt-0.5 text-[11px] leading-snug text-text-muted">{n.body}</p>
+                          {n.link && (
+                            <p className="mt-1 text-[10px] text-primary">Toque para abrir →</p>
+                          )}
+                        </div>
+                        <span className="shrink-0 text-[10px] text-text-muted/60">{relativeTime(n.createdAt)}</span>
+                      </button>
                     </li>
                   ))}
                 </ul>

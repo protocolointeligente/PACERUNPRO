@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Copy, DollarSign, Link2, Loader2, UserPlus } from "lucide-react";
+import QRCode from "react-qr-code";
+import { ArrowLeft, Check, Copy, DollarSign, Link2, Loader2, RefreshCw, UserPlus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,11 +26,13 @@ const PERIOD_LABEL: Record<string, string> = {
   ANUAL: "/ano",
 };
 
-export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClientProps) {
+export default function ConvidarAtletaClient({ coachUserId: _coachUserId }: ConvidarAtletaClientProps) {
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-  const inviteUrl = `${baseUrl}/cadastro?perfil=atleta&coach=${coachUserId}`;
 
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [generatingToken, setGeneratingToken] = useState(false);
   const [copied, setCopied] = useState(false);
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [planId, setPlanId] = useState("");
@@ -39,8 +42,37 @@ export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClie
   const [manualError, setManualError] = useState("");
   const [manualSuccess, setManualSuccess] = useState<{ tempPassword?: string; existing?: boolean } | null>(null);
 
+  const inviteUrl = inviteToken ? `${baseUrl}/convite/${inviteToken}` : null;
+
+  async function generateInvite() {
+    setGeneratingToken(true);
+    try {
+      const res = await fetch("/api/coach/invites", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setInviteToken(data.token);
+      }
+    } catch {
+      // silent
+    } finally {
+      setGeneratingToken(false);
+    }
+  }
+
   useEffect(() => {
-    fetch("/api/coach/planos")
+    // Load most recent active invite first, generate one if none
+    fetch("/api/coach/invites")
+      .then((r) => r.ok ? r.json() : { invites: [] })
+      .then((data: { invites: { token: string }[] }) => {
+        if (data.invites.length > 0) {
+          setInviteToken(data.invites[0].token);
+        } else {
+          generateInvite();
+        }
+      })
+      .catch(() => generateInvite());
+
+    fetch("/api/coach/plans")
       .then((r) => r.ok ? r.json() : [])
       .then((data: CoachPlan[]) => {
         setPlans(data);
@@ -48,15 +80,17 @@ export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClie
       })
       .catch(() => null)
       .finally(() => setLoadingPlans(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleCopy() {
+    if (!inviteUrl) return;
     try {
       await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback
+      // Fallback for non-secure contexts
     }
   }
 
@@ -112,11 +146,11 @@ export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClie
         </Badge>
         <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Convidar atleta</h1>
         <p className="mt-1 text-sm text-text-muted">
-          Adicione atletas ao seu perfil compartilhando um link ou inserindo os dados manualmente.
+          Adicione atletas compartilhando um link seguro ou inserindo os dados manualmente.
         </p>
       </div>
 
-      {/* Invite link section */}
+      {/* Invite link + QR code */}
       <Card>
         <CardContent className="space-y-4 pt-5">
           <div className="flex items-center gap-3">
@@ -124,35 +158,59 @@ export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClie
               <Link2 className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-text">Link de convite</p>
-              <p className="text-xs text-text-muted">Envie para o atleta se cadastrar automaticamente vinculado a você</p>
+              <p className="text-sm font-semibold text-text">Link de convite seguro</p>
+              <p className="text-xs text-text-muted">O atleta cria conta → é vinculado a você automaticamente</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3.5 py-2.5">
-            <span className="flex-1 truncate text-xs font-mono text-text-muted">{inviteUrl}</span>
-            <button
-              onClick={handleCopy}
-              className="ml-2 flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-text transition-colors hover:border-primary/40 hover:bg-card-hover"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-3.5 w-3.5 text-green-400" />
-                  <span className="text-green-400">Copiado!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5" />
-                  Copiar
-                </>
-              )}
-            </button>
-          </div>
+          {generatingToken || !inviteUrl ? (
+            <div className="flex items-center gap-2 py-4 text-sm text-text-muted">
+              <Loader2 className="h-4 w-4 animate-spin" /> Gerando link seguro…
+            </div>
+          ) : (
+            <>
+              {/* QR code */}
+              <div className="flex justify-center rounded-xl border border-border bg-white p-4">
+                <QRCode value={inviteUrl} size={180} />
+              </div>
+
+              {/* Copy link row */}
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3.5 py-2.5">
+                <span className="flex-1 truncate text-xs font-mono text-text-muted">{inviteUrl}</span>
+                <button
+                  onClick={handleCopy}
+                  className="ml-2 flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-text transition-colors hover:border-primary/40 hover:bg-card-hover"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-green-400" />
+                      <span className="text-green-400">Copiado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" />
+                      Copiar
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Regenerate */}
+              <button
+                onClick={generateInvite}
+                disabled={generatingToken}
+                className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Gerar novo link (invalida o anterior)
+              </button>
+            </>
+          )}
 
           <div className="rounded-xl border border-border/50 bg-card-hover/30 px-4 py-3 space-y-1">
             <p className="text-xs font-semibold text-text">Como funciona</p>
             <p className="text-xs text-text-muted">
-              Envie este link para o seu atleta. Quando ele se cadastrar, já ficará vinculado ao seu perfil automaticamente.
+              O atleta acessa o link, cria conta ou faz login, e fica vinculado a você automaticamente. O link expira em 30 dias.
             </p>
           </div>
         </CardContent>

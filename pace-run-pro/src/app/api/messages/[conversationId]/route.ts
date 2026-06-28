@@ -69,14 +69,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ con
 
   await prisma.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } });
 
-  const recipientUserId = conversation.athleteId === userId ? conversation.coachId : conversation.athleteId;
+  const isCoachSending = conversation.coachId === userId;
+  const recipientUserId = isCoachSending ? conversation.athleteId : conversation.coachId;
   const senderName = session.user.name ?? "Alguém";
+  const notifLink = isCoachSending ? `/atleta/treinador` : `/treinador/mensagens/${conversationId}`;
 
   await prisma.notification.create({
     data: {
       userId: recipientUserId,
       title: `Mensagem de ${senderName}`,
       body: content.length > 80 ? content.slice(0, 80) + "…" : content,
+      link: notifLink,
     },
   });
 

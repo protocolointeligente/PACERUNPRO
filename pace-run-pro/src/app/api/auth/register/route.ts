@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { name, email, password, phone, city, goal, role, studentCount, coachId, tosAccepted } = await req.json();
+    const { name, email, password, phone, city, goal, role, studentCount, coachId, inviteToken, tosAccepted } = await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Campos obrigatórios faltando." }, { status: 400 });
@@ -100,20 +100,32 @@ export async function POST(req: NextRequest) {
     const isCoach = role === "COACH";
     const tosAcceptedAt = new Date();
 
-    // Look up (or create) coach record when coachId (user ID) is provided for athlete registration
+    // Look up coach record via inviteToken (preferred) or coachId (legacy)
     let coachRecord: { id: string } | null = null;
-    if (!isCoach && coachId) {
-      const coachUser = await prisma.user.findUnique({
-        where: { id: coachId, role: "COACH" },
-        select: { id: true },
-      });
-      if (coachUser) {
-        coachRecord = await prisma.coach.upsert({
-          where: { userId: coachId },
-          update: {},
-          create: { userId: coachId, specialties: [] },
+    let resolvedInviteId: string | null = null;
+    if (!isCoach) {
+      if (inviteToken) {
+        const invite = await prisma.athleteInvite.findUnique({
+          where: { token: inviteToken },
+          select: { id: true, coachId: true, usedAt: true, expiresAt: true },
+        });
+        if (invite && !invite.usedAt && invite.expiresAt > new Date()) {
+          coachRecord = { id: invite.coachId };
+          resolvedInviteId = invite.id;
+        }
+      } else if (coachId) {
+        const coachUser = await prisma.user.findUnique({
+          where: { id: coachId, role: "COACH" },
           select: { id: true },
         });
+        if (coachUser) {
+          coachRecord = await prisma.coach.upsert({
+            where: { userId: coachId },
+            update: {},
+            create: { userId: coachId, specialties: [] },
+            select: { id: true },
+          });
+        }
       }
     }
 
@@ -132,6 +144,22 @@ export async function POST(req: NextRequest) {
       },
       select: { id: true, email: true, name: true, role: true },
     });
+
+    // Mark invite as used and notify coach when athlete registers via invite token
+    if (!isCoach && resolvedInviteId && coachRecord) {
+      await prisma.athleteInvite.update({ where: { id: resolvedInviteId }, data: { usedAt: new Date() } });
+      const coachUser = await prisma.coach.findUnique({ where: { id: coachRecord.id }, select: { userId: true } });
+      if (coachUser) {
+        await prisma.notification.create({
+          data: {
+            userId: coachUser.userId,
+            title: "Novo atleta no seu grupo!",
+            body: `${name} acabou de se cadastrar pelo seu link de convite.`,
+            link: `/treinador/atletas`,
+          },
+        });
+      }
+    }
 
     // Auto-activate free plan for coaches — no admin approval required
     if (isCoach) {

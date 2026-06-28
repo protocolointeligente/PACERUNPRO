@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, Suspense } from "react";
-import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useState, Suspense, useEffect } from "react";
+import { signIn, getSession, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/logo";
@@ -12,11 +12,28 @@ const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 // ── Inner content (reads searchParams) ───────────────────────────────────
+function roleDestination(role?: string) {
+  if (role === "ADMIN") return "/admin/dashboard";
+  if (role === "COACH") return "/treinador/dashboard";
+  return "/atleta/dashboard";
+}
+
 function LoginContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  // Redirect already-authenticated users by role
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      const role = (session.user as { role?: string }).role;
+      router.replace(roleDestination(role));
+    }
+  }, [status, session, router]);
+
   // Validate callbackUrl to prevent open-redirect attacks
   const raw = searchParams.get("callbackUrl") ?? "";
-  const callbackUrl = raw.startsWith("/") ? raw : "";
+  const callbackUrl = raw.startsWith("/") && !raw.startsWith("//") ? raw : "";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,11 +46,7 @@ function LoginContent() {
     setError("");
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    const result = await signIn("credentials", { email, password, redirect: false });
 
     if (result?.error) {
       setError("E-mail ou senha incorretos.");
@@ -41,13 +54,23 @@ function LoginContent() {
       return;
     }
 
-    // Full page navigation so the server picks up the new session cookie
-    // and each layout applies role-based routing (COACH → /treinador, ADMIN → /admin)
-    window.location.assign(callbackUrl || "/atleta/dashboard");
+    // Fetch updated session to read the role and redirect accordingly
+    const newSession = await getSession();
+    const role = (newSession?.user as { role?: string })?.role;
+    window.location.assign(callbackUrl || roleDestination(role));
   }
 
   function handleGoogle() {
-    signIn("google", { callbackUrl: callbackUrl || "/atleta/dashboard" });
+    // /auth/redirect checks role server-side and bounces to the right dashboard
+    signIn("google", { callbackUrl: callbackUrl || "/auth/redirect" });
+  }
+
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <span className="animate-spin border-2 border-primary/30 border-t-primary rounded-full h-8 w-8" />
+      </div>
+    );
   }
 
   return (

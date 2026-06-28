@@ -13,7 +13,7 @@ export async function GET() {
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
     take: 30,
-    select: { id: true, title: true, body: true, read: true, createdAt: true },
+    select: { id: true, title: true, body: true, link: true, read: true, createdAt: true },
   });
 
   const unreadCount = notifications.filter((n) => !n.read).length;
