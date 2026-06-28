@@ -41,13 +41,12 @@ export interface NavItem {
   sectionStart?: string;
 }
 
-// Bottom nav (5 primary items — most used daily)
+// Bottom nav (4 primary items — daily athlete flow)
 export const athleteNav: NavItem[] = [
-  { href: "/atleta/dashboard", label: "Início", icon: LayoutDashboard },
-  { href: "/atleta/calendario", label: "Treinos", icon: CalendarDays },
-  { href: "/atleta/ia-treinadora", label: "IA Treinadora", icon: Bot },
+  { href: "/atleta/dashboard", label: "Hoje", icon: LayoutDashboard },
+  { href: "/atleta/calendario", label: "Plano", icon: CalendarDays },
   { href: "/atleta/evolucao", label: "Evolução", icon: TrendingUp },
-  { href: "/atleta/perfil", label: "Perfil", icon: User },
+  { href: "/atleta/ia-treinadora", label: "Treinador", icon: Bot },
 ];
 
 // Sidebar / drawer secondary items (sectioned for clarity)
