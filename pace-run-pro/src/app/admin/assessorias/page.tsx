@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Building2, CheckCircle2, Users, DollarSign, Clock } from "lucide-react";
+import { Building2, CheckCircle2, Users, DollarSign, Clock, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -141,6 +141,8 @@ export default function AssessoriasPage() {
   const [planFilter, setPlanFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/coaches")
@@ -174,6 +176,21 @@ export default function AssessoriasPage() {
       return matchSearch && matchPlan && matchStatus;
     });
   }, [assessoriaList, search, planFilter, statusFilter, approvedIds]);
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/admin/coaches/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setAssessoriaList((prev) => prev.filter((a) => a.id !== id));
+      }
+    } catch {
+      // network error
+    } finally {
+      setDeletingId(null);
+      setConfirmDeleteId(null);
+    }
+  };
 
   const handleApprove = async (id: string) => {
     try {
@@ -335,6 +352,34 @@ export default function AssessoriasPage() {
                         </Button>
                       )}
                       <EditPlanButton coachId={a.id} currentPlan={a.plan} />
+                      {confirmDeleteId === a.id ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-danger">Confirmar exclusão?</span>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDelete(a.id)}
+                            disabled={deletingId === a.id}
+                          >
+                            {deletingId === a.id ? "…" : "Sim, excluir"}
+                          </Button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="text-xs text-text-muted hover:text-text"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-danger hover:text-danger ml-auto"
+                          onClick={() => setConfirmDeleteId(a.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Copy, Link2, UserPlus } from "lucide-react";
+import { ArrowLeft, Check, Copy, DollarSign, Link2, Loader2, UserPlus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,20 @@ interface ConvidarAtletaClientProps {
   coachUserId: string;
 }
 
+interface CoachPlan {
+  id: string;
+  name: string;
+  priceCents: number;
+  period: string;
+}
+
+const PERIOD_LABEL: Record<string, string> = {
+  MENSAL: "/mês",
+  TRIMESTRAL: "/trim.",
+  SEMESTRAL: "/sem.",
+  ANUAL: "/ano",
+};
+
 export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClientProps) {
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
   const inviteUrl = `${baseUrl}/cadastro?perfil=atleta&coach=${coachUserId}`;
@@ -18,9 +32,23 @@ export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClie
   const [copied, setCopied] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [planId, setPlanId] = useState("");
+  const [plans, setPlans] = useState<CoachPlan[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState(true);
   const [manualLoading, setManualLoading] = useState(false);
   const [manualError, setManualError] = useState("");
   const [manualSuccess, setManualSuccess] = useState<{ tempPassword?: string; existing?: boolean } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/coach/planos")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: CoachPlan[]) => {
+        setPlans(data);
+        if (data.length > 0) setPlanId(data[0].id);
+      })
+      .catch(() => null)
+      .finally(() => setLoadingPlans(false));
+  }, []);
 
   async function handleCopy() {
     try {
@@ -28,7 +56,7 @@ export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClie
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback: select text
+      // Fallback
     }
   }
 
@@ -42,7 +70,7 @@ export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClie
       const res = await fetch("/api/coach/athletes/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email }),
+        body: JSON.stringify({ name, email, planId: planId || undefined }),
       });
       const data = await res.json();
 
@@ -64,6 +92,8 @@ export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClie
 
   const inputClass =
     "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
+
+  const selectedPlan = plans.find((p) => p.id === planId);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -124,9 +154,6 @@ export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClie
             <p className="text-xs text-text-muted">
               Envie este link para o seu atleta. Quando ele se cadastrar, já ficará vinculado ao seu perfil automaticamente.
             </p>
-            <p className="mt-1 text-xs text-text-muted">
-              Você também pode gerar um QR code com este link para compartilhar presencialmente.
-            </p>
           </div>
         </CardContent>
       </Card>
@@ -157,6 +184,11 @@ export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClie
                   </code>
                   <p className="text-xs text-text-muted">Compartilhe esta senha com o atleta para o primeiro acesso.</p>
                 </div>
+              )}
+              {selectedPlan && (
+                <p className="text-xs text-success">
+                  Plano atribuído: <strong>{selectedPlan.name}</strong> — R${(selectedPlan.priceCents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}{PERIOD_LABEL[selectedPlan.period] ?? "/mês"}
+                </p>
               )}
               <button
                 onClick={() => setManualSuccess(null)}
@@ -195,6 +227,51 @@ export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClie
                 />
               </label>
 
+              {/* Plan selection */}
+              <div>
+                <span className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  <DollarSign className="h-3 w-3" /> Plano de cobrança
+                </span>
+                {loadingPlans ? (
+                  <div className="flex items-center gap-2 text-xs text-text-muted py-2">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando planos…
+                  </div>
+                ) : plans.length === 0 ? (
+                  <div className="rounded-xl border border-warning/30 bg-warning/10 px-3.5 py-3">
+                    <p className="text-xs font-semibold text-warning">Sem planos de cobrança criados</p>
+                    <p className="mt-0.5 text-xs text-text-muted">
+                      O atleta será adicionado sem plano. Configure seus planos de venda para cobrar automaticamente.
+                    </p>
+                    <a href="/treinador/planos-venda" className="mt-1 inline-block text-xs font-semibold text-primary hover:underline">
+                      Criar planos de venda →
+                    </a>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <select
+                      value={planId}
+                      onChange={(e) => setPlanId(e.target.value)}
+                      className={inputClass}
+                    >
+                      <option value="">Sem plano (gratuito / definir depois)</option>
+                      {plans.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} — R${(p.priceCents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}{PERIOD_LABEL[p.period] ?? "/mês"}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedPlan && (
+                      <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2">
+                        <DollarSign className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <p className="text-xs text-primary">
+                          O atleta será registrado no plano <strong>{selectedPlan.name}</strong>. Você precisará cobrar manualmente ou via link de pagamento.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {manualError && (
                 <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-sm text-red-400">
                   {manualError}
@@ -208,7 +285,7 @@ export default function ConvidarAtletaClient({ coachUserId }: ConvidarAtletaClie
                 className="w-full"
               >
                 {manualLoading ? (
-                  <span className="animate-spin border-2 border-white/30 border-t-white rounded-full h-4 w-4" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   "Adicionar atleta"
                 )}

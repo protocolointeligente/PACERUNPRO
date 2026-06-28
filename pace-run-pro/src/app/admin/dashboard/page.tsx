@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Clock,
   DollarSign,
+  Phone,
   TrendingUp,
   Users,
   XCircle,
@@ -345,6 +346,111 @@ export default function AdminDashboard() {
           </Card>
         </motion.div>
       </div>
+
+      {/* O que fazer hoje */}
+      <motion.div custom={5} variants={fadeUp} initial="hidden" animate="show">
+        <SectionHeader
+          title="O que fazer hoje"
+          subtitle="Ações priorizadas para crescimento e retenção das assessorias"
+        />
+        <div className="space-y-3">
+          {/* Intervenção urgente em contas de risco */}
+          {atRiskAccounts.length > 0 && (
+            <Card className="border-danger/30 bg-danger/5">
+              <CardContent className="flex flex-wrap items-start gap-4 p-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-danger/20 text-danger">
+                  <Phone className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text">
+                    Ligar para {atRiskAccounts.length} assessoria{atRiskAccounts.length > 1 ? "s" : ""} em risco de churn
+                  </p>
+                  <p className="mt-0.5 text-xs text-text-muted">
+                    {atRiskAccounts.map((a) => a.name).slice(0, 3).join(", ")}
+                    {atRiskAccounts.length > 3 ? ` e mais ${atRiskAccounts.length - 3}` : ""}
+                    {" "}— health score abaixo de 55 ou sem atividade há +14 dias.
+                    Entrar em contato, entender dificuldades e oferecer suporte ativo.
+                  </p>
+                  <a href="/admin/assessorias" className="mt-1.5 inline-flex text-xs font-semibold text-danger hover:underline">
+                    Ver assessorias em risco →
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Aprovações pendentes */}
+          {pendingApprovals.length > 0 && (
+            <Card className="border-warning/30 bg-warning/5">
+              <CardContent className="flex flex-wrap items-start gap-4 p-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-warning/20 text-warning">
+                  <Clock className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text">
+                    Aprovar {pendingApprovals.length} cadastro{pendingApprovals.length > 1 ? "s" : ""} pendente{pendingApprovals.length > 1 ? "s" : ""}
+                  </p>
+                  <p className="mt-0.5 text-xs text-text-muted">
+                    Novos treinadores aguardando aprovação. Quanto mais rápido ativar, menor a taxa de desistência no onboarding.
+                  </p>
+                  <a href="/admin/aprovacoes" className="mt-1.5 inline-flex text-xs font-semibold text-warning hover:underline">
+                    Ir para aprovações →
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Ações de crescimento — sempre visíveis */}
+          {[
+            {
+              icon: TrendingUp,
+              color: "text-primary bg-primary/20 border-primary/30",
+              title: "Publicar conteúdo de captação",
+              desc: "Poste um case de sucesso de atleta ou treinador nas redes. Conteúdo real gera +32% de conversão vs. anúncio pago.",
+              href: null,
+            },
+            {
+              icon: Users,
+              color: "text-success bg-success/20 border-success/30",
+              title: "Ligar para 5 leads frios",
+              desc: "Treinadores que demonstraram interesse mas não converteram. Ligação direta tem taxa de conversão 3× maior que e-mail.",
+              href: "/admin/assessorias",
+            },
+            {
+              icon: DollarSign,
+              color: "text-info bg-info/20 border-info/30",
+              title: "Verificar inadimplências e cobranças com falha",
+              desc: "Cheque o painel financeiro por cobranças pendentes ou recusadas. Cada dia de atraso reduz a chance de recuperação.",
+              href: "/admin/financeiro",
+            },
+            {
+              icon: Building2,
+              color: "text-text-muted bg-card-hover border-border",
+              title: "Atualizar planos e pricing",
+              desc: "Revise se os planos refletem o valor entregue. Uma conversa de upsell com clientes Starter pode aumentar o MRR em 40%.",
+              href: "/admin/planos",
+            },
+          ].map((item) => (
+            <Card key={item.title} className={`border ${item.color.split(" ")[2]}`}>
+              <CardContent className="flex flex-wrap items-start gap-4 p-4">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${item.color.split(" ")[1]} ${item.color.split(" ")[0]}`}>
+                  <item.icon className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text">{item.title}</p>
+                  <p className="mt-0.5 text-xs text-text-muted">{item.desc}</p>
+                  {item.href && (
+                    <a href={item.href} className="mt-1.5 inline-flex text-xs font-semibold text-primary hover:underline">
+                      Acessar →
+                    </a>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 }
