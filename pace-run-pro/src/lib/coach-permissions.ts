@@ -21,6 +21,7 @@ import {
   BookOpen,
   Layers,
   MessageSquare,
+  BarChart2,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -66,6 +67,7 @@ const coreNav: NavItem[] = [
   // — Prescrição —
   { href: "/treinador/prescricao/corrida",       label: "VDOT / Paces",    icon: Activity,    sectionStart: "Prescrição" },
   { href: "/treinador/prescricao/forca",         label: "Força",           icon: Dumbbell                               },
+  { href: "/treinador/configuracoes/zonas",      label: "Zonas de treino", icon: Zap                                    },
   { href: "/treinador/biblioteca",               label: "Biblioteca",      icon: BookOpen                               },
   { href: "/treinador/minha-loja",               label: "Minha loja",      icon: ShoppingBag                            },
 ];
@@ -96,10 +98,10 @@ const businessNavUnlimited: NavItem[] = [
 ];
 
 const helpNav: NavItem[] = [
-  { href: "/treinador/configuracoes/zonas", label: "Zonas de treino",   icon: Zap,          sectionStart: "Conta"    },
-  { href: "/treinador/perfil",              label: "Meu Perfil",        icon: User           },
-  { href: "/treinador/universidade",        label: "PACE University",   icon: BookOpen,      sectionStart: "Aprender" },
-  { href: "/treinador/conheca-o-sistema",   label: "Conheça o sistema", icon: GraduationCap  },
+  { href: "/treinador/universidade",        label: "PACE University",   icon: GraduationCap, sectionStart: "Aprender" },
+  { href: "/treinador/conheca-o-sistema",   label: "Conheça o sistema", icon: BookOpen                               },
+  { href: "/treinador/glossario",           label: "Glossário",         icon: BarChart2                              },
+  { href: "/treinador/perfil",              label: "Minha conta",       icon: User,          sectionStart: "Conta"    },
 ];
 
 export function getCoachNav(

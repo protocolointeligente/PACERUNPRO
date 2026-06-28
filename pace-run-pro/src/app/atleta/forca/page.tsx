@@ -149,6 +149,11 @@ export default function StrengthPage() {
                           src={gif}
                           alt={block.exercise.name}
                           className="h-14 w-20 shrink-0 rounded-lg object-cover"
+                          onError={() => setExerciseGifs(prev => {
+                            const next = { ...prev };
+                            delete next[block.exercise.id];
+                            return next;
+                          })}
                         />
                       ) : (
                         <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-lg bg-card-hover">

@@ -29,6 +29,7 @@ import {
   BookOpen,
   ShoppingBag,
   MessageSquare,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react";
 
@@ -50,15 +51,16 @@ export const athleteNav: NavItem[] = [
 
 // Sidebar / drawer secondary items (sectioned for clarity)
 export const athleteMoreNav: NavItem[] = [
-  { href: "/atleta/forca",       label: "Força",                icon: Dumbbell,     sectionStart: "Treino"    },
-  { href: "/atleta/atividade",   label: "Atividades",           icon: CheckSquare                             },
-  { href: "/atleta/testes",      label: "Testes de performance", icon: Activity,    sectionStart: "Análise"   },
-  { href: "/atleta/planos",      label: "Planos & periodização", icon: ClipboardList                          },
-  { href: "/atleta/previsao",    label: "Previsão & estratégia", icon: Target                                 },
-  { href: "/atleta/comunidade",  label: "Comunidade",           icon: Trophy,       sectionStart: "Social"    },
-  { href: "/atleta/biblioteca",  label: "Minha biblioteca",     icon: BookOpen                                },
-  { href: "/atleta/tenis",       label: "Tênis tracker",        icon: Shirt                                   },
-  { href: "/atleta/universidade",label: "PACE University",      icon: GraduationCap, sectionStart: "Aprender" },
+  { href: "/atleta/forca",        label: "Força",                 icon: Dumbbell,      sectionStart: "Treino"   },
+  { href: "/atleta/atividade",    label: "Atividades",            icon: CheckSquare                             },
+  { href: "/atleta/testes",       label: "Testes de performance", icon: Activity,      sectionStart: "Análise"  },
+  { href: "/atleta/planos",       label: "Planos & periodização", icon: ClipboardList                           },
+  { href: "/atleta/previsao",     label: "Previsão & estratégia", icon: Target                                  },
+  { href: "/atleta/comunidade",   label: "Comunidade",            icon: Trophy,        sectionStart: "Social"   },
+  { href: "/atleta/biblioteca",   label: "Minha biblioteca",      icon: BookOpen                                },
+  { href: "/atleta/tenis",        label: "Tênis tracker",         icon: Shirt                                   },
+  { href: "/atleta/universidade", label: "PACE University",       icon: GraduationCap, sectionStart: "Aprender" },
+  { href: "/atleta/perfil",       label: "Minha conta",           icon: CreditCard,    sectionStart: "Conta"    },
 ];
 
 export const coachNav: NavItem[] = [

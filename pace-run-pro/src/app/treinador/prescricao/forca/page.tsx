@@ -228,6 +228,7 @@ function TemplateCard({
                             src={libEx!.gifUrl ?? libEx!.imageUrl!}
                             alt={ex.name}
                             className="h-10 w-14 shrink-0 rounded-md object-cover border border-border"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                           />
                         ) : (
                           <div className="h-10 w-14 shrink-0 rounded-md border border-border bg-card-hover/40" />
@@ -1168,6 +1169,7 @@ export default function StrengthPrescriptionPage() {
                               src={ex.gifUrl}
                               alt={ex.name}
                               className="mx-auto block max-h-40 object-contain"
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).parentElement!.style.display = "none"; }}
                             />
                           </div>
                         )}
@@ -1184,6 +1186,7 @@ export default function StrengthPrescriptionPage() {
                                 src={ex.imageUrl}
                                 alt=""
                                 className="h-full w-full object-cover"
+                                onError={(e) => { (e.currentTarget as HTMLImageElement).parentElement!.style.display = "none"; }}
                               />
                             </button>
                           )}

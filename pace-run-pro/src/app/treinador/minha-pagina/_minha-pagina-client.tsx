@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Camera, Copy, ExternalLink, Globe, QrCode, Share2 } from "lucide-react";
+import { Camera, CheckCircle2, Copy, ExternalLink, Globe, Loader2, Pencil, QrCode, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,18 @@ const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   show: (i: number = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4, ease: "easeOut" as const } }),
 };
+
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9\s]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 50);
+}
 
 function resizeImage(file: File, maxW: number, maxH: number): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -32,6 +44,11 @@ function resizeImage(file: File, maxW: number, maxH: number): Promise<string> {
 
 export default function MinhaPaginaClient() {
   const [slug, setSlug] = useState<string | null>(null);
+  const [slugInput, setSlugInput] = useState("");
+  const [slugSaving, setSlugSaving] = useState(false);
+  const [slugError, setSlugError] = useState("");
+  const [slugSaved, setSlugSaved] = useState(false);
+  const [editingSlug, setEditingSlug] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -45,13 +62,45 @@ export default function MinhaPaginaClient() {
   useEffect(() => {
     fetch("/api/coach/profile")
       .then((r) => r.json())
-      .then((d: { slug?: string | null; avatarUrl?: string | null; bannerUrl?: string | null }) => {
-        if (d.slug) setSlug(d.slug);
+      .then((d: { slug?: string | null; avatarUrl?: string | null; bannerUrl?: string | null; name?: string | null }) => {
+        if (d.slug) {
+          setSlug(d.slug);
+          setSlugInput(d.slug);
+        } else if (d.name) {
+          setSlugInput(generateSlug(d.name));
+        }
         if (d.avatarUrl) setAvatarUrl(d.avatarUrl);
         if (d.bannerUrl) setBannerUrl(d.bannerUrl);
       })
       .catch(() => null);
   }, []);
+
+  async function handleSaveSlug() {
+    const s = slugInput.trim();
+    if (!s) return;
+    setSlugSaving(true);
+    setSlugError("");
+    try {
+      const res = await fetch("/api/coach/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: s }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        setSlugError(d.error ?? "Erro ao salvar URL.");
+        return;
+      }
+      setSlug(s);
+      setEditingSlug(false);
+      setSlugSaved(true);
+      setTimeout(() => setSlugSaved(false), 3000);
+    } catch {
+      setSlugError("Erro ao salvar URL.");
+    } finally {
+      setSlugSaving(false);
+    }
+  }
 
   function handleCopy() {
     if (!publicUrl) return;
@@ -167,20 +216,89 @@ export default function MinhaPaginaClient() {
         <Card>
           <CardContent className="space-y-4 p-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-1">Seu link</p>
-              {publicUrl ? (
-                <div className="flex items-center gap-2 rounded-xl border border-border bg-card-hover/40 px-4 py-3">
-                  <p className="flex-1 truncate font-mono text-sm text-primary">{publicUrl}</p>
-                  <button onClick={handleCopy} className="shrink-0 text-text-muted hover:text-text transition-colors">
-                    <Copy className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="rounded-xl border border-border bg-card-hover/40 px-4 py-3">
-                  <p className="text-xs text-text-muted">Configure um slug na página de perfil para ativar seu link público.</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Seu link público</p>
+
+              {/* No slug yet — setup form */}
+              {!slug && (
+                <div className="space-y-2">
+                  <p className="text-xs text-text-muted">
+                    Defina o endereço da sua página. Use seu nome ou assessoria, sem espaços.
+                  </p>
+                  <div className="flex gap-2">
+                    <div className="flex flex-1 min-w-0 items-center gap-1 rounded-xl border border-border bg-card-hover/40 px-3 py-2.5">
+                      <span className="text-[11px] text-text-muted shrink-0 whitespace-nowrap">pacerunpro.com.br/p/</span>
+                      <input
+                        value={slugInput}
+                        onChange={(e) => {
+                          setSlugInput(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+                          setSlugError("");
+                        }}
+                        placeholder="seu-nome"
+                        className="flex-1 min-w-0 bg-transparent text-sm text-text outline-none"
+                        onKeyDown={(e) => { if (e.key === "Enter") void handleSaveSlug(); }}
+                      />
+                    </div>
+                    <Button onClick={handleSaveSlug} disabled={slugSaving || !slugInput} size="sm">
+                      {slugSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Ativar"}
+                    </Button>
+                  </div>
+                  {slugError && <p className="text-xs text-danger">{slugError}</p>}
                 </div>
               )}
-              {copied && <p className="mt-1 text-xs text-success">Link copiado!</p>}
+
+              {/* Slug set — show URL with edit option */}
+              {slug && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-card-hover/40 px-4 py-3">
+                    <p className="flex-1 truncate font-mono text-sm text-primary">{publicUrl}</p>
+                    <button onClick={handleCopy} className="shrink-0 text-text-muted hover:text-text transition-colors" title="Copiar link">
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Inline slug editor */}
+                  {!editingSlug ? (
+                    <button
+                      onClick={() => setEditingSlug(true)}
+                      className="flex items-center gap-1 text-[11px] text-text-muted hover:text-primary transition-colors"
+                    >
+                      <Pencil className="h-3 w-3" /> Alterar URL
+                    </button>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <div className="flex gap-2">
+                        <div className="flex flex-1 min-w-0 items-center gap-1 rounded-xl border border-border bg-card-hover/40 px-3 py-2">
+                          <span className="text-[11px] text-text-muted shrink-0 whitespace-nowrap">…/p/</span>
+                          <input
+                            value={slugInput}
+                            onChange={(e) => {
+                              setSlugInput(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+                              setSlugError("");
+                            }}
+                            autoFocus
+                            className="flex-1 min-w-0 bg-transparent text-sm text-text outline-none"
+                            onKeyDown={(e) => { if (e.key === "Enter") void handleSaveSlug(); if (e.key === "Escape") setEditingSlug(false); }}
+                          />
+                        </div>
+                        <Button onClick={handleSaveSlug} disabled={slugSaving || slugInput === slug} size="sm">
+                          {slugSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Salvar"}
+                        </Button>
+                        <button onClick={() => { setEditingSlug(false); setSlugInput(slug); setSlugError(""); }} className="text-text-muted hover:text-text transition-colors px-1">
+                          ✕
+                        </button>
+                      </div>
+                      {slugError && <p className="text-xs text-danger">{slugError}</p>}
+                    </div>
+                  )}
+
+                  {slugSaved && (
+                    <p className="flex items-center gap-1 text-xs text-success">
+                      <CheckCircle2 className="h-3 w-3" /> URL salva!
+                    </p>
+                  )}
+                  {copied && <p className="text-xs text-success">Link copiado!</p>}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2">
