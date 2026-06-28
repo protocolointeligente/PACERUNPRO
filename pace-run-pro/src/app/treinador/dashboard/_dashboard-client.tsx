@@ -9,20 +9,15 @@ import {
   CalendarDays,
   ClipboardCheck,
   Dumbbell,
-  Flame,
   Library,
   Plus,
   ShieldAlert,
   Users,
   Wallet,
+  Flame,
+  MessageSquare,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { SectionHeader } from "@/components/shared/section-header";
-import { InfoTooltip } from "@/components/ui/info-tooltip";
-import { cn } from "@/lib/utils";
 import { CoachOnboardingSteps } from "@/components/coach/onboarding-steps";
 
 export interface AthleteRow {
@@ -62,50 +57,13 @@ const fadeUp = {
 };
 
 const QUICK_ACTIONS = [
-  {
-    label: "Criar treino",
-    description: "Prescreva corrida, força ou mobilidade para um atleta.",
-    href: "/treinador/prescricao/corrida",
-    icon: Plus,
-    accent: "text-primary",
-    bg: "bg-primary/10",
-  },
-  {
-    label: "Criar semana",
-    description: "Monte uma semana completa para um ou vários atletas.",
-    href: "/treinador/prescricao/periodizacao",
-    icon: CalendarDays,
-    accent: "text-success",
-    bg: "bg-success/10",
-  },
-  {
-    label: "Prescrever força",
-    description: "Adicione treino de força, mobilidade ou funcional.",
-    href: "/treinador/prescricao/forca",
-    icon: Dumbbell,
-    accent: "text-violet-400",
-    bg: "bg-violet-400/10",
-  },
-  {
-    label: "Usar modelo",
-    description: "Aplique um treino salvo da biblioteca.",
-    href: "/treinador/biblioteca",
-    icon: Library,
-    accent: "text-warning",
-    bg: "bg-warning/10",
-  },
+  { label: "Prescrever", description: "Corrida, força ou mobilidade", href: "/treinador/prescricao/corrida", icon: Plus, color: "#C6F24E", bg: "rgba(198,242,78,0.12)" },
+  { label: "Criar semana", description: "Periodização completa", href: "/treinador/prescricao/periodizacao", icon: CalendarDays, color: "#46E0C8", bg: "rgba(70,224,200,0.12)" },
+  { label: "Força", description: "Prescrever força e funcional", href: "/treinador/prescricao/forca", icon: Dumbbell, color: "#B78BFF", bg: "rgba(183,139,255,0.12)" },
+  { label: "Biblioteca", description: "Modelos salvos de treino", href: "/treinador/biblioteca", icon: Library, color: "#FFB020", bg: "rgba(255,176,32,0.12)" },
 ];
 
-const colorMap = {
-  danger:      { border: "border-danger/30",  bg: "bg-danger/8",   text: "text-danger",  icon: "bg-danger/15 text-danger"   },
-  warning:     { border: "border-warning/30", bg: "bg-warning/8",  text: "text-warning", icon: "bg-warning/15 text-warning" },
-  info:        { border: "border-info/30",    bg: "bg-info/8",     text: "text-info",    icon: "bg-info/15 text-info"       },
-  "text-muted":{ border: "border-border",     bg: "bg-card-hover", text: "text-text",    icon: "bg-card-hover text-text-muted" },
-};
-
-export default function CoachDashboard({
-  firstName, credential, athleteCount, athletesAtRisk: riskCount, athletes,
-}: CoachDashboardProps) {
+export default function CoachDashboard({ firstName, credential, athleteCount, athletesAtRisk: riskCount, athletes }: CoachDashboardProps) {
   const [center, setCenter] = useState<ActionCenterData | null>(null);
 
   useEffect(() => {
@@ -118,80 +76,96 @@ export default function CoachDashboard({
   const athletesAtRisk = athletes.filter((a) => a.status === "risco");
 
   const todayActions = [
-    {
-      id: "sem-treino",
-      label: "atletas sem treino esta semana",
-      value: center ? center.athletesWithoutWorkout : "—",
-      icon: Users,
-      color: (center && center.athletesWithoutWorkout > 0 ? "warning" : "text-muted") as keyof typeof colorMap,
-      href: "/treinador/atletas?filtro=sem-treino",
-      cta: "Ver atletas",
-    },
-    {
-      id: "liberacao",
-      label: "treinos aguardando liberação",
-      value: center ? center.unreleasedWorkouts : "—",
-      icon: Flame,
-      color: (center && center.unreleasedWorkouts > 0 ? "info" : "text-muted") as keyof typeof colorMap,
-      href: "/treinador/atletas",
-      cta: "Liberar treinos",
-    },
-    {
-      id: "perdidos",
-      label: "treinos não realizados",
-      value: center ? center.missedWorkouts : "—",
-      icon: ShieldAlert,
-      color: (center && center.missedWorkouts > 0 ? "danger" : "text-muted") as keyof typeof colorMap,
-      href: "/treinador/alertas",
-      cta: "Ver alertas",
-    },
-    {
-      id: "checkins",
-      label: "check-ins com sinal de atenção (7 dias)",
-      value: center ? center.flaggedCheckins : "—",
-      icon: ClipboardCheck,
-      color: (center && center.flaggedCheckins > 0 ? "warning" : "text-muted") as keyof typeof colorMap,
-      href: "/treinador/atletas",
-      cta: "Revisar check-ins",
-    },
+    { id: "sem-treino", label: "sem treino esta semana", value: center ? center.athletesWithoutWorkout : null, icon: Users, href: "/treinador/atletas?filtro=sem-treino", accent: "#FFB020" },
+    { id: "liberacao", label: "aguardando liberação", value: center ? center.unreleasedWorkouts : null, icon: Flame, href: "/treinador/atletas", accent: "#3FA7FF" },
+    { id: "perdidos", label: "treinos não realizados", value: center ? center.missedWorkouts : null, icon: ShieldAlert, href: "/treinador/alertas", accent: "#FF5A4D" },
+    { id: "checkins", label: "check-ins sinalizados", value: center ? center.flaggedCheckins : null, icon: ClipboardCheck, href: "/treinador/atletas", accent: "#FFB020" },
+  ];
+
+  const stats = [
+    { label: "Atletas ativos", value: athleteCount, color: "#C6F24E" },
+    { label: "Treinos esta semana", value: center?.workoutsThisWeek ?? "—", color: "#46E0C8" },
+    { label: "Em risco", value: riskCount, color: riskCount > 0 ? "#FF5A4D" : "#5C636B" },
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-7">
-      {/* Onboarding tour — shown only to new coaches */}
+    <div className="mx-auto max-w-6xl space-y-6">
       <CoachOnboardingSteps athleteCount={athleteCount} />
 
       {/* Greeting */}
       <motion.div variants={fadeUp} initial="hidden" animate="show"
-        className="flex flex-wrap items-center justify-between gap-4">
+        className="flex flex-wrap items-center justify-between gap-4"
+      >
         <div>
-          <p className="text-sm text-text-muted">Painel do treinador</p>
-          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: "#5C636B" }}>
+            Painel do Treinador
+          </p>
+          <h1 className="mt-1 text-2xl font-bold sm:text-3xl" style={{ fontFamily: "'Archivo', sans-serif", color: "#ECEAE3" }}>
             Olá, {firstName}
           </h1>
-          <p className="mt-1 text-xs text-text-muted">{credential}</p>
+          {credential && (
+            <p className="mt-0.5 text-xs" style={{ color: "#5C636B" }}>{credential}</p>
+          )}
         </div>
         <Link href="/treinador/atletas/convidar">
-          <Button size="lg" variant="secondary">Convidar atleta</Button>
+          <button
+            className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+            style={{ background: "rgba(198,242,78,0.12)", color: "#C6F24E", border: "1px solid rgba(198,242,78,0.2)" }}
+          >
+            <Plus className="h-4 w-4" />
+            Convidar atleta
+          </button>
         </Link>
+      </motion.div>
+
+      {/* Stats row */}
+      <motion.div custom={0.5} variants={fadeUp} initial="hidden" animate="show"
+        className="grid grid-cols-3 gap-3"
+      >
+        {stats.map((s) => (
+          <div
+            key={s.label}
+            className="rounded-2xl px-4 py-3 text-center"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            <p
+              className="text-2xl font-bold"
+              style={{ fontFamily: "'JetBrains Mono', monospace", color: s.color }}
+            >
+              {s.value}
+            </p>
+            <p className="mt-0.5 text-[11px]" style={{ color: "#5C636B" }}>{s.label}</p>
+          </div>
+        ))}
       </motion.div>
 
       {/* Quick actions */}
       <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-text-muted">
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "#5C636B" }}>
           Ações rápidas
         </p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {QUICK_ACTIONS.map((action) => {
             const Icon = action.icon;
             return (
               <Link key={action.href} href={action.href}>
-                <div className="group rounded-2xl border border-border bg-card p-4 transition-all duration-200 hover:bg-card-hover hover:shadow-md">
-                  <div className={cn("mb-3 flex h-9 w-9 items-center justify-center rounded-xl", action.bg)}>
-                    <Icon className={cn("h-4 w-4", action.accent)} />
+                <div
+                  className="flex flex-col gap-3 rounded-2xl p-4 transition-all duration-200"
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <div
+                    className="flex h-9 w-9 items-center justify-center rounded-xl"
+                    style={{ background: action.bg }}
+                  >
+                    <Icon className="h-4 w-4" style={{ color: action.color }} />
                   </div>
-                  <p className="text-sm font-semibold text-text">{action.label}</p>
-                  <p className="mt-1 text-xs leading-snug text-text-muted">{action.description}</p>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: "#ECEAE3" }}>{action.label}</p>
+                    <p className="mt-0.5 text-[11px] leading-snug" style={{ color: "#5C636B" }}>{action.description}</p>
+                  </div>
                 </div>
               </Link>
             );
@@ -199,33 +173,35 @@ export default function CoachDashboard({
         </div>
       </motion.div>
 
-      {/* O que precisa de ação hoje */}
+      {/* Action center */}
       <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-text-muted">
-          O que precisa de ação hoje
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "#5C636B" }}>
+          Requer ação hoje
         </p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {todayActions.map((action) => {
             const Icon = action.icon;
-            const c = colorMap[action.color];
-            const isZero = action.value === 0;
+            const val = action.value;
+            const hasAlert = val !== null && val > 0;
             return (
               <Link key={action.id} href={action.href}>
-                <div className={cn(
-                  "group relative flex flex-col gap-3 rounded-2xl border p-5 transition-all duration-200 hover:shadow-lg",
-                  isZero ? "border-border bg-card-hover/40" : `${c.border} ${c.bg}`
-                )}>
-                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", isZero ? "bg-card text-text-muted" : c.icon)}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className={cn("font-display text-2xl font-extrabold", isZero ? "text-text-muted" : c.text)}>
-                      {action.value}
-                    </div>
-                    <p className="mt-0.5 text-xs leading-snug text-text-muted">{action.label}</p>
-                  </div>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-text-muted transition-colors group-hover:text-text">
-                    {action.cta} <ArrowRight className="h-3 w-3" />
+                <div
+                  className="flex flex-col gap-2 rounded-2xl p-4"
+                  style={{
+                    background: hasAlert ? `${action.accent}10` : "rgba(255,255,255,0.03)",
+                    border: hasAlert ? `1px solid ${action.accent}30` : "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <Icon className="h-5 w-5" style={{ color: hasAlert ? action.accent : "#5C636B" }} />
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ fontFamily: "'JetBrains Mono', monospace", color: hasAlert ? action.accent : "#5C636B" }}
+                  >
+                    {val === null ? "—" : val}
+                  </p>
+                  <p className="text-[11px] leading-snug" style={{ color: "#5C636B" }}>{action.label}</p>
+                  <span className="flex items-center gap-0.5 text-[11px] font-semibold" style={{ color: "#5C636B" }}>
+                    Ver <ArrowRight className="h-3 w-3" />
                   </span>
                 </div>
               </Link>
@@ -234,64 +210,54 @@ export default function CoachDashboard({
         </div>
       </motion.div>
 
-      {/* Overview stats */}
-      <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show"
-        className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {[
-          { label: "Total de atletas",         value: athleteCount,                            icon: Users,         accent: "text-primary" },
-          { label: "Treinos nesta semana",      value: center ? center.workoutsThisWeek : "—", icon: ClipboardCheck, accent: "text-info"    },
-          { label: "Atletas em risco",          value: riskCount,                               icon: AlertTriangle,  accent: "text-danger"  },
-        ].map(({ label, value, icon: Icon, accent }) => (
-          <Card key={label}>
-            <CardContent className="flex items-center gap-3 p-4">
-              <Icon className={cn("h-5 w-5 shrink-0", accent)} />
-              <div>
-                <p className="font-display text-xl font-bold text-text">{value}</p>
-                <p className="text-xs text-text-muted">{label}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </motion.div>
-
+      {/* Atletas em risco + carga */}
       <div className="grid gap-5 lg:grid-cols-3">
-        {/* Atletas em risco */}
-        <motion.div custom={4} variants={fadeUp} initial="hidden" animate="show"
-          className="space-y-5 lg:col-span-2">
-          <SectionHeader title="Atletas que precisam de atenção" href="/treinador/atletas" />
+        <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show" className="space-y-3 lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "#5C636B" }}>
+              Atletas em atenção
+            </p>
+            <Link href="/treinador/atletas" className="text-xs font-semibold" style={{ color: "#C6F24E" }}>
+              Ver todos →
+            </Link>
+          </div>
           {athletesAtRisk.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-success/10">
-                  <Users className="h-6 w-6 text-success" />
-                </div>
-                <p className="text-sm font-semibold text-text">Nenhum atleta em risco</p>
-                <p className="text-xs text-text-muted">Todos os atletas estão com status ativo.</p>
-              </CardContent>
-            </Card>
+            <div
+              className="flex flex-col items-center gap-3 rounded-2xl py-10 text-center"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: "rgba(70,224,160,0.12)" }}>
+                <Users className="h-6 w-6" style={{ color: "#46E0A0" }} />
+              </div>
+              <p className="text-sm font-semibold" style={{ color: "#ECEAE3" }}>Nenhum atleta em risco</p>
+              <p className="text-xs" style={{ color: "#5C636B" }}>Todos os atletas estão ativos.</p>
+            </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {athletesAtRisk.map((a) => (
                 <Link key={a.id} href={`/treinador/atletas/${a.id}`}>
-                  <Card hover className="p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-danger/15 font-display text-sm font-bold text-danger">
-                          {a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-text">{a.name}</p>
-                          <p className="text-xs text-text-muted">Meta: {a.goal} · {a.level}</p>
-                        </div>
-                      </div>
-                      <Badge variant="danger">Em risco</Badge>
+                  <div
+                    className="flex items-center gap-3 rounded-2xl px-4 py-3 transition-opacity hover:opacity-90"
+                    style={{
+                      background: "rgba(255,90,77,0.06)",
+                      border: "1px solid rgba(255,90,77,0.2)",
+                    }}
+                  >
+                    <div
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold"
+                      style={{ background: "rgba(255,90,77,0.15)", color: "#FF5A4D" }}
+                    >
+                      {a.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
                     </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-text-muted sm:grid-cols-3 sm:gap-3">
-                      <span>Adesão: <span className="font-semibold text-text">{Math.round(a.adherence * 100)}%</span></span>
-                      <span>Carga: <span className="font-semibold text-text">{a.weeklyLoad} UA</span></span>
-                      <span>Último check-in: <span className="font-semibold text-text">{a.lastCheckIn}</span></span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold" style={{ color: "#ECEAE3" }}>{a.name}</p>
+                      <p className="text-xs" style={{ color: "#5C636B" }}>{a.goal} · {a.level}</p>
                     </div>
-                  </Card>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs font-semibold" style={{ color: "#FF5A4D" }}>Em risco</p>
+                      <p className="text-[11px]" style={{ color: "#5C636B" }}>Últ.: {a.lastCheckIn}</p>
+                    </div>
+                  </div>
                 </Link>
               ))}
             </div>
@@ -299,63 +265,77 @@ export default function CoachDashboard({
         </motion.div>
 
         {/* Carga da equipe */}
-        <motion.div custom={5} variants={fadeUp} initial="hidden" animate="show" className="space-y-5">
-          <Card>
-            <CardContent className="p-5">
-              <h3 className="mb-4 flex items-center gap-1.5 font-display text-base font-semibold text-text">
-                Carga da equipe
-                <InfoTooltip text="UA = Unidades Arbitrárias. Mede a carga combinando duração (min) × RPE de cada sessão, somadas na semana." />
-              </h3>
-              <div className="space-y-3">
-                {athletes.length === 0 ? (
-                  <p className="py-4 text-center text-sm text-text-muted">Nenhum atleta ainda.</p>
-                ) : (
-                  athletes.slice(0, 6).map((a) => (
-                    <div key={a.id}>
-                      <div className="mb-1 flex items-center justify-between text-xs">
-                        <span className="truncate text-text-muted">{a.name}</span>
-                        <span className="font-semibold text-text">{a.weeklyLoad} UA</span>
-                      </div>
-                      <Progress
-                        value={(a.weeklyLoad / 500) * 100}
-                        colorClassName={cn(
-                          a.status === "risco" ? "bg-danger" :
-                          a.status === "ativo" ? "bg-success" : "bg-text-muted"
-                        )}
+        <motion.div custom={4} variants={fadeUp} initial="hidden" animate="show">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "#5C636B" }}>
+              Carga da equipe
+            </p>
+          </div>
+          <div
+            className="rounded-2xl p-4 space-y-3"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            {athletes.length === 0 ? (
+              <p className="py-4 text-center text-sm" style={{ color: "#5C636B" }}>Nenhum atleta ainda.</p>
+            ) : (
+              athletes.slice(0, 6).map((a) => {
+                const barColor = a.status === "risco" ? "#FF5A4D" : a.status === "ativo" ? "#46E0A0" : "#5C636B";
+                const pct = Math.min((a.weeklyLoad / 500) * 100, 100);
+                return (
+                  <div key={a.id}>
+                    <div className="mb-1 flex items-center justify-between text-xs">
+                      <span className="truncate" style={{ color: "#9AA0A6" }}>{a.name}</span>
+                      <span className="font-semibold font-mono" style={{ color: "#ECEAE3" }}>{a.weeklyLoad}</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%`, background: barColor }}
                       />
                     </div>
-                  ))
-                )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Quick message CTA */}
+          <Link href="/treinador/mensagens" className="mt-3 block">
+            <div
+              className="flex items-center gap-3 rounded-2xl px-4 py-3"
+              style={{ background: "rgba(198,242,78,0.06)", border: "1px solid rgba(198,242,78,0.15)" }}
+            >
+              <MessageSquare className="h-5 w-5 shrink-0" style={{ color: "#C6F24E" }} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold" style={{ color: "#ECEAE3" }}>Mensagens</p>
+                <p className="text-xs" style={{ color: "#5C636B" }}>Conversar com atletas</p>
               </div>
-            </CardContent>
-          </Card>
+              <ArrowRight className="h-4 w-4 shrink-0" style={{ color: "#5C636B" }} />
+            </div>
+          </Link>
 
           {center && center.unreleasedWorkouts > 0 && (
-            <Card className="border-warning/30 bg-warning/5">
-              <CardContent className="p-5">
-                <h3 className="font-display text-base font-semibold text-text">Liberação pendente</h3>
-                <p className="mt-1.5 text-sm text-text-muted">
-                  {center.unreleasedWorkouts} {center.unreleasedWorkouts === 1 ? "treino aguarda" : "treinos aguardam"} liberação.
-                </p>
-                <Link href="/treinador/atletas">
-                  <Button className="mt-3 w-full">Liberar agora</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
-
-          {(!center || center.unreleasedWorkouts === 0) && (
-            <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-card">
-              <CardContent className="p-5">
-                <h3 className="font-display text-base font-semibold text-text">Prescrição rápida</h3>
-                <p className="mt-1.5 text-sm text-text-muted">
-                  Crie uma semana de treinos e libere para seus atletas.
-                </p>
-                <Link href="/treinador/prescricao/periodizacao">
-                  <Button className="mt-3 w-full">Criar semana</Button>
-                </Link>
-              </CardContent>
-            </Card>
+            <Link href="/treinador/atletas" className="mt-3 block">
+              <div
+                className="flex items-center gap-3 rounded-2xl px-4 py-3"
+                style={{ background: "rgba(255,176,32,0.06)", border: "1px solid rgba(255,176,32,0.2)" }}
+              >
+                <Wallet className="h-5 w-5 shrink-0" style={{ color: "#FFB020" }} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold" style={{ color: "#ECEAE3" }}>Liberação pendente</p>
+                  <p className="text-xs" style={{ color: "#5C636B" }}>
+                    {center.unreleasedWorkouts} {center.unreleasedWorkouts === 1 ? "treino aguarda" : "treinos aguardam"}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  className="shrink-0 text-xs"
+                  style={{ background: "#FFB020", color: "#0A0C0F" }}
+                >
+                  Liberar
+                </Button>
+              </div>
+            </Link>
           )}
         </motion.div>
       </div>

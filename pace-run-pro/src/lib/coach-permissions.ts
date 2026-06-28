@@ -21,6 +21,7 @@ import {
   Zap,
   BookOpen,
   Layers,
+  MessageSquare,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -55,9 +56,9 @@ function planTier(planId: string): number {
 const coreNav: NavItem[] = [
   { href: "/treinador/dashboard",                label: "Dashboard",  icon: LayoutDashboard },
   { href: "/treinador/atletas",                  label: "Atletas",    icon: Users           },
+  { href: "/treinador/mensagens",                label: "Mensagens",  icon: MessageSquare   },
   { href: "/treinador/alertas",                  label: "Alertas",    icon: Bell            },
   { href: "/treinador/prescricao/periodizacao",  label: "Periodizar", icon: CalendarDays    },
-  { href: "/treinador/analise-semanal",          label: "Análise",    icon: BarChart2       },
 
   // — Equipe —
   { href: "/treinador/grupos",                   label: "Grupos",          icon: Layers,      sectionStart: "Equipe"    },

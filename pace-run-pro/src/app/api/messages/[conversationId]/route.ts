@@ -22,12 +22,28 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ conv
 
   const messages = await prisma.message.findMany({
     where: { conversationId },
-    include: { fromUser: { select: { id: true, name: true, avatarUrl: true } } },
     orderBy: { createdAt: "asc" },
     take: 100,
   });
 
-  return NextResponse.json(messages);
+  const isCoach = conversation.coachId === userId;
+  const otherUserId = isCoach ? conversation.athleteId : conversation.coachId;
+  const otherUser = await prisma.user.findUnique({
+    where: { id: otherUserId },
+    select: { name: true, avatarUrl: true },
+  });
+
+  return NextResponse.json({
+    id: conversation.id,
+    currentUserId: userId,
+    athleteId: conversation.athleteId,
+    coachId: conversation.coachId,
+    athleteName: isCoach ? otherUser?.name : null,
+    athleteAvatar: isCoach ? otherUser?.avatarUrl : null,
+    coachName: !isCoach ? otherUser?.name : null,
+    coachAvatar: !isCoach ? otherUser?.avatarUrl : null,
+    messages,
+  });
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ conversationId: string }> }) {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LogOut, Menu, Search } from "lucide-react";
+import { LogOut, Menu, MoreVertical, Search, X } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -120,15 +120,17 @@ export function AppShell({
           collapsed ? "w-16" : "w-64"
         )}
       >
-        <div className={cn("flex items-center py-4 border-b border-border/40", collapsed ? "justify-center px-3" : "justify-between px-4")}>
+        <div className={cn("flex items-center py-4 border-b border-border/40", collapsed ? "justify-center px-3" : "px-4")}>
           {!collapsed && <Logo size={32} />}
-          <button
-            onClick={toggleCollapsed}
-            title={collapsed ? "Expandir sidebar" : "Recolher sidebar"}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-card-hover hover:text-text"
-          >
-            <Menu className="h-[18px] w-[18px]" />
-          </button>
+          {collapsed && (
+            <button
+              onClick={toggleCollapsed}
+              title="Expandir sidebar"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-card-hover hover:text-text"
+            >
+              <Menu className="h-[18px] w-[18px]" />
+            </button>
+          )}
         </div>
         {!collapsed && (
           <p className="px-5 pt-3 pb-1 text-[10px] uppercase tracking-[0.16em] text-text-muted/70">{roleLabel}</p>
@@ -169,6 +171,16 @@ export function AppShell({
         </div>
       </aside>
 
+      {/* Floating 3-dots menu button — mobile only, anchored above bottom nav */}
+      <button
+        className="fixed bottom-[72px] right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-border/60 bg-card shadow-xl shadow-black/30 transition-colors hover:bg-card-hover lg:hidden print:hidden"
+        onClick={() => setMobileOpen(true)}
+        aria-label="Abrir menu"
+        style={{ backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
+      >
+        <MoreVertical className="h-5 w-5 text-text-muted" />
+      </button>
+
       {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
@@ -189,7 +201,16 @@ export function AppShell({
             >
               <div className="mb-6 flex items-center justify-between px-2 pt-2">
                 <Logo size={30} />
-                <ThemeToggle inline />
+                <div className="flex items-center gap-2">
+                  <ThemeToggle inline />
+                  <button
+                    onClick={() => setMobileOpen(false)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-card-hover hover:text-text"
+                    aria-label="Fechar menu"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
               <nav className="space-y-0.5">
                 {nav.map((item) => renderNavItem(item, () => setMobileOpen(false), true))}
@@ -213,10 +234,11 @@ export function AppShell({
       {/* Main column */}
       <div className="flex min-h-dvh flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-xl sm:px-6 print:hidden">
+          {/* Desktop sidebar collapse toggle — visible only on lg+ */}
           <button
-            className="rounded-lg p-2 text-text-muted hover:bg-card hover:text-text lg:hidden"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Abrir menu"
+            className="hidden rounded-lg p-2 text-text-muted hover:bg-card hover:text-text lg:flex"
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
           >
             <Menu className="h-5 w-5" />
           </button>

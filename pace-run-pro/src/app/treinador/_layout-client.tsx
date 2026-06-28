@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { MessageNotifier } from "@/components/messages/message-notifier";
 import { CoachRoleProvider, useCoachRole } from "@/context/coach-role-context";
 import { getCoachNav, ROLE_LABELS, ROLE_DESCRIPTIONS, type CoachRole } from "@/lib/coach-permissions";
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,7 @@ function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUr
     >
       {children}
       <BottomNav items={main.slice(0, 5)} />
+      <MessageNotifier role="COACH" />
     </AppShell>
   );
 }

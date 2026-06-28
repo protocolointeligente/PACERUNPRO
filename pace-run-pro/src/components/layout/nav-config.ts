@@ -30,6 +30,7 @@ import {
   UserPlus,
   BookOpen,
   ShoppingBag,
+  MessageSquare,
   type LucideIcon,
 } from "lucide-react";
 
@@ -46,7 +47,7 @@ export const athleteNav: NavItem[] = [
   { href: "/atleta/dashboard", label: "Hoje", icon: LayoutDashboard },
   { href: "/atleta/calendario", label: "Plano", icon: CalendarDays },
   { href: "/atleta/evolucao", label: "Evolução", icon: TrendingUp },
-  { href: "/atleta/ia-treinadora", label: "Treinador", icon: Bot },
+  { href: "/atleta/treinador", label: "Treinador", icon: MessageSquare },
 ];
 
 // Sidebar / drawer secondary items (sectioned for clarity)
