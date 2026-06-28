@@ -98,6 +98,7 @@ export async function POST(req: NextRequest) {
   }
 
   const [userId, planId] = parts;
+  const autoRenew = parts.includes("ar");
 
   // Detect payment method from charge object
   let paymentMethod = "pix";
@@ -125,12 +126,12 @@ export async function POST(req: NextRequest) {
     if (existingSub) {
       await prisma.subscription.update({
         where: { id: existingSub.id },
-        data: { plan, status: "ACTIVE", renewsAt },
+        data: { plan, status: "ACTIVE", renewsAt, autoRenew },
       });
       subscriptionId = existingSub.id;
     } else {
       const newSub = await prisma.subscription.create({
-        data: { userId, plan, status: "ACTIVE", renewsAt },
+        data: { userId, plan, status: "ACTIVE", renewsAt, autoRenew },
       });
       subscriptionId = newSub.id;
     }

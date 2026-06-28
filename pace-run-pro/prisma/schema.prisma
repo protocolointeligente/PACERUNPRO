@@ -723,16 +723,17 @@ enum SubscriptionStatus {
 }
 
 model Subscription {
-  id        String             @id @default(cuid())
-  userId    String
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan      SubscriptionPlan   @default(FREE)
-  status    SubscriptionStatus @default(TRIAL)
-  startedAt DateTime           @default(now())
-  renewsAt  DateTime?
+  id         String             @id @default(cuid())
+  userId     String
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan       SubscriptionPlan   @default(FREE)
+  status     SubscriptionStatus @default(TRIAL)
+  autoRenew  Boolean            @default(false)
+  startedAt  DateTime           @default(now())
+  renewsAt   DateTime?
   canceledAt DateTime?
 
-  payments  Payment[]
+  payments   Payment[]
 
   @@index([userId])
   @@map("subscriptions")

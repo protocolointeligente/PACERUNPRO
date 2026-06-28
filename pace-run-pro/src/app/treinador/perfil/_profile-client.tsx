@@ -13,6 +13,9 @@ import {
   User,
   MessageCircle,
   BookOpen,
+  CreditCard,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +26,14 @@ const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
 
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted";
+
+interface SubscriptionInfo {
+  id: string;
+  plan: string;
+  status: string;
+  renewsAt: Date | null;
+  autoRenew: boolean;
+}
 
 interface Props {
   initialName: string;
@@ -35,6 +46,7 @@ interface Props {
   initialBio: string;
   initialWhatsapp: string;
   initialSpecialties: string[];
+  subscription?: SubscriptionInfo | null;
 }
 
 export default function CoachProfileClient({
@@ -48,6 +60,7 @@ export default function CoachProfileClient({
   initialBio,
   initialWhatsapp,
   initialSpecialties,
+  subscription,
 }: Props) {
   const [name, setName] = useState(initialName);
   const [phone, setPhone] = useState(initialPhone);
@@ -62,6 +75,10 @@ export default function CoachProfileClient({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+  const [cancelError, setCancelError] = useState("");
+  const [cancelDone, setCancelDone] = useState(false);
   const router = useRouter();
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -143,6 +160,46 @@ export default function CoachProfileClient({
       setSaving(false);
     }
   }
+
+  async function handleCancelSubscription() {
+    setCanceling(true);
+    setCancelError("");
+    try {
+      const res = await fetch("/api/treinador/subscription/cancel", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        setCancelError(data.error ?? "Erro ao cancelar.");
+        return;
+      }
+      setCancelDone(true);
+      setShowCancelDialog(false);
+      router.refresh();
+    } catch {
+      setCancelError("Erro ao cancelar assinatura.");
+    } finally {
+      setCanceling(false);
+    }
+  }
+
+  const planLabel: Record<string, string> = {
+    ATHLETE: "Atleta",
+    COACH: "Treinador / Starter",
+    TEAM: "Assessoria / Pro",
+  };
+
+  const statusLabel: Record<string, string> = {
+    TRIAL: "Período gratuito",
+    ACTIVE: "Ativo",
+    PAST_DUE: "Vencido",
+    CANCELED: "Cancelado",
+  };
+
+  const statusVariant: Record<string, "primary" | "success" | "danger" | "warning" | "default"> = {
+    TRIAL: "primary",
+    ACTIVE: "success",
+    PAST_DUE: "danger",
+    CANCELED: "default",
+  };
 
   const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase() || "TR";
 
@@ -338,6 +395,152 @@ export default function CoachProfileClient({
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Subscription Management */}
+      {subscription && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
+          <Card>
+            <CardContent className="p-6">
+              <div className="mb-5 flex items-center gap-2 border-b border-border pb-3">
+                <CreditCard className="h-4 w-4 text-text-muted" />
+                <h2 className="text-sm font-semibold text-text">Minha Assinatura</h2>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-3">
+                  <div className="space-y-1">
+                    <p className="text-xs text-text-muted uppercase tracking-wider font-semibold">Plano atual</p>
+                    <p className="font-semibold text-text">{planLabel[subscription.plan] ?? subscription.plan}</p>
+                  </div>
+                  <Badge variant={statusVariant[subscription.status] ?? "default"}>
+                    {statusLabel[subscription.status] ?? subscription.status}
+                  </Badge>
+                </div>
+
+                {subscription.renewsAt && (
+                  <div className="rounded-xl border border-border bg-background px-4 py-3">
+                    <p className="text-xs text-text-muted uppercase tracking-wider font-semibold mb-1">
+                      {subscription.status === "CANCELED" ? "Acesso até" : "Próximo vencimento"}
+                    </p>
+                    <p className="font-semibold text-text">
+                      {new Date(subscription.renewsAt).toLocaleDateString("pt-BR", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                )}
+
+                <div className="rounded-xl border border-border bg-background px-4 py-3">
+                  <p className="text-xs text-text-muted uppercase tracking-wider font-semibold mb-1">
+                    Renovação automática
+                  </p>
+                  <p className="text-sm text-text">
+                    {subscription.autoRenew
+                      ? "Ativada — seu plano renova automaticamente no cartão de crédito."
+                      : "Desativada — você decide quando e se quer continuar."}
+                  </p>
+                </div>
+
+                {cancelDone && (
+                  <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    Assinatura cancelada. Seu acesso segue ativo até o vencimento.
+                  </div>
+                )}
+
+                {subscription.status !== "CANCELED" && !cancelDone && (
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowCancelDialog(true)}
+                      className="text-sm text-danger hover:underline"
+                    >
+                      Cancelar assinatura
+                    </button>
+                    <p className="mt-1 text-[11px] text-text-muted">
+                      Seu acesso permanece ativo até o fim do período pago. Sem multas ou taxas.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Cancel Confirmation Dialog */}
+      {showCancelDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-danger/10">
+                <AlertTriangle className="h-5 w-5 text-danger" />
+              </div>
+              <button
+                type="button"
+                onClick={() => { setShowCancelDialog(false); setCancelError(""); }}
+                className="rounded-lg p-1 text-text-muted hover:text-text transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <h3 className="font-display text-lg font-bold text-text mb-2">Cancelar assinatura?</h3>
+            <p className="text-sm text-text-muted mb-2">
+              Seu acesso continuará ativo até <strong className="text-text">
+                {subscription?.renewsAt
+                  ? new Date(subscription.renewsAt).toLocaleDateString("pt-BR")
+                  : "o fim do período"}
+              </strong>. Após essa data, o acesso será suspenso automaticamente.
+            </p>
+            <p className="text-sm text-text-muted mb-5">
+              Nenhum valor será cobrado. Você pode assinar novamente a qualquer momento.
+            </p>
+
+            {cancelError && (
+              <p className="mb-4 rounded-xl border border-danger/30 bg-danger/10 px-4 py-2 text-sm text-danger">
+                {cancelError}
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => { setShowCancelDialog(false); setCancelError(""); }}
+                disabled={canceling}
+              >
+                Manter plano
+              </Button>
+              <Button
+                variant="danger"
+                className="flex-1"
+                onClick={handleCancelSubscription}
+                disabled={canceling}
+              >
+                {canceling ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Cancelando…
+                  </>
+                ) : (
+                  "Confirmar cancelamento"
+                )}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

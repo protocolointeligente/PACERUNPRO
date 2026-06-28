@@ -17,8 +17,15 @@ export default async function CoachProfilePage() {
       state: true,
       avatarUrl: true,
       coach: { select: { credential: true, bio: true, whatsapp: true, specialties: true } },
+      subscriptions: {
+        orderBy: { startedAt: "desc" },
+        take: 1,
+        select: { id: true, plan: true, status: true, renewsAt: true, autoRenew: true },
+      },
     },
   });
+
+  const sub = user?.subscriptions?.[0] ?? null;
 
   return (
     <CoachProfileClient
@@ -32,6 +39,7 @@ export default async function CoachProfilePage() {
       initialBio={user?.coach?.bio ?? ""}
       initialWhatsapp={user?.coach?.whatsapp ?? ""}
       initialSpecialties={user?.coach?.specialties ?? []}
+      subscription={sub}
     />
   );
 }

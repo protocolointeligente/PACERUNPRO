@@ -153,6 +153,9 @@ function CheckoutContent() {
   const [pixCopied, setPixCopied] = useState(false);
   const [pixOrderId, setPixOrderId] = useState<string | null>(null);
 
+  // Auto-renewal
+  const [autoRenew, setAutoRenew] = useState(false);
+
   // Success
   const [success, setSuccess] = useState(false);
 
@@ -203,6 +206,7 @@ function CheckoutContent() {
           method: paymentMethod,
           planId: selectedPlan,
           planName: plan.name,
+          autoRenew: paymentMethod === "cartao" ? autoRenew : false,
           customerName: customerName.trim(),
           customerEmail: customerEmail.trim(),
           customerCpf: customerCpf.replace(/\D/g, ""),
@@ -621,16 +625,39 @@ function CheckoutContent() {
             </Button>
           </div>
 
-          <div className="mt-4 rounded-xl border border-border bg-card-hover/40 p-4 text-xs text-text-muted space-y-1.5">
+          <div className="mt-4 rounded-xl border border-border bg-card-hover/40 p-4 text-xs text-text-muted space-y-3">
             <p className="font-semibold text-text text-[11px] uppercase tracking-wider">Como funciona a assinatura</p>
             <p>
-              Ao confirmar o pagamento, você terá acesso pelo período contratado ({b2cPlans.find(p => p.id === selectedPlan)?.name.toLowerCase() ?? "selecionado"}).
-              O acesso é liberado <strong className="text-text">automaticamente</strong> após a confirmação do pagamento.
+              Ao confirmar o pagamento, você terá acesso pelo período contratado.
+              O acesso é liberado <strong className="text-text">automaticamente</strong> após a confirmação.
+              Você pode cancelar a qualquer momento em Perfil → Assinatura.
             </p>
-            <p>
-              A assinatura <strong className="text-text">não renova automaticamente</strong> — ao final do período, você receberá um aviso por e-mail
-              e poderá escolher renovar. Sem cobranças surpresa.
-            </p>
+
+            {/* Auto-renewal toggle — only for credit card */}
+            {paymentMethod === "cartao" && (
+              <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-border bg-background p-3">
+                <input
+                  type="checkbox"
+                  checked={autoRenew}
+                  onChange={(e) => setAutoRenew(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+                />
+                <div>
+                  <p className="font-semibold text-text text-[12px]">Renovar automaticamente</p>
+                  <p className="text-[11px] text-text-muted leading-snug mt-0.5">
+                    Ao marcar esta opção, sua assinatura será renovada automaticamente ao final do período
+                    usando o mesmo cartão. Você receberá um aviso por e-mail 7 dias antes da cobrança e poderá cancelar a qualquer momento.
+                  </p>
+                </div>
+              </label>
+            )}
+
+            {paymentMethod === "pix" && (
+              <p className="text-[11px] text-text-muted italic">
+                PIX não suporta renovação automática — você receberá um lembrete por e-mail antes do vencimento.
+              </p>
+            )}
+
             <p>🔒 Pagamento seguro via PagBank. Seus dados são criptografados.</p>
           </div>
         </div>

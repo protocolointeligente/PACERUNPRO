@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
     method: string;
     planId: string;
     planName: string;
+    autoRenew?: boolean;
     voucherCode?: string;
     customerName: string;
     customerEmail: string;
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
     cardCvv?: string;
   };
 
-  const { method, planId, planName, voucherCode, customerName, customerEmail, customerCpf } = body;
+  const { method, planId, planName, autoRenew, voucherCode, customerName, customerEmail, customerCpf } = body;
 
   if (!method || !planId || !customerName || !customerEmail) {
     return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
@@ -83,7 +84,8 @@ export async function POST(req: NextRequest) {
     "https://www.pacerunpro.com.br";
   const notificationUrl = `${origin}/api/webhooks/pagbank`;
 
-  const referenceId = `${userId}_${planId}_${Date.now()}`;
+  // Encode autoRenew in referenceId so webhook can restore the preference
+  const referenceId = `${userId}_${planId}_${Date.now()}${autoRenew ? "_ar" : ""}`;
 
   try {
     if (method === "pix") {
