@@ -161,6 +161,7 @@ model Athlete {
   loadParams         AthleteLoadParams?
   planPurchases      PlanPurchase[]
   recoveryLogs       RecoveryLog[]
+  questionnaires     Questionnaire[]
 
   shoes              Shoe[]
 
@@ -695,6 +696,21 @@ model PushSubscription {
 
   @@unique([userId, endpoint])
   @@map("push_subscriptions")
+}
+
+model Questionnaire {
+  id          String   @id @default(cuid())
+  athleteId   String
+  athlete     Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  type        String   // SF36 | WELLNESS | READINESS | CUSTOM
+  title       String?
+  responses   Json
+  score       Float?
+  completedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([athleteId, type])
+  @@map("questionnaires")
 }
 
 enum DeviceProvider {

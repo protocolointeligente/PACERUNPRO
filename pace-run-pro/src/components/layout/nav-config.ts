@@ -54,6 +54,8 @@ export const athleteMoreNav: NavItem[] = [
   { href: "/atleta/forca",        label: "Força",                 icon: Dumbbell,      sectionStart: "Treino"   },
   { href: "/atleta/atividade",    label: "Atividades",            icon: CheckSquare                             },
   { href: "/atleta/testes",       label: "Testes de performance", icon: Activity,      sectionStart: "Análise"  },
+  { href: "/atleta/relatorio",    label: "Relatório PDF",         icon: FileBarChart                            },
+  { href: "/atleta/questionarios",label: "Questionários de saúde",icon: ClipboardList                          },
   { href: "/atleta/planos",       label: "Planos & periodização", icon: ClipboardList                           },
   { href: "/atleta/previsao",     label: "Previsão & estratégia", icon: Target                                  },
   { href: "/atleta/comunidade",   label: "Comunidade",            icon: Trophy,        sectionStart: "Social"   },
