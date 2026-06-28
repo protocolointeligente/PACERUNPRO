@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
           unit_amount: product.priceCents,
           product_data: {
             name: product.title,
-            description: `Plano de ${product.durationWeeks} semanas · ${product.level} · por ${product.coach.user.name}`,
+            description: `Plano de ${product.durationWeeks} semanas · ${product.level} · por ${product.coach?.user.name ?? "PACE RUN PRO"}`,
             images: product.coverUrl ? [product.coverUrl] : [],
           },
         },

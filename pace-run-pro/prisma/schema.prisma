@@ -163,6 +163,8 @@ model Athlete {
   recoveryLogs       RecoveryLog[]
   questionnaires     Questionnaire[]
   physicalAssessments PhysicalAssessment[]
+  marketplaceOrders  MarketplaceOrder[]
+  marketplaceReviews MarketplaceReview[]
 
   shoes              Shoe[]
 
@@ -199,6 +201,10 @@ model Coach {
   planProducts      PlanProduct[]
   sharedTemplates   SharedWorkoutTemplate[]
   athleteInvites    AthleteInvite[]
+  marketplaceStore  MarketplaceStore?
+  marketplaceProducts MarketplaceProduct[]
+  marketplaceCommissions MarketplaceCommission[]
+  marketplacePayouts MarketplacePayout[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -1118,8 +1124,8 @@ model CoachZoneModel {
 
 model PlanProduct {
   id            String    @id @default(cuid())
-  coachId       String
-  coach         Coach     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  coachId       String?
+  coach         Coach?    @relation(fields: [coachId], references: [id], onDelete: Cascade)
 
   title         String
   slug          String    @unique
@@ -1266,4 +1272,217 @@ model Message {
 
   @@index([conversationId, createdAt])
   @@map("messages")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Marketplace Fase 1 — Ecossistema de produtos e serviços
+// ────────────────────────────────────────────────────────────────────────────
+
+model MarketplaceStore {
+  id            String   @id @default(cuid())
+  coachId       String   @unique
+  coach         Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  name          String
+  slug          String   @unique
+  description   String?
+  logoUrl       String?
+  bannerUrl     String?
+  primaryColor  String   @default("#C6F24E")
+  instagramUrl  String?
+  whatsapp      String?
+
+  commissionPct Float    @default(0.15)
+  isActive      Boolean  @default(true)
+  stripeAccountId String?  // Stripe Connect account
+
+  products      MarketplaceProduct[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("marketplace_stores")
+}
+
+enum MarketplaceProductType {
+  PLANILHA
+  EBOOK
+  CURSO
+  EVENTO
+  CONSULTORIA
+  AVALIACAO
+  TESTE
+  ASSINATURA
+  TREINAMENTO
+}
+
+enum MarketplaceOrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  FULFILLED
+  CANCELLED
+  REFUNDED
+}
+
+model MarketplaceProduct {
+  id          String   @id @default(cuid())
+  storeId     String?
+  store       MarketplaceStore? @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  coachId     String?
+  coach       Coach?   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  type        MarketplaceProductType @default(PLANILHA)
+  title       String
+  slug        String   @unique
+  description String   @default("")
+  coverUrl    String?
+
+  priceCents  Int      @default(0)
+  currency    String   @default("BRL")
+
+  durationWeeks Int?
+  level         String?
+  sport         String?
+  format        String?  // video | ao-vivo | gravado
+  eventDate     DateTime?
+  maxParticipants Int?
+  deliveryDays  Int?
+
+  included      String[]
+  content       Json?
+  fileUrl       String?
+
+  published     Boolean  @default(false)
+  featured      Boolean  @default(false)
+  purchases     Int      @default(0)
+  rating        Float?
+  ratingCount   Int      @default(0)
+
+  commissionPct Float?
+
+  orderItems  MarketplaceOrderItem[]
+  reviews     MarketplaceReview[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([storeId])
+  @@index([coachId])
+  @@index([type, published])
+  @@map("marketplace_products")
+}
+
+model MarketplaceOrder {
+  id              String   @id @default(cuid())
+  athleteId       String
+  athlete         Athlete  @relation(fields: [athleteId], references: [id])
+
+  totalCents      Int
+  currency        String   @default("BRL")
+  status          MarketplaceOrderStatus @default(PENDING)
+
+  stripeSessionId String?
+  pagbankOrderId  String?
+  notes           String?
+
+  items           MarketplaceOrderItem[]
+  commissions     MarketplaceCommission[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([athleteId])
+  @@map("marketplace_orders")
+}
+
+model MarketplaceOrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       MarketplaceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     MarketplaceProduct @relation(fields: [productId], references: [id])
+
+  priceCents  Int
+  quantity    Int    @default(1)
+  status      MarketplaceOrderStatus @default(PENDING)
+
+  fulfilledAt DateTime?
+  fileUrl     String?
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("marketplace_order_items")
+}
+
+model MarketplaceCommission {
+  id              String   @id @default(cuid())
+  orderId         String
+  order           MarketplaceOrder @relation(fields: [orderId], references: [id])
+  coachId         String?
+  coach           Coach?   @relation(fields: [coachId], references: [id])
+
+  grossCents      Int
+  commissionPct   Float
+  commissionCents Int
+  netCents        Int
+
+  paidOut     Boolean  @default(false)
+  paidAt      DateTime?
+  payoutId    String?
+  payout      MarketplacePayout? @relation(fields: [payoutId], references: [id])
+
+  createdAt   DateTime @default(now())
+
+  @@index([coachId])
+  @@index([orderId])
+  @@map("marketplace_commissions")
+}
+
+model MarketplacePayout {
+  id          String   @id @default(cuid())
+  coachId     String
+  coach       Coach    @relation(fields: [coachId], references: [id])
+
+  amountCents Int
+  currency    String   @default("BRL")
+
+  status      String   @default("PENDING")
+  method      String   @default("PIX")
+  pixKey      String?
+  transferId  String?
+
+  commissions MarketplaceCommission[]
+
+  createdAt   DateTime @default(now())
+  processedAt DateTime?
+
+  @@index([coachId])
+  @@map("marketplace_payouts")
+}
+
+model MarketplaceReview {
+  id          String   @id @default(cuid())
+  productId   String
+  product     MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  athleteId   String
+  athlete     Athlete  @relation(fields: [athleteId], references: [id])
+
+  rating      Int
+  comment     String?
+
+  createdAt   DateTime @default(now())
+
+  @@unique([productId, athleteId])
+  @@map("marketplace_reviews")
+}
+
+model MarketplaceConfig {
+  id                  String   @id @default(cuid())
+  defaultCommissionPct Float    @default(0.15)
+  categoryConfig      Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("marketplace_config")
 }

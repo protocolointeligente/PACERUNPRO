@@ -30,6 +30,7 @@ interface Product {
   rating: number | null;
   ratingCount: number;
   included: string[];
+  isPlatform?: boolean;
   coach: {
     slug: string | null;
     user: { name: string | null; avatarUrl: string | null };
@@ -109,10 +110,14 @@ function ProductCard({ p }: { p: Product }) {
 
         {/* Coach */}
         <div className="mt-auto flex items-center gap-2 border-t border-border pt-3">
-          <Avatar className="h-6 w-6">
-            <AvatarImage src={p.coach.user.avatarUrl ?? undefined} />
-            <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
-          </Avatar>
+          {p.isPlatform ? (
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-[9px] font-bold text-primary shrink-0">PRO</span>
+          ) : (
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={p.coach.user.avatarUrl ?? undefined} />
+              <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+            </Avatar>
+          )}
           <span className="flex-1 text-[11px] text-text-muted truncate">{coachName}</span>
           <span className="font-display font-bold text-sm text-primary">{fmtPrice(p.priceCents)}</span>
         </div>

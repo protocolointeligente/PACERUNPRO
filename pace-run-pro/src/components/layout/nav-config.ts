@@ -30,6 +30,7 @@ import {
   ShoppingBag,
   MessageSquare,
   CreditCard,
+  Store,
   type LucideIcon,
 } from "lucide-react";
 
@@ -61,6 +62,7 @@ export const athleteMoreNav: NavItem[] = [
   { href: "/atleta/comunidade",   label: "Comunidade",            icon: Trophy,        sectionStart: "Social"   },
   { href: "/atleta/biblioteca",   label: "Minha biblioteca",      icon: BookOpen                                },
   { href: "/atleta/tenis",        label: "Tênis tracker",         icon: Shirt                                   },
+  { href: "/loja",                label: "Loja de treinos",       icon: ShoppingBag, sectionStart: "Comprar"    },
   { href: "/atleta/universidade", label: "PACE University",       icon: GraduationCap, sectionStart: "Aprender" },
   { href: "/atleta/perfil",       label: "Minha conta",           icon: CreditCard,    sectionStart: "Conta"    },
 ];
@@ -76,6 +78,7 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/prescricao/forca-periodizacao", label: "Periodização força", icon: BarChart2 },
   { href: "/treinador/biblioteca", label: "Biblioteca de treinos", icon: BookOpen },
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
+  { href: "/treinador/marketplace",  label: "Marketplace",             icon: Store       },
   { href: "/treinador/minha-loja", label: "Minha loja de treinos", icon: ShoppingBag },
   { href: "/treinador/gestao",        label: "Gestão & vendas",        icon: DollarSign  },
   { href: "/treinador/receitas",     label: "Receitas da loja",       icon: TrendingUp  },
@@ -94,6 +97,8 @@ export const adminNav: NavItem[] = [
   { href: "/admin/assessorias", label: "Assessorias",     icon: Building2       },
   { href: "/admin/planos",      label: "Planos & Módulos",icon: LayoutGrid      },
   { href: "/admin/financeiro",  label: "Financeiro",      icon: DollarSign      },
+  { href: "/admin/marketplace", label: "Marketplace GMV", icon: Store           },
+  { href: "/admin/loja",        label: "Loja da plataforma", icon: ShoppingBag  },
   { href: "/admin/pendencias",  label: "Pendências",      icon: CheckSquare     },
   { href: "/admin/vouchers",    label: "Vouchers",        icon: Ticket          },
   { href: "/admin/logs",        label: "Logs e auditoria",icon: ScrollText      },

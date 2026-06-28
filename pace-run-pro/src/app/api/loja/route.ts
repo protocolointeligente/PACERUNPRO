@@ -26,5 +26,12 @@ export async function GET(req: NextRequest) {
     take: 60,
   });
 
-  return NextResponse.json(products);
+  // Normalize platform products (null coach) for the response
+  const normalized = products.map((p) => ({
+    ...p,
+    coach: p.coach ?? { slug: null, user: { name: "PACE RUN PRO", avatarUrl: null } },
+    isPlatform: p.coachId === null,
+  }));
+
+  return NextResponse.json(normalized);
 }
