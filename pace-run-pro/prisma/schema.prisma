@@ -57,9 +57,10 @@ model User {
   phone         String?
   city          String?
   state         String?
-  emailVerified DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  emailVerified   DateTime?
+  tosAcceptedAt   DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   athlete       Athlete?
   coach         Coach?

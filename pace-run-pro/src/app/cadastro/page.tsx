@@ -73,6 +73,7 @@ function CadastroContent() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [tosAccepted, setTosAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -111,6 +112,7 @@ function CadastroContent() {
           email,
           password: senha,
           role,
+          tosAccepted,
           studentCount: role === "COACH" ? studentCount : undefined,
           coachId: profileType === "atleta_com_treinador" ? coachId : undefined,
         }),
@@ -367,6 +369,31 @@ function CadastroContent() {
                 />
               </label>
 
+              {/* Terms of Service */}
+              <div className="rounded-xl border border-border bg-card-hover/40 p-3.5">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={tosAccepted}
+                    onChange={(e) => setTosAccepted(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-primary cursor-pointer"
+                  />
+                  <span className="text-xs text-text-muted leading-relaxed">
+                    Li e aceito os{" "}
+                    <Link href="/termos" target="_blank" className="font-semibold text-primary hover:underline">
+                      Termos de Serviço
+                    </Link>{" "}
+                    e a{" "}
+                    <Link href="/privacidade" target="_blank" className="font-semibold text-primary hover:underline">
+                      Política de Privacidade
+                    </Link>
+                    . Estou ciente de que o PACE RUN PRO é uma plataforma de gestão de treinos e{" "}
+                    <strong className="text-text">não substitui orientação médica</strong> — a
+                    responsabilidade pela segurança dos treinos é do treinador credenciado.
+                  </span>
+                </label>
+              </div>
+
               {/* Error message */}
               {error && (
                 <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-sm text-red-400">
@@ -378,7 +405,7 @@ function CadastroContent() {
                 type="submit"
                 variant="primary"
                 size="lg"
-                disabled={loading}
+                disabled={loading || !tosAccepted}
                 className="mt-2 w-full"
               >
                 {loading ? (

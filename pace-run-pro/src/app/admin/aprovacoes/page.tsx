@@ -101,9 +101,9 @@ export default function AprovacoesPage() {
         <Badge variant="warning" className="mb-2">
           <Clock className="h-3 w-3" /> Aprovações
         </Badge>
-        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Assessorias aguardando aprovação</h1>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Assessorias e treinadores</h1>
         <p className="mt-1.5 text-sm text-text-muted">
-          Ao aprovar, a assessoria recebe acesso ao sistema e um e-mail de boas-vindas é enviado automaticamente.
+          Planos gratuitos e pagos são ativados automaticamente no cadastro — sem aprovação manual. Esta tela mostra apenas contas suspensas ou com acesso bloqueado manualmente.
         </p>
       </motion.div>
 

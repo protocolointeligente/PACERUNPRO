@@ -409,7 +409,11 @@ function CheckoutContent() {
             </ul>
           </div>
 
-          <Button variant="primary" size="lg" className="mt-8 w-full" onClick={() => setStep(2)}>
+          <p className="mt-4 text-center text-xs text-text-muted">
+            Sem renovação automática — você decide quando e se quer continuar. Nenhuma cobrança surpresa.
+          </p>
+
+          <Button variant="primary" size="lg" className="mt-4 w-full" onClick={() => setStep(2)}>
             Continuar →
           </Button>
         </div>
@@ -617,9 +621,18 @@ function CheckoutContent() {
             </Button>
           </div>
 
-          <p className="mt-4 text-center text-xs text-text-muted">
-            🔒 Pagamento seguro via PagBank. Seus dados são criptografados.
-          </p>
+          <div className="mt-4 rounded-xl border border-border bg-card-hover/40 p-4 text-xs text-text-muted space-y-1.5">
+            <p className="font-semibold text-text text-[11px] uppercase tracking-wider">Como funciona a assinatura</p>
+            <p>
+              Ao confirmar o pagamento, você terá acesso pelo período contratado ({b2cPlans.find(p => p.id === selectedPlan)?.name.toLowerCase() ?? "selecionado"}).
+              O acesso é liberado <strong className="text-text">automaticamente</strong> após a confirmação do pagamento.
+            </p>
+            <p>
+              A assinatura <strong className="text-text">não renova automaticamente</strong> — ao final do período, você receberá um aviso por e-mail
+              e poderá escolher renovar. Sem cobranças surpresa.
+            </p>
+            <p>🔒 Pagamento seguro via PagBank. Seus dados são criptografados.</p>
+          </div>
         </div>
       )}
     </>
