@@ -127,15 +127,6 @@ export function AppShell({
       >
         <div className={cn("flex items-center py-4 border-b border-border/40", collapsed ? "justify-center px-3" : "px-4")}>
           {!collapsed && <Logo size={32} />}
-          {collapsed && (
-            <button
-              onClick={toggleCollapsed}
-              title="Expandir sidebar"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-card-hover hover:text-text"
-            >
-              <Menu className="h-[18px] w-[18px]" />
-            </button>
-          )}
         </div>
         {!collapsed && (
           <p className="px-5 pt-3 pb-1 text-[10px] uppercase tracking-[0.16em] text-text-muted/70">{roleLabel}</p>

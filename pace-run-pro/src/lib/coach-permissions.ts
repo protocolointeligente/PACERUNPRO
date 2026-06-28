@@ -96,9 +96,10 @@ const businessNavUnlimited: NavItem[] = [
 ];
 
 const helpNav: NavItem[] = [
-  { href: "/treinador/configuracoes/zonas", label: "Zonas de treino",   icon: Zap,          sectionStart: "Conta" },
-  { href: "/treinador/perfil",              label: "Meu Perfil",        icon: User          },
-  { href: "/treinador/conheca-o-sistema",   label: "Conheça o sistema", icon: GraduationCap },
+  { href: "/treinador/configuracoes/zonas", label: "Zonas de treino",   icon: Zap,          sectionStart: "Conta"    },
+  { href: "/treinador/perfil",              label: "Meu Perfil",        icon: User           },
+  { href: "/treinador/universidade",        label: "PACE University",   icon: BookOpen,      sectionStart: "Aprender" },
+  { href: "/treinador/conheca-o-sistema",   label: "Conheça o sistema", icon: GraduationCap  },
 ];
 
 export function getCoachNav(
