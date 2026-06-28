@@ -76,6 +76,7 @@ model User {
   billingSettings     BillingSettings?
   workoutLogComments  WorkoutLogComment[]
   pushSubscriptions   PushSubscription[]
+  messagesSent        Message[]          @relation("MessagesSent")
 
   @@map("users")
 }
@@ -1162,4 +1163,31 @@ model Shoe {
 
   @@index([athleteId])
   @@map("shoes")
+}
+
+model Conversation {
+  id         String    @id @default(cuid())
+  athleteId  String
+  coachId    String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  messages   Message[]
+
+  @@unique([athleteId, coachId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  fromUserId     String
+  fromUser       User         @relation("MessagesSent", fields: [fromUserId], references: [id])
+  content        String
+  isAI           Boolean      @default(false)
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
 }

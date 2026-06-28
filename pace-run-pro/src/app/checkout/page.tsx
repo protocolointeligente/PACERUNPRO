@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, Copy, Zap } from "lucide-react";
+import { Check, Copy, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { b2cPlans, b2cIncludes } from "@/lib/mock-data";
@@ -76,7 +77,7 @@ function PlanSummaryCard({ planId }: { planId: string }) {
 }
 
 // ── Payment method toggle ─────────────────────────────────────────────────
-type PaymentMethod = "cartao" | "pix" | "boleto";
+type PaymentMethod = "cartao" | "pix";
 
 function PaymentToggle({
   value,
@@ -88,7 +89,6 @@ function PaymentToggle({
   const options: { id: PaymentMethod; label: string }[] = [
     { id: "cartao", label: "Cartão de crédito" },
     { id: "pix", label: "PIX" },
-    { id: "boleto", label: "Boleto" },
   ];
   return (
     <div className="flex gap-2">
@@ -111,6 +111,15 @@ function PaymentToggle({
   );
 }
 
+// ── CPF formatter ─────────────────────────────────────────────────────────
+function formatCpf(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  return digits
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
+}
+
 // ── Inner content (reads searchParams) ───────────────────────────────────
 function CheckoutContent() {
   const router = useRouter();
@@ -121,51 +130,194 @@ function CheckoutContent() {
 
   const [step, setStep] = useState<1 | 2>(1);
   const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Step 1 — Plan selection
   const [selectedPlan, setSelectedPlan] = useState(defaultPlan);
 
-  // Step 2 — Payment
+  // Step 2 — User info
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerCpf, setCustomerCpf] = useState("");
+
+  // Payment
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cartao");
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
+
+  // PIX result
+  const [pixText, setPixText] = useState<string | null>(null);
+  const [pixQrCodeUrl, setPixQrCodeUrl] = useState<string | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
+  const [pixOrderId, setPixOrderId] = useState<string | null>(null);
+
+  // Success
+  const [success, setSuccess] = useState(false);
 
   const plan = b2cPlans.find((p) => p.id === selectedPlan) ?? b2cPlans[2];
 
+  // Pre-fill from session
+  useEffect(() => {
+    fetch("/api/atleta/perfil")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { name?: string; email?: string } | null) => {
+        if (d?.name && !customerName) setCustomerName(d.name);
+        if (d?.email && !customerEmail) setCustomerEmail(d.email);
+      })
+      .catch(() => null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function handleCopyPix() {
-    navigator.clipboard
-      .writeText(
-        "00020126580014BR.GOV.BCB.PIX0136e7c6d1a2-3f4b-5c6d-7e8f-9a0b1c2d3e4f5204000053039865802BR5925PACE RUN PRO TECNOLOGIA6009SAO PAULO62070503***6304ABCD"
-      )
-      .catch(() => undefined);
+    if (!pixText) return;
+    navigator.clipboard.writeText(pixText).catch(() => undefined);
     setPixCopied(true);
     setTimeout(() => setPixCopied(false), 2500);
   }
 
-  function handleConfirm() {
+  async function handlePay() {
+    setError(null);
+    if (!customerName.trim() || !customerEmail.trim()) {
+      setError("Nome e e-mail são obrigatórios.");
+      return;
+    }
+    if (paymentMethod === "pix" && !customerCpf.replace(/\D/g, "")) {
+      setError("CPF é obrigatório para pagamento via PIX.");
+      return;
+    }
+    if (paymentMethod === "cartao") {
+      if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
+        setError("Preencha todos os dados do cartão.");
+        return;
+      }
+    }
+
     setProcessing(true);
-    setTimeout(() => {
-      router.push("/anamnese");
-    }, 1500);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          method: paymentMethod,
+          planId: selectedPlan,
+          planName: plan.name,
+          customerName: customerName.trim(),
+          customerEmail: customerEmail.trim(),
+          customerCpf: customerCpf.replace(/\D/g, ""),
+          ...(paymentMethod === "cartao"
+            ? { cardNumber: cardNumber.replace(/\s/g, ""), cardName, cardExpiry, cardCvv }
+            : {}),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "Erro ao processar pagamento.");
+        return;
+      }
+
+      if (paymentMethod === "pix") {
+        // Show PIX QR code — user pays and we wait for webhook
+        setPixText(data.pixText ?? null);
+        setPixQrCodeUrl(data.pixQrCodeUrl ?? null);
+        setPixOrderId(data.orderId ?? null);
+      } else {
+        // Card — check status
+        if (data.status === "PAID" || data.status === "AUTHORIZED") {
+          setSuccess(true);
+        } else if (data.status === "DECLINED") {
+          setError(`Cartão recusado: ${data.declineCode ?? "tente outro cartão"}.`);
+        } else {
+          // Other statuses — redirect to success page
+          setSuccess(true);
+        }
+      }
+    } catch {
+      setError("Falha de conexão. Verifique sua internet e tente novamente.");
+    } finally {
+      setProcessing(false);
+    }
   }
 
-  if (processing) {
+  // ── Success screen ────────────────────────────────────────────────────
+  if (success) {
     return (
-      <div className="flex flex-col items-center gap-6 py-24 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full gradient-primary shadow-2xl shadow-primary/40">
-          <Zap className="h-10 w-10 text-text animate-pulse" fill="white" />
+      <div className="flex flex-col items-center gap-6 py-20 text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-success/20 shadow-2xl shadow-success/20">
+          <CheckCircle2 className="h-10 w-10 text-success" />
         </div>
         <div>
           <h2 className="font-display text-2xl font-extrabold text-text">
-            Processando...
+            Pagamento aprovado!
           </h2>
           <p className="mt-2 text-sm text-text-muted">
-            Confirmando seu pagamento. Aguarde um momento.
+            Seu plano foi ativado. Bem-vindo ao PACERUNPRO.
           </p>
         </div>
+        <Button variant="primary" size="lg" onClick={() => router.push("/atleta/dashboard")}>
+          Acessar minha conta →
+        </Button>
+      </div>
+    );
+  }
+
+  // ── PIX waiting screen ────────────────────────────────────────────────
+  if (pixText) {
+    return (
+      <div className="flex flex-col items-center gap-6 py-10 text-center">
+        <h2 className="font-display text-2xl font-extrabold text-text">Pague via PIX</h2>
+        <p className="text-sm text-text-muted max-w-sm">
+          Escaneie o QR code ou copie a chave PIX. O acesso é liberado automaticamente após o pagamento.
+        </p>
+
+        {/* QR code image */}
+        <div className="flex h-[220px] w-[220px] items-center justify-center rounded-2xl border border-border bg-white p-3">
+          {pixQrCodeUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={pixQrCodeUrl} alt="QR Code PIX" className="h-full w-full object-contain" />
+          ) : (
+            <div className="text-center text-xs text-gray-400">
+              <Loader2 className="mx-auto h-8 w-8 animate-spin mb-2" />
+              Carregando QR Code…
+            </div>
+          )}
+        </div>
+
+        {/* Copy PIX code */}
+        <div className="w-full max-w-sm space-y-2">
+          <div className="flex gap-2">
+            <input
+              readOnly
+              value={pixText}
+              className={`${inputClass} truncate cursor-default text-xs`}
+            />
+            <Button
+              variant="outline"
+              size="md"
+              className="flex-shrink-0 gap-1.5"
+              onClick={handleCopyPix}
+            >
+              <Copy className="h-4 w-4" />
+              {pixCopied ? "Copiado!" : "Copiar"}
+            </Button>
+          </div>
+          {pixOrderId && (
+            <p className="text-xs text-text-muted">
+              Pedido: <span className="font-mono">{pixOrderId}</span>
+            </p>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-text-muted max-w-sm">
+          O QR Code expira em <strong className="text-warning">30 minutos</strong>. Após pagar, aguarde a confirmação automática.
+        </div>
+
+        <Button variant="outline" size="md" onClick={() => { setPixText(null); setPixQrCodeUrl(null); }}>
+          ← Voltar
+        </Button>
       </div>
     );
   }
@@ -230,7 +382,7 @@ function CheckoutContent() {
                 </div>
                 {p.months > 1 && (
                   <p className="mt-1 text-xs text-text-muted">
-                    Total: R$ {formatBRL(p.totalPrice)} em {p.months}x
+                    Total: R$ {formatBRL(p.totalPrice)}
                   </p>
                 )}
                 {p.discountPct > 0 && (
@@ -249,10 +401,7 @@ function CheckoutContent() {
             </p>
             <ul className="space-y-2">
               {b2cIncludes.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-start gap-2.5 text-sm text-text-muted"
-                >
+                <li key={item} className="flex items-start gap-2.5 text-sm text-text-muted">
                   <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
                   <span>{item}</span>
                 </li>
@@ -260,12 +409,7 @@ function CheckoutContent() {
             </ul>
           </div>
 
-          <Button
-            variant="primary"
-            size="lg"
-            className="mt-8 w-full"
-            onClick={() => setStep(2)}
-          >
+          <Button variant="primary" size="lg" className="mt-8 w-full" onClick={() => setStep(2)}>
             Continuar →
           </Button>
         </div>
@@ -281,13 +425,58 @@ function CheckoutContent() {
             Revise seu pedido e conclua o pagamento.
           </p>
 
+          {error && (
+            <div className="mt-4 flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
+              {/* User info */}
+              <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+                <p className="text-sm font-semibold text-text">Seus dados</p>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    Nome completo *
+                  </span>
+                  <input
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Seu nome"
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    E-mail *
+                  </span>
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+                    CPF {paymentMethod === "pix" ? "*" : "(recomendado)"}
+                  </span>
+                  <input
+                    value={customerCpf}
+                    onChange={(e) => setCustomerCpf(formatCpf(e.target.value))}
+                    placeholder="000.000.000-00"
+                    inputMode="numeric"
+                    className={inputClass}
+                  />
+                </label>
+              </div>
+
               {/* Order summary */}
               <div className="rounded-2xl border border-border bg-card p-6">
-                <p className="mb-4 text-sm font-semibold text-text">
-                  Resumo do pedido
-                </p>
+                <p className="mb-4 text-sm font-semibold text-text">Resumo do pedido</p>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-text-muted">Plano</span>
@@ -315,13 +504,8 @@ function CheckoutContent() {
 
               {/* Payment method */}
               <div className="space-y-4">
-                <p className="text-sm font-semibold text-text">
-                  Forma de pagamento
-                </p>
-                <PaymentToggle
-                  value={paymentMethod}
-                  onChange={setPaymentMethod}
-                />
+                <p className="text-sm font-semibold text-text">Forma de pagamento</p>
+                <PaymentToggle value={paymentMethod} onChange={setPaymentMethod} />
 
                 {/* Cartão */}
                 {paymentMethod === "cartao" && (
@@ -332,9 +516,13 @@ function CheckoutContent() {
                       </span>
                       <input
                         value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, "").slice(0, 16);
+                          setCardNumber(digits.replace(/(\d{4})/g, "$1 ").trim());
+                        }}
                         placeholder="0000 0000 0000 0000"
                         maxLength={19}
+                        inputMode="numeric"
                         className={inputClass}
                       />
                     </label>
@@ -344,8 +532,8 @@ function CheckoutContent() {
                       </span>
                       <input
                         value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        placeholder="Exatamente como no cartão"
+                        onChange={(e) => setCardName(e.target.value.toUpperCase())}
+                        placeholder="NOME COMO NO CARTÃO"
                         className={inputClass}
                       />
                     </label>
@@ -356,9 +544,13 @@ function CheckoutContent() {
                         </span>
                         <input
                           value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value)}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                            setCardExpiry(v.length > 2 ? `${v.slice(0, 2)}/${v.slice(2)}` : v);
+                          }}
                           placeholder="MM/AA"
                           maxLength={5}
+                          inputMode="numeric"
                           className={inputClass}
                         />
                       </label>
@@ -368,9 +560,10 @@ function CheckoutContent() {
                         </span>
                         <input
                           value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value)}
+                          onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
                           placeholder="000"
                           maxLength={4}
+                          inputMode="numeric"
                           className={inputClass}
                         />
                       </label>
@@ -378,55 +571,15 @@ function CheckoutContent() {
                   </div>
                 )}
 
-                {/* PIX */}
+                {/* PIX info */}
                 {paymentMethod === "pix" && (
-                  <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-6">
-                    <div className="flex h-[200px] w-[200px] items-center justify-center rounded-2xl border-2 border-dashed border-border bg-card-hover">
-                      <span className="text-center text-xs text-text-muted">
-                        QR Code PIX
-                        <br />
-                        (mock)
-                      </span>
-                    </div>
-                    <p className="text-xs text-text-muted">
-                      Escaneie o QR code ou copie a chave PIX abaixo
-                    </p>
-                    <div className="flex w-full gap-2">
-                      <input
-                        readOnly
-                        value="00020126580014BR.GOV.BCB.PIX..."
-                        className={`${inputClass} truncate cursor-default`}
-                      />
-                      <Button
-                        variant="outline"
-                        size="md"
-                        className="flex-shrink-0 gap-1.5"
-                        onClick={handleCopyPix}
-                      >
-                        <Copy className="h-4 w-4" />
-                        {pixCopied ? "Copiado!" : "Copiar"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Boleto */}
-                {paymentMethod === "boleto" && (
-                  <div className="rounded-2xl border border-border bg-card p-6 text-center">
-                    <div className="mx-auto mb-4 flex h-14 w-48 items-center justify-center rounded-lg border border-dashed border-border bg-card-hover">
-                      <span className="text-xs text-text-muted">
-                        Código de barras
-                      </span>
-                    </div>
+                  <div className="rounded-2xl border border-border bg-card p-5 text-center space-y-2">
+                    <div className="text-4xl">⚡</div>
+                    <p className="font-semibold text-text">Pagamento instantâneo</p>
                     <p className="text-sm text-text-muted">
-                      Boleto vence em{" "}
-                      <span className="font-semibold text-warning">
-                        3 dias úteis
-                      </span>
+                      Clique em "Confirmar" para gerar o QR Code. O acesso é liberado automaticamente após o pagamento.
                     </p>
-                    <p className="mt-1 text-xs text-text-muted">
-                      Após o pagamento, a confirmação ocorre em até 1 dia útil.
-                    </p>
+                    <p className="text-xs text-text-muted">CPF obrigatório para PIX</p>
                   </div>
                 )}
               </div>
@@ -444,23 +597,29 @@ function CheckoutContent() {
           </div>
 
           <div className="mt-8 flex gap-3">
-            <Button
-              variant="outline"
-              size="lg"
-              className="px-5"
-              onClick={() => setStep(1)}
-            >
+            <Button variant="outline" size="lg" className="px-5" onClick={() => { setStep(1); setError(null); }}>
               ← Voltar
             </Button>
             <Button
               variant="primary"
               size="lg"
               className="flex-1"
-              onClick={handleConfirm}
+              onClick={handlePay}
+              disabled={processing}
             >
-              Confirmar e assinar
+              {processing ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processando…</>
+              ) : paymentMethod === "pix" ? (
+                "Gerar QR Code PIX →"
+              ) : (
+                "Confirmar pagamento →"
+              )}
             </Button>
           </div>
+
+          <p className="mt-4 text-center text-xs text-text-muted">
+            🔒 Pagamento seguro via PagBank. Seus dados são criptografados.
+          </p>
         </div>
       )}
     </>
@@ -474,22 +633,30 @@ export default function CheckoutPage() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/30">
-              <Zap className="h-5 w-5 text-white" fill="white" />
-            </div>
-            <span className="font-display text-lg font-extrabold tracking-wide text-text">
-              PACE RUN <span className="gradient-text">PRO</span>
-            </span>
+          <Link href="/">
+            <Logo size={28} />
           </Link>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-text-muted">Dúvidas? </span>
+            <a href="mailto:suporte@pacerunpro.com.br" className="text-xs text-primary hover:underline">
+              suporte@pacerunpro.com.br
+            </a>
+          </div>
         </div>
       </nav>
 
-      <main className="mx-auto max-w-5xl px-6 py-12">
-        <Suspense fallback={null}>
+      {/* Content */}
+      <div className="mx-auto max-w-3xl px-6 py-12">
+        <Suspense
+          fallback={
+            <div className="flex justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          }
+        >
           <CheckoutContent />
         </Suspense>
-      </main>
+      </div>
     </div>
   );
 }
