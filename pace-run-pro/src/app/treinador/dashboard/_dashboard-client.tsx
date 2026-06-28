@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  AlertTriangle,
   ArrowRight,
   CalendarDays,
   ClipboardCheck,

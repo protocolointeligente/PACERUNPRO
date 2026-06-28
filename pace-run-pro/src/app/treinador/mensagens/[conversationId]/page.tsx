@@ -92,7 +92,6 @@ export default function CoachConversationPage({
 
   const msgs = conv?.messages ?? [];
   const myId = conv?.currentUserId;
-  const athleteInitial = conv?.athleteName?.slice(0, 2).toUpperCase() ?? "AT";
 
   if (loading) {
     return (

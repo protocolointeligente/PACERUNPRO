@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Bell,
-  BarChart2,
   Users,
   CalendarDays,
   Activity,

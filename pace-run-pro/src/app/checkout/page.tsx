@@ -577,7 +577,7 @@ function CheckoutContent() {
                     <div className="text-4xl">⚡</div>
                     <p className="font-semibold text-text">Pagamento instantâneo</p>
                     <p className="text-sm text-text-muted">
-                      Clique em "Confirmar" para gerar o QR Code. O acesso é liberado automaticamente após o pagamento.
+                      Clique em &ldquo;Gerar QR Code PIX&rdquo; abaixo. O acesso é liberado automaticamente após o pagamento.
                     </p>
                     <p className="text-xs text-text-muted">CPF obrigatório para PIX</p>
                   </div>
