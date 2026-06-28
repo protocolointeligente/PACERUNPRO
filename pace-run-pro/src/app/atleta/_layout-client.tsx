@@ -26,7 +26,7 @@ export default function AtletaLayoutClient({
       avatarUrl={avatarUrl}
     >
       {children}
-      <BottomNav items={athleteNav} />
+      <BottomNav items={athleteNav} showMore />
       <MessageNotifier role="ATHLETE" />
     </AppShell>
   );

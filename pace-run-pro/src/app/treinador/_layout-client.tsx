@@ -83,7 +83,7 @@ function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUr
       }
     >
       {children}
-      <BottomNav items={main.slice(0, 5)} />
+      <BottomNav items={main.slice(0, 5)} showMore />
       <MessageNotifier role="COACH" />
     </AppShell>
   );

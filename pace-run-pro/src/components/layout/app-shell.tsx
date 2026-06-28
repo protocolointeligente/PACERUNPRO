@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LogOut, Menu, MoreVertical, Search, X } from "lucide-react";
+import { LogOut, Menu, Search, X } from "lucide-react";
+import { createContext, useContext } from "react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,6 +14,10 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import type { NavItem } from "./nav-config";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Context so children (BottomNav) can trigger the mobile drawer
+export const AppShellDrawerContext = createContext<{ openDrawer: () => void }>({ openDrawer: () => {} });
+export function useAppShellDrawer() { return useContext(AppShellDrawerContext); }
 
 interface AppShellProps {
   nav: NavItem[];
@@ -171,16 +176,6 @@ export function AppShell({
         </div>
       </aside>
 
-      {/* Floating 3-dots menu button — mobile only, anchored above bottom nav */}
-      <button
-        className="fixed bottom-[72px] right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-border/60 bg-card shadow-xl shadow-black/30 transition-colors hover:bg-card-hover lg:hidden print:hidden"
-        onClick={() => setMobileOpen(true)}
-        aria-label="Abrir menu"
-        style={{ backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
-      >
-        <MoreVertical className="h-5 w-5 text-text-muted" />
-      </button>
-
       {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
@@ -231,7 +226,8 @@ export function AppShell({
         )}
       </AnimatePresence>
 
-      {/* Main column */}
+      {/* Main column — provide drawer context so BottomNav can trigger it */}
+      <AppShellDrawerContext.Provider value={{ openDrawer: () => setMobileOpen(true) }}>
       <div className="flex min-h-dvh flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-xl sm:px-6 print:hidden">
           {/* Desktop sidebar collapse toggle — visible only on lg+ */}
@@ -262,6 +258,7 @@ export function AppShell({
 
         <main className="flex-1 px-4 pb-24 pt-5 sm:px-6 lg:pb-10">{children}</main>
       </div>
+      </AppShellDrawerContext.Provider>
     </div>
   );
 }

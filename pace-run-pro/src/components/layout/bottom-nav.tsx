@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "./nav-config";
+import { useAppShellDrawer } from "./app-shell";
 
-export function BottomNav({ items }: { items: NavItem[] }) {
+export function BottomNav({ items, showMore }: { items: NavItem[]; showMore?: boolean }) {
   const pathname = usePathname();
+  const { openDrawer } = useAppShellDrawer();
 
   return (
     <nav
@@ -66,6 +69,30 @@ export function BottomNav({ items }: { items: NavItem[] }) {
             </Link>
           );
         })}
+
+        {/* More / menu trigger */}
+        {showMore && (
+          <button
+            onClick={openDrawer}
+            aria-label="Abrir menu"
+            className="relative flex flex-1 flex-col items-center gap-[5px] pt-3 pb-1 transition-colors min-h-[56px]"
+          >
+            <MoreVertical
+              className="h-[22px] w-[22px] transition-colors"
+              style={{ color: "#5C636B", strokeWidth: 1.7 }}
+            />
+            <span
+              className="text-[10px] font-medium tracking-wide"
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                letterSpacing: "0.06em",
+                color: "#5C636B",
+              }}
+            >
+              Menu
+            </span>
+          </button>
+        )}
       </div>
     </nav>
   );
