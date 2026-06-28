@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Camera, CheckCircle2, Copy, ExternalLink, Globe, Loader2, Pencil, QrCode, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -352,9 +353,9 @@ export default function MinhaPaginaClient() {
               Adicione seu logo, bio pública, WhatsApp e configure seus planos para ter uma página profissional.
             </p>
             <div className="flex gap-2">
-              <a href="/treinador/planos-venda">
+              <Link href="/treinador/planos-venda">
                 <Button variant="outline" size="sm">Editar planos</Button>
-              </a>
+              </Link>
             </div>
           </CardContent>
         </Card>

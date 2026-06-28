@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
@@ -422,9 +423,9 @@ export default function AlertasPage() {
               <p className="text-xs text-text-muted leading-relaxed">
                 Você receberá notificações por push e e-mail sempre que um alerta crítico for
                 gerado. Configure suas preferências em{" "}
-                <a href="/treinador/admin" className="text-primary hover:underline">
+                <Link href="/treinador/admin" className="text-primary hover:underline">
                   Configurações
-                </a>
+                </Link>
                 .
               </p>
             </CardContent>

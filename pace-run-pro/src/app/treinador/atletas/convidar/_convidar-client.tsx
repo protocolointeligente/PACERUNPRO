@@ -300,9 +300,9 @@ export default function ConvidarAtletaClient({ coachUserId: _coachUserId }: Conv
                     <p className="mt-0.5 text-xs text-text-muted">
                       O atleta será adicionado sem plano. Configure seus planos de venda para cobrar automaticamente.
                     </p>
-                    <a href="/treinador/planos-venda" className="mt-1 inline-block text-xs font-semibold text-primary hover:underline">
+                    <Link href="/treinador/planos-venda" className="mt-1 inline-block text-xs font-semibold text-primary hover:underline">
                       Criar planos de venda →
-                    </a>
+                    </Link>
                   </div>
                 ) : (
                   <div className="space-y-2">

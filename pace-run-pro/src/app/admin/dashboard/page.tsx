@@ -371,9 +371,9 @@ export default function AdminDashboard() {
                     {" "}— health score abaixo de 55 ou sem atividade há +14 dias.
                     Entrar em contato, entender dificuldades e oferecer suporte ativo.
                   </p>
-                  <a href="/admin/assessorias" className="mt-1.5 inline-flex text-xs font-semibold text-danger hover:underline">
+                  <Link href="/admin/assessorias" className="mt-1.5 inline-flex text-xs font-semibold text-danger hover:underline">
                     Ver assessorias em risco →
-                  </a>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -393,9 +393,9 @@ export default function AdminDashboard() {
                   <p className="mt-0.5 text-xs text-text-muted">
                     Novos treinadores aguardando aprovação. Quanto mais rápido ativar, menor a taxa de desistência no onboarding.
                   </p>
-                  <a href="/admin/aprovacoes" className="mt-1.5 inline-flex text-xs font-semibold text-warning hover:underline">
+                  <Link href="/admin/aprovacoes" className="mt-1.5 inline-flex text-xs font-semibold text-warning hover:underline">
                     Ir para aprovações →
-                  </a>
+                  </Link>
                 </div>
               </CardContent>
             </Card>

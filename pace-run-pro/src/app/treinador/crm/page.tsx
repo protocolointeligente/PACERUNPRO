@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCoachRole } from "@/context/coach-role-context";
 import { canAccess } from "@/lib/coach-permissions";
@@ -476,7 +477,7 @@ function CrmContent() {
               </div>
             ) : (
               <p className="rounded-xl border border-border bg-card-hover/40 px-3 py-2 text-xs text-text-muted">
-                Configure um slug em <a href="/treinador/minha-pagina" className="text-primary hover:underline">Minha página pública</a> para ativar seu link de isca.
+                Configure um slug em <Link href="/treinador/minha-pagina" className="text-primary hover:underline">Minha página pública</Link> para ativar seu link de isca.
               </p>
             )}
           </CardContent>

@@ -102,7 +102,7 @@ export default function AdminDashboardPage() {
             {planRows.length === 0 ? (
               <p className="py-8 text-center text-sm text-text-muted">
                 Nenhum plano de venda configurado ainda.{" "}
-                <a href="/treinador/planos-venda" className="text-primary hover:underline">Criar planos →</a>
+                <Link href="/treinador/planos-venda" className="text-primary hover:underline">Criar planos →</Link>
               </p>
             ) : (
               <div className="space-y-4">
