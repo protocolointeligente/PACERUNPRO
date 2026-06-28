@@ -162,6 +162,7 @@ model Athlete {
   planPurchases      PlanPurchase[]
   recoveryLogs       RecoveryLog[]
   questionnaires     Questionnaire[]
+  physicalAssessments PhysicalAssessment[]
 
   shoes              Shoe[]
 
@@ -696,6 +697,47 @@ model PushSubscription {
 
   @@unique([userId, endpoint])
   @@map("push_subscriptions")
+}
+
+model PhysicalAssessment {
+  id          String   @id @default(cuid())
+  athleteId   String
+  athlete     Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  coachId     String?
+  assessedAt  DateTime @default(now())
+
+  // Body composition
+  weightKg    Float?
+  bodyFatPct  Float?
+  muscleMassKg Float?
+  bmi         Float?
+
+  // Perimetry (cm)
+  neckCm      Float?
+  chestCm     Float?
+  waistCm     Float?
+  hipCm       Float?
+  thighCm     Float?
+  calfCm      Float?
+  armCm       Float?
+  forearmCm   Float?
+
+  // Performance
+  vo2max      Float?
+  restingHr   Int?
+  hrv         Float?
+  flexibilityScore Float?
+
+  // Photos and consent
+  photoUrls   String[]
+  lgpdConsent Boolean  @default(false)
+  consentAt   DateTime?
+  notes       String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([athleteId])
+  @@map("physical_assessments")
 }
 
 model Questionnaire {
