@@ -1,2 +1,5 @@
 # Next.js build output
 .next/
+
+# Claude Code agent worktrees (temporary)
+.claude/worktrees/
