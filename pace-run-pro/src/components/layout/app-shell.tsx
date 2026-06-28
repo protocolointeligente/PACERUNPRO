@@ -192,9 +192,10 @@ export function AppShell({
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
-              className="fixed inset-y-0 left-0 z-50 w-[min(288px,85vw)] border-r border-border bg-card p-4 lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 flex w-[min(288px,85vw)] flex-col border-r border-border bg-card lg:hidden"
             >
-              <div className="mb-6 flex items-center justify-between px-2 pt-2">
+              {/* Header — fixo */}
+              <div className="flex shrink-0 items-center justify-between px-6 py-4 border-b border-border/40">
                 <Logo size={30} />
                 <div className="flex items-center gap-2">
                   <ThemeToggle inline />
@@ -207,20 +208,26 @@ export function AppShell({
                   </button>
                 </div>
               </div>
-              <nav className="space-y-0.5">
+
+              {/* Nav — scrollável */}
+              <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
                 {nav.map((item) => renderNavItem(item, () => setMobileOpen(false), true))}
                 {moreNav.length > 0 && moreNav.map((item) => renderNavItem(item, () => setMobileOpen(false), true))}
+              </nav>
+
+              {/* Footer — fixo */}
+              <div className="shrink-0 border-t border-border/40 px-3 py-3">
                 <button
                   onClick={() => {
                     setMobileOpen(false);
                     handleLogout();
                   }}
-                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold text-danger transition-colors hover:border-danger/50 hover:bg-danger/5"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold text-danger transition-colors hover:border-danger/50 hover:bg-danger/5"
                 >
                   <LogOut className="h-3.5 w-3.5" />
                   Sair
                 </button>
-              </nav>
+              </div>
             </motion.aside>
           </>
         )}
