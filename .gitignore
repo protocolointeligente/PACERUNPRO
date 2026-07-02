@@ -1,5 +1,8 @@
 # Next.js build output
 .next/
 
+# Node dependencies
+node_modules/
+
 # Claude Code agent worktrees (temporary)
 .claude/worktrees/
