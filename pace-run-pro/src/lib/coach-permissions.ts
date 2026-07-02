@@ -22,6 +22,8 @@ import {
   Layers,
   MessageSquare,
   BarChart2,
+  Bike,
+  Waves,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -67,6 +69,8 @@ const coreNav: NavItem[] = [
   // — Prescrição —
   { href: "/treinador/prescricao/corrida",       label: "VDOT / Paces",    icon: Activity,    sectionStart: "Prescrição" },
   { href: "/treinador/prescricao/forca",         label: "Força",           icon: Dumbbell                               },
+  { href: "/treinador/prescricao/ciclismo",      label: "Ciclismo / FTP",  icon: Bike,        sectionStart: undefined   },
+  { href: "/treinador/prescricao/natacao",       label: "Natação / CSS",   icon: Waves,       sectionStart: undefined   },
   { href: "/treinador/configuracoes/zonas",      label: "Zonas de treino", icon: Zap                                    },
   { href: "/treinador/biblioteca",               label: "Biblioteca",      icon: BookOpen                               },
   { href: "/treinador/minha-loja",               label: "Minha loja",      icon: ShoppingBag                            },
