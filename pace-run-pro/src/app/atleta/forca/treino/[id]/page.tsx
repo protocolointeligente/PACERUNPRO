@@ -43,7 +43,7 @@ interface ExerciseJsonEntry {
 }
 
 function normName(n: string) {
-  return n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return n.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
 export default function StrengthTreinoPreviewPage() {
@@ -111,7 +111,6 @@ export default function StrengthTreinoPreviewPage() {
         <p className="mt-1 text-xs capitalize text-text-muted">{dateStr}</p>
       </div>
 
-      {/* Stats summary */}
       {blocks.length > 0 && (
         <div className="flex flex-wrap gap-3">
           <span className="rounded-xl border border-border bg-card px-3 py-2 text-xs text-text-muted">
@@ -131,7 +130,6 @@ export default function StrengthTreinoPreviewPage() {
         </div>
       )}
 
-      {/* Exercise list */}
       <div className="space-y-3">
         {blocks.length === 0 ? (
           <Card>

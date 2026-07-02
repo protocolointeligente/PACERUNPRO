@@ -163,7 +163,7 @@ export function estimateTSS(workout: WorkoutForLoad, params?: LoadParams | null)
   return Math.round(tss);
 }
 
-// ── CTL/ATL/TSB time series ───────────────────────────────────────────────────
+// ── CTL/ATL/TSB time series ─────────────────────────────────────────────
 
 const DECAY_CTL = Math.exp(-1 / 42); // ~0.9762 — 42-day time constant
 const DECAY_ATL = Math.exp(-1 / 7);  // ~0.8668 — 7-day time constant
@@ -229,7 +229,7 @@ function sortedDateRange(dateSet: Set<string>): string[] {
   return dates;
 }
 
-// ── Spike & form detection ────────────────────────────────────────────────────
+// ── Spike & form detection ────────────────────────────────────────────
 
 export interface LoadAlert {
   type: "spike" | "overreaching" | "detraining";

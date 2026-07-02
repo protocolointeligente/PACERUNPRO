@@ -56,7 +56,6 @@ export default function StrengthPage() {
   const [upcomingWorkouts, setUpcomingWorkouts] = useState<UpcomingWorkout[]>([]);
   const [upcomingLoading, setUpcomingLoading] = useState(true);
 
-  // Load exercises.json once to get gifUrls
   useEffect(() => {
     fetch("/exercises.json")
       .then((r) => (r.ok ? r.json() : []))
@@ -100,7 +99,6 @@ export default function StrengthPage() {
         <p className="mt-1 text-sm text-text-muted">Veja e acesse todos os treinos de força agendados.</p>
       </div>
 
-      {/* Today's strength session */}
       {todayWorkout === undefined ? (
         <Card>
           <CardContent className="flex justify-center py-10">
@@ -203,7 +201,6 @@ export default function StrengthPage() {
         </Card>
       )}
 
-      {/* Upcoming força sessions */}
       <div>
         <h2 className="mb-3 font-display text-lg font-semibold text-text">Próximas sessões de força</h2>
         {upcomingLoading ? (

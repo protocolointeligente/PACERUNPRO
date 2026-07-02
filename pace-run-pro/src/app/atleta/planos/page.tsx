@@ -210,7 +210,6 @@ export default function PlansPage() {
         </p>
       </div>
 
-      {/* Macrocycle progress */}
       <Card>
         <CardContent className="p-5">
           <div className="mb-3 flex items-center justify-between">
@@ -227,7 +226,6 @@ export default function PlansPage() {
         </CardContent>
       </Card>
 
-      {/* Periodization phases */}
       {phases.length > 0 && (
         <div>
           <h2 className="mb-4 font-display text-lg font-semibold text-text">Linha do tempo das fases</h2>
@@ -272,7 +270,6 @@ export default function PlansPage() {
         </div>
       )}
 
-      {/* Mesocycles */}
       {mesocycles.length > 0 && (
         <div>
           <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-text">

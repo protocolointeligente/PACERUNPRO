@@ -39,7 +39,7 @@ export function vo2From2400m(durationSec: number) {
   return Math.round((483 / minutes + 3.5) * 10) / 10;
 }
 
-// ── Velocidade Aeróbica Máxima (VAM) ────────────────────────────────────────
+// ── Velocidade Aeróbica Máxima (VAM) ───────────────────────────────────
 
 /** VAM a partir de distância (m) e tempo (s) — velocidade média do esforço máximo. */
 export function vamFromDistanceTime(distanceM: number, durationSec: number) {
@@ -57,7 +57,7 @@ export function vo2FromVam(vamKmh: number) {
   return vamKmh * 3.5;
 }
 
-// ── RAST (Running-based Anaerobic Sprint Test) ──────────────────────────────
+// ── RAST (Running-based Anaerobic Sprint Test) ──────────────────────────
 
 export interface RastSplit {
   timeSec: number;
@@ -87,7 +87,7 @@ export function calculateRast(splits: RastSplit[], massKg: number, distanceM = 3
   return { powers, peakPowerW, minPowerW, avgPowerW, fatigueIndexWPerS };
 }
 
-// ── Limiar anaeróbico (estimativa de campo — Conconi/Pace de limiar) ────────
+// ── Limiar anaeróbico (estimativa de campo — Conconi/Pace de limiar) ────
 
 /**
  * Estima o pace de limiar anaeróbico (T-pace) a partir de um teste máximo.
@@ -105,7 +105,7 @@ export function thresholdPaceFromTest(distanceM: number, durationSec: number): n
   return Math.round(paceSecPerKm * factor);
 }
 
-// ── Zonas de frequência cardíaca (Karvonen) ─────────────────────────────────
+// ── Zonas de frequência cardíaca (Karvonen) ───────────────────────────
 
 export interface HrZone {
   zone: number;
@@ -257,7 +257,7 @@ export function weeklyLoadStatus(currentLoad: number, previousAvgLoad: number) {
   return { ratio, label: "Estável", color: "success" as const };
 }
 
-// ── Motor de check-in inteligente ───────────────────────────────────────────
+// ── Motor de check-in inteligente ───────────────────────────────────
 
 export type CheckInRecord = {
   date: string;

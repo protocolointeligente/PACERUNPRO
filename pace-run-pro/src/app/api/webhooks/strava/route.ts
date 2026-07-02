@@ -35,12 +35,10 @@ export async function POST(request: NextRequest) {
 
   const { object_type, object_id, aspect_type, owner_id } = body;
 
-  // Only process new activity events
   if (object_type !== "activity" || aspect_type !== "create") {
     return NextResponse.json({ status: "ignored" });
   }
 
-  // Find the connected device by Strava athlete ID
   const device = await prisma.connectedDevice.findFirst({
     where: { provider: "STRAVA", externalId: String(owner_id) },
     include: { user: { include: { athlete: true } } },
@@ -76,7 +74,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Find a workout scheduled for the same calendar day
   const activityDate = new Date(activity.start_date);
   const dayStart = new Date(activityDate);
   dayStart.setUTCHours(0, 0, 0, 0);
@@ -125,7 +122,6 @@ export async function POST(request: NextRequest) {
       }),
     ]);
 
-    // Recalculate adherenceRate for last 28 days
     const since28d = new Date();
     since28d.setDate(since28d.getDate() - 28);
 

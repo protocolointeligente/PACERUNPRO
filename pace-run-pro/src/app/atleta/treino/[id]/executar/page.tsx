@@ -63,7 +63,6 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
   const lastSplitKmRef = useRef(0);
   const lastSplitElapsedRef = useRef(0);
 
-  // Timer — increments only while running
   useEffect(() => {
     if (!running) return;
     const t = setInterval(() => setElapsed((e) => e + 1), 1000);
@@ -119,7 +118,6 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
   // GPS is requested only on explicit user action (requestGps called via button)
   // Auto-requesting on mount silently fails on iOS Safari
 
-  // Continuous position watch — pauses when athlete pauses the workout
   useEffect(() => {
     if (gpsStatus !== "active" || !running) return;
     const watchId = navigator.geolocation.watchPosition(handlePosition, handleGeoError, {
@@ -130,7 +128,6 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
     return () => navigator.geolocation.clearWatch(watchId);
   }, [gpsStatus, running, handlePosition, handleGeoError]);
 
-  // Derived real metrics from GPS points
   const distanceMeters = useMemo(() => totalDistanceMeters(points), [points]);
   const distanceKm = distanceMeters / 1000;
   const elevationGain = useMemo(() => elevationGainMeters(points), [points]);
@@ -145,10 +142,8 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
         ? 3600 / instantPace
         : null;
 
-  // Real SVG route drawn from actual GPS coordinates
   const routePath = useMemo(() => buildRoutePath(points, 400, 240, 24), [points]);
 
-  // Auto-splits triggered by real GPS-measured distance
   useEffect(() => {
     const wholeKm = Math.floor(distanceKm);
     if (wholeKm > lastSplitKmRef.current) {
@@ -168,7 +163,6 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
   function finish() {
     setShowFinishDialog(false);
     setRunning(false);
-    // Persist real GPS stats so the check-in page can build the share card
     const avgPace = distanceKm > 0.01 && elapsed > 0 ? elapsed / distanceKm : null;
     try {
       localStorage.setItem(
@@ -183,7 +177,7 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
         }),
       );
     } catch {
-      // storage unavailable (private browsing or permissions)
+      // storage unavailable
     }
     // Save workout log to the database
     fetch(`/api/atleta/workouts/${id}`, {
@@ -304,7 +298,6 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
         </Card>
       )}
 
-      {/* Route map — real GPS trace or waiting indicator */}
       <div className="relative h-56 overflow-hidden rounded-2xl border border-border sm:h-72">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(139,92,246,0.35),transparent_55%),radial-gradient(circle_at_75%_70%,rgba(56,189,248,0.25),transparent_55%),#0b1220]" />
         <svg viewBox="0 0 400 240" className="absolute inset-0 h-full w-full opacity-80">
@@ -338,7 +331,6 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
-      {/* Primary readouts */}
       <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
         <BigStat label="Tempo" value={formatDuration(elapsed)} accent="text-text" />
         <BigStat label="Distância" value={`${distanceKm.toFixed(2)} km`} accent="gradient-text" />
@@ -350,7 +342,6 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
         />
       </div>
 
-      {/* Secondary metrics — all real GPS-derived values */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SmallStat icon={Gauge} label="Ritmo instantâneo" value={instantPace ? formatPace(Math.round(instantPace)) : "--:--/km"} />
         <SmallStat icon={Zap} label="Velocidade" value={speedKmh != null ? `${speedKmh.toFixed(1)} km/h` : "--"} />
@@ -358,7 +349,6 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
         <SmallStat icon={Crosshair} label="Precisão GPS" value={lastPoint ? `±${Math.round(lastPoint.accuracy)} m` : "--"} />
       </div>
 
-      {/* Pace vs target */}
       <div className="rounded-2xl border border-border bg-card p-4">
         <div className="mb-1.5 flex items-center justify-between text-sm">
           <span className="font-medium text-text">Pace vs. meta da sessão</span>
@@ -378,7 +368,6 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
         </p>
       </div>
 
-      {/* Auto-splits from real GPS distance */}
       {splits.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-4">
           <h3 className="mb-3 font-display text-sm font-semibold text-text">Splits automáticos</h3>
@@ -396,7 +385,6 @@ export default function ExecuteWorkoutPage({ params }: { params: Promise<{ id: s
         </div>
       )}
 
-      {/* Controls */}
       <div className="sticky bottom-20 z-10 flex items-center justify-center gap-3 lg:bottom-6">
         <Button
           size="lg"

@@ -99,7 +99,6 @@ export async function POST() {
 
   let synced = 0;
   for (const activity of activities) {
-    // Look for a scheduled workout within ±12 h
     const actDate = new Date(activity.start_date);
     const windowStart = new Date(actDate.getTime() - 12 * 60 * 60 * 1000);
     const windowEnd   = new Date(actDate.getTime() + 12 * 60 * 60 * 1000);
