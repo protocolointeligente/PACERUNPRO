@@ -227,6 +227,7 @@ model Team {
   members   TeamMember[]
   createdAt DateTime     @default(now())
 
+  @@index([coachId])
   @@map("teams")
 }
 
@@ -611,6 +612,7 @@ model Race {
   resultTime String?
   location   String?
 
+  @@index([athleteId, date])
   @@map("races")
 }
 
@@ -624,6 +626,7 @@ model Achievement {
   icon        String?
   earnedAt    DateTime @default(now())
 
+  @@index([athleteId])
   @@map("achievements")
 }
 
@@ -641,6 +644,7 @@ model FeedPost {
 
   createdAt DateTime @default(now())
 
+  @@index([authorId, createdAt])
   @@map("feed_posts")
 }
 
@@ -653,6 +657,8 @@ model FeedComment {
   content   String
   createdAt DateTime @default(now())
 
+  @@index([postId])
+  @@index([authorId])
   @@map("feed_comments")
 }
 
@@ -682,6 +688,7 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
+  @@index([userId, createdAt])
   @@map("notifications")
 }
 

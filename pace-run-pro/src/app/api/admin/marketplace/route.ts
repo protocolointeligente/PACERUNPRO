@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-guard";
+import { getSession, requireAdmin } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-
-function isAdmin(session: Awaited<ReturnType<typeof getSession>>) {
-  if (!session?.user?.id) return false;
-  const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase());
-  return adminEmails.includes(session.user.email?.toLowerCase() ?? "");
-}
 
 export async function GET(_req: NextRequest) {
   const session = await getSession();
-  if (!isAdmin(session)) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  const denied = requireAdmin(session);
+  if (denied) return denied;
 
   const [commissions, products, orders, stores] = await Promise.all([
     prisma.marketplaceCommission.findMany({
@@ -75,7 +70,8 @@ export async function GET(_req: NextRequest) {
 // PATCH — update commission config
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
-  if (!isAdmin(session)) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  const denied = requireAdmin(session);
+  if (denied) return denied;
 
   const body = await req.json();
   const { defaultCommissionPct, categoryConfig } = body;

@@ -26,9 +26,15 @@ export function formatNumber(value: number, fractionDigits = 1) {
   });
 }
 
+/** Format a BRL value (in reais, float) as "1.234,56" */
 export function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+}
+
+/** Format a BRL value (in centavos, integer) as currency string "R$ 1.234,56" */
+export function formatBRLCents(cents: number) {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }

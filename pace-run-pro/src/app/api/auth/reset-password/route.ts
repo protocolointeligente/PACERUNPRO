@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { resetPasswordLimiter } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  const rl = resetPasswordLimiter(request);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente." },
+      { status: 429 }
+    );
+  }
+
   try {
     const { token, password } = await request.json();
 

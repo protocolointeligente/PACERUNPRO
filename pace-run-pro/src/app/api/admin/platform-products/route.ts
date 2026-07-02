@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-guard";
+import { getSession, requireAdmin } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
-function isAdmin(session: Awaited<ReturnType<typeof getSession>>) {
-  if (!session?.user?.id) return false;
-  const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase());
-  return adminEmails.includes(session.user.email?.toLowerCase() ?? "");
-}
-
-// GET — list platform products (coachId = null)
 export async function GET(_req: NextRequest) {
   const session = await getSession();
-  if (!isAdmin(session)) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  const denied = requireAdmin(session);
+  if (denied) return denied;
 
   const products = await prisma.planProduct.findMany({
     where: { coachId: null },
@@ -21,10 +15,10 @@ export async function GET(_req: NextRequest) {
   return NextResponse.json(products);
 }
 
-// POST — create a platform product
 export async function POST(req: NextRequest) {
   const session = await getSession();
-  if (!isAdmin(session)) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  const denied = requireAdmin(session);
+  if (denied) return denied;
 
   const body = await req.json();
   const {
@@ -37,7 +31,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "title e slug são obrigatórios" }, { status: 400 });
   }
 
-  // Check slug uniqueness
   const exists = await prisma.planProduct.findUnique({ where: { slug } });
   if (exists) return NextResponse.json({ error: "Slug já existe" }, { status: 409 });
 
@@ -65,10 +58,10 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(product, { status: 201 });
 }
 
-// PATCH — update platform product
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
-  if (!isAdmin(session)) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  const denied = requireAdmin(session);
+  if (denied) return denied;
 
   const body = await req.json();
   const { id, ...data } = body;
@@ -83,10 +76,10 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json(updated);
 }
 
-// DELETE — remove platform product
 export async function DELETE(req: NextRequest) {
   const session = await getSession();
-  if (!isAdmin(session)) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  const denied = requireAdmin(session);
+  if (denied) return denied;
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");

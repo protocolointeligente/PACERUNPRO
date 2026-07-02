@@ -101,3 +101,9 @@ export const voucherValidateLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 10 requests per minute
   key: "voucher:validate",
 });
+
+export const resetPasswordLimiter = createRateLimiter({
+  limit: 5,
+  windowMs: 15 * 60 * 1000, // 5 requests per 15 minutes
+  key: "auth:reset-password",
+});
