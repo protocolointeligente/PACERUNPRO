@@ -58,6 +58,29 @@ export interface ExchangeResult {
  * Representação unificada de uma atividade física, independente da plataforma.
  * Adapters convertem dados brutos do provider para este formato.
  */
+/**
+ * Modalidade esportiva normalizada — mapeada a partir do tipo nativo do provider.
+ * Usar para classificar atividades no banco (WorkoutLog.sport).
+ */
+export type NormalizedSport = "RUN" | "BIKE" | "SWIM" | "STRENGTH" | "MOBILITY" | "TRIATHLON" | "BRICK" | "OTHER";
+
+/**
+ * Mapeamento de tipo de atividade nativo → NormalizedSport.
+ * Adapters usam esta função para normalizar o activityType do provider.
+ */
+export function mapActivityTypeToSport(activityType?: string): NormalizedSport {
+  if (!activityType) return "OTHER";
+  const t = activityType.toLowerCase();
+  if (/run|trail|hike|walk|jogging/.test(t)) return "RUN";
+  if (/ride|cycling|bike|virt.*ride|ebike|gravel/.test(t)) return "BIKE";
+  if (/swim|natacao|pool|openwater/.test(t)) return "SWIM";
+  if (/weight|strength|forca|gym|crossfit|crosstraining/.test(t)) return "STRENGTH";
+  if (/yoga|pilates|stretch|mobil/.test(t)) return "MOBILITY";
+  if (/triathlon|tri\b/.test(t)) return "TRIATHLON";
+  if (/brick/.test(t)) return "BRICK";
+  return "OTHER";
+}
+
 export interface NormalizedActivity {
   /** ID da atividade na plataforma de origem (ex.: "12345678" no Strava). */
   sourceId: string;
@@ -70,18 +93,38 @@ export interface NormalizedActivity {
    * Exemplos: "Run", "TrailRun", "Ride", "Swim", "Walk".
    */
   activityType?: string;
+  /** Modalidade normalizada derivada do activityType. */
+  sport?: NormalizedSport;
   startedAt: Date;
   finishedAt?: Date;
   /** Duração total em segundos. */
   durationSec?: number;
   distanceKm?: number;
-  /** Ritmo médio em segundos por km. */
+  /** Ritmo médio em segundos por km (corrida). */
   avgPaceSecPerKm?: number;
+  /** Pace médio em seg/100m (natação). */
+  avgPacePer100m?: number;
   avgHrBpm?: number;
   maxHrBpm?: number;
   elevationGainM?: number;
   calories?: number;
   cadenceAvg?: number;
+  /** Potência média (ciclismo). */
+  avgWatts?: number;
+  /** Normalized Power (ciclismo). */
+  normalizedPower?: number;
+  /** Intensity Factor = NP / FTP (ciclismo). */
+  intensityFactor?: number;
+  /** TSS calculado por potência (ciclismo). */
+  tssFromPower?: number;
+  /** Pool length em metros (natação). */
+  poolLengthM?: number;
+  /** Estilo de nado (freestyle | backstroke | breaststroke | butterfly | medley). */
+  swimStroke?: string;
+  /** SWOLF (eficiência de natação). */
+  swolf?: number;
+  /** Braçadas por minuto. */
+  strokeRate?: number;
   /** Suffer Score / Training Load nativo do provider (ex.: Strava Suffer Score). */
   sufferScore?: number;
   /** RPE estimado a partir de FC (1–10). Calculado pelo adapter quando não disponível. */

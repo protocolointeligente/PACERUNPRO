@@ -13,21 +13,47 @@ import Link from "next/link";
 // ── Workout type config ───────────────────────────────────────────────────────
 
 const WO_CONFIG: Record<string, { label: string; short: string; bg: string; dot: string }> = {
-  REGENERATIVO:      { label: "Regenerativo",       short: "Z1", bg: "bg-emerald-400", dot: "#4ade80" },
-  RODAGEM_LEVE:      { label: "Rodagem Leve",        short: "Z2", bg: "bg-sky-400",     dot: "#38bdf8" },
-  PROGRESSIVO:       { label: "Progressivo",         short: "P",  bg: "bg-blue-500",    dot: "#3b82f6" },
-  LONGAO:            { label: "Longão",              short: "L",  bg: "bg-info/80",     dot: "#3FA7FF" },
-  FARTLEK:           { label: "Fartlek",             short: "F",  bg: "bg-amber-400",   dot: "#fbbf24" },
-  TECNICA:           { label: "Técnica",             short: "T",  bg: "bg-teal-400",    dot: "#2dd4bf" },
-  SUBIDA:            { label: "Subida",              short: "S",  bg: "bg-orange-400",  dot: "#fb923c" },
-  TEMPO_RUN:         { label: "Tempo Run",           short: "T4", bg: "bg-warning/80",  dot: "#FFB020" },
-  INTERVALADO_LONGO: { label: "Intervalado Longo",   short: "IL", bg: "bg-rose-500",    dot: "#f43f5e" },
-  INTERVALADO_CURTO: { label: "Intervalado Curto",   short: "IC", bg: "bg-red-600",     dot: "#dc2626" },
-  PROVA:             { label: "Prova",               short: "★",  bg: "bg-red-700",     dot: "#b91c1c" },
-  FORCA:             { label: "Força",               short: "FC", bg: "bg-accent/80",  dot: "#46E0C8" },
-  FUNCIONAL:         { label: "Funcional",           short: "FN", bg: "bg-accent/80",   dot: "#46E0C8" },
-  MOBILIDADE:        { label: "Mobilidade",          short: "MB", bg: "bg-green-400",   dot: "#4ade80" },
-  RECUPERACAO:       { label: "Recuperação",         short: "RC", bg: "bg-gray-400",    dot: "#9ca3af" },
+  // ── Corrida ──
+  REGENERATIVO:        { label: "Regenerativo",        short: "Z1", bg: "bg-emerald-400",  dot: "#4ade80" },
+  RODAGEM_LEVE:        { label: "Rodagem Leve",         short: "Z2", bg: "bg-sky-400",      dot: "#38bdf8" },
+  PROGRESSIVO:         { label: "Progressivo",          short: "P",  bg: "bg-blue-500",     dot: "#3b82f6" },
+  LONGAO:              { label: "Longão",               short: "L",  bg: "bg-info/80",      dot: "#3FA7FF" },
+  FARTLEK:             { label: "Fartlek",              short: "F",  bg: "bg-amber-400",    dot: "#fbbf24" },
+  TECNICA:             { label: "Técnica",              short: "T",  bg: "bg-teal-400",     dot: "#2dd4bf" },
+  SUBIDA:              { label: "Subida",               short: "S",  bg: "bg-orange-400",   dot: "#fb923c" },
+  TEMPO_RUN:           { label: "Tempo Run",            short: "T4", bg: "bg-warning/80",   dot: "#FFB020" },
+  INTERVALADO_LONGO:   { label: "Intervalado Longo",    short: "IL", bg: "bg-rose-500",     dot: "#f43f5e" },
+  INTERVALADO_CURTO:   { label: "Intervalado Curto",    short: "IC", bg: "bg-red-600",      dot: "#dc2626" },
+  PROVA:               { label: "Prova",                short: "★",  bg: "bg-red-700",      dot: "#b91c1c" },
+  // ── Ciclismo ──
+  ENDURANCE_BIKE:      { label: "Endurance Bike",       short: "Z2", bg: "bg-orange-300",   dot: "#fdba74" },
+  RECOVERY_BIKE:       { label: "Recuperação Bike",     short: "RC", bg: "bg-orange-200",   dot: "#fed7aa" },
+  SWEET_SPOT:          { label: "Sweet Spot",           short: "SS", bg: "bg-orange-400",   dot: "#fb923c" },
+  TEMPO_BIKE:          { label: "Tempo Bike",           short: "T",  bg: "bg-orange-500",   dot: "#f97316" },
+  THRESHOLD_BIKE:      { label: "Limiar Bike",          short: "L",  bg: "bg-orange-600",   dot: "#ea580c" },
+  VO2MAX_BIKE:         { label: "VO2máx Bike",          short: "V",  bg: "bg-red-500",      dot: "#ef4444" },
+  ANAEROBIC_BIKE:      { label: "Anaeróbico",           short: "AN", bg: "bg-red-700",      dot: "#b91c1c" },
+  SPRINT_BIKE:         { label: "Sprint Bike",          short: "SP", bg: "bg-red-800",      dot: "#991b1b" },
+  LONG_RIDE:           { label: "Saída Longa",          short: "LR", bg: "bg-amber-500",    dot: "#f59e0b" },
+  // ── Natação ──
+  TECNICA_NATACAO:     { label: "Técnica Natação",      short: "TN", bg: "bg-cyan-400",     dot: "#22d3ee" },
+  ENDURANCE_NATACAO:   { label: "Endurance Natação",    short: "Z2", bg: "bg-cyan-500",     dot: "#06b6d4" },
+  INTERVALADO_NATACAO: { label: "Intervalados Natação", short: "IN", bg: "bg-blue-500",     dot: "#3b82f6" },
+  LIMIAR_NATACAO:      { label: "Limiar / CSS",         short: "CS", bg: "bg-blue-600",     dot: "#2563eb" },
+  SPRINT_NATACAO:      { label: "Sprint Natação",       short: "SP", bg: "bg-blue-700",     dot: "#1d4ed8" },
+  RECUPERACAO_NATACAO: { label: "Recuperação Natação",  short: "RC", bg: "bg-cyan-300",     dot: "#67e8f9" },
+  AGUAS_ABERTAS:       { label: "Águas Abertas",        short: "AA", bg: "bg-teal-500",     dot: "#14b8a6" },
+  // ── Triathlon / Brick ──
+  BRICK_BIKE_RUN:      { label: "Brick Bike+Corrida",   short: "BR", bg: "bg-yellow-500",   dot: "#eab308" },
+  BRICK_SWIM_BIKE:     { label: "Brick Nat+Bike",       short: "BS", bg: "bg-yellow-600",   dot: "#ca8a04" },
+  TRANSICAO:           { label: "Transição",            short: "T",  bg: "bg-yellow-400",   dot: "#facc15" },
+  SIMULADO_TRIATHLON:  { label: "Simulado Triathlon",   short: "ST", bg: "bg-amber-600",    dot: "#d97706" },
+  TREINO_COMBINADO:    { label: "Treino Combinado",     short: "TC", bg: "bg-amber-500",    dot: "#f59e0b" },
+  // ── Força / Mobilidade ──
+  FORCA:               { label: "Força",                short: "FC", bg: "bg-purple-500",   dot: "#a855f7" },
+  FUNCIONAL:           { label: "Funcional",            short: "FN", bg: "bg-purple-400",   dot: "#c084fc" },
+  MOBILIDADE:          { label: "Mobilidade",           short: "MB", bg: "bg-green-400",    dot: "#4ade80" },
+  RECUPERACAO:         { label: "Recuperação",          short: "RC", bg: "bg-gray-400",     dot: "#9ca3af" },
 };
 
 function woCfg(type: string) {
@@ -38,16 +64,24 @@ function woCfg(type: string) {
 
 export interface CalWorkout {
   id: string;
-  date: string;         // YYYY-MM-DD
+  date: string;             // YYYY-MM-DD
   type: string;
+  sport?: string | null;
   title: string | null;
   status: string;
   targetDistanceKm: number | null;
   targetDurationMin: number | null;
   targetPaceSecPerKm?: number | null;
+  targetPacePer100m?: number | null;
+  targetPowerPctFtp?: number | null;
   targetRpe?: number | null;
   structured?: boolean;
 }
+
+const SPORT_EMOJI: Record<string, string> = {
+  RUN: "🏃", BIKE: "🚴", SWIM: "🏊", STRENGTH: "🏋️",
+  MOBILITY: "🧘", TRIATHLON: "🏅", BRICK: "⚡",
+};
 
 interface Props {
   athleteId: string;
@@ -160,9 +194,21 @@ function WorkoutModal({ wo, onClose }: { wo: CalWorkout; onClose: () => void }) 
             </div>
           </div>
 
-          {wo.targetPaceSecPerKm && (
+          {wo.targetPaceSecPerKm && wo.sport !== "SWIM" && (
             <p className="text-xs text-text-muted">
               Pace: <span className="font-semibold text-text">{formatPace(wo.targetPaceSecPerKm)}</span>
+            </p>
+          )}
+          {wo.targetPacePer100m && (
+            <p className="text-xs text-text-muted">
+              Pace: <span className="font-semibold text-text">
+                {Math.floor(wo.targetPacePer100m / 60)}:{String(wo.targetPacePer100m % 60).padStart(2, "0")}/100m
+              </span>
+            </p>
+          )}
+          {wo.targetPowerPctFtp && (
+            <p className="text-xs text-text-muted">
+              Potência alvo: <span className="font-semibold text-text">{wo.targetPowerPctFtp}% FTP</span>
             </p>
           )}
           {wo.targetRpe && (
@@ -335,6 +381,11 @@ export function AthleteCalendar({ athleteId, initialWorkouts }: Props) {
                       )}
                     >
                       <GripVertical className="h-2.5 w-2.5 shrink-0 opacity-60" />
+                      {wo.sport && wo.sport !== "RUN" && (
+                        <span className="shrink-0 text-[10px]" aria-hidden="true">
+                          {SPORT_EMOJI[wo.sport] ?? ""}
+                        </span>
+                      )}
                       <span className="truncate">{wo.title ?? cfg.label}</span>
                     </div>
                   );
@@ -348,10 +399,11 @@ export function AthleteCalendar({ athleteId, initialWorkouts }: Props) {
       {/* Legend */}
       <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1">
         {[
-          { label: "Z2 Leve", bg: "bg-sky-400" },
-          { label: "T4 Limiar", bg: "bg-orange-500" },
-          { label: "IL Intervalo", bg: "bg-rose-500" },
-          { label: "FC Força", bg: "bg-violet-500" },
+          { label: "🏃 Corrida",   bg: "bg-sky-400" },
+          { label: "🚴 Ciclismo",  bg: "bg-orange-400" },
+          { label: "🏊 Natação",   bg: "bg-cyan-500" },
+          { label: "⚡ Brick",     bg: "bg-yellow-500" },
+          { label: "🏋️ Força",     bg: "bg-purple-500" },
         ].map((l) => (
           <span key={l.label} className="flex items-center gap-1 text-[10px] text-text-muted">
             <span className={cn("h-2.5 w-2.5 rounded-sm", l.bg)} />

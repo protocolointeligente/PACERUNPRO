@@ -115,6 +115,63 @@ export const ZONE_PRESETS: ZoneModelPreset[] = [
       { number: 5, name: "VO2máx / Competição", color: "#f87171", minPct: 90,  maxPct: 100, description: "Ritmo de prova" },
     ],
   },
+  // ── Ciclismo — Potência (FTP) ─────────────────────────────────────────────
+  {
+    name: "Ciclismo 7 Zonas — Potência (FTP)",
+    sport: "CICLISMO",
+    method: "FTP",
+    zoneCount: 7,
+    zones: [
+      { number: 1, name: "Recuperação Ativa",      color: "#4ade80", minPct: 0,   maxPct: 55,  rpeRange: [1,2],  description: "< 55% FTP — recuperação muito fácil" },
+      { number: 2, name: "Resistência",            color: "#38bdf8", minPct: 55,  maxPct: 75,  rpeRange: [2,3],  description: "55–75% FTP — base aeróbica longa" },
+      { number: 3, name: "Tempo / Sweet Spot",     color: "#34d399", minPct: 75,  maxPct: 90,  rpeRange: [4,5],  description: "75–90% FTP — tempo e sweet spot" },
+      { number: 4, name: "Limiar de Lactato",      color: "#fb923c", minPct: 90,  maxPct: 105, rpeRange: [6,7],  description: "90–105% FTP — esforço de limiar" },
+      { number: 5, name: "VO2máx",                 color: "#f87171", minPct: 105, maxPct: 120, rpeRange: [7,8],  description: "105–120% FTP — intervalados curtos" },
+      { number: 6, name: "Cap. Anaeróbica",        color: "#ef4444", minPct: 120, maxPct: 150, rpeRange: [9,9],  description: "120–150% FTP — sprints curtos" },
+      { number: 7, name: "Potência Neuromuscular", color: "#dc2626", minPct: 150, maxPct: 999, rpeRange: [10,10], description: "> 150% FTP — sprints máximos" },
+    ],
+  },
+  {
+    name: "Ciclismo 5 Zonas — FC Limiar",
+    sport: "CICLISMO",
+    method: "LIMIAR",
+    zoneCount: 5,
+    zones: [
+      { number: 1, name: "Recuperação",   color: "#4ade80", minPct: 0,   maxPct: 80,  description: "< 80% FC Limiar" },
+      { number: 2, name: "Aeróbico",     color: "#38bdf8", minPct: 80,  maxPct: 87,  description: "80–87% FC Limiar" },
+      { number: 3, name: "Tempo",        color: "#a78bfa", minPct: 87,  maxPct: 93,  description: "87–93% FC Limiar" },
+      { number: 4, name: "Limiar",       color: "#fb923c", minPct: 93,  maxPct: 100, description: "93–100% FC Limiar" },
+      { number: 5, name: "Anaeróbico",   color: "#f87171", minPct: 100, maxPct: 115, description: "> FC Limiar" },
+    ],
+  },
+  // ── Natação — CSS (Pace) ──────────────────────────────────────────────────
+  {
+    name: "Natação 5 Zonas (CSS Pace)",
+    sport: "NATACAO",
+    method: "PACE",
+    zoneCount: 5,
+    zones: [
+      { number: 1, name: "Recuperação",          color: "#4ade80", minPct: 115, maxPct: 999, description: "≥ 115% CSS — fácil / técnica" },
+      { number: 2, name: "Base Aeróbica",        color: "#38bdf8", minPct: 108, maxPct: 115, description: "108–115% CSS — ritmo longo" },
+      { number: 3, name: "Desenvolvimento",      color: "#a78bfa", minPct: 103, maxPct: 108, description: "103–108% CSS — desenvolvimento aeróbico" },
+      { number: 4, name: "Limiar / CSS",         color: "#fb923c", minPct: 100, maxPct: 103, description: "100–103% CSS — ritmo CSS" },
+      { number: 5, name: "VO2máx / Prova",       color: "#f87171", minPct: 90,  maxPct: 100, description: "90–100% CSS — sprint e prova" },
+    ],
+  },
+  {
+    name: "Natação 5 Zonas (RPE)",
+    sport: "NATACAO",
+    method: "RPE",
+    zoneCount: 5,
+    zones: [
+      { number: 1, name: "Recuperação Ativa",    color: "#4ade80", minPct: 0, maxPct: 0, rpeRange: [1,3],  description: "Técnica e recuperação" },
+      { number: 2, name: "Resistência",          color: "#38bdf8", minPct: 0, maxPct: 0, rpeRange: [4,5],  description: "Ritmo de longa distância" },
+      { number: 3, name: "Desenvolvimento",      color: "#a78bfa", minPct: 0, maxPct: 0, rpeRange: [5,6],  description: "Ritmo progressivo" },
+      { number: 4, name: "Limiar",               color: "#fb923c", minPct: 0, maxPct: 0, rpeRange: [7,8],  description: "Séries de limiar" },
+      { number: 5, name: "Sprint / VO2máx",      color: "#f87171", minPct: 0, maxPct: 0, rpeRange: [9,10], description: "Sprints e tiros máximos" },
+    ],
+  },
+  // ── Força ─────────────────────────────────────────────────────────────────
   {
     name: "Força — Zonas por RPE",
     sport: "FORCA",

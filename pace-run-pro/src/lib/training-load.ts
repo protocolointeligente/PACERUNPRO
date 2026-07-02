@@ -14,14 +14,18 @@ export interface LoadParams {
 
 export interface WorkoutForLoad {
   type: string;
+  sport?: string | null;
   targetDistanceKm?: number | null;
   targetDurationMin?: number | null;
   targetPaceSecPerKm?: number | null;
+  targetPacePer100m?: number | null;    // Natação: pace alvo em seg/100m
+  targetPowerWatts?: number | null;     // Ciclismo: potência alvo
+  targetPowerPctFtp?: number | null;    // Ciclismo: % FTP alvo
   targetRpe?: number | null;
 }
 
-// Intensity Factor (IF) by workout type when threshold pace is unknown
-const ZONE_IF: Record<string, number> = {
+// Intensity Factor (IF) por tipo de treino — corrida
+const ZONE_IF_RUN: Record<string, number> = {
   REGENERATIVO:       0.65,
   RODAGEM_LEVE:       0.70,
   PROGRESSIVO:        0.78,
@@ -33,10 +37,51 @@ const ZONE_IF: Record<string, number> = {
   INTERVALADO_LONGO:  0.97,
   INTERVALADO_CURTO:  1.04,
   PROVA:              1.05,
+};
+
+// IF por tipo de treino — ciclismo (% do FTP como IF estimado)
+const ZONE_IF_BIKE: Record<string, number> = {
+  RECOVERY_BIKE:   0.60,
+  ENDURANCE_BIKE:  0.70,
+  TEMPO_BIKE:      0.82,
+  SWEET_SPOT:      0.88,
+  THRESHOLD_BIKE:  0.98,
+  VO2MAX_BIKE:     1.10,
+  ANAEROBIC_BIKE:  1.25,
+  SPRINT_BIKE:     1.40,
+  LONG_RIDE:       0.72,
+};
+
+// IF por tipo de treino — natação (relativo ao CSS)
+const ZONE_IF_SWIM: Record<string, number> = {
+  RECUPERACAO_NATACAO:  0.65,
+  TECNICA_NATACAO:      0.70,
+  ENDURANCE_NATACAO:    0.80,
+  LIMIAR_NATACAO:       0.95,
+  INTERVALADO_NATACAO:  1.05,
+  SPRINT_NATACAO:       1.20,
+  AGUAS_ABERTAS:        0.82,
+};
+
+// IF para modalidades genéricas
+const ZONE_IF_GENERIC: Record<string, number> = {
   FORCA:              0.65,
   FUNCIONAL:          0.68,
   MOBILIDADE:         0.45,
   RECUPERACAO:        0.55,
+  BRICK_BIKE_RUN:     0.85,
+  BRICK_SWIM_BIKE:    0.82,
+  TRANSICAO:          0.50,
+  SIMULADO_TRIATHLON: 0.88,
+  TREINO_COMBINADO:   0.80,
+};
+
+// Fallback unificado
+const ZONE_IF: Record<string, number> = {
+  ...ZONE_IF_RUN,
+  ...ZONE_IF_BIKE,
+  ...ZONE_IF_SWIM,
+  ...ZONE_IF_GENERIC,
 };
 
 // Default duration (minutes) when none is specified
@@ -70,12 +115,41 @@ export function estimateTSS(workout: WorkoutForLoad, params?: LoadParams | null)
   // Determine Intensity Factor
   let intensityFactor: number;
 
-  // Strength/non-running: use RPE if available
+  // Força/mobilidade: usar RPE se disponível
   if (type === "FORCA" || type === "FUNCIONAL" || type === "MOBILIDADE" || type === "RECUPERACAO") {
     const rpe = workout.targetRpe ?? 6;
     intensityFactor = rpe / 10;
-    // Scale down strength TSS (not comparable 1:1 with running TSS)
     return Math.round(durationHours * intensityFactor * intensityFactor * 100 * 0.55);
+  }
+
+  // ── Ciclismo — TSS por potência ou %FTP ──────────────────────────────────
+  const isBike = type in ZONE_IF_BIKE ||
+    workout.sport === "BIKE" ||
+    type === "BRICK_BIKE_RUN" || type === "BRICK_SWIM_BIKE";
+
+  if (isBike) {
+    if (workout.targetPowerWatts && params?.ftpWatts && params.ftpWatts > 0) {
+      // TSS = horas × IF² × 100  (IF = potência / FTP)
+      intensityFactor = Math.min(workout.targetPowerWatts / params.ftpWatts, 1.5);
+    } else if (workout.targetPowerPctFtp) {
+      intensityFactor = workout.targetPowerPctFtp / 100;
+    } else {
+      intensityFactor = ZONE_IF_BIKE[type] ?? ZONE_IF[type] ?? 0.75;
+    }
+    return Math.round(durationHours * intensityFactor * intensityFactor * 100);
+  }
+
+  // ── Natação — sTSS por pace e CSS ─────────────────────────────────────────
+  const isSwim = type in ZONE_IF_SWIM || workout.sport === "SWIM";
+
+  if (isSwim) {
+    if (workout.targetPacePer100m && params?.swimThresholdSecPer100m && params.swimThresholdSecPer100m > 0) {
+      // SwimIF = CSS_pace / avgPace (pace menor = mais rápido = IF maior)
+      intensityFactor = Math.min(params.swimThresholdSecPer100m / workout.targetPacePer100m, 1.5);
+    } else {
+      intensityFactor = ZONE_IF_SWIM[type] ?? 0.80;
+    }
+    return Math.round(durationHours * intensityFactor * intensityFactor * 100);
   }
 
   // Running: use threshold pace if available

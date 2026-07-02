@@ -28,6 +28,7 @@ export interface AthleteRow {
   adherence: number;
   weeklyLoad: number;
   lastCheckIn: string;
+  primarySport?: string | null;
 }
 
 export interface CoachDashboardProps {
@@ -47,6 +48,11 @@ interface ActionCenterData {
   workoutsThisWeek: number;
 }
 
+const SPORT_EMOJI: Record<string, string> = {
+  RUN: "🏃", BIKE: "🚴", SWIM: "🏊", STRENGTH: "🏋️",
+  MOBILITY: "🧘", TRIATHLON: "🏅", BRICK: "⚡",
+};
+
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   show: (i: number = 0) => ({
@@ -56,10 +62,10 @@ const fadeUp = {
 };
 
 const QUICK_ACTIONS = [
-  { label: "Prescrever", description: "Corrida, força ou mobilidade", href: "/treinador/prescricao/corrida", icon: Plus, color: "#C6F24E", bg: "rgba(198,242,78,0.12)" },
+  { label: "Prescrever", description: "Corrida, bike, natação...", href: "/treinador/prescricao/corrida", icon: Plus, color: "#C6F24E", bg: "rgba(198,242,78,0.12)" },
   { label: "Criar semana", description: "Periodização completa", href: "/treinador/prescricao/periodizacao", icon: CalendarDays, color: "#46E0C8", bg: "rgba(70,224,200,0.12)" },
-  { label: "Força", description: "Prescrever força e funcional", href: "/treinador/prescricao/forca", icon: Dumbbell, color: "#B78BFF", bg: "rgba(183,139,255,0.12)" },
-  { label: "Biblioteca", description: "Modelos salvos de treino", href: "/treinador/biblioteca", icon: Library, color: "#FFB020", bg: "rgba(255,176,32,0.12)" },
+  { label: "Força / Mob.", description: "Prescrever força e mobilidade", href: "/treinador/prescricao/forca", icon: Dumbbell, color: "#B78BFF", bg: "rgba(183,139,255,0.12)" },
+  { label: "Biblioteca", description: "Modelos de treino multisport", href: "/treinador/biblioteca", icon: Library, color: "#FFB020", bg: "rgba(255,176,32,0.12)" },
 ];
 
 export default function CoachDashboard({ firstName, credential, athleteCount, athletesAtRisk: riskCount, athletes }: CoachDashboardProps) {
@@ -250,7 +256,12 @@ export default function CoachDashboard({ firstName, credential, athleteCount, at
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold" style={{ color: "#ECEAE3" }}>{a.name}</p>
-                      <p className="text-xs" style={{ color: "#5C636B" }}>{a.goal} · {a.level}</p>
+                      <p className="text-xs" style={{ color: "#5C636B" }}>
+                        {a.primarySport && a.primarySport !== "RUN" && (
+                          <span className="mr-1">{SPORT_EMOJI[a.primarySport] ?? ""}</span>
+                        )}
+                        {a.goal} · {a.level}
+                      </p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs font-semibold" style={{ color: "#FF5A4D" }}>Em risco</p>
@@ -283,7 +294,12 @@ export default function CoachDashboard({ firstName, credential, athleteCount, at
                 return (
                   <div key={a.id}>
                     <div className="mb-1 flex items-center justify-between text-xs">
-                      <span className="truncate" style={{ color: "#9AA0A6" }}>{a.name}</span>
+                      <span className="truncate" style={{ color: "#9AA0A6" }}>
+                        {a.primarySport && a.primarySport !== "RUN" && (
+                          <span className="mr-1">{SPORT_EMOJI[a.primarySport] ?? ""}</span>
+                        )}
+                        {a.name}
+                      </span>
                       <span className="font-semibold font-mono" style={{ color: "#ECEAE3" }}>{a.weeklyLoad}</span>
                     </div>
                     <div className="h-1.5 w-full rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>

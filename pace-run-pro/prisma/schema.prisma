@@ -27,7 +27,18 @@ enum Sex {
   OUTRO
 }
 
+enum SportType {
+  RUN
+  BIKE
+  SWIM
+  STRENGTH
+  MOBILITY
+  TRIATHLON
+  BRICK
+}
+
 enum Goal {
+  // Corrida
   CINCO_KM
   DEZ_KM
   VINTE_E_UM_KM
@@ -36,6 +47,18 @@ enum Goal {
   EMAGRECIMENTO
   PERFORMANCE
   RETORNO_AS_CORRIDAS
+  // Ciclismo
+  GRAN_FONDO
+  CICLISMO_PERFORMANCE
+  // Natação
+  NATACAO_PERFORMANCE
+  // Triathlon
+  SPRINT_TRIATHLON
+  OLIMPICO
+  MEIO_IRONMAN
+  IRONMAN
+  AQUATLON
+  DUATLON
 }
 
 enum ExperienceLevel {
@@ -171,6 +194,7 @@ model Athlete {
   appointments       Appointment[]
 
   shoes              Shoe[]
+  sportProfiles      AthleteSportProfile[]
   dailyLoads         DailyLoad[]
 
   createdAt          DateTime @default(now())
@@ -309,6 +333,7 @@ model TrainingWeek {
 // ────────────────────────────────────────────────────────────────────────────
 
 enum WorkoutType {
+  // ── Corrida ────────────────────────────────────────────
   RODAGEM_LEVE
   INTERVALADO_CURTO
   INTERVALADO_LONGO
@@ -320,6 +345,31 @@ enum WorkoutType {
   SUBIDA
   TECNICA
   PROVA
+  // ── Ciclismo ───────────────────────────────────────────
+  ENDURANCE_BIKE
+  RECOVERY_BIKE
+  TEMPO_BIKE
+  SWEET_SPOT
+  THRESHOLD_BIKE
+  VO2MAX_BIKE
+  ANAEROBIC_BIKE
+  SPRINT_BIKE
+  LONG_RIDE
+  // ── Natação ────────────────────────────────────────────
+  TECNICA_NATACAO
+  ENDURANCE_NATACAO
+  INTERVALADO_NATACAO
+  LIMIAR_NATACAO
+  SPRINT_NATACAO
+  RECUPERACAO_NATACAO
+  AGUAS_ABERTAS
+  // ── Triathlon / Brick ──────────────────────────────────
+  BRICK_BIKE_RUN
+  BRICK_SWIM_BIKE
+  TRANSICAO
+  SIMULADO_TRIATHLON
+  TREINO_COMBINADO
+  // ── Genérico ───────────────────────────────────────────
   FORCA
   FUNCIONAL
   MOBILIDADE
@@ -341,6 +391,7 @@ model Workout {
 
   date          DateTime
   type          WorkoutType
+  sport         SportType?    // RUN | BIKE | SWIM | STRENGTH | MOBILITY | TRIATHLON | BRICK
   title         String
   status        WorkoutStatus @default(AGENDADO)
 
@@ -353,11 +404,26 @@ model Workout {
   structured    Boolean  @default(false)  // treino com blocos estruturados
   blocks        Json?                     // WorkoutBlock[] — ver lib/workout-blocks.ts
 
-  targetPaceSecPerKm Int?
+  // ── Alvos universais ──────────────────────────────────
   targetHrZone       String?
   targetRpe          Int?
   targetDistanceKm   Float?
   targetDurationMin  Int?
+  targetTss          Int?     // TSS alvo prescrito
+  plannedLoad        Float?   // carga planejada (sRPE estimado)
+
+  // ── Corrida ───────────────────────────────────────────
+  targetPaceSecPerKm Int?
+
+  // ── Ciclismo ──────────────────────────────────────────
+  targetPowerWatts   Int?     // potência alvo (W)
+  targetPowerPctFtp  Int?     // % do FTP alvo (ex: 95 = 95% FTP)
+  targetCadence      Int?     // cadência alvo (rpm)
+
+  // ── Natação ───────────────────────────────────────────
+  targetPacePer100m  Int?     // pace alvo em seg/100m
+  targetStrokeRate   Int?     // braçadas por minuto alvo
+  targetSwolf        Int?     // SWOLF alvo
 
   videoUrl      String?
   imageUrl      String?
@@ -380,31 +446,58 @@ model WorkoutLog {
   athlete      Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
 
   // Source tracking
-  source              String   @default("manual") // manual | strava | garmin | polar | coros | apple | google_fit | suunto
-  stravaActivityId    String?  @unique
-  externalActivityId  String?  // provider-specific activity ID (used with source for dedup)
+  source              String    @default("manual") // manual | strava | garmin | polar | coros | apple | google_fit | suunto
+  stravaActivityId    String?   @unique
+  externalActivityId  String?   // provider-specific activity ID (used with source for dedup)
 
+  // ── Modalidade ────────────────────────────────────────
+  sport               SportType? // RUN | BIKE | SWIM | STRENGTH | MOBILITY | TRIATHLON | BRICK
+
+  // ── Dados de execução universais ──────────────────────
   startedAt    DateTime?
   finishedAt   DateTime?
   distanceKm   Float?
   durationSec  Int?
-  avgPaceSecPerKm Int?
   avgHr        Int?
   maxHr        Int?
-  cadence      Int?
   elevationGainM Float?
   calories     Int?
   gpsTrack     Json?
   splits       Json?
-
   rpe          Int?
   feeling      String?
+
+  // ── Carga calculada ───────────────────────────────────
+  tss          Float?   // Training Stress Score real
+  actualLoad   Float?   // sRPE load = durationMin × RPE
+
+  // ── Corrida ───────────────────────────────────────────
+  avgPaceSecPerKm Int?
+  cadence         Int?
+
+  // ── Ciclismo ──────────────────────────────────────────
+  avgWatts          Int?
+  normalizedPower   Int?   // NP
+  intensityFactor   Float? // IF = NP / FTP
+  tssFromPower      Float? // TSS calculado por potência
+
+  // ── Natação ───────────────────────────────────────────
+  poolLengthM       Int?   // 25 | 50
+  swimStroke        String? // freestyle | backstroke | breaststroke | butterfly | medley
+  swolf             Int?   // SWOLF = tempo/piscina + braçadas
+  strokeRate        Int?   // braçadas por minuto
+  avgPacePer100m    Int?   // pace médio em seg/100m
+
+  // ── Feedback ──────────────────────────────────────────
+  coachFeedback    String?
+  athleteFeedback  String?
 
   comments     WorkoutLogComment[]
 
   createdAt    DateTime @default(now())
 
   @@index([athleteId, startedAt])
+  @@index([athleteId, sport])
   @@index([workoutId])
   @@index([source, externalActivityId])
   @@map("workout_logs")
@@ -520,6 +613,7 @@ model ExerciseVideo {
 // ────────────────────────────────────────────────────────────────────────────
 
 enum TestType {
+  // ── Corrida ────────────────────────────────────────────
   COOPER
   CINCO_MINUTOS
   TRES_KM
@@ -527,29 +621,54 @@ enum TestType {
   VAM
   RAST
   LIMIAR
+  // ── Ciclismo ───────────────────────────────────────────
+  FTP_20MIN
+  FTP_RAMP
+  CRITICAL_POWER_5MIN
+  CRITICAL_POWER_20MIN
+  FC_LIMIAR_BIKE
+  // ── Natação ────────────────────────────────────────────
+  CSS_400_200
+  CSS_1000M
+  SWIM_30MIN
+  PACE_CRITICO_NATACAO
+  TECNICA_NATACAO
 }
 
 model PerformanceTest {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   athleteId   String
-  athlete     Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  athlete     Athlete   @relation(fields: [athleteId], references: [id], onDelete: Cascade)
 
   type        TestType
+  sport       SportType? // modalidade do teste
   date        DateTime
   distanceM   Float?
   durationSec Int?
   avgHr       Int?
   maxHr       Int?
 
-  // resultados calculados
-  vo2max      Float?
-  vamKmh      Float?
+  // ── Corrida ───────────────────────────────────────────
+  vo2max                Float?
+  vamKmh                Float?
   thresholdPaceSecPerKm Int?
+
+  // ── Ciclismo ──────────────────────────────────────────
+  avgWatts              Int?    // potência média do teste
+  ftpWatts              Int?    // FTP calculado
+  criticalPowerWatts    Int?    // CP calculado
+
+  // ── Natação ───────────────────────────────────────────
+  cssPacePer100m        Int?    // CSS em seg/100m
+  time400mSec           Int?    // tempo 400m (CSS test)
+  time200mSec           Int?    // tempo 200m (CSS test)
+
   notes       String?
 
   createdAt   DateTime @default(now())
 
   @@index([athleteId, date])
+  @@index([athleteId, sport])
   @@map("performance_tests")
 }
 
@@ -1094,6 +1213,48 @@ model AthleteLoadParams {
   updatedAt               DateTime @updatedAt
 
   @@map("athlete_load_params")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Perfil multisport por modalidade — CSS, FTP, paces, zonas específicas
+// ────────────────────────────────────────────────────────────────────────────
+
+model AthleteSportProfile {
+  id          String    @id @default(cuid())
+  athleteId   String
+  athlete     Athlete   @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  sport       SportType // RUN | BIKE | SWIM | STRENGTH | MOBILITY | TRIATHLON | BRICK
+
+  // ── Corrida ───────────────────────────────────────────
+  thresholdPaceSecPerKm Int?  // pace limiar (seg/km)
+  vdot                  Float? // VDOT de Daniels
+  vamKmh                Float? // VAM em km/h
+  vo2max                Float? // VO2max estimado (ml/kg/min)
+
+  // ── Ciclismo ──────────────────────────────────────────
+  ftpWatts              Int?   // FTP em watts
+  ftpWattsPerKg         Float? // FTP relativo (W/kg)
+  criticalPowerWatts    Int?   // Potência crítica (CP)
+  wPrimeJoules          Int?   // Reserva anaeróbia W' em joules
+
+  // ── Natação ───────────────────────────────────────────
+  cssPacePer100m        Int?   // Critical Swim Speed em seg/100m
+  cssMetersPerSec       Float? // CSS em m/s
+
+  // ── FC (universal) ────────────────────────────────────
+  hrMax                 Int?   // FC máxima para esta modalidade
+  hrRest                Int?   // FC repouso
+  hrThreshold           Int?   // FC limiar (LTHR)
+
+  // ── Zonas personalizadas ──────────────────────────────
+  zones                 Json?  // ZoneDef[] sobrescreve modelo padrão
+
+  updatedAt             DateTime @updatedAt
+
+  @@unique([athleteId, sport])
+  @@index([athleteId])
+  @@map("athlete_sport_profiles")
 }
 
 // ────────────────────────────────────────────────────────────────────────────

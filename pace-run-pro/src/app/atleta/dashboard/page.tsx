@@ -26,19 +26,41 @@ function secToMin(s: number) {
 }
 
 // Zone bar segments derived from workout type / objective hint
-function zoneSegments(type: string, objective?: string): { color: string; flex: number }[] {
+function zoneSegments(type: string, sport?: string, objective?: string): { color: string; flex: number }[] {
   const obj = (objective ?? "").toLowerCase();
-  const isForca = type === "forca" || type === "funcional";
-  if (isForca) return [{ color: "#FFB020", flex: 100 }];
+  const s = (sport ?? "RUN").toUpperCase();
+  if (s === "STRENGTH") return [{ color: "#FFB020", flex: 100 }];
+  if (s === "MOBILITY")  return [{ color: "#4ade80", flex: 100 }];
+  if (s === "SWIM") {
+    if (type.includes("SPRINT") || type.includes("LIMIAR"))
+      return [{ color: "#22d3ee", flex: 40 }, { color: "#3b82f6", flex: 60 }];
+    return [{ color: "#67e8f9", flex: 60 }, { color: "#22d3ee", flex: 40 }];
+  }
+  if (s === "BIKE") {
+    if (type.includes("VO2") || type.includes("ANAEROBIC") || type.includes("SPRINT"))
+      return [{ color: "#f97316", flex: 35 }, { color: "#ef4444", flex: 65 }];
+    if (type.includes("THRESHOLD") || type.includes("SWEET"))
+      return [{ color: "#fdba74", flex: 30 }, { color: "#f97316", flex: 70 }];
+    return [{ color: "#fed7aa", flex: 65 }, { color: "#fdba74", flex: 35 }];
+  }
   if (obj.includes("z4") || obj.includes("interval") || obj.includes("tiro"))
     return [{ color: "#46E0C8", flex: 30 }, { color: "#C6F24E", flex: 35 }, { color: "#FFB020", flex: 35 }];
   if (obj.includes("z3") || obj.includes("tempo") || obj.includes("progress"))
     return [{ color: "#46E0C8", flex: 50 }, { color: "#C6F24E", flex: 50 }];
   if (obj.includes("z1") || obj.includes("recup") || obj.includes("leve"))
     return [{ color: "#3FA7FF", flex: 100 }];
-  // default Z2 + slight Z3 for "rodagem"
   return [{ color: "#46E0C8", flex: 65 }, { color: "#C6F24E", flex: 35 }];
 }
+
+const SPORT_ACCENT: Record<string, { color: string; bg: string; border: string; label: string; startLabel: string }> = {
+  RUN:      { color: "#C6F24E", bg: "rgba(198,242,78,0.08)",  border: "rgba(198,242,78,0.26)",  label: "Corrida",   startLabel: "▶  Iniciar corrida" },
+  BIKE:     { color: "#f97316", bg: "rgba(249,115,22,0.08)",  border: "rgba(249,115,22,0.26)",  label: "Ciclismo",  startLabel: "▶  Iniciar ciclismo" },
+  SWIM:     { color: "#06b6d4", bg: "rgba(6,182,212,0.08)",   border: "rgba(6,182,212,0.26)",   label: "Natação",   startLabel: "▶  Iniciar natação" },
+  STRENGTH: { color: "#FFB020", bg: "rgba(255,176,32,0.08)",  border: "rgba(255,176,32,0.26)",  label: "Força",     startLabel: "▶  Iniciar força" },
+  MOBILITY: { color: "#4ade80", bg: "rgba(74,222,128,0.08)",  border: "rgba(74,222,128,0.26)",  label: "Mobilidade",startLabel: "▶  Iniciar mobilidade" },
+  TRIATHLON:{ color: "#eab308", bg: "rgba(234,179,8,0.08)",   border: "rgba(234,179,8,0.26)",   label: "Triathlon", startLabel: "▶  Iniciar treino" },
+  BRICK:    { color: "#eab308", bg: "rgba(234,179,8,0.08)",   border: "rgba(234,179,8,0.26)",   label: "Brick",     startLabel: "▶  Iniciar brick" },
+};
 
 // ── types ───────────────────────────────────────────────────────────────────
 interface WorkoutEntry {
@@ -46,8 +68,11 @@ interface WorkoutEntry {
   date: string;
   title: string;
   type: string;
+  sport?: string | null;
   objective?: string;
   targetPaceSecPerKm?: number;
+  targetPacePer100m?: number;
+  targetPowerPctFtp?: number;
   distanceKm?: number;
   durationMin?: number;
   targetRpe?: number;
@@ -55,16 +80,17 @@ interface WorkoutEntry {
 
 // ── workout card ────────────────────────────────────────────────────────────
 function WorkoutCard({ w, yesterday }: { w: WorkoutEntry; yesterday?: boolean }) {
-  const isForca = w.type === "forca" || w.type === "funcional";
-  const accent = isForca ? "#FFB020" : "#C6F24E";
-  const accentBg = isForca ? "rgba(255,176,32,0.08)" : "rgba(198,242,78,0.08)";
-  const accentBorder = isForca ? "rgba(255,176,32,0.26)" : "rgba(198,242,78,0.26)";
-  const accentLabel = isForca ? "rgba(255,176,32,0.24)" : "rgba(198,242,78,0.24)";
-  const ctaBg = isForca ? "rgba(255,176,32,0.12)" : "#C6F24E";
-  const ctaText = isForca ? "#FFB020" : "#0A0C0F";
-  const ctaLabel = isForca ? "▶  Iniciar força" : "▶  Iniciar corrida";
-  const typeLabel = isForca ? "Força · Membros inferiores" : `Corrida · ${w.objective?.slice(0, 20) ?? "Z2 base"}`;
-  const segments = zoneSegments(w.type, w.objective);
+  const sportKey = (w.sport ?? "RUN").toUpperCase();
+  const sportCfg = SPORT_ACCENT[sportKey] ?? SPORT_ACCENT.RUN;
+  const accent        = sportCfg.color;
+  const accentBg      = sportCfg.bg;
+  const accentBorder  = sportCfg.border;
+  const accentLabel   = accentBg;
+  const ctaBg         = sportKey === "RUN" ? "#C6F24E" : accentBg;
+  const ctaText       = sportKey === "RUN" ? "#0A0C0F" : accent;
+  const ctaLabel      = yesterday ? "▶  Ver treino" : sportCfg.startLabel;
+  const typeLabel     = `${sportCfg.label} · ${w.objective?.slice(0, 20) ?? w.type}`;
+  const segments      = zoneSegments(w.type, sportKey, w.objective);
 
   const href = yesterday ? `/atleta/treino/${w.id}` : `/atleta/treino/${w.id}/executar`;
   const detailHref = `/atleta/treino/${w.id}`;
@@ -98,10 +124,12 @@ function WorkoutCard({ w, yesterday }: { w: WorkoutEntry; yesterday?: boolean })
             {w.title}
           </div>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#9AA0A6", marginTop: 3 }}>
-            {w.distanceKm ? `${w.distanceKm} km` : ""}
+            {w.distanceKm ? `${w.distanceKm} ${sportKey === "SWIM" ? "m" : "km"}` : ""}
             {w.distanceKm && w.durationMin ? " · " : ""}
             {w.durationMin ? `~${w.durationMin} min` : ""}
-            {w.targetPaceSecPerKm ? ` · ${secToMin(w.targetPaceSecPerKm)}/km` : ""}
+            {w.targetPaceSecPerKm && sportKey === "RUN" ? ` · ${secToMin(w.targetPaceSecPerKm)}/km` : ""}
+            {w.targetPacePer100m ? ` · ${secToMin(w.targetPacePer100m)}/100m` : ""}
+            {w.targetPowerPctFtp ? ` · ${w.targetPowerPctFtp}% FTP` : ""}
           </div>
         </div>
         {/* icon square */}
@@ -109,24 +137,15 @@ function WorkoutCard({ w, yesterday }: { w: WorkoutEntry; yesterday?: boolean })
           width: 40, height: 40, borderRadius: 11,
           background: accentBg, border: `1px solid ${accentLabel}`,
           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-          marginLeft: 10,
+          marginLeft: 10, fontSize: 20,
         }}>
-          {isForca ? (
-            <svg width="18" height="14" viewBox="0 0 24 14" fill="none">
-              <rect x="1" y="5" width="3" height="4" rx="1.5" fill={accent} />
-              <rect x="0" y="6" width="2" height="2" rx="1" fill={accent} />
-              <rect x="20" y="5" width="3" height="4" rx="1.5" fill={accent} />
-              <rect x="22" y="6" width="2" height="2" rx="1" fill={accent} />
-              <rect x="4" y="6" width="16" height="2" rx="1" fill={accent} />
-              <rect x="7" y="4" width="3" height="6" rx="1.5" fill={accent} />
-              <rect x="14" y="4" width="3" height="6" rx="1.5" fill={accent} />
-            </svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <circle cx="13" cy="4" r="2" fill={accent} />
-              <path d="M8 7.5l4-2 2.5 4-3.5 2.5-1.5 5M9 9.5L6 12" stroke={accent} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
+          {sportKey === "STRENGTH" ? "🏋️" :
+           sportKey === "BIKE"     ? "🚴" :
+           sportKey === "SWIM"     ? "🏊" :
+           sportKey === "MOBILITY" ? "🧘" :
+           sportKey === "TRIATHLON"? "🏅" :
+           sportKey === "BRICK"    ? "⚡" :
+           "🏃"}
         </div>
       </div>
 
@@ -158,7 +177,7 @@ function WorkoutCard({ w, yesterday }: { w: WorkoutEntry; yesterday?: boolean })
       <Link href={href} style={{ display: "block" }}>
         <div style={{
           background: ctaBg,
-          ...(isForca ? { border: `1px solid rgba(255,176,32,0.28)` } : {}),
+          ...(sportKey !== "RUN" ? { border: `1px solid ${accentBorder}` } : {}),
           borderRadius: 12, padding: 13,
           textAlign: "center", fontWeight: 800, fontSize: 14, color: ctaText, cursor: "pointer",
         }}>
