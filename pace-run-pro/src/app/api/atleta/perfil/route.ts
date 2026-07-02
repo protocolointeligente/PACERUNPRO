@@ -68,8 +68,8 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  if (!session?.user?.id || session.user.role !== "ATHLETE") {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const body = (await req.json()) as {

@@ -4,8 +4,8 @@ import webpush from "web-push";
 
 // Called by Vercel Cron at 07:00 America/Sao_Paulo
 export async function GET(req: NextRequest) {
-  const cronSecret = req.headers.get("authorization");
-  if (cronSecret !== `Bearer ${process.env.CRON_SECRET}`) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || req.headers.get("authorization") !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

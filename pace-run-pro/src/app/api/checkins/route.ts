@@ -74,7 +74,15 @@ export async function POST(req: NextRequest) {
     workoutLogId?: string;
   };
 
-  const { rpe, pain, sleep, fatigue, mood, notes } = body;
+  const clampInt = (v: number | undefined, min: number, max: number) =>
+    v != null ? Math.min(max, Math.max(min, Math.round(v))) : undefined;
+
+  const rpe     = clampInt(body.rpe,     0, 10);
+  const pain    = clampInt(body.pain,    0, 10);
+  const sleep   = clampInt(body.sleep,   0, 10);
+  const fatigue = clampInt(body.fatigue, 0, 10);
+  const mood    = clampInt(body.mood,    0, 10);
+  const notes   = typeof body.notes === "string" ? body.notes.trim().slice(0, 500) : undefined;
 
   // Sinaliza risco ao treinador: dor >= 6, fadiga >= 8 ou RPE >= 9
   const flagged =

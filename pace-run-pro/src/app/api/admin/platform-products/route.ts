@@ -64,13 +64,27 @@ export async function PATCH(req: NextRequest) {
   if (denied) return denied;
 
   const body = await req.json();
-  const { id, ...data } = body;
+  const {
+    id,
+    title, slug, description, sport, level, durationWeeks,
+    weeklyHoursMin, weeklyHoursMax, goal, priceCents,
+    coverUrl, featured, included, planContent, published,
+  } = body;
   if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
 
   const product = await prisma.planProduct.findUnique({ where: { id } });
   if (!product || product.coachId !== null) {
     return NextResponse.json({ error: "Produto não encontrado ou não é da plataforma" }, { status: 404 });
   }
+
+  // Allowlist updateable fields — never pass raw body to Prisma
+  const data = Object.fromEntries(
+    Object.entries({
+      title, slug, description, sport, level, durationWeeks,
+      weeklyHoursMin, weeklyHoursMax, goal, priceCents,
+      coverUrl, featured, included, planContent, published,
+    }).filter(([, v]) => v !== undefined),
+  );
 
   const updated = await prisma.planProduct.update({ where: { id }, data });
   return NextResponse.json(updated);

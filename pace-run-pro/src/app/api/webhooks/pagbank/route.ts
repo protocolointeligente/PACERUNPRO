@@ -25,20 +25,18 @@ function planDurationDays(planId: string): number {
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
 
-  // Verificação HMAC-SHA256 obrigatória em produção
+  // HMAC-SHA256 obrigatório sempre — fail closed se secret não configurado
   const webhookSecret = process.env.PAGBANK_WEBHOOK_SECRET;
-  if (!webhookSecret && process.env.NODE_ENV === "production") {
-    console.error("[pagbank] PAGBANK_WEBHOOK_SECRET não configurado em produção");
+  if (!webhookSecret) {
+    console.error("[pagbank] PAGBANK_WEBHOOK_SECRET não configurado — webhook rejeitado");
     return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
   }
-  if (webhookSecret) {
-    // PagBank envia a assinatura no header x-pagbank-signature como hex HMAC-SHA256
-    const receivedSig = req.headers.get("x-pagbank-signature") ?? "";
-    const expectedSig = createHmac("sha256", webhookSecret).update(rawBody).digest("hex");
-    if (receivedSig !== expectedSig) {
-      console.warn("[pagbank] assinatura inválida recebida");
-      return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
-    }
+  // PagBank envia a assinatura no header x-pagbank-signature como hex HMAC-SHA256
+  const receivedSig = req.headers.get("x-pagbank-signature") ?? "";
+  const expectedSig = createHmac("sha256", webhookSecret).update(rawBody).digest("hex");
+  if (receivedSig !== expectedSig) {
+    console.warn("[pagbank] assinatura inválida recebida");
+    return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
   }
 
   let event: Record<string, unknown>;

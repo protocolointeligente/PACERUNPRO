@@ -113,3 +113,9 @@ export const leadsLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 3 lead submissions per minute per IP
   key: "leads",
 });
+
+export const loginLimiter = createRateLimiter({
+  limit: 10,
+  windowMs: 15 * 60 * 1000, // 10 login attempts per 15 minutes per IP
+  key: "auth:login",
+});

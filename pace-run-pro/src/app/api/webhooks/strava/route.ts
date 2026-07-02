@@ -19,9 +19,10 @@ export async function GET(request: NextRequest) {
 // Strava sends POST for new/updated activities
 export async function POST(request: NextRequest) {
   // Validate secret embedded in webhook URL (registered with ?secret=TOKEN)
+  // Fail closed: if the env var is not set, reject all incoming POSTs.
   const secret = new URL(request.url).searchParams.get("secret");
   const expectedSecret = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN;
-  if (expectedSecret && secret !== expectedSecret) {
+  if (!expectedSecret || secret !== expectedSecret) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

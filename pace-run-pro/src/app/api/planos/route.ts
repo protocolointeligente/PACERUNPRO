@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-guard";
+import { getSession, requireCoach } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import type { CyclePhase, Goal, WorkoutType } from "@prisma/client";
 
@@ -54,11 +54,10 @@ function nextMonday(): Date {
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
+  const guard = requireCoach(session);
+  if (guard) return guard;
 
-  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } });
+  const coach = await prisma.coach.findUnique({ where: { userId: session!.user!.id as string } });
   if (!coach) {
     return NextResponse.json({ error: "Treinador não encontrado" }, { status: 403 });
   }
