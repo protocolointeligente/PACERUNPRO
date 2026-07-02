@@ -7,17 +7,16 @@ import {
   Gauge,
   HeartPulse,
   MapPin,
-  PlayCircle,
   Target,
   Thermometer,
   Wind,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { formatPace } from "@/lib/utils";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { WorkoutActions } from "@/components/workout/workout-actions";
 
 const WORKOUT_TYPE_LABELS: Record<string, string> = {
   RODAGEM_LEVE: "Rodagem Leve",
@@ -73,6 +72,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
       id: true,
       date: true,
       type: true,
+      sport: true,
       title: true,
       status: true,
       objective: true,
@@ -205,14 +205,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
       )}
 
       {/* CTA */}
-      <div className="sticky bottom-20 z-10 flex justify-center lg:bottom-6">
-        <Link href={`/atleta/treino/${workout.id}/executar`} className="w-full sm:w-auto">
-          <Button size="lg" className="w-full px-10 shadow-2xl shadow-primary/40 sm:w-auto">
-            <PlayCircle className="h-5 w-5" />
-            INICIAR TREINO
-          </Button>
-        </Link>
-      </div>
+      <WorkoutActions workoutId={workout.id} sport={workout.sport ?? "RUN"} />
     </div>
   );
 }

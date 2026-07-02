@@ -42,6 +42,61 @@ import { formatPace } from "@/lib/utils";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+type SportMode = "RUN" | "BIKE" | "SWIM" | "TRIATHLON";
+
+const SPORT_LABELS: Record<SportMode, string> = {
+  RUN: "Corrida",
+  BIKE: "Ciclismo",
+  SWIM: "Natação",
+  TRIATHLON: "Triathlon",
+};
+
+const SPORT_EMOJIS: Record<SportMode, string> = {
+  RUN: "🏃",
+  BIKE: "🚴",
+  SWIM: "🏊",
+  TRIATHLON: "🏅",
+};
+
+// Volume unit labels per sport
+const SPORT_VOLUME_LABEL: Record<SportMode, string> = {
+  RUN: "km/sem",
+  BIKE: "km/sem",
+  SWIM: "m/sem",
+  TRIATHLON: "h/sem",
+};
+
+const SPORT_VOLUME_UNIT: Record<SportMode, string> = {
+  RUN: "km",
+  BIKE: "km",
+  SWIM: "m",
+  TRIATHLON: "h",
+};
+
+// Default weekly volume per level for non-run sports
+const SPORT_LEVEL_DEFAULTS: Record<SportMode, Record<Level, { start: number; growth: number; max: number }>> = {
+  RUN: {
+    Iniciante:     { start: 25,   growth: 2.0, max: 50  },
+    Intermediário: { start: 48,   growth: 3.5, max: 90  },
+    Avançado:      { start: 96,   growth: 5.0, max: 150 },
+  },
+  BIKE: {
+    Iniciante:     { start: 80,   growth: 10,  max: 200  },
+    Intermediário: { start: 150,  growth: 15,  max: 400  },
+    Avançado:      { start: 250,  growth: 20,  max: 600  },
+  },
+  SWIM: {
+    Iniciante:     { start: 5000,  growth: 500,  max: 15000  },
+    Intermediário: { start: 10000, growth: 800,  max: 25000  },
+    Avançado:      { start: 18000, growth: 1200, max: 40000  },
+  },
+  TRIATHLON: {
+    Iniciante:     { start: 5,  growth: 0.5, max: 12 },
+    Intermediário: { start: 9,  growth: 0.8, max: 18 },
+    Avançado:      { start: 14, growth: 1.0, max: 25 },
+  },
+};
+
 type Phase = "Base" | "Construção" | "Específico" | "Taper";
 
 interface Week {
@@ -91,13 +146,19 @@ const LEVEL_KM_CONFIG: Record<Level, { startPerSession: number; weeklyGrowth: nu
   Avançado:      { startPerSession: 12.0, weeklyGrowth: 5.0, maxKm: 150 },
 };
 
-function generatePeriodization(totalWeeks: number, sessions: number, level: Level): Week[] {
+function generatePeriodization(totalWeeks: number, sessions: number, level: Level, sport: SportMode = "RUN"): Week[] {
   const baseEnd = Math.round(totalWeeks * 0.35);
   const construcaoEnd = baseEnd + Math.round(totalWeeks * 0.3);
   const especificoEnd = construcaoEnd + Math.round(totalWeeks * 0.25);
 
-  const cfg = LEVEL_KM_CONFIG[level];
-  const baseWeekKm = cfg.startPerSession * Math.max(1, sessions);
+  const cfg = sport === "RUN"
+    ? { startPerSession: LEVEL_KM_CONFIG[level].startPerSession, weeklyGrowth: LEVEL_KM_CONFIG[level].weeklyGrowth, maxKm: LEVEL_KM_CONFIG[level].maxKm }
+    : null;
+
+  const sportCfg = SPORT_LEVEL_DEFAULTS[sport][level];
+  const baseWeekVolume = cfg
+    ? cfg.startPerSession * Math.max(1, sessions)
+    : sportCfg.start;
 
   return Array.from({ length: totalWeeks }, (_, i) => {
     const week = i + 1;
@@ -109,8 +170,11 @@ function generatePeriodization(totalWeeks: number, sessions: number, level: Leve
     else if (week <= especificoEnd) phase = "Específico";
     else phase = "Taper";
 
-    const peakKm = Math.min(baseWeekKm + (week - 1) * cfg.weeklyGrowth, cfg.maxKm);
-    const km = Math.round(isDeload ? Math.max(baseWeekKm * 0.6, peakKm * 0.6) : peakKm);
+    const peakVolume = Math.min(
+      baseWeekVolume + (week - 1) * sportCfg.growth,
+      sportCfg.max
+    );
+    const km = Math.round(isDeload ? Math.max(baseWeekVolume * 0.6, peakVolume * 0.6) : peakVolume);
 
     const baseVolume = isDeload ? 60 : 70 + Math.min(week * 1.5, 25);
     const volume = Math.round(Math.min(baseVolume, 100));
@@ -193,6 +257,7 @@ export default function PeriodizacaoPage() {
   }, []);
 
   // Macro state
+  const [sportMode, setSportMode] = useState<SportMode>("RUN");
   const [selectedAthletes, setSelectedAthletes] = useState<string[]>([]);
   const [goal, setGoal] = useState<Goal>("Meia-maratona");
   const [level, setLevel] = useState<Level>("Intermediário");
@@ -233,7 +298,7 @@ export default function PeriodizacaoPage() {
   }
 
   function handleGenerate() {
-    const result = generatePeriodization(totalWeeks, trainingDays.length || 3, level);
+    const result = generatePeriodization(totalWeeks, trainingDays.length || 3, level, sportMode);
     setWeeks(result);
     setGenerated(true);
     setSaved(false);
@@ -479,6 +544,34 @@ export default function PeriodizacaoPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Sport selector */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-text-muted">Modalidade</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {(["RUN", "BIKE", "SWIM", "TRIATHLON"] as SportMode[]).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => {
+                          setSportMode(s);
+                          setGenerated(false);
+                          setWeeks([]);
+                          setWorkoutsMap({});
+                        }}
+                        className={cn(
+                          "flex items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-medium transition-all",
+                          sportMode === s
+                            ? "border-primary/60 bg-primary/15 text-primary"
+                            : "border-border bg-background text-text-muted hover:border-primary/30 hover:text-text"
+                        )}
+                      >
+                        <span>{SPORT_EMOJIS[s]}</span>
+                        <span>{SPORT_LABELS[s]}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Athletes — multi-select */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -511,22 +604,24 @@ export default function PeriodizacaoPage() {
                   </div>
                 </div>
 
-                {/* Goal */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-text-muted">Objetivo</label>
-                  <div className="relative">
-                    <select
-                      className={selectClass}
-                      value={goal}
-                      onChange={(e) => setGoal(e.target.value as Goal)}
-                    >
-                      {goals.map((g) => (
-                        <option key={g} value={g}>{g}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                {/* Goal — running only */}
+                {sportMode === "RUN" && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-text-muted">Objetivo</label>
+                    <div className="relative">
+                      <select
+                        className={selectClass}
+                        value={goal}
+                        onChange={(e) => setGoal(e.target.value as Goal)}
+                      >
+                        {goals.map((g) => (
+                          <option key={g} value={g}>{g}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Level */}
                 <div className="space-y-1.5">
@@ -633,8 +728,8 @@ export default function PeriodizacaoPage() {
               </CardContent>
             </Card>
 
-            {/* VDOT + workout generation */}
-            {generated && (
+            {/* VDOT + workout generation — running only */}
+            {generated && sportMode === "RUN" && (
               <Card className="border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-sm">
@@ -820,10 +915,10 @@ export default function PeriodizacaoPage() {
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div>
                       <h2 className="font-display text-xl font-bold text-text">
-                        Macrociclo — {totalWeeks} semanas
+                        {SPORT_EMOJIS[sportMode]} Macrociclo {SPORT_LABELS[sportMode]} — {totalWeeks} semanas
                       </h2>
                       <p className="text-sm text-text-muted mt-0.5">
-                        {goal} · {level} · {trainingDays.length}×/semana
+                        {sportMode === "RUN" ? `${goal} · ` : ""}{level} · {trainingDays.length}×/semana
                         {selectedAthletes.length > 0
                           ? ` · ${selectedAthletes.map((id) => athletes.find((a) => a.id === id)?.name ?? "").filter(Boolean).join(", ")}`
                           : ""}
@@ -871,6 +966,7 @@ export default function PeriodizacaoPage() {
                         goal={goal}
                         level={level}
                         totalWeeks={totalWeeks}
+                        sport={sportMode}
                         athleteName={selectedAthletes.length === 1 ? (athletes.find((a) => a.id === selectedAthletes[0])?.name) : selectedAthletes.length > 1 ? `${selectedAthletes.length} atletas` : undefined}
                       />
                       <div className="space-y-4 print:hidden">
@@ -907,7 +1003,7 @@ export default function PeriodizacaoPage() {
                                       <span>Fase</span>
                                       <span>Volume</span>
                                       <span>Inten. %</span>
-                                      <span>km/sem</span>
+                                      <span>{SPORT_VOLUME_LABEL[sportMode]}</span>
                                       <span>Sessões</span>
                                       <span>Descarga</span>
                                       <span>Notas</span>
@@ -956,6 +1052,23 @@ export default function PeriodizacaoPage() {
                             no painel lateral
                           </p>
                         </div>
+                      ) : sportMode !== "RUN" ? (
+                        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-16 text-center px-6">
+                          <span className="text-4xl mb-3">{SPORT_EMOJIS[sportMode]}</span>
+                          <p className="font-display text-base font-semibold text-text">
+                            Gerador de treinos {SPORT_LABELS[sportMode]} em breve
+                          </p>
+                          <p className="mt-1 text-sm text-text-muted max-w-sm">
+                            Use a aba de prescrição de {SPORT_LABELS[sportMode].toLowerCase()} para criar
+                            treinos individualmente e atribuir às semanas do plano.
+                          </p>
+                          <Link
+                            href={`/treinador/prescricao/${sportMode === "BIKE" ? "ciclismo" : sportMode === "SWIM" ? "natacao" : "triatlo"}`}
+                            className="mt-4 text-sm text-primary underline underline-offset-4 hover:text-primary/80 transition-colors"
+                          >
+                            Ir para prescrição de {SPORT_LABELS[sportMode].toLowerCase()} →
+                          </Link>
+                        </div>
                       ) : (
                         weeks.map((w) => {
                           const workouts = workoutsMap[w.week] ?? [];
@@ -994,11 +1107,12 @@ export default function PeriodizacaoPage() {
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <SummaryRow label="Total de semanas" value={`${totalWeeks} sem`} />
+                  <SummaryRow label="Modalidade" value={`${SPORT_EMOJIS[sportMode]} ${SPORT_LABELS[sportMode]}`} />
                   <SummaryRow
                     label="Frequência"
                     value={`${trainingDays.length}×/semana`}
                   />
-                  {totalWorkouts > 0 && (
+                  {totalWorkouts > 0 && sportMode === "RUN" && (
                     <SummaryRow label="Total de treinos" value={`${totalWorkouts}`} />
                   )}
                   <div className="space-y-1.5">
@@ -1517,20 +1631,22 @@ function PeriodizacaoPrintTable({
   goal,
   level,
   totalWeeks,
+  sport,
   athleteName,
 }: {
   weeks: Week[];
   goal: Goal;
   level: Level;
   totalWeeks: number;
+  sport: SportMode;
   athleteName?: string;
 }) {
   return (
     <div className="hidden print:block">
-      <h1 className="text-xl font-bold text-black">Pace Run Pro — Periodização</h1>
+      <h1 className="text-xl font-bold text-black">Pace Run Pro — Periodização {SPORT_LABELS[sport]}</h1>
       <p className="mb-4 text-sm text-black">
         {athleteName ? `Atleta: ${athleteName} · ` : ""}
-        Objetivo: {goal} · Nível: {level} · {totalWeeks} semanas
+        {sport === "RUN" ? `Objetivo: ${goal} · ` : ""}Nível: {level} · {totalWeeks} semanas
       </p>
       <table className="w-full border-collapse text-xs text-black">
         <thead>
@@ -1540,7 +1656,7 @@ function PeriodizacaoPrintTable({
             <th className="border border-black px-2 py-1 text-left">Fase</th>
             <th className="border border-black px-2 py-1 text-left">Volume</th>
             <th className="border border-black px-2 py-1 text-left">Intensidade</th>
-            <th className="border border-black px-2 py-1 text-left">km/sem</th>
+            <th className="border border-black px-2 py-1 text-left">{SPORT_VOLUME_LABEL[sport]}</th>
             <th className="border border-black px-2 py-1 text-left">Sessões</th>
             <th className="border border-black px-2 py-1 text-left">Descarga</th>
             <th className="border border-black px-2 py-1 text-left">Notas</th>
