@@ -171,6 +171,7 @@ model Athlete {
   appointments       Appointment[]
 
   shoes              Shoe[]
+  dailyLoads         DailyLoad[]
 
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -1637,4 +1638,40 @@ model ChallengeParticipant {
   @@unique([challengeId, athleteId])
   @@index([challengeId])
   @@map("challenge_participants")
+}
+
+model DailyLoad {
+  id            String   @id @default(cuid())
+  athleteId     String
+  athlete       Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  date          DateTime @db.Date
+
+  tss           Float    @default(0)
+
+  // Banister CTL/ATL/TSB
+  ctl           Float    @default(0)
+  atl           Float    @default(0)
+  tsb           Float    @default(0)
+
+  // EWMA (Williams et al., 2017)
+  ewmaAcute     Float    @default(0)
+  ewmaChronic   Float    @default(0)
+  ewmaRatio     Float    @default(1)
+
+  // Rolling windows
+  weeklyLoad    Float    @default(0)
+  monthlyLoad   Float    @default(0)
+
+  // ACWR (fixed window)
+  acwr          Float?
+
+  // Tendency & alerts
+  trend         String?  // "rising" | "stable" | "declining"
+  form          String?  // FormStatus
+
+  computedAt    DateTime @default(now())
+
+  @@unique([athleteId, date])
+  @@index([athleteId, date])
+  @@map("daily_loads")
 }
