@@ -61,6 +61,7 @@ export const athleteMoreNav: NavItem[] = [
   { href: "/atleta/questionarios",label: "Questionários de saúde",icon: ClipboardList                          },
   { href: "/atleta/planos",       label: "Planos & periodização", icon: ClipboardList                           },
   { href: "/atleta/previsao",     label: "Previsão & estratégia", icon: Target                                  },
+  { href: "/atleta/agenda",        label: "Agendar consulta",      icon: Calendar,      sectionStart: "Treinador" },
   { href: "/atleta/comunidade",   label: "Comunidade",            icon: Trophy,        sectionStart: "Social"   },
   { href: "/atleta/biblioteca",   label: "Minha biblioteca",      icon: BookOpen                                },
   { href: "/atleta/tenis",        label: "Tênis tracker",         icon: Shirt                                   },

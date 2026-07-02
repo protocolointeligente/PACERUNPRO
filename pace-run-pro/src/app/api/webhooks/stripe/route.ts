@@ -23,13 +23,35 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as import("stripe").Stripe.Checkout.Session;
-    const { purchaseId, productId } = session.metadata ?? {};
+    const { purchaseId, productId, marketplaceOrderId } = session.metadata ?? {};
 
+    // Marketplace order (product/course/event checkout)
+    if (marketplaceOrderId) {
+      await prisma.marketplaceOrder.update({
+        where: { id: marketplaceOrderId },
+        data: {
+          status: "PAID",
+          stripeSessionId: session.id,
+        },
+      });
+      await prisma.marketplaceOrderItem.updateMany({
+        where: { orderId: marketplaceOrderId },
+        data: { status: "PAID" },
+      });
+      if (productId) {
+        await prisma.marketplaceProduct.update({
+          where: { id: productId },
+          data: { purchases: { increment: 1 } },
+        }).catch(() => null);
+      }
+      return NextResponse.json({ received: true });
+    }
+
+    // Training plan purchase (legacy store)
     if (!purchaseId || !productId) {
       return NextResponse.json({ error: "Missing metadata" }, { status: 400 });
     }
 
-    // Mark purchase as paid
     await prisma.planPurchase.update({
       where: { id: purchaseId },
       data: {
@@ -39,7 +61,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Increment purchase counter on product
     await prisma.planProduct.update({
       where: { id: productId },
       data: { purchases: { increment: 1 } },
@@ -48,9 +69,14 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.expired") {
     const session = event.data.object as import("stripe").Stripe.Checkout.Session;
-    const { purchaseId } = session.metadata ?? {};
-    if (purchaseId) {
-      // Reset pending purchase so they can retry
+    const { purchaseId, marketplaceOrderId } = session.metadata ?? {};
+
+    if (marketplaceOrderId) {
+      await prisma.marketplaceOrder.update({
+        where: { id: marketplaceOrderId },
+        data: { status: "PENDING", stripeSessionId: null },
+      }).catch(() => null);
+    } else if (purchaseId) {
       await prisma.planPurchase.update({
         where: { id: purchaseId },
         data: { status: "PENDING", stripeSessionId: null },
