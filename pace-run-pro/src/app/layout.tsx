@@ -5,6 +5,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import { CookieConsent } from "@/components/cookie-consent";
 import { ToastProvider } from "@/components/toast/toast-provider";
 import { PwaInit } from "@/components/pwa/pwa-init";
+import { AuthSessionProvider } from "@/components/session-provider";
 import "./globals.css";
 
 // PACERUNPRO — Archivo (display/UI) + JetBrains Mono (pace/dados)
@@ -72,11 +73,13 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <ToastProvider>
-            <PwaInit />
-            {children}
-            <CookieConsent />
-          </ToastProvider>
+          <AuthSessionProvider>
+            <ToastProvider>
+              <PwaInit />
+              {children}
+              <CookieConsent />
+            </ToastProvider>
+          </AuthSessionProvider>
         </NextIntlClientProvider>
       </body>
     </html>
