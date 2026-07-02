@@ -1,151 +1,70 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, CheckCircle2, Clock, ExternalLink, Mail, ShieldAlert, Zap } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Mail, ShoppingBag, UserCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { pendencias, pendingApprovals, type PendenciaItem, type PendenciaType } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   show: (i: number = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4, ease: "easeOut" as const } }),
 };
 
-const TYPE_CONFIG: Record<PendenciaType, { label: string; variant: "warning" | "danger" | "info" | "primary"; icon: React.ElementType }> = {
-  "white-label-setup": { label: "White Label",   variant: "primary", icon: Zap          },
-  "cobranca-falha":    { label: "Falha",          variant: "danger",  icon: AlertTriangle },
-  "pix-expirado":      { label: "PIX pendente",   variant: "warning", icon: Clock        },
-  "fraude":            { label: "Suspeita",        variant: "danger",  icon: ShieldAlert  },
-};
-
-function PendenciaCard({ item, onResolve }: { item: PendenciaItem; onResolve: (id: string) => void }) {
-  const cfg = TYPE_CONFIG[item.type];
-  const Icon = cfg.icon;
-
-  return (
-    <Card className="border-border/60">
-      <CardContent className="p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className={cn(
-              "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-              cfg.variant === "danger"  && "bg-danger/10",
-              cfg.variant === "warning" && "bg-warning/10",
-              cfg.variant === "primary" && "bg-primary/10",
-              cfg.variant === "info"    && "bg-info/10",
-            )}>
-              <Icon className={cn(
-                "h-4 w-4",
-                cfg.variant === "danger"  && "text-danger",
-                cfg.variant === "warning" && "text-warning",
-                cfg.variant === "primary" && "text-primary",
-                cfg.variant === "info"    && "text-info",
-              )} />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="font-display text-sm font-bold text-text">{item.title}</p>
-                <Badge variant={cfg.variant} className="text-[10px]">{cfg.label}</Badge>
-              </div>
-              <p className="mt-0.5 text-xs font-medium text-primary">{item.assessoria}</p>
-              <p className="mt-1 max-w-lg text-xs text-text-muted">{item.description}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-text-muted">
-                <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{item.contact}</span>
-                {item.value && <span className="font-medium text-text">R$ {item.value}/mês</span>}
-                <span>{item.createdAt}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {item.type === "white-label-setup" && (
-            <>
-              <Button variant="primary" size="sm" className="gap-1.5">
-                <ExternalLink className="h-3.5 w-3.5" /> Iniciar setup
-              </Button>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Mail className="h-3.5 w-3.5" /> Contatar cliente
-              </Button>
-            </>
-          )}
-          {item.type === "cobranca-falha" && (
-            <>
-              <Button variant="primary" size="sm" className="gap-1.5">
-                <Zap className="h-3.5 w-3.5" /> Tentar novamente
-              </Button>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Mail className="h-3.5 w-3.5" /> Notificar cliente
-              </Button>
-            </>
-          )}
-          {item.type === "pix-expirado" && (
-            <>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Mail className="h-3.5 w-3.5" /> Enviar lembrete
-              </Button>
-            </>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-success hover:text-success gap-1.5"
-            onClick={() => onResolve(item.id)}
-          >
-            <CheckCircle2 className="h-3.5 w-3.5" /> Marcar resolvido
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+interface PendingCoach {
+  id: string; name: string; email: string; createdAt: string; plan: string; status: string;
+}
+interface PastDueSub {
+  id: string; userName: string; userEmail: string; plan: string; renewsAt: string | null;
+}
+interface StaleMktOrder {
+  id: string; athleteName: string; athleteEmail: string; totalCents: number; productTitle: string; createdAt: string;
+}
+interface FailedPayment {
+  id: string; userName: string; userEmail: string; amountCents: number; method: string | null; createdAt: string;
 }
 
-function WhiteLabelCard({ item, onResolve }: { item: typeof pendingApprovals[number]; onResolve: (id: string) => void }) {
-  return (
-    <Card className="border-primary/20">
-      <CardContent className="p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="font-display text-sm font-bold text-text">{item.name}</p>
-              <Badge variant="primary" className="text-[10px]">White Label</Badge>
-            </div>
-            <p className="mt-0.5 text-xs text-text-muted">{item.city} · {item.contact}</p>
-            <p className="mt-1 text-xs text-text-muted">Plano pago — aguardando onboarding e setup de domínio dedicado.</p>
-          </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button variant="primary" size="sm" className="gap-1.5">
-            <Zap className="h-3.5 w-3.5" /> Iniciar onboarding
-          </Button>
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Mail className="h-3.5 w-3.5" /> Contatar
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-success hover:text-success gap-1.5"
-            onClick={() => onResolve(item.id)}
-          >
-            <CheckCircle2 className="h-3.5 w-3.5" /> Concluir setup
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+interface PendenciasData {
+  pendingCoaches: PendingCoach[];
+  pastDueSubs: PastDueSub[];
+  staleMktOrders: StaleMktOrder[];
+  failedPayments: FailedPayment[];
+}
+
+function formatBRL(cents: number) {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 export default function PendenciasPage() {
+  const [data, setData] = useState<PendenciasData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set());
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch("/api/admin/pendencias");
+    if (res.ok) setData(await res.json());
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   const resolve = (id: string) => setResolvedIds((prev) => new Set([...prev, id]));
 
-  const activePendencias = pendencias.filter((p) => !resolvedIds.has(p.id));
-  const activeWL = pendingApprovals.filter((a) => !resolvedIds.has(a.id));
-  const total = activePendencias.length + activeWL.length;
+  const total = data
+    ? data.pendingCoaches.filter((c) => !resolvedIds.has(c.id)).length +
+      data.pastDueSubs.filter((s) => !resolvedIds.has(s.id)).length +
+      data.staleMktOrders.filter((o) => !resolvedIds.has(o.id)).length +
+      data.failedPayments.filter((p) => !resolvedIds.has(p.id)).length
+    : 0;
+
+  if (loading) return <div className="p-8 text-center text-text-muted">Carregando…</div>;
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -155,53 +74,136 @@ export default function PendenciasPage() {
         </Badge>
         <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Pendências</h1>
         <p className="mt-1.5 text-sm text-text-muted">
-          Itens que exigem ação manual: setups White Label, cobranças com falha e PIX aguardando.
-          Planos Starter, Pro e Assessoria são ativados automaticamente após confirmação de pagamento.
+          Itens que exigem atenção: ativações de treinador, cobranças com falha, pedidos parados e pagamentos não confirmados.
         </p>
       </motion.div>
 
       {total === 0 ? (
         <motion.div variants={fadeUp} custom={1} initial="hidden" animate="show">
-          <Card>
-            <CardContent className="p-10 text-center">
-              <CheckCircle2 className="mx-auto h-10 w-10 text-success mb-3" />
-              <p className="font-display text-base font-bold text-text">Sem pendências</p>
-              <p className="mt-1 text-sm text-text-muted">Nenhum item requer atenção manual no momento.</p>
-            </CardContent>
-          </Card>
+          <Card><CardContent className="p-10 text-center">
+            <CheckCircle2 className="mx-auto h-10 w-10 text-success mb-3" />
+            <p className="font-display text-base font-bold text-text">Sem pendências</p>
+            <p className="mt-1 text-sm text-text-muted">Nenhum item requer atenção manual no momento.</p>
+          </CardContent></Card>
         </motion.div>
       ) : (
-        <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show" className="space-y-3">
-          {/* White Label setup requests */}
-          {activeWL.map((a) => (
-            <WhiteLabelCard key={a.id} item={a} onResolve={resolve} />
-          ))}
+        <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show" className="space-y-6">
 
-          {/* Operational issues */}
-          {activePendencias.map((p) => (
-            <PendenciaCard key={p.id} item={p} onResolve={resolve} />
-          ))}
-        </motion.div>
-      )}
+          {/* Pending coaches */}
+          {(data?.pendingCoaches.filter((c) => !resolvedIds.has(c.id)).length ?? 0) > 0 && (
+            <section>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-text-muted">Treinadores aguardando</p>
+              <div className="space-y-3">
+                {data!.pendingCoaches.filter((c) => !resolvedIds.has(c.id)).map((c) => (
+                  <Card key={c.id} className="border-border/60">
+                    <CardContent className="p-4 flex flex-wrap items-center gap-4">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <UserCheck className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-text">{c.name}</p>
+                        <p className="text-xs text-text-muted flex items-center gap-1"><Mail className="h-3 w-3" />{c.email}</p>
+                        <p className="text-xs text-text-muted">Cadastrado em {fmtDate(c.createdAt)} · Plano {c.plan}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Link href={`/admin/assessorias`}>
+                          <Button variant="primary" size="sm">Gerenciar</Button>
+                        </Link>
+                        <Button variant="ghost" size="sm" className="text-success hover:text-success gap-1" onClick={() => resolve(c.id)}>
+                          <CheckCircle2 className="h-3.5 w-3.5" /> OK
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )}
 
-      {resolvedIds.size > 0 && (
-        <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-text-muted">Resolvidos nesta sessão</p>
-          <div className="space-y-1.5">
-            {[...resolvedIds].map((id) => {
-              const name = pendencias.find((p) => p.id === id)?.assessoria
-                ?? pendingApprovals.find((a) => a.id === id)?.name
-                ?? id;
-              return (
-                <Card key={id} className="opacity-50">
-                  <CardContent className="flex items-center justify-between p-3">
-                    <span className="text-sm text-text-muted">{name}</span>
-                    <Badge variant="success"><CheckCircle2 className="h-3 w-3" /> Resolvido</Badge>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+          {/* Past-due subscriptions */}
+          {(data?.pastDueSubs.filter((s) => !resolvedIds.has(s.id)).length ?? 0) > 0 && (
+            <section>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-text-muted">Assinaturas com falha</p>
+              <div className="space-y-3">
+                {data!.pastDueSubs.filter((s) => !resolvedIds.has(s.id)).map((s) => (
+                  <Card key={s.id} className={cn("border-border/60")}>
+                    <CardContent className="p-4 flex flex-wrap items-center gap-4">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-danger/10">
+                        <AlertTriangle className="h-4 w-4 text-danger" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-text">{s.userName}</p>
+                        <p className="text-xs text-text-muted flex items-center gap-1"><Mail className="h-3 w-3" />{s.userEmail}</p>
+                        <p className="text-xs text-text-muted">
+                          Plano {s.plan} · Renova em {s.renewsAt ? fmtDate(s.renewsAt) : "—"}
+                        </p>
+                      </div>
+                      <Badge variant="danger">Falha</Badge>
+                      <Button variant="ghost" size="sm" className="text-success hover:text-success gap-1" onClick={() => resolve(s.id)}>
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Resolvido
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Stale marketplace orders */}
+          {(data?.staleMktOrders.filter((o) => !resolvedIds.has(o.id)).length ?? 0) > 0 && (
+            <section>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-text-muted">Pedidos parados (+24h)</p>
+              <div className="space-y-3">
+                {data!.staleMktOrders.filter((o) => !resolvedIds.has(o.id)).map((o) => (
+                  <Card key={o.id} className="border-border/60">
+                    <CardContent className="p-4 flex flex-wrap items-center gap-4">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/10">
+                        <ShoppingBag className="h-4 w-4 text-warning" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-text">{o.athleteName} — {o.productTitle}</p>
+                        <p className="text-xs text-text-muted flex items-center gap-1"><Mail className="h-3 w-3" />{o.athleteEmail}</p>
+                        <p className="text-xs text-text-muted">{formatBRL(o.totalCents)} · Criado {fmtDate(o.createdAt)}</p>
+                      </div>
+                      <Badge variant="warning">Pendente</Badge>
+                      <Button variant="ghost" size="sm" className="text-success hover:text-success gap-1" onClick={() => resolve(o.id)}>
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Resolvido
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Failed payments */}
+          {(data?.failedPayments.filter((p) => !resolvedIds.has(p.id)).length ?? 0) > 0 && (
+            <section>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-text-muted">Pagamentos recusados (7 dias)</p>
+              <div className="space-y-3">
+                {data!.failedPayments.filter((p) => !resolvedIds.has(p.id)).map((p) => (
+                  <Card key={p.id} className="border-border/60">
+                    <CardContent className="p-4 flex flex-wrap items-center gap-4">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-danger/10">
+                        <AlertTriangle className="h-4 w-4 text-danger" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-text">{p.userName}</p>
+                        <p className="text-xs text-text-muted flex items-center gap-1"><Mail className="h-3 w-3" />{p.userEmail}</p>
+                        <p className="text-xs text-text-muted">
+                          {formatBRL(p.amountCents)} · {p.method ?? "—"} · {fmtDate(p.createdAt)}
+                        </p>
+                      </div>
+                      <Badge variant="danger">Recusado</Badge>
+                      <Button variant="ghost" size="sm" className="text-success hover:text-success gap-1" onClick={() => resolve(p.id)}>
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Resolvido
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )}
         </motion.div>
       )}
     </div>

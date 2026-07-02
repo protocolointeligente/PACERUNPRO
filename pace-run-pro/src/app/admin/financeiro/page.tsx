@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { SectionHeader } from "@/components/shared/section-header";
-import { b2bPlans } from "@/lib/mock-data";
 import { formatBRL } from "@/lib/utils";
 
 const fadeUp = {
@@ -29,7 +28,14 @@ const fadeUp = {
   }),
 };
 
-const planPrice = (id: string) => b2bPlans.find((p) => p.id === id)?.price ?? 0;
+// B2B plan monthly prices (reais)
+const B2B_PRICES: Record<string, number> = {
+  "b2b-starter": 99,
+  "b2b-pro": 199,
+  "b2b-assessoria": 349,
+  "b2b-unlimited": 699,
+};
+const planPrice = (id: string) => B2B_PRICES[id] ?? 0;
 
 const b2bBadgeVariant = (name: string) => {
   if (name === "White Label") return "danger" as const;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,6 +12,7 @@ import {
   ChevronUp,
   CheckSquare,
   Square,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -258,9 +259,26 @@ const CHECKLIST_ITEMS = (carbsBefore: number) => [
   "GPS ativo e com carga",
 ];
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface RealDataResponse {
+  bestEffort: { distanceKm: number; durationSec: number; avgPaceSecPerKm: number | null; date: string } | null;
+  latestTest: { vo2max: number | null; vamKmh: number | null; thresholdPaceSecPerKm: number | null; date: string; testType: string } | null;
+  latestRace: { name: string; distanceKm: number; timeSeconds: number; date: string } | null;
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PrevisaoPage() {
+  const [realData, setRealData] = useState<RealDataResponse | null>(null);
+
+  useEffect(() => {
+    fetch("/api/atleta/previsao")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => setRealData(d))
+      .catch(() => null);
+  }, []);
+
   // Prediction state
   const [refTime, setRefTime] = useState("25:00");
   const [refDist, setRefDist] = useState("5");
@@ -406,6 +424,38 @@ export default function PrevisaoPage() {
               placeholder="Ex.: 25:30 (MM:SS) ou 1:58:00"
             />
           </label>
+
+          {/* Real data seed */}
+          {(realData?.bestEffort || realData?.latestRace) && (() => {
+            const effort = realData.bestEffort;
+            const race = realData.latestRace;
+            const src = effort ?? (race ? { distanceKm: race.distanceKm, durationSec: race.timeSeconds, date: race.date } : null);
+            if (!src) return null;
+            const label = effort
+              ? `Melhor treino: ${src.distanceKm} km em ${formatRaceTime(src.durationSec)}`
+              : `Corrida: ${race!.name} ${src.distanceKm} km em ${formatRaceTime(src.durationSec)}`;
+            return (
+              <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+                <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-text">{label}</p>
+                  <p className="text-[10px] text-text-muted">
+                    {new Date(src.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRefDist(String(src.distanceKm));
+                    setRefTime(formatRaceTime(src.durationSec));
+                  }}
+                  className="shrink-0 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+                >
+                  Usar esses dados
+                </button>
+              </div>
+            );
+          })()}
 
           <Button onClick={handleCalculate} className="w-full sm:w-auto">
             <TrendingUp className="h-4 w-4" />
