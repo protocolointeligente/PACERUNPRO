@@ -59,7 +59,7 @@ export function decrypt(stored: string): string {
   }
 
   const combined = Buffer.from(stored.slice(4), "base64");
-  if (combined.length < IV_LEN + TAG_LEN + 1) {
+  if (combined.length < IV_LEN + TAG_LEN) {
     throw new Error("[encryption] Corrupted ciphertext: too short");
   }
 

@@ -87,6 +87,6 @@ export const ACWR_RISK_LABELS: Record<ACWRRisk, { label: string; color: string; 
   danger: {
     label: "Alto risco",
     color: "#EF4444",
-    recommendation: "Ratio crítico — risco aumentado de lesão. Reduza a carga imediatamente.",
+    recommendation: "Ratio ACWR elevado — indicador de carga aguda muito acima do habitual. Sugere-se redução de volume e avaliação pelo treinador. Não substitui orientação de profissional de saúde.",
   },
 };

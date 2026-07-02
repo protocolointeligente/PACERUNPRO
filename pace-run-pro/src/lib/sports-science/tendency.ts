@@ -83,7 +83,7 @@ export function detectOverreaching(series: LoadDay[]): OverreachingSignal {
   if (last.tsb < -30) {
     return {
       detected: true,
-      reason: `TSB ${last.tsb.toFixed(1)} — fadiga acumulada severa (overreaching não funcional provável).`,
+      reason: `TSB ${last.tsb.toFixed(1)} — indicador de fadiga acumulada elevada. Sugere-se reavaliação da carga com o treinador. Estimativa de suporte à decisão, não constitui diagnóstico médico.`,
       severity: "danger",
     };
   }
@@ -93,7 +93,7 @@ export function detectOverreaching(series: LoadDay[]): OverreachingSignal {
   if (last5.length === 5 && last5.every((d) => d.tsb < -20)) {
     return {
       detected: true,
-      reason: "TSB abaixo de -20 por 5 dias consecutivos — overreaching funcional em progresso.",
+      reason: "TSB abaixo de -20 por 5 dias consecutivos — sinal de fadiga acumulada. Recomenda-se revisão da carga semanal com o treinador.",
       severity: "warning",
     };
   }

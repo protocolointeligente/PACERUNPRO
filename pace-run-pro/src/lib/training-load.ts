@@ -349,7 +349,7 @@ export function ewmaRiskLevel(ratio: number): {
     level: "very_high",
     label: "Alto risco",
     color: "#EF4444",
-    recommendation: "Ratio crítico — risco aumentado de lesão. Reduza carga imediatamente.",
+    recommendation: "Ratio EWMA elevado — indicador de carga aguda muito acima do habitual. Sugere-se redução de volume e avaliação com o treinador. Estimativa de suporte à decisão — não constitui diagnóstico médico.",
   };
 }
 

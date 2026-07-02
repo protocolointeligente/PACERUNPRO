@@ -40,8 +40,9 @@ const METHODS: { id: ReceivingMethod; label: string; description: string; icon: 
   {
     id: "mercadopago",
     label: "Mercado Pago",
-    description: "Conta Mercado Pago. Ideal para assessorias que já usam o ecossistema.",
+    description: "Conta Mercado Pago. Em breve — integração em desenvolvimento.",
     icon: Wallet,
+    badge: "Em breve",
   },
   {
     id: "stripe",
