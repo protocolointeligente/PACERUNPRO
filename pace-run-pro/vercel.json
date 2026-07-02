@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/training-load",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/integration-sync",
+      "schedule": "0 */6 * * *"
     }
   ]
 }

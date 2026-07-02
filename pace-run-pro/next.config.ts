@@ -33,18 +33,50 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@react-pdf/renderer", "@neondatabase/serverless", "@prisma/adapter-neon"],
+  serverExternalPackages: [
+    "@react-pdf/renderer",
+    "@neondatabase/serverless",
+    "@prisma/adapter-neon",
+    "@prisma/adapter-pg",
+  ],
+
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
   },
+
+  // Compress responses
+  compress: true,
+
+  // Experimental features for performance
+  experimental: {
+    optimizePackageImports: [
+      "@radix-ui/react-icons",
+      "lucide-react",
+      "date-fns",
+      "recharts",
+    ],
+  },
+
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: securityHeaders,
+      },
+      // Cache static assets aggressively
+      {
+        source: "/_next/static/(.*)",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      // Cache public images
+      {
+        source: "/images/(.*)",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=3600" }],
       },
     ];
   },

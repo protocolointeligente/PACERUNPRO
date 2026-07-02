@@ -6,6 +6,7 @@ import { CookieConsent } from "@/components/cookie-consent";
 import { ToastProvider } from "@/components/toast/toast-provider";
 import { PwaInit } from "@/components/pwa/pwa-init";
 import { AuthSessionProvider } from "@/components/session-provider";
+import { QueryProvider } from "@/components/query-provider";
 import "./globals.css";
 
 // PACERUNPRO — Archivo (display/UI) + JetBrains Mono (pace/dados)
@@ -74,11 +75,13 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AuthSessionProvider>
-            <ToastProvider>
-              <PwaInit />
-              {children}
-              <CookieConsent />
-            </ToastProvider>
+            <QueryProvider>
+              <ToastProvider>
+                <PwaInit />
+                {children}
+                <CookieConsent />
+              </ToastProvider>
+            </QueryProvider>
           </AuthSessionProvider>
         </NextIntlClientProvider>
       </body>

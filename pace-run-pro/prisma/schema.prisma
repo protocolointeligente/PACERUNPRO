@@ -380,8 +380,9 @@ model WorkoutLog {
   athlete      Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
 
   // Source tracking
-  source          String   @default("manual") // manual | strava | garmin | polar | coros | apple
-  stravaActivityId String?  @unique
+  source              String   @default("manual") // manual | strava | garmin | polar | coros | apple | google_fit | suunto
+  stravaActivityId    String?  @unique
+  externalActivityId  String?  // provider-specific activity ID (used with source for dedup)
 
   startedAt    DateTime?
   finishedAt   DateTime?
@@ -405,6 +406,7 @@ model WorkoutLog {
 
   @@index([athleteId, startedAt])
   @@index([workoutId])
+  @@index([source, externalActivityId])
   @@map("workout_logs")
 }
 
@@ -791,12 +793,14 @@ model ConnectedDevice {
   id           String         @id @default(cuid())
   userId       String
   user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider     DeviceProvider
-  externalId   String?
-  accessToken  String?
-  refreshToken String?
-  connectedAt  DateTime       @default(now())
-  lastSyncAt   DateTime?
+  provider        DeviceProvider
+  externalId      String?
+  accessToken     String?
+  refreshToken    String?
+  tokenExpiresAt  DateTime?
+  scope           String?
+  connectedAt     DateTime       @default(now())
+  lastSyncAt      DateTime?
 
   @@unique([userId, provider])
   @@index([userId])
