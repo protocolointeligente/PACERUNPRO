@@ -42,7 +42,20 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (!course) return NextResponse.json({ error: "Curso não encontrado" }, { status: 404 });
 
   const body = await req.json();
-  const { title, lessons } = body;
+  const { title, lessons, _action, moduleId: targetModuleId } = body;
+
+  // Add a new lesson to an existing module
+  if (_action === "addLesson" && targetModuleId) {
+    const mod = await prisma.courseModule.findFirst({ where: { id: targetModuleId, productId } });
+    if (!mod) return NextResponse.json({ error: "Módulo não encontrado" }, { status: 404 });
+    const maxLessonPos = await prisma.courseLesson.aggregate({ where: { moduleId: targetModuleId }, _max: { position: true } });
+    const lessonPos = (maxLessonPos._max.position ?? -1) + 1;
+    const lesson = await prisma.courseLesson.create({
+      data: { moduleId: targetModuleId, title: "Nova aula", position: lessonPos },
+    });
+    return NextResponse.json(lesson, { status: 201 });
+  }
+
   if (!title) return NextResponse.json({ error: "title obrigatório" }, { status: 400 });
 
   const maxPos = await prisma.courseModule.aggregate({ where: { productId }, _max: { position: true } });

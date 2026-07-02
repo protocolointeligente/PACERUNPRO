@@ -31,6 +31,8 @@ import {
   MessageSquare,
   CreditCard,
   Store,
+  Calendar,
+  Clock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -63,7 +65,9 @@ export const athleteMoreNav: NavItem[] = [
   { href: "/atleta/biblioteca",   label: "Minha biblioteca",      icon: BookOpen                                },
   { href: "/atleta/tenis",        label: "Tênis tracker",         icon: Shirt                                   },
   { href: "/loja",                label: "Loja de treinos",       icon: ShoppingBag, sectionStart: "Comprar"    },
-  { href: "/atleta/universidade", label: "PACE University",       icon: GraduationCap, sectionStart: "Aprender" },
+  { href: "/atleta/cursos",       label: "Meus cursos",           icon: BookOpen,      sectionStart: "Aprender" },
+  { href: "/atleta/desafios",     label: "Desafios",              icon: Trophy                                  },
+  { href: "/atleta/universidade", label: "PACE University",       icon: GraduationCap                          },
   { href: "/atleta/perfil",       label: "Minha conta",           icon: CreditCard,    sectionStart: "Conta"    },
 ];
 
@@ -78,7 +82,11 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/prescricao/forca-periodizacao", label: "Periodização força", icon: BarChart2 },
   { href: "/treinador/biblioteca", label: "Biblioteca de treinos", icon: BookOpen },
   { href: "/treinador/relatorios", label: "Relatórios", icon: FileBarChart },
-  { href: "/treinador/marketplace",  label: "Marketplace",             icon: Store       },
+  { href: "/treinador/marketplace",  label: "Marketplace",             icon: Store,        sectionStart: "Produto" },
+  { href: "/treinador/cursos",       label: "Cursos online",           icon: BookOpen                            },
+  { href: "/treinador/eventos",      label: "Eventos",                 icon: Calendar                            },
+  { href: "/treinador/desafios",     label: "Desafios",                icon: Trophy                              },
+  { href: "/treinador/agenda",       label: "Agenda",                  icon: Clock                               },
   { href: "/treinador/minha-loja", label: "Minha loja de treinos", icon: ShoppingBag },
   { href: "/treinador/gestao",        label: "Gestão & vendas",        icon: DollarSign  },
   { href: "/treinador/receitas",     label: "Receitas da loja",       icon: TrendingUp  },
