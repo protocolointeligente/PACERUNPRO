@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Activity, Calculator, History, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  Activity, Calculator, History, Sparkles, Bell,
+  ChevronDown, ChevronUp, CalendarDays, Clock, CheckCircle2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   calculateRast,
   paceFromKmh,
@@ -17,6 +22,8 @@ import {
 } from "@/lib/calculations";
 import { cn, formatPace } from "@/lib/utils";
 
+// ── Utils ─────────────────────────────────────────────────────────────────────
+
 function parseClock(input: string) {
   const parts = input.split(":").map((p) => Number(p.trim()));
   if (parts.some((p) => Number.isNaN(p))) return null;
@@ -29,57 +36,171 @@ function parseClock(input: string) {
 const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
 
+interface PendingTest {
+  id: string;
+  title: string;
+  date: string;
+  objective: string | null;
+  status: string;
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
 export default function PerformanceTestsPage() {
+  const [pending, setPending] = useState<PendingTest[]>([]);
+  const [loadingPending, setLoadingPending] = useState(true);
+  const [showCalc, setShowCalc] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/atleta/workouts?limit=30")
+      .then((r) => r.ok ? r.json() : [])
+      .then((workouts: { id: string; title: string; date: string; objective: string | null; status: string; type: string }[]) => {
+        const tests = workouts.filter(
+          (w) => w.title?.toLowerCase().includes("teste") || w.type === "PROVA"
+        );
+        setPending(tests);
+      })
+      .catch(() => null)
+      .finally(() => setLoadingPending(false));
+  }, []);
+
+  const hasPending = pending.filter((t) => t.status !== "CONCLUIDO").length > 0;
+
   return (
     <div className="mx-auto max-w-5xl space-y-7">
-      <div>
-        <Badge variant="primary" className="mb-2">
-          <Sparkles className="h-3 w-3" /> Cálculos automáticos
-        </Badge>
-        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Testes de performance</h1>
-        <p className="mt-1.5 max-w-2xl text-sm text-text-muted">
-          Registre seus protocolos de campo e receba estimativas automáticas de VO2máx, VAM, limiar e potência —
-          os mesmos dados usados pelo motor de prescrição inteligente para calibrar o seu plano.
-        </p>
-      </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <CooperCard />
-        <FiveMinCard />
-        <ThreeKmCard />
-        <TwentyFourHundredCard />
-        <VamCard />
-        <RastCard />
-        <ThresholdCard />
-      </div>
-
-      {/* History */}
-      <div>
-        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-text">
-          <History className="h-4 w-4 text-text-muted" />
-          Histórico de testes
+      {/* ── Pending tests from coach ─────────────────────────────────────── */}
+      {!loadingPending && (
+        <div>
+          {hasPending ? (
+            <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
+              <div className="mb-4 flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <Bell className="h-5 w-5" />
+                </span>
+                <div>
+                  <h2 className="font-display text-base font-bold text-text">Teste solicitado pelo seu treinador</h2>
+                  <p className="mt-0.5 text-sm text-text-muted">Realize o teste na data indicada e envie o resultado.</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {pending.filter((t) => t.status !== "CONCLUIDO").map((test) => (
+                  <Link
+                    key={test.id}
+                    href={`/atleta/treino/${test.id}`}
+                    className="flex items-center gap-3 rounded-xl border border-primary/20 bg-background p-4 hover:border-primary/40 hover:bg-primary/5 transition-all"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Activity className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-text">{test.title}</p>
+                      {test.objective && (
+                        <p className="mt-0.5 line-clamp-1 text-xs text-text-muted">{test.objective}</p>
+                      )}
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="flex items-center gap-1 text-xs text-text-muted">
+                        <CalendarDays className="h-3 w-3" />
+                        {new Date(test.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <div className="mt-4 flex gap-3">
+                <Link href="/atleta/calendario">
+                  <Button variant="primary" size="sm" className="gap-2">
+                    <CalendarDays className="h-4 w-4" />Ver no calendário
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-success/10 text-success">
+                <CheckCircle2 className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-text">Nenhum teste pendente</p>
+                <p className="text-xs text-text-muted">Seu treinador irá solicitar testes quando necessário.</p>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-12 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-info/10 text-info">
-            <Activity className="h-6 w-6" />
+      )}
+
+      {/* ── Completed tests history ──────────────────────────────────────── */}
+      {!loadingPending && pending.filter((t) => t.status === "CONCLUIDO").length > 0 && (
+        <div>
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-text">
+            <History className="h-4 w-4 text-text-muted" />
+            Testes realizados
+          </div>
+          <div className="space-y-2">
+            {pending.filter((t) => t.status === "CONCLUIDO").map((test) => (
+              <Link
+                key={test.id}
+                href={`/atleta/treino/${test.id}`}
+                className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 hover:bg-card-hover transition-all"
+              >
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+                <p className="flex-1 text-sm text-text">{test.title}</p>
+                <span className="text-xs text-text-muted">
+                  {new Date(test.date).toLocaleDateString("pt-BR")}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Calculadora (secondary, collapsible) ─────────────────────────── */}
+      <div className="rounded-2xl border border-border">
+        <button
+          className="flex w-full items-center gap-3 p-4 text-left"
+          onClick={() => setShowCalc(!showCalc)}
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-card-hover text-text-muted">
+            <Calculator className="h-4 w-4" />
           </span>
-          <p className="text-sm font-semibold text-text">Nenhum teste registrado ainda</p>
-          <p className="text-sm text-text-muted">Use os calculadores acima para realizar seus testes de performance.</p>
-        </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-text">Calculadora de testes</p>
+            <p className="text-xs text-text-muted">Cooper, 2400m, 3km, 5min, VAM, RAST, Limiar anaeróbico</p>
+          </div>
+          <Badge variant="outline" className="text-[10px] shrink-0">Ferramenta de apoio</Badge>
+          {showCalc ? <ChevronUp className="h-4 w-4 text-text-muted" /> : <ChevronDown className="h-4 w-4 text-text-muted" />}
+        </button>
+
+        {showCalc && (
+          <div className="border-t border-border px-4 pb-4 pt-3">
+            <div className="mb-3">
+              <Badge variant="primary" className="mb-2 text-[10px]">
+                <Sparkles className="h-3 w-3" /> Cálculos automáticos
+              </Badge>
+              <p className="text-xs text-text-muted">
+                Use apenas sob orientação do treinador. Os resultados são repassados automaticamente para atualização das suas zonas.
+              </p>
+            </div>
+            <div className="grid gap-5 lg:grid-cols-2">
+              <CooperCard />
+              <FiveMinCard />
+              <ThreeKmCard />
+              <TwentyFourHundredCard />
+              <VamCard />
+              <RastCard />
+              <ThresholdCard />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function TestCard({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  children: React.ReactNode;
-}) {
+// ── Shared components ─────────────────────────────────────────────────────────
+
+function TestCard({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
     <Card>
       <CardHeader className="flex-row items-start gap-3">
@@ -109,6 +230,8 @@ function ResultBox({ items }: { items: { label: string; value: string }[] }) {
   );
 }
 
+// ── Calculator cards (all preserved) ──────────────────────────────────────────
+
 function CooperCard() {
   const [distance, setDistance] = useState("2600");
   const d = Number(distance);
@@ -120,12 +243,10 @@ function CooperCard() {
         <input className={inputClass} value={distance} onChange={(e) => setDistance(e.target.value)} inputMode="numeric" />
       </label>
       {vo2 != null && (
-        <ResultBox
-          items={[
-            { label: "VO2máx estimado", value: `${vo2.toFixed(1)} ml/kg/min` },
-            { label: "Classificação", value: classifyVo2(vo2) },
-          ]}
-        />
+        <ResultBox items={[
+          { label: "VO2máx estimado", value: `${vo2.toFixed(1)} ml/kg/min` },
+          { label: "Classificação", value: classifyVo2(vo2) },
+        ]} />
       )}
     </TestCard>
   );
@@ -142,12 +263,10 @@ function FiveMinCard() {
         <input className={inputClass} value={distance} onChange={(e) => setDistance(e.target.value)} inputMode="numeric" />
       </label>
       {vo2 != null && (
-        <ResultBox
-          items={[
-            { label: "VO2máx estimado", value: `${vo2.toFixed(1)} ml/kg/min` },
-            { label: "Velocidade média", value: `${(d / 1000 / (5 / 60)).toFixed(1)} km/h` },
-          ]}
-        />
+        <ResultBox items={[
+          { label: "VO2máx estimado", value: `${vo2.toFixed(1)} ml/kg/min` },
+          { label: "Velocidade média", value: `${(d / 1000 / (5 / 60)).toFixed(1)} km/h` },
+        ]} />
       )}
     </TestCard>
   );
@@ -164,12 +283,10 @@ function ThreeKmCard() {
         <input className={inputClass} value={time} onChange={(e) => setTime(e.target.value)} placeholder="13:40" />
       </label>
       {vo2 != null && (
-        <ResultBox
-          items={[
-            { label: "VO2máx estimado", value: `${vo2.toFixed(1)} ml/kg/min` },
-            { label: "Pace médio", value: formatPace(Math.round(sec! / 3)) },
-          ]}
-        />
+        <ResultBox items={[
+          { label: "VO2máx estimado", value: `${vo2.toFixed(1)} ml/kg/min` },
+          { label: "Pace médio", value: formatPace(Math.round(sec! / 3)) },
+        ]} />
       )}
     </TestCard>
   );
@@ -186,12 +303,10 @@ function TwentyFourHundredCard() {
         <input className={inputClass} value={time} onChange={(e) => setTime(e.target.value)} placeholder="10:30" />
       </label>
       {vo2 != null && (
-        <ResultBox
-          items={[
-            { label: "VO2máx estimado", value: `${vo2.toFixed(1)} ml/kg/min` },
-            { label: "Pace médio", value: formatPace(Math.round((sec! / 2400) * 1000)) },
-          ]}
-        />
+        <ResultBox items={[
+          { label: "VO2máx estimado", value: `${vo2.toFixed(1)} ml/kg/min` },
+          { label: "Pace médio", value: formatPace(Math.round((sec! / 2400) * 1000)) },
+        ]} />
       )}
     </TestCard>
   );
@@ -216,13 +331,11 @@ function VamCard() {
         </label>
       </div>
       {vam != null && (
-        <ResultBox
-          items={[
-            { label: "VAM", value: `${vam.toFixed(1)} km/h` },
-            { label: "Pace na VAM", value: formatPace(paceFromKmh(vam)) },
-            { label: "VO2máx estimado", value: `${vo2FromVam(vam).toFixed(1)} ml/kg/min` },
-          ]}
-        />
+        <ResultBox items={[
+          { label: "VAM", value: `${vam.toFixed(1)} km/h` },
+          { label: "Pace na VAM", value: formatPace(paceFromKmh(vam)) },
+          { label: "VO2máx estimado", value: `${vo2FromVam(vam).toFixed(1)} ml/kg/min` },
+        ]} />
       )}
     </TestCard>
   );
@@ -234,7 +347,6 @@ function RastCard() {
   const massNum = Number(mass);
   const splits = times.map((t) => ({ timeSec: Number(t) })).filter((s) => Number.isFinite(s.timeSec) && s.timeSec > 0);
   const result = massNum > 0 && splits.length === 6 ? calculateRast(splits, massNum) : null;
-
   return (
     <TestCard title="RAST" subtitle="Running-based Anaerobic Sprint Test — 6 tiros de 35 m">
       <label className="mb-3 block">
@@ -248,24 +360,18 @@ function RastCard() {
             key={i}
             className={cn(inputClass, "text-center")}
             value={t}
-            onChange={(e) => {
-              const next = [...times];
-              next[i] = e.target.value;
-              setTimes(next);
-            }}
+            onChange={(e) => { const next = [...times]; next[i] = e.target.value; setTimes(next); }}
             inputMode="decimal"
           />
         ))}
       </div>
       {result && (
-        <ResultBox
-          items={[
-            { label: "Potência pico", value: `${result.peakPowerW.toFixed(0)} W` },
-            { label: "Potência mínima", value: `${result.minPowerW.toFixed(0)} W` },
-            { label: "Potência média", value: `${result.avgPowerW.toFixed(0)} W` },
-            { label: "Índice de fadiga", value: `${result.fatigueIndexWPerS.toFixed(2)} W/s` },
-          ]}
-        />
+        <ResultBox items={[
+          { label: "Potência pico", value: `${result.peakPowerW.toFixed(0)} W` },
+          { label: "Potência mínima", value: `${result.minPowerW.toFixed(0)} W` },
+          { label: "Potência média", value: `${result.avgPowerW.toFixed(0)} W` },
+          { label: "Índice de fadiga", value: `${result.fatigueIndexWPerS.toFixed(2)} W/s` },
+        ]} />
       )}
     </TestCard>
   );
@@ -290,12 +396,10 @@ function ThresholdCard() {
         </label>
       </div>
       {pace != null && (
-        <ResultBox
-          items={[
-            { label: "Pace de limiar estimado", value: formatPace(pace) },
-            { label: "Faixa de treino sugerida", value: `${formatPace(pace - 10)} – ${formatPace(pace + 5)}` },
-          ]}
-        />
+        <ResultBox items={[
+          { label: "Pace de limiar estimado", value: formatPace(pace) },
+          { label: "Faixa de treino sugerida", value: `${formatPace(pace - 10)} – ${formatPace(pace + 5)}` },
+        ]} />
       )}
     </TestCard>
   );

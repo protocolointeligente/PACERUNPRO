@@ -15,6 +15,8 @@ import {
   Wallet,
   Flame,
   MessageSquare,
+  ClipboardList,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CoachOnboardingSteps } from "@/components/coach/onboarding-steps";
@@ -62,9 +64,9 @@ const fadeUp = {
 };
 
 const QUICK_ACTIONS = [
-  { label: "Prescrever", description: "Corrida, bike, natação...", href: "/treinador/prescricao/corrida", icon: Plus, color: "#C6F24E", bg: "rgba(198,242,78,0.12)" },
-  { label: "Criar semana", description: "Periodização completa", href: "/treinador/prescricao/periodizacao", icon: CalendarDays, color: "#46E0C8", bg: "rgba(70,224,200,0.12)" },
-  { label: "Força / Mob.", description: "Prescrever força e mobilidade", href: "/treinador/prescricao/forca", icon: Dumbbell, color: "#B78BFF", bg: "rgba(183,139,255,0.12)" },
+  { label: "Calendário", description: "Prescrever treinos da semana", href: "/treinador/prescricao", icon: Plus, color: "#C6F24E", bg: "rgba(198,242,78,0.12)" },
+  { label: "Periodização", description: "Planejar ciclo completo", href: "/treinador/prescricao/periodizacao", icon: CalendarDays, color: "#46E0C8", bg: "rgba(70,224,200,0.12)" },
+  { label: "Avaliações", description: "Testes e avaliação física", href: "/treinador/prescricao/avaliacoes", icon: ClipboardList, color: "#B78BFF", bg: "rgba(183,139,255,0.12)" },
   { label: "Biblioteca", description: "Modelos de treino multisport", href: "/treinador/biblioteca", icon: Library, color: "#FFB020", bg: "rgba(255,176,32,0.12)" },
 ];
 
@@ -210,6 +212,45 @@ export default function CoachDashboard({ firstName, credential, athleteCount, at
                   </span>
                 </div>
               </Link>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* Avaliações & Testes — widgets ETAPA 10 */}
+      <motion.div custom={2.5} variants={fadeUp} initial="hidden" animate="show">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "#5C636B" }}>
+            Avaliações & Testes
+          </p>
+          <a href="/treinador/prescricao/avaliacoes" className="text-xs font-semibold" style={{ color: "#B78BFF" }}>
+            Central de avaliações →
+          </a>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { label: "Testes pendentes",      value: "—", icon: Activity,     accent: "#FFB020", href: "/treinador/prescricao/avaliacoes/testes" },
+            { label: "Avaliações pendentes",  value: "—", icon: ClipboardList, accent: "#B78BFF", href: "/treinador/prescricao/avaliacoes/fisica" },
+            { label: "Sem avaliação",         value: athleteCount > 0 ? athleteCount : "—", icon: Users, accent: "#FF5A4D", href: "/treinador/prescricao/avaliacoes/fisica" },
+            { label: "Reavaliações",          value: "—", icon: ClipboardCheck, accent: "#46E0C8", href: "/treinador/prescricao/avaliacoes" },
+          ].map((w) => {
+            const Icon = w.icon;
+            return (
+              <a key={w.label} href={w.href}>
+                <div
+                  className="flex flex-col gap-2 rounded-2xl p-4 transition-opacity hover:opacity-90"
+                  style={{ background: `${w.accent}08`, border: `1px solid ${w.accent}20` }}
+                >
+                  <Icon className="h-5 w-5" style={{ color: w.accent }} />
+                  <p className="text-2xl font-bold" style={{ fontFamily: "'JetBrains Mono', monospace", color: w.accent }}>
+                    {w.value}
+                  </p>
+                  <p className="text-[11px] leading-snug" style={{ color: "#5C636B" }}>{w.label}</p>
+                  <span className="flex items-center gap-0.5 text-[11px] font-semibold" style={{ color: "#5C636B" }}>
+                    Ver <ArrowRight className="h-3 w-3" />
+                  </span>
+                </div>
+              </a>
             );
           })}
         </div>

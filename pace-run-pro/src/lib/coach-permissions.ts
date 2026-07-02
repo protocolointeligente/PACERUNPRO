@@ -25,6 +25,8 @@ import {
   Bike,
   Waves,
   Trophy,
+  ClipboardList,
+  BarChart3,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -57,25 +59,29 @@ function planTier(planId: string): number {
 
 // First 5 items become the mobile bottom nav — keep them as the daily-driver actions
 const coreNav: NavItem[] = [
-  { href: "/treinador/dashboard",                label: "Dashboard",  icon: LayoutDashboard },
-  { href: "/treinador/atletas",                  label: "Atletas",    icon: Users           },
-  { href: "/treinador/mensagens",                label: "Mensagens",  icon: MessageSquare   },
-  { href: "/treinador/alertas",                  label: "Alertas",    icon: Bell            },
-  { href: "/treinador/prescricao/periodizacao",  label: "Periodizar", icon: CalendarDays    },
-
-  // — Equipe —
-  { href: "/treinador/grupos",                   label: "Grupos",          icon: Layers,      sectionStart: "Equipe"    },
-  { href: "/treinador/relatorios",               label: "Relatórios",      icon: FileBarChart                           },
+  { href: "/treinador/dashboard",   label: "Dashboard", icon: LayoutDashboard },
+  { href: "/treinador/atletas",     label: "Atletas",   icon: Users           },
+  { href: "/treinador/mensagens",   label: "Mensagens", icon: MessageSquare   },
+  { href: "/treinador/alertas",     label: "Alertas",   icon: Bell            },
+  { href: "/treinador/prescricao",  label: "Prescrição", icon: CalendarDays   },
 
   // — Prescrição —
-  { href: "/treinador/prescricao/corrida",       label: "VDOT / Paces",    icon: Activity,    sectionStart: "Prescrição" },
-  { href: "/treinador/prescricao/forca",         label: "Força",           icon: Dumbbell                               },
-  { href: "/treinador/prescricao/ciclismo",      label: "Ciclismo / FTP",  icon: Bike,        sectionStart: undefined   },
-  { href: "/treinador/prescricao/natacao",       label: "Natação / CSS",   icon: Waves,       sectionStart: undefined   },
-  { href: "/treinador/prescricao/triatlo",       label: "Triathlon",       icon: Trophy,      sectionStart: undefined   },
-  { href: "/treinador/configuracoes/zonas",      label: "Zonas de treino", icon: Zap                                    },
-  { href: "/treinador/biblioteca",               label: "Biblioteca",      icon: BookOpen                               },
-  { href: "/treinador/minha-loja",               label: "Minha loja",      icon: ShoppingBag                            },
+  { href: "/treinador/prescricao/periodizacao",   label: "Periodização",    icon: BarChart3,       sectionStart: "Prescrição" },
+  { href: "/treinador/prescricao/avaliacoes",     label: "Avaliações",      icon: ClipboardList                              },
+
+  // — Modalidades —
+  { href: "/treinador/prescricao/corrida",        label: "Corrida — VDOT",  icon: Activity,        sectionStart: "Modalidades" },
+  { href: "/treinador/prescricao/ciclismo",       label: "Ciclismo — FTP",  icon: Bike                                        },
+  { href: "/treinador/prescricao/natacao",        label: "Natação — CSS",   icon: Waves                                       },
+  { href: "/treinador/prescricao/forca",          label: "Força",           icon: Dumbbell                                    },
+  { href: "/treinador/prescricao/triatlo",        label: "Triathlon",       icon: Trophy                                      },
+  { href: "/treinador/configuracoes/zonas",       label: "Zonas de treino", icon: Zap                                         },
+
+  // — Equipe —
+  { href: "/treinador/grupos",      label: "Grupos",     icon: Layers,      sectionStart: "Equipe" },
+  { href: "/treinador/relatorios",  label: "Relatórios", icon: FileBarChart                        },
+  { href: "/treinador/biblioteca",  label: "Biblioteca", icon: BookOpen                            },
+  { href: "/treinador/minha-loja",  label: "Minha loja", icon: ShoppingBag                        },
 ];
 
 // Starter+ (tier ≥ 1)
