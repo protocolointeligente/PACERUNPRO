@@ -18,6 +18,15 @@ function roleDestination(role?: string) {
   return "/atleta/dashboard";
 }
 
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  OAuthAccountNotLinked:
+    "Este e-mail já está cadastrado com senha. Use e-mail e senha para entrar abaixo.",
+  Callback: "Erro ao processar login com Google. Tente novamente.",
+  AccessDenied: "Acesso negado.",
+  Configuration: "Erro de configuração. Contate o suporte.",
+  Default: "Erro ao entrar. Tente novamente.",
+};
+
 function LoginContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -34,6 +43,11 @@ function LoginContent() {
   // Validate callbackUrl to prevent open-redirect attacks
   const raw = searchParams.get("callbackUrl") ?? "";
   const callbackUrl = raw.startsWith("/") && !raw.startsWith("//") ? raw : "";
+
+  const authErrorCode = searchParams.get("error") ?? "";
+  const authErrorMessage = authErrorCode
+    ? (AUTH_ERROR_MESSAGES[authErrorCode] ?? AUTH_ERROR_MESSAGES.Default)
+    : "";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -122,6 +136,13 @@ function LoginContent() {
           <span className="text-xs text-text-muted">ou</span>
           <hr className="flex-1 border-border" />
         </div>
+
+        {/* OAuth error banner (e.g. OAuthAccountNotLinked) */}
+        {authErrorMessage && (
+          <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-sm text-amber-400">
+            {authErrorMessage}
+          </p>
+        )}
 
         {/* Credentials form */}
         <form onSubmit={handleCredentials} className="space-y-4">

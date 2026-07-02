@@ -107,3 +107,9 @@ export const resetPasswordLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 5 requests per 15 minutes
   key: "auth:reset-password",
 });
+
+export const leadsLimiter = createRateLimiter({
+  limit: 3,
+  windowMs: 60 * 1000, // 3 lead submissions per minute per IP
+  key: "leads",
+});

@@ -32,7 +32,6 @@ export async function POST(req: NextRequest) {
     customerName: string;
     customerEmail: string;
     customerCpf: string;
-    userId?: string;
     cardNumber?: string;
     cardName?: string;
     cardExpiry?: string;
