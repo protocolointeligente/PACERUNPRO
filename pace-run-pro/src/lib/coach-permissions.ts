@@ -24,6 +24,7 @@ import {
   BarChart2,
   Bike,
   Waves,
+  Trophy,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -71,6 +72,7 @@ const coreNav: NavItem[] = [
   { href: "/treinador/prescricao/forca",         label: "Força",           icon: Dumbbell                               },
   { href: "/treinador/prescricao/ciclismo",      label: "Ciclismo / FTP",  icon: Bike,        sectionStart: undefined   },
   { href: "/treinador/prescricao/natacao",       label: "Natação / CSS",   icon: Waves,       sectionStart: undefined   },
+  { href: "/treinador/prescricao/triatlo",       label: "Triathlon",       icon: Trophy,      sectionStart: undefined   },
   { href: "/treinador/configuracoes/zonas",      label: "Zonas de treino", icon: Zap                                    },
   { href: "/treinador/biblioteca",               label: "Biblioteca",      icon: BookOpen                               },
   { href: "/treinador/minha-loja",               label: "Minha loja",      icon: ShoppingBag                            },

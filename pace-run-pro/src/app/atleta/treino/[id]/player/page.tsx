@@ -3,10 +3,12 @@
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Pause, Play, SkipForward, Square, Volume2, VolumeX, Zap } from "lucide-react";
+import { Navigation2, Pause, Play, SkipForward, Square, Volume2, VolumeX, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PlayerSession, ExecutionStatus, WorkoutCompletionData, PlayerPreferences } from "@/lib/workout-player/types";
 import { DEFAULT_PLAYER_PREFERENCES } from "@/lib/workout-player/types";
+import type { LiveMetrics } from "@/lib/workout-player/live-metrics-provider";
+import type { PaceAlert } from "@/lib/workout-player/pace-alert-engine";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -139,12 +141,16 @@ export default function WorkoutPlayerPage({ params }: { params: Promise<{ id: st
   const [prefs, setPrefs] = useState<PlayerPreferences>(DEFAULT_PLAYER_PREFERENCES);
   const [completion, setCompletion] = useState<WorkoutCompletionData | null>(null);
   const [audioReady, setAudioReady] = useState(false);
+  const [liveMetrics, setLiveMetrics] = useState<LiveMetrics | null>(null);
+  const [paceAlert, setPaceAlert] = useState<PaceAlert | null>(null);
 
   // Dynamic imports to avoid SSR issues
   const engineRef = useRef<import("@/lib/workout-player").WorkoutExecutionEngine | null>(null);
   const audioRef = useRef<import("@/lib/workout-player").AudioCueEngine | null>(null);
   const voiceRef = useRef<import("@/lib/workout-player").VoiceCueEngine | null>(null);
   const vibRef = useRef<import("@/lib/workout-player").VibrationCueEngine | null>(null);
+  const gpsRef = useRef<import("@/lib/workout-player").LiveMetricsProvider | null>(null);
+  const alertEngineRef = useRef<import("@/lib/workout-player").PaceAlertEngine | null>(null);
 
   // Load workout and build a minimal player session from DB data
   useEffect(() => {
@@ -234,12 +240,14 @@ export default function WorkoutPlayerPage({ params }: { params: Promise<{ id: st
     if (!session) return;
     let unmounted = false;
 
-    import("@/lib/workout-player").then(({ WorkoutExecutionEngine, AudioCueEngine, VoiceCueEngine, VibrationCueEngine }) => {
+    import("@/lib/workout-player").then(({ WorkoutExecutionEngine, AudioCueEngine, VoiceCueEngine, VibrationCueEngine, LiveMetricsProvider, PaceAlertEngine }) => {
       if (unmounted) return;
       const engine = new WorkoutExecutionEngine();
       const audio = new AudioCueEngine();
       const voice = new VoiceCueEngine();
       const vib = new VibrationCueEngine();
+      const gps = new LiveMetricsProvider();
+      const alertEngine = new PaceAlertEngine();
 
       voice.setMode(prefs.voiceMode);
       voice.setVolume(prefs.volume);
@@ -249,6 +257,32 @@ export default function WorkoutPlayerPage({ params }: { params: Promise<{ id: st
       audioRef.current = audio;
       voiceRef.current = voice;
       vibRef.current = vib;
+      gpsRef.current = gps;
+      alertEngineRef.current = alertEngine;
+
+      // GPS metrics + pace alerts
+      gps.onMetrics((m) => {
+        if (unmounted) return;
+        setLiveMetrics(m);
+        const currentStatus = engine.getStatus();
+        const step = currentStatus.currentStep;
+        if (step?.targetType === "PACE" && currentStatus.state === "running") {
+          const alert = alertEngine.check(m.currentPaceSecPerKm, step.targetMin, step.targetMax);
+          if (alert) {
+            setPaceAlert(alert);
+            if (alert.type === "too_slow") {
+              audio.playOffTargetSlow();
+              voice.speak("off_target_slow");
+              vib.onAlert();
+            } else {
+              audio.playOffTargetFast();
+              voice.speak("off_target_fast");
+              vib.onAlert();
+            }
+            setTimeout(() => setPaceAlert(null), 5000);
+          }
+        }
+      });
 
       engine.load(session);
 
@@ -287,6 +321,7 @@ export default function WorkoutPlayerPage({ params }: { params: Promise<{ id: st
         unmounted = true;
         unsub1(); unsub2(); unsub3(); unsub4();
         engine.destroy();
+        gps.destroy();
       };
     });
 
@@ -300,6 +335,8 @@ export default function WorkoutPlayerPage({ params }: { params: Promise<{ id: st
 
   const handleStart = useCallback(() => {
     activateAudio();
+    gpsRef.current?.start();
+    alertEngineRef.current?.reset();
     engineRef.current?.start();
   }, [activateAudio]);
 
@@ -310,14 +347,23 @@ export default function WorkoutPlayerPage({ params }: { params: Promise<{ id: st
   }, []);
 
   const handleSkip = useCallback(() => engineRef.current?.skipStep(), []);
-  const handleStop = useCallback(() => engineRef.current?.stop(), []);
+  const handleStop = useCallback(() => {
+    gpsRef.current?.stop();
+    engineRef.current?.stop();
+  }, []);
 
   const handleSaveCompletion = useCallback((feedback: { rpe: number; feeling: string; notes: string }) => {
     if (!completion) return;
+    const gps = gpsRef.current?.getMetrics();
     fetch(`/api/atleta/workouts/${id}/complete`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...completion, ...feedback }),
+      body: JSON.stringify({
+        ...completion,
+        ...feedback,
+        distanceMeters: gps?.distanceMeters ?? undefined,
+        avgPaceSecPerKm: gps?.avgPaceSecPerKm ?? undefined,
+      }),
     }).then(() => setTimeout(() => router.push(`/atleta/treino/${id}`), 1500));
   }, [completion, id, router]);
 
@@ -420,6 +466,51 @@ export default function WorkoutPlayerPage({ params }: { params: Promise<{ id: st
             </p>
           </div>
         )}
+
+        {/* GPS live metrics */}
+        {liveMetrics && liveMetrics.gpsStatus === "active" && (
+          <div className="flex gap-4 text-center">
+            <div>
+              <p className="text-xs text-text-muted">Pace atual</p>
+              <p className="text-sm font-bold">
+                {liveMetrics.currentPaceSecPerKm ? fmtPace(liveMetrics.currentPaceSecPerKm) : "--:--"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-text-muted">Distância</p>
+              <p className="text-sm font-bold">
+                {(liveMetrics.distanceMeters / 1000).toFixed(2)} km
+              </p>
+            </div>
+          </div>
+        )}
+        {liveMetrics && liveMetrics.gpsStatus === "requesting" && (
+          <div className="flex items-center gap-2 text-amber-400 text-xs">
+            <Navigation2 size={14} className="animate-pulse" />
+            Aguardando GPS...
+          </div>
+        )}
+        {liveMetrics && liveMetrics.gpsStatus === "denied" && (
+          <p className="text-xs text-text-muted">GPS negado — modo manual por tempo</p>
+        )}
+
+        {/* Pace alert */}
+        <AnimatePresence>
+          {paceAlert && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                paceAlert.type === "too_slow"
+                  ? "bg-amber-500/20 border border-amber-500/50 text-amber-300"
+                  : "bg-blue-500/20 border border-blue-500/50 text-blue-300"
+              }`}
+            >
+              {paceAlert.message}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Next step */}
         {status.nextStep && (
