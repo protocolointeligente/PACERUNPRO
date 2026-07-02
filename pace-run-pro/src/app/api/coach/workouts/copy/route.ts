@@ -2,60 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { WorkoutType } from "@prisma/client";
+import { computeWeekBounds, findOrCreateActivePlan, findOrCreateWeek } from "@/lib/prescription-service";
 
-async function findOrCreatePlanAndWeek(
-  athleteId: string,
-  coachId: string,
-  workoutDate: Date
-) {
-  let plan = await prisma.trainingPlan.findFirst({
-    where: { athleteId, coachId, endDate: { gte: new Date() } },
-  });
-  if (!plan) {
-    const athlete = await prisma.athlete.findUnique({
-      where: { id: athleteId },
-      select: { goal: true },
-    });
-    plan = await prisma.trainingPlan.create({
-      data: {
-        athleteId,
-        coachId,
-        name: "Plano de Treinamento",
-        goal: athlete?.goal ?? "PERFORMANCE",
-        phase: "BASE",
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-      },
-    });
-  }
-
-  const dow = workoutDate.getDay();
-  const diffToMon = (dow + 6) % 7;
-  const weekStart = new Date(workoutDate);
-  weekStart.setDate(workoutDate.getDate() - diffToMon);
-  weekStart.setHours(0, 0, 0, 0);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
-
-  let week = await prisma.trainingWeek.findFirst({
-    where: { planId: plan.id, startDate: weekStart },
-  });
-  if (!week) {
-    const weekCount = await prisma.trainingWeek.count({ where: { planId: plan.id } });
-    week = await prisma.trainingWeek.create({
-      data: {
-        planId: plan.id,
-        weekNumber: weekCount + 1,
-        phase: plan.phase,
-        startDate: weekStart,
-        endDate: weekEnd,
-        released: true,
-      },
-    });
-  }
-
-  return week;
+async function findOrCreatePlanAndWeek(athleteId: string, coachId: string, workoutDate: Date) {
+  const plan = await findOrCreateActivePlan(athleteId, coachId, new Date());
+  const { weekStart, weekEnd } = computeWeekBounds(workoutDate);
+  return findOrCreateWeek(plan.id, plan.phase, weekStart, weekEnd);
 }
 
 export async function POST(req: NextRequest) {

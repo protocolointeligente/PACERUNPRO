@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { WorkoutType } from "@prisma/client";
+import { findOrCreateActivePlan, findOrCreateWeek } from "@/lib/prescription-service";
 
 const DAY_MAP: Record<string, number> = {
   Dom: 0,
@@ -72,49 +73,8 @@ export async function POST(req: NextRequest) {
   let totalWorkoutsCreated = 0;
 
   for (const athleteId of athleteIds) {
-    // Find or create training plan
-    let plan = await prisma.trainingPlan.findFirst({
-      where: { athleteId, coachId: coach.id, endDate: { gte: new Date() } },
-    });
-
-    if (!plan) {
-      const athlete = await prisma.athlete.findUnique({
-        where: { id: athleteId },
-        select: { goal: true },
-      });
-      plan = await prisma.trainingPlan.create({
-        data: {
-          athleteId,
-          coachId: coach.id,
-          name: "Plano de Treinamento",
-          goal: athlete?.goal ?? "PERFORMANCE",
-          phase: "BASE",
-          startDate: new Date(startDate),
-          endDate: new Date(new Date(startDate).getTime() + 90 * 24 * 60 * 60 * 1000),
-        },
-      });
-    }
-
-    // Find or create training week
-    let week = await prisma.trainingWeek.findFirst({
-      where: { planId: plan.id, startDate: weekStart },
-    });
-
-    if (!week) {
-      const weekCount = await prisma.trainingWeek.count({
-        where: { planId: plan.id },
-      });
-      week = await prisma.trainingWeek.create({
-        data: {
-          planId: plan.id,
-          weekNumber: weekCount + 1,
-          phase: plan.phase,
-          startDate: weekStart,
-          endDate: weekEnd,
-          released: true,
-        },
-      });
-    }
+    const plan = await findOrCreateActivePlan(athleteId, coach.id, weekStart);
+    const week = await findOrCreateWeek(plan.id, plan.phase, weekStart, weekEnd);
 
     // Create workouts for each session (skip rest days)
     for (const s of sessions) {

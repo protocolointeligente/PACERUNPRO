@@ -16,9 +16,12 @@ export async function GET(req: NextRequest) {
   const tab = searchParams.get("tab") ?? "meus"; // meus | equipe
   const category = searchParams.get("category") ?? undefined;
 
+  // TEAM scope is currently restricted to the requesting coach's own templates.
+  // A cross-coach team model does not yet exist in the schema, so showing all TEAM
+  // templates platform-wide would expose other coaches' content without authorisation.
   const where =
     tab === "equipe"
-      ? { scope: "TEAM" as TemplateScope, ...(category ? { category: category as never } : {}) }
+      ? { coachId: coach.id, scope: "TEAM" as TemplateScope, ...(category ? { category: category as never } : {}) }
       : { coachId: coach.id, ...(category ? { category: category as never } : {}) };
 
   const templates = await prisma.sharedWorkoutTemplate.findMany({

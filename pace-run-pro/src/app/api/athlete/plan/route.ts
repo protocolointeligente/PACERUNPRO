@@ -2,6 +2,31 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
+const PLAN_SELECT = {
+  id: true,
+  name: true,
+  goal: true,
+  raceDate: true,
+  macrocycle: true,
+  phase: true,
+  startDate: true,
+  endDate: true,
+  weeks: {
+    select: {
+      id: true,
+      weekNumber: true,
+      mesocycle: true,
+      phase: true,
+      startDate: true,
+      endDate: true,
+      targetLoad: true,
+      targetVolumeKm: true,
+      released: true,
+    },
+    orderBy: { weekNumber: "asc" as const },
+  },
+} as const;
+
 export async function GET() {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "ATHLETE") {
@@ -14,34 +39,18 @@ export async function GET() {
   });
   if (!athlete) return NextResponse.json({ plan: null });
 
-  const plan = await prisma.trainingPlan.findFirst({
-    where: { athleteId: athlete.id },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      goal: true,
-      raceDate: true,
-      macrocycle: true,
-      phase: true,
-      startDate: true,
-      endDate: true,
-      weeks: {
-        select: {
-          id: true,
-          weekNumber: true,
-          mesocycle: true,
-          phase: true,
-          startDate: true,
-          endDate: true,
-          targetLoad: true,
-          targetVolumeKm: true,
-          released: true,
-        },
-        orderBy: { weekNumber: "asc" },
-      },
-    },
-  });
+  // Prefer the currently active plan; fall back to the most recently created if none is active.
+  const plan =
+    (await prisma.trainingPlan.findFirst({
+      where: { athleteId: athlete.id, endDate: { gte: new Date() } },
+      orderBy: { createdAt: "desc" },
+      select: PLAN_SELECT,
+    })) ??
+    (await prisma.trainingPlan.findFirst({
+      where: { athleteId: athlete.id },
+      orderBy: { createdAt: "desc" },
+      select: PLAN_SELECT,
+    }));
 
   if (!plan) return NextResponse.json({ plan: null });
 

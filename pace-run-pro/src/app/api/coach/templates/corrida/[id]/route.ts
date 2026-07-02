@@ -7,7 +7,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.id || session.user.role !== "COACH") return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } });
   if (!coach) return NextResponse.json({ error: "Treinador não encontrado" }, { status: 403 });

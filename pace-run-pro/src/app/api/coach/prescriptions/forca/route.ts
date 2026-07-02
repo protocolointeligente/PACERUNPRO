@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import type { ExerciseCategory, StrengthSplit } from "@prisma/client";
+import { findOrCreateActivePlan, findOrCreateWeek } from "@/lib/prescription-service";
 
 const DAY_MAP: Record<string, number> = {
   Dom: 0, Seg: 1, Ter: 2, Qua: 3, Qui: 4, Sex: 5, Sáb: 6,
@@ -77,45 +78,8 @@ export async function POST(req: NextRequest) {
   const weekStart = new Date(startDate);
   const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
 
-  // Find or create training plan
-  let plan = await prisma.trainingPlan.findFirst({
-    where: { athleteId, coachId: coach.id, endDate: { gte: new Date() } },
-  });
-  if (!plan) {
-    const athlete = await prisma.athlete.findUnique({
-      where: { id: athleteId },
-      select: { goal: true },
-    });
-    plan = await prisma.trainingPlan.create({
-      data: {
-        athleteId,
-        coachId: coach.id,
-        name: "Plano de Treinamento",
-        goal: athlete?.goal ?? "PERFORMANCE",
-        phase: "BASE",
-        startDate: weekStart,
-        endDate: new Date(weekStart.getTime() + 90 * 24 * 60 * 60 * 1000),
-      },
-    });
-  }
-
-  // Find or create training week
-  let week = await prisma.trainingWeek.findFirst({
-    where: { planId: plan.id, startDate: weekStart },
-  });
-  if (!week) {
-    const weekCount = await prisma.trainingWeek.count({ where: { planId: plan.id } });
-    week = await prisma.trainingWeek.create({
-      data: {
-        planId: plan.id,
-        weekNumber: weekCount + 1,
-        phase: plan.phase,
-        startDate: weekStart,
-        endDate: weekEnd,
-        released: true,
-      },
-    });
-  }
+  const plan = await findOrCreateActivePlan(athleteId, coach.id, weekStart);
+  const week = await findOrCreateWeek(plan.id, plan.phase, weekStart, weekEnd);
 
   const strengthSplit: StrengthSplit = SPLIT_MAP[division] ?? "PERSONALIZADA";
   let totalCreated = 0;

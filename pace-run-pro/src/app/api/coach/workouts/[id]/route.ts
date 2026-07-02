@@ -29,19 +29,43 @@ export async function PATCH(
   const resolved = await resolveCoachWorkout(session.user.id, id);
   if (!resolved) return NextResponse.json({ error: "Treino não encontrado" }, { status: 404 });
 
-  const body = (await req.json()) as { date?: string; title?: string };
+  const body = (await req.json()) as {
+    date?: string;
+    title?: string;
+    objective?: string;
+    warmup?: string;
+    mainSet?: string;
+    cooldown?: string;
+    notes?: string;
+    targetDistanceKm?: number | null;
+    targetDurationMin?: number | null;
+    targetPaceSecPerKm?: number | null;
+    targetRpe?: number | null;
+    structured?: boolean;
+    blocks?: unknown;
+  };
 
-  const data: { date?: Date; title?: string } = {};
-  if (body.date) {
+  const data: Record<string, unknown> = {};
+
+  if (body.date !== undefined) {
     const d = new Date(body.date);
     if (isNaN(d.getTime())) {
       return NextResponse.json({ error: "Data inválida" }, { status: 400 });
     }
     data.date = d;
   }
-  if (typeof body.title === "string" && body.title.trim()) {
-    data.title = body.title.trim();
-  }
+  if (typeof body.title === "string" && body.title.trim()) data.title = body.title.trim();
+  if (typeof body.objective === "string") data.objective = body.objective.trim();
+  if (typeof body.warmup === "string") data.warmup = body.warmup.trim() || null;
+  if (typeof body.mainSet === "string") data.mainSet = body.mainSet.trim() || null;
+  if (typeof body.cooldown === "string") data.cooldown = body.cooldown.trim() || null;
+  if (typeof body.notes === "string") data.notes = body.notes.trim() || null;
+  if (body.targetDistanceKm !== undefined) data.targetDistanceKm = body.targetDistanceKm;
+  if (body.targetDurationMin !== undefined) data.targetDurationMin = body.targetDurationMin;
+  if (body.targetPaceSecPerKm !== undefined) data.targetPaceSecPerKm = body.targetPaceSecPerKm;
+  if (body.targetRpe !== undefined) data.targetRpe = body.targetRpe;
+  if (typeof body.structured === "boolean") data.structured = body.structured;
+  if (body.blocks !== undefined) data.blocks = body.blocks;
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "Nada para atualizar" }, { status: 400 });
