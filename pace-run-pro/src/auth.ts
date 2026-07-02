@@ -62,8 +62,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         let role = (user as { role?: UserRole }).role ?? "ATHLETE";
 
-        // Bootstrap: e-mails listados em ADMIN_EMAILS sempre recebem acesso de ADMIN,
-        // mesmo que a conta tenha sido criada com o papel padrão (ATHLETE).
+        // Bootstrap on login: promote ADMIN_EMAILS emails immediately.
         const adminEmails = (process.env.ADMIN_EMAILS ?? "")
           .split(",")
           .map((e) => e.trim().toLowerCase())
@@ -76,34 +75,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         token.role = role;
         token.id = user.id;
-      } else if (token.id) {
-        // Token refresh: re-read role from DB so changes take effect without re-login
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { role: true, email: true },
-        });
-        if (dbUser) {
-          let role = dbUser.role;
-
-          // Bootstrap on refresh: if ADMIN_EMAILS is set and the DB still has a
-          // non-admin role for this email, promote and persist immediately.
-          if (role !== "ADMIN" && dbUser.email) {
-            const adminEmails = (process.env.ADMIN_EMAILS ?? "")
-              .split(",")
-              .map((e) => e.trim().toLowerCase())
-              .filter(Boolean);
-            if (adminEmails.includes(dbUser.email.toLowerCase())) {
-              role = "ADMIN" as UserRole;
-              await prisma.user.update({
-                where: { id: token.id as string },
-                data: { role: "ADMIN" },
-              });
-            }
-          }
-
-          token.role = role;
-        }
       }
+      // Role is stored in the JWT — no DB lookup needed on every request.
+      // To apply a manual role change, the user must sign out and back in.
       return token;
     },
     session({ session, token }) {

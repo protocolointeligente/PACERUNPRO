@@ -165,6 +165,10 @@ model Athlete {
   physicalAssessments PhysicalAssessment[]
   marketplaceOrders  MarketplaceOrder[]
   marketplaceReviews MarketplaceReview[]
+  lessonProgress     CourseLessonProgress[]
+  eventRegistrations EventRegistration[]
+  challengeParticipations ChallengeParticipant[]
+  appointments       Appointment[]
 
   shoes              Shoe[]
 
@@ -205,6 +209,9 @@ model Coach {
   marketplaceProducts MarketplaceProduct[]
   marketplaceCommissions MarketplaceCommission[]
   marketplacePayouts MarketplacePayout[]
+  challenges        Challenge[]
+  appointments      Appointment[]
+  coachAvailability CoachAvailability[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -1361,8 +1368,11 @@ model MarketplaceProduct {
 
   commissionPct Float?
 
-  orderItems  MarketplaceOrderItem[]
-  reviews     MarketplaceReview[]
+  orderItems         MarketplaceOrderItem[]
+  reviews            MarketplaceReview[]
+  courseModules      CourseModule[]
+  eventRegistrations EventRegistration[]
+  appointments       Appointment[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1485,4 +1495,139 @@ model MarketplaceConfig {
   updatedAt           DateTime @updatedAt
 
   @@map("marketplace_config")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Fase 2 — Cursos, Eventos, Agenda, Desafios
+// ────────────────────────────────────────────────────────────────────────────
+
+model CourseModule {
+  id        String   @id @default(cuid())
+  productId String
+  product   MarketplaceProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  title     String
+  position  Int      @default(0)
+  lessons   CourseLesson[]
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@map("course_modules")
+}
+
+model CourseLesson {
+  id          String   @id @default(cuid())
+  moduleId    String
+  module      CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title       String
+  videoUrl    String?
+  duration    Int?     // seconds
+  position    Int      @default(0)
+  isPreview   Boolean  @default(false)
+  content     String?
+  createdAt   DateTime @default(now())
+  progress    CourseLessonProgress[]
+
+  @@index([moduleId])
+  @@map("course_lessons")
+}
+
+model CourseLessonProgress {
+  id          String   @id @default(cuid())
+  lessonId    String
+  lesson      CourseLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  athleteId   String
+  athlete     Athlete  @relation(fields: [athleteId], references: [id])
+  completedAt DateTime @default(now())
+
+  @@unique([lessonId, athleteId])
+  @@map("course_lesson_progress")
+}
+
+model EventRegistration {
+  id          String   @id @default(cuid())
+  productId   String
+  product     MarketplaceProduct @relation(fields: [productId], references: [id])
+  athleteId   String
+  athlete     Athlete  @relation(fields: [athleteId], references: [id])
+  orderId     String?
+  status      String   @default("CONFIRMED")
+  registeredAt DateTime @default(now())
+
+  @@unique([productId, athleteId])
+  @@index([productId])
+  @@map("event_registrations")
+}
+
+model CoachAvailability {
+  id          String   @id @default(cuid())
+  coachId     String
+  coach       Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  dayOfWeek   Int      // 0=Dom ... 6=Sab
+  startTime   String   // "09:00"
+  endTime     String   // "18:00"
+  slotMinutes Int      @default(60)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([coachId])
+  @@map("coach_availability")
+}
+
+model Appointment {
+  id           String   @id @default(cuid())
+  coachId      String
+  coach        Coach    @relation(fields: [coachId], references: [id])
+  athleteId    String
+  athlete      Athlete  @relation(fields: [athleteId], references: [id])
+  productId    String?
+  product      MarketplaceProduct? @relation(fields: [productId], references: [id])
+  scheduledAt  DateTime
+  durationMin  Int      @default(60)
+  status       String   @default("PENDING")
+  notes        String?
+  meetUrl      String?
+  athleteNotes String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([coachId])
+  @@index([athleteId])
+  @@map("appointments")
+}
+
+model Challenge {
+  id          String   @id @default(cuid())
+  coachId     String
+  coach       Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  type        String   @default("DISTANCIA")
+  targetValue Float?
+  targetUnit  String?
+  sport       String   @default("CORRIDA")
+  startDate   DateTime
+  endDate     DateTime
+  isPublic    Boolean  @default(false)
+  bannerUrl   String?
+  participants ChallengeParticipant[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([coachId])
+  @@map("challenges")
+}
+
+model ChallengeParticipant {
+  id          String   @id @default(cuid())
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  athleteId   String
+  athlete     Athlete  @relation(fields: [athleteId], references: [id])
+  progress    Float    @default(0)
+  completedAt DateTime?
+  joinedAt    DateTime @default(now())
+
+  @@unique([challengeId, athleteId])
+  @@index([challengeId])
+  @@map("challenge_participants")
 }

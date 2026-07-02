@@ -33,7 +33,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@react-pdf/renderer"],
+  serverExternalPackages: ["@react-pdf/renderer", "@neondatabase/serverless", "@prisma/adapter-neon"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
