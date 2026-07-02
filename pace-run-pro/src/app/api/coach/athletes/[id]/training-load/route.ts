@@ -23,12 +23,32 @@ export async function GET(
     return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
   }
 
-  const [loadParams, workouts] = await Promise.all([
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const cutoff = new Date(today.getTime() - 120 * 86400_000);
+
+  const [loadParams, workoutLogs, futureWorkouts] = await Promise.all([
     prisma.athleteLoadParams.findUnique({ where: { athleteId } }),
+    // Actual completed workout logs (real training stimulus)
+    prisma.workoutLog.findMany({
+      where: {
+        athleteId,
+        workout: { date: { gte: cutoff } },
+      },
+      select: {
+        distanceKm: true,
+        durationSec: true,
+        avgPaceSecPerKm: true,
+        rpe: true,
+        workout: { select: { type: true, date: true } },
+      },
+    }),
+    // Future scheduled workouts for projection
     prisma.workout.findMany({
       where: {
         week: { plan: { athleteId } },
-        date: { gte: new Date(Date.now() - 120 * 86400_000) },
+        date: { gte: today },
+        status: { in: ["AGENDADO", "LIBERADO"] },
       },
       select: {
         date: true,
@@ -42,21 +62,41 @@ export async function GET(
     }),
   ]);
 
-  // Aggregate TSS per day
   const dailyTss = new Map<string, number>();
-  for (const w of workouts) {
+
+  // Actual logs drive CTL/ATL/TSB
+  for (const log of workoutLogs) {
+    if (!log.workout) continue;
     const tss = estimateTSS(
       {
-        type: w.type as string,
-        targetDistanceKm: w.targetDistanceKm,
-        targetDurationMin: w.targetDurationMin,
-        targetPaceSecPerKm: w.targetPaceSecPerKm,
-        targetRpe: w.targetRpe,
+        type: log.workout.type as string,
+        targetDistanceKm: log.distanceKm,
+        targetDurationMin: log.durationSec != null ? log.durationSec / 60 : null,
+        targetPaceSecPerKm: log.avgPaceSecPerKm,
+        targetRpe: log.rpe,
       },
       loadParams,
     );
-    const day = w.date.toISOString().slice(0, 10);
+    const day = log.workout.date.toISOString().slice(0, 10);
     dailyTss.set(day, (dailyTss.get(day) ?? 0) + tss);
+  }
+
+  // Future planned workouts for projection
+  for (const w of futureWorkouts) {
+    const day = w.date.toISOString().slice(0, 10);
+    if (!dailyTss.has(day)) {
+      const tss = estimateTSS(
+        {
+          type: w.type as string,
+          targetDistanceKm: w.targetDistanceKm,
+          targetDurationMin: w.targetDurationMin,
+          targetPaceSecPerKm: w.targetPaceSecPerKm,
+          targetRpe: w.targetRpe,
+        },
+        loadParams,
+      );
+      dailyTss.set(day, tss);
+    }
   }
 
   const series = computeLoadSeries(dailyTss, 90);

@@ -14,10 +14,11 @@ export function vo2FromCooper(distanceM: number) {
   return (distanceM - 504.9) / 44.73;
 }
 
-/** Teste de 5 minutos (Balke adaptado): distância em metros → VO2máx estimado. */
+/** Teste de 5 minutos: distância em metros → VO2máx estimado (ACSM, 2014). */
 export function vo2From5MinTest(distanceM: number) {
-  const kmh = distanceM / 1000 / (5 / 60);
-  return 3.5 * kmh + 3.5 * 0.2; // base aeróbica + custo de deslocamento
+  // ACSM formula: VO2 = 0.2 × v(m/min) + 3.5
+  const vMperMin = distanceM / 5; // 5-min test → m/min
+  return Math.round((0.2 * vMperMin + 3.5) * 10) / 10;
 }
 
 /** Teste de 3 km: tempo em segundos → VO2máx estimado (fórmula de campo). */
@@ -29,10 +30,13 @@ export function vo2From3km(durationSec: number) {
   return kmh * 3.5;
 }
 
-/** Teste de 2400 m (12 min Cooper reverso): tempo em segundos → VO2máx. */
+/**
+ * Teste de 2400 m: tempo em segundos → VO2máx (George et al., 1993).
+ * Fórmula: VO2máx = 483 / T(min) + 3.5
+ */
 export function vo2From2400m(durationSec: number) {
   const minutes = durationSec / 60;
-  return 3.5 * (2400 / (minutes * 60)) * 3.6 * 1.5 + 10;
+  return Math.round((483 / minutes + 3.5) * 10) / 10;
 }
 
 // ── Velocidade Aeróbica Máxima (VAM) ────────────────────────────────────────
@@ -70,6 +74,7 @@ export interface RastResult {
 /** RAST: 6 tiros de 35 m — calcula potência (W) por tiro e índice de fadiga. */
 export function calculateRast(splits: RastSplit[], massKg: number, distanceM = 35): RastResult {
   const powers = splits.map((s) => {
+    if (s.timeSec <= 0) return 0;
     const velocity = distanceM / s.timeSec;
     const acceleration = velocity / s.timeSec;
     return massKg * acceleration * velocity; // P = m·a·v (Watts)
@@ -84,11 +89,20 @@ export function calculateRast(splits: RastSplit[], massKg: number, distanceM = 3
 
 // ── Limiar anaeróbico (estimativa de campo — Conconi/Pace de limiar) ────────
 
-/** Estima o pace de limiar a partir do pace dos últimos 20–30 min de um teste contínuo. */
-export function thresholdPaceFromTest(distanceM: number, durationSec: number) {
+/**
+ * Estima o pace de limiar anaeróbico (T-pace) a partir de um teste máximo.
+ * O fator de escala depende da duração do teste (intensidade relativa ao VO2max):
+ *  - ≤6 min (ex: 5-min): roda ~105% vVO2max → T-pace = pace_teste / 0.82
+ *  - ≤15 min (ex: Cooper 12-min): roda ~96% vVO2max → T-pace = pace_teste / 0.88
+ *  - >15 min (ex: 30-min): pace ≈ limiar anaeróbico → sem ajuste (×1.00)
+ * Ref: Daniels (2012), Léger & Boucher (1980).
+ */
+export function thresholdPaceFromTest(distanceM: number, durationSec: number): number {
+  if (distanceM <= 0) return 0;
   const paceSecPerKm = durationSec / (distanceM / 1000);
-  // ajuste de campo: limiar ≈ 97–100% do pace médio de um esforço de ~30min
-  return Math.round(paceSecPerKm * 1.0);
+  const durationMin = durationSec / 60;
+  const factor = durationMin <= 6 ? 1.22 : durationMin <= 15 ? 1.15 : 1.00;
+  return Math.round(paceSecPerKm * factor);
 }
 
 // ── Zonas de frequência cardíaca (Karvonen) ─────────────────────────────────

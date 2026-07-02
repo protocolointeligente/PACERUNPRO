@@ -238,16 +238,16 @@ describe("evaluateCheckInRules", () => {
     expect(evaluateCheckInRules([])).toHaveLength(0);
   });
 
-  it("dor > 7 retorna ação bloquear_intenso", () => {
+  it("dor >= 8 retorna ação bloquear_treino", () => {
     const history = [{ date: "2026-06-26", rpe: 6, pain: 8, sleep: 5, fatigue: 5, mood: 6 }];
     const results = evaluateCheckInRules(history);
-    expect(results.some((r) => r.action === "bloquear_intenso")).toBe(true);
+    expect(results.some((r) => r.action === "bloquear_treino")).toBe(true);
   });
 
-  it("dor > 7 inclui sugestão de treino alternativo", () => {
+  it("dor >= 8 inclui sugestão de avaliação médica", () => {
     const history = [{ date: "2026-06-26", rpe: 6, pain: 9, sleep: 5, fatigue: 5, mood: 6 }];
     const results = evaluateCheckInRules(history);
-    const blocked = results.find((r) => r.action === "bloquear_intenso");
+    const blocked = results.find((r) => r.action === "bloquear_treino");
     expect(blocked?.suggestion).toBeTruthy();
   });
 

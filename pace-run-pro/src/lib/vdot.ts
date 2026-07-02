@@ -32,7 +32,8 @@ export function calculateVDOT(distanceM: number, timeSec: number): number {
   if (distanceM <= 0 || timeSec <= 0) return 0;
   const timeMin = timeSec / 60;
   const velocity = distanceM / timeMin;
-  return vo2FromVelocity(velocity) / percentVO2Max(timeMin);
+  const vdot = vo2FromVelocity(velocity) / percentVO2Max(timeMin);
+  return vdot > 0 ? vdot : 0; // guard: very slow paces can yield negative VO2 cost
 }
 
 /** Pace (segundos por km) correspondente a uma intensidade (% do VDOT/VO2máx). */

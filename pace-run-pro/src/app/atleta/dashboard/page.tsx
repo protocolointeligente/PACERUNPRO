@@ -237,11 +237,17 @@ function PseWidget({ yesterdayWorkout }: { yesterdayWorkout: WorkoutEntry | null
 }
 
 // ── quick metrics ───────────────────────────────────────────────────────────
-function QuickMetrics({ tsb, ctl, series }: { tsb: number | null; ctl: number | null; series: LoadDay[] }) {
-  const weekKm = series.slice(-7).reduce((acc, d) => acc + (d.ctl ?? 0) * 0.1, 0);
-  const adherence = series.length > 0
-    ? Math.round(series.filter((d) => (d.ctl ?? 0) > 0).length / Math.max(series.length, 1) * 100)
-    : null;
+function QuickMetrics({
+  tsb,
+  ctl,
+  weeklyStats,
+}: {
+  tsb: number | null;
+  ctl: number | null;
+  weeklyStats: { totalKm: number; adherencePct: number | null } | null;
+}) {
+  const weekKm = weeklyStats?.totalKm ?? 0;
+  const adherence = weeklyStats?.adherencePct ?? null;
 
   const formLabel = tsb !== null ? FORM_LABELS[formStatus(tsb)].label : null;
   const formColor = tsb !== null ? (tsb > 5 ? "#C6F24E" : tsb > -15 ? "#46E0C8" : "#FFB020") : "#9AA0A6";
@@ -360,6 +366,7 @@ export default function AthleteDashboard() {
   const [tsb, setTsb] = useState<number | null>(null);
   const [ctl, setCtl] = useState<number | null>(null);
   const [series, setSeries] = useState<LoadDay[]>([]);
+  const [weeklyStats, setWeeklyStats] = useState<{ totalKm: number; adherencePct: number | null } | null>(null);
 
   useEffect(() => { setGreeting(getGreeting()); }, []);
 
@@ -373,9 +380,14 @@ export default function AthleteDashboard() {
   useEffect(() => {
     fetch("/api/atleta/training-load")
       .then((r) => r.ok ? r.json() : null)
-      .then((d: { latest?: { tsb: number; ctl: number } | null; series?: LoadDay[] } | null) => {
+      .then((d: {
+        latest?: { tsb: number; ctl: number } | null;
+        series?: LoadDay[];
+        weeklyStats?: { totalKm: number; adherencePct: number | null };
+      } | null) => {
         if (d?.latest) { setTsb(d.latest.tsb); setCtl(d.latest.ctl); }
         if (d?.series?.length) setSeries(d.series.slice(-14));
+        if (d?.weeklyStats) setWeeklyStats(d.weeklyStats);
       })
       .catch(() => null);
   }, []);
@@ -466,7 +478,7 @@ export default function AthleteDashboard() {
         <PseWidget yesterdayWorkout={yesterdayWorkout} />
 
         {/* ── Quick metrics ── */}
-        <QuickMetrics tsb={tsb} ctl={ctl} series={series} />
+        <QuickMetrics tsb={tsb} ctl={ctl} weeklyStats={weeklyStats} />
 
       </div>
     </div>
