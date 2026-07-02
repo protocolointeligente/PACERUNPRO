@@ -969,6 +969,7 @@ export default function PeriodizacaoPage() {
                         sport={sportMode}
                         athleteName={selectedAthletes.length === 1 ? (athletes.find((a) => a.id === selectedAthletes[0])?.name) : selectedAthletes.length > 1 ? `${selectedAthletes.length} atletas` : undefined}
                       />
+                      <PeriodizacaoCharts weeks={weeks} sport={sportMode} />
                       <div className="space-y-4 print:hidden">
                         {Object.entries(mesocycles).map(([meso, mesoWeeks]) => {
                           const dominantPhase = mesoWeeks.reduce((acc, w) => {
@@ -1678,6 +1679,169 @@ function PeriodizacaoPrintTable({
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+// ── PeriodizacaoCharts ────────────────────────────────────────────────────────
+
+const PHASE_HEX: Record<Phase, string> = {
+  Base:       "#38bdf8",
+  Construção: "#6366f1",
+  Específico: "#f59e0b",
+  Taper:      "#22c55e",
+};
+
+function computeTrainingLoad(weeks: Week[]): { ctl: number; atl: number; tsb: number }[] {
+  const dailyTss: number[] = [];
+  for (const w of weeks) {
+    const weeklyTss = (w.volume / 100) * (w.intensity / 100) * w.sessions * 80;
+    const daily = weeklyTss / 7;
+    for (let d = 0; d < 7; d++) dailyTss.push(daily);
+  }
+  let ctl = 0, atl = 0;
+  return weeks.map((_, wi) => {
+    for (let d = 0; d < 7; d++) {
+      const tss = dailyTss[wi * 7 + d] ?? 0;
+      ctl = ctl + (tss - ctl) * (1 - Math.exp(-1 / 42));
+      atl = atl + (tss - atl) * (1 - Math.exp(-1 / 7));
+    }
+    return { ctl: Math.round(ctl * 10) / 10, atl: Math.round(atl * 10) / 10, tsb: Math.round((ctl - atl) * 10) / 10 };
+  });
+}
+
+function PeriodizacaoCharts({ weeks, sport }: { weeks: Week[]; sport: SportMode }) {
+  if (weeks.length === 0) return null;
+
+  const W = 800;
+  const H_VOL = 120;
+  const H_TL = 110;
+  const PAD_L = 40;
+  const PAD_R = 16;
+  const PAD_T = 12;
+  const PAD_B = 24;
+  const barW = Math.max(4, (W - PAD_L - PAD_R) / weeks.length - 2);
+  const maxKm = Math.max(...weeks.map((w) => w.km));
+
+  const tl = computeTrainingLoad(weeks);
+  const maxCtl = Math.max(...tl.map((t) => t.ctl), 1);
+  const minTsb = Math.min(...tl.map((t) => t.tsb));
+  const maxTsb = Math.max(...tl.map((t) => t.tsb));
+  const tlMin = Math.min(minTsb, 0) - 5;
+  const tlMax = Math.max(maxCtl, maxTsb) + 5;
+  const tlRange = tlMax - tlMin;
+
+  function xPos(i: number) {
+    return PAD_L + i * ((W - PAD_L - PAD_R) / weeks.length) + barW / 2;
+  }
+  function tlY(v: number) {
+    return PAD_T + (1 - (v - tlMin) / tlRange) * (H_TL - PAD_T - PAD_B);
+  }
+
+  const ctlPoints = tl.map((t, i) => `${xPos(i)},${tlY(t.ctl)}`).join(" ");
+  const atlPoints = tl.map((t, i) => `${xPos(i)},${tlY(t.atl)}`).join(" ");
+  const tsbPoints = tl.map((t, i) => `${xPos(i)},${tlY(t.tsb)}`).join(" ");
+  const zeroY = tlY(0);
+
+  return (
+    <div className="space-y-3 print:hidden">
+      {/* ── Volume chart ── */}
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
+          Volume por semana ({SPORT_VOLUME_UNIT[sport]})
+        </p>
+        <div className="overflow-x-auto">
+          <svg viewBox={`0 0 ${W} ${H_VOL}`} className="w-full" style={{ minWidth: Math.max(300, weeks.length * 20) }}>
+            {/* Y-axis labels */}
+            {[0, 50, 100].map((pct) => {
+              const y = PAD_T + (1 - pct / 100) * (H_VOL - PAD_T - PAD_B);
+              return (
+                <g key={pct}>
+                  <text x={PAD_L - 4} y={y + 3} textAnchor="end" fontSize={8} fill="currentColor" className="text-text-muted" opacity={0.5}>
+                    {Math.round(maxKm * pct / 100)}
+                  </text>
+                  <line x1={PAD_L} y1={y} x2={W - PAD_R} y2={y} stroke="currentColor" strokeWidth={0.5} opacity={0.15} />
+                </g>
+              );
+            })}
+            {/* Bars */}
+            {weeks.map((w, i) => {
+              const barH = Math.max(2, ((w.km / maxKm) * (H_VOL - PAD_T - PAD_B)));
+              const bx = PAD_L + i * ((W - PAD_L - PAD_R) / weeks.length);
+              const by = H_VOL - PAD_B - barH;
+              const color = PHASE_HEX[w.phase];
+              return (
+                <g key={w.week}>
+                  <rect
+                    x={bx + 1} y={by} width={Math.max(2, barW - 2)} height={barH}
+                    fill={color} rx={2} opacity={w.isDeload ? 0.4 : 0.85}
+                  />
+                  {weeks.length <= 20 && (
+                    <text x={bx + barW / 2} y={H_VOL - PAD_B + 10} textAnchor="middle" fontSize={7} fill="currentColor" className="text-text-muted" opacity={0.5}>
+                      {w.week}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+            {/* Deload markers */}
+            {weeks.filter((w) => w.isDeload).map((w, i) => {
+              const bx = PAD_L + (w.week - 1) * ((W - PAD_L - PAD_R) / weeks.length) + barW / 2;
+              return (
+                <text key={`dl-${i}`} x={bx} y={PAD_T + 8} textAnchor="middle" fontSize={7} fill="#f59e0b" opacity={0.8}>↓</text>
+              );
+            })}
+          </svg>
+        </div>
+        {/* Phase legend */}
+        <div className="mt-2 flex flex-wrap gap-3">
+          {(["Base", "Construção", "Específico", "Taper"] as Phase[]).map((p) => (
+            <span key={p} className="flex items-center gap-1 text-[10px] text-text-muted">
+              <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: PHASE_HEX[p] }} />
+              {p}
+            </span>
+          ))}
+          <span className="flex items-center gap-1 text-[10px] text-text-muted">
+            <span className="text-warning">↓</span>
+            Semana descarga
+          </span>
+        </div>
+      </div>
+
+      {/* ── Training Load chart (CTL / ATL / TSB) ── */}
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-muted">
+          Carga de treino estimada
+        </p>
+        <p className="mb-3 text-[10px] text-text-muted">CTL (forma) · ATL (fadiga) · TSB (equilíbrio) — valores simulados a partir do plano</p>
+        <div className="overflow-x-auto">
+          <svg viewBox={`0 0 ${W} ${H_TL}`} className="w-full" style={{ minWidth: Math.max(300, weeks.length * 20) }}>
+            {/* Zero line (TSB = 0) */}
+            <line x1={PAD_L} y1={zeroY} x2={W - PAD_R} y2={zeroY} stroke="#6366f1" strokeWidth={0.5} strokeDasharray="3,3" opacity={0.4} />
+            <text x={PAD_L - 4} y={zeroY + 3} textAnchor="end" fontSize={7} fill="#6366f1" opacity={0.6}>0</text>
+            {/* ATL area */}
+            <polyline points={atlPoints} fill="none" stroke="#fb923c" strokeWidth={1.5} opacity={0.7} />
+            {/* CTL line */}
+            <polyline points={ctlPoints} fill="none" stroke="#38bdf8" strokeWidth={2} opacity={0.9} />
+            {/* TSB line */}
+            <polyline points={tsbPoints} fill="none" stroke="#22c55e" strokeWidth={1.5} strokeDasharray="4,2" opacity={0.8} />
+            {/* Axis */}
+            <line x1={PAD_L} y1={PAD_T} x2={PAD_L} y2={H_TL - PAD_B} stroke="currentColor" strokeWidth={0.5} opacity={0.2} />
+          </svg>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-4">
+          {[
+            { label: "CTL (Forma crônica)", color: "#38bdf8", dash: false },
+            { label: "ATL (Fadiga aguda)", color: "#fb923c", dash: false },
+            { label: "TSB (Equilíbrio)", color: "#22c55e", dash: true },
+          ].map((item) => (
+            <span key={item.label} className="flex items-center gap-1.5 text-[10px] text-text-muted">
+              <svg width={20} height={8}><line x1={0} y1={4} x2={20} y2={4} stroke={item.color} strokeWidth={2} strokeDasharray={item.dash ? "4,2" : undefined} /></svg>
+              {item.label}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
