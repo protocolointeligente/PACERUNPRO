@@ -63,6 +63,122 @@ export default function EvolutionPage() {
     reader.readAsDataURL(file);
   }
 
+  // ── Derived trend labels (computed from real data) ──────────────────────
+  function pctChange(prev: number, curr: number) {
+    if (prev === 0) return null;
+    return Math.round(((curr - prev) / prev) * 100);
+  }
+
+  function weeklyVolumeTrend(): { label: string; up: boolean } | null {
+    const d = evolucao.weeklyVolume;
+    if (d.length < 2) return null;
+    const recent = d.slice(-4).reduce((s, x) => s + x.km, 0) / Math.min(d.length, 4);
+    const older = d.slice(0, Math.max(1, d.length - 4)).reduce((s, x) => s + x.km, 0) / Math.max(1, d.length - 4);
+    const pct = pctChange(older, recent);
+    if (pct === null) return null;
+    return { label: `${pct >= 0 ? "+" : ""}${pct}% nas últimas 4 semanas`, up: pct >= 0 };
+  }
+
+  function monthlyVolumeTrend(): string | null {
+    const d = evolucao.monthlyVolume;
+    if (d.length === 0) return null;
+    const peak = d.reduce((a, b) => (b.km > a.km ? b : a));
+    return `Recorde: ${peak.km} km em ${peak.label}`;
+  }
+
+  function paceTrend(): string | null {
+    const d = evolucao.avgPace;
+    if (d.length < 2) return null;
+    const first = d[0].paceSec;
+    const last = d[d.length - 1].paceSec;
+    const diffSec = first - last; // positive = faster (improvement)
+    if (Math.abs(diffSec) < 2) return "Pace estável no período";
+    const abs = Math.abs(diffSec);
+    const dir = diffSec > 0 ? "mais rápido" : "mais lento";
+    return `${Math.floor(abs / 60) > 0 ? Math.floor(abs / 60) + "min " : ""}${abs % 60}s/km ${dir} em ${d.length} semanas`;
+  }
+
+  function hrTrend(): string | null {
+    const d = evolucao.avgHr;
+    if (d.length < 2) return null;
+    const diff = d[d.length - 1].hr - d[0].hr;
+    if (diff === 0) return "FC estável no período";
+    return `${diff > 0 ? "+" : ""}${diff} bpm em ${d.length} semanas${diff < 0 ? " — melhora aeróbica" : ""}`;
+  }
+
+  function vo2Trend(): string | null {
+    const d = evolucao.vo2History;
+    if (d.length < 2) return null;
+    const diff = Math.round((d[d.length - 1].vo2 - d[0].vo2) * 10) / 10;
+    if (diff === 0) return "VO2 estável no período";
+    return `${diff > 0 ? "+" : ""}${diff} ml/kg/min em ${d.length} meses`;
+  }
+
+  function weightTrend(): string | null {
+    const d = evolucao.weightHistory;
+    if (d.length < 2) return null;
+    const diff = Math.round((d[d.length - 1].kg - d[0].kg) * 10) / 10;
+    if (diff === 0) return "Peso estável no período";
+    return `${diff > 0 ? "+" : ""}${diff} kg desde ${d[0].label}`;
+  }
+
+  function summaryBullets(): { text: string; positive: boolean }[] {
+    const bullets: { text: string; positive: boolean }[] = [];
+
+    const pace = evolucao.avgPace;
+    if (pace.length >= 2) {
+      const diffSec = pace[0].paceSec - pace[pace.length - 1].paceSec;
+      const abs = Math.abs(diffSec);
+      const improved = diffSec > 0;
+      bullets.push({
+        text: improved
+          ? `Pace melhorou ${abs}s/km nas últimas ${pace.length} semanas.`
+          : `Pace subiu ${abs}s/km nas últimas ${pace.length} semanas — revise a intensidade.`,
+        positive: improved,
+      });
+    }
+
+    const load = evolucao.trainingLoad;
+    if (load.length >= 2) {
+      const recent = load[load.length - 1].load;
+      const prev = load[load.length - 2].load;
+      const spike = prev > 0 ? recent / prev : 1;
+      bullets.push({
+        text: spike > 1.3
+          ? `Carga subiu ${Math.round((spike - 1) * 100)}% em relação à semana anterior — risco de overtraining.`
+          : "Carga dentro da faixa segura de progressão.",
+        positive: spike <= 1.3,
+      });
+    }
+
+    const hr = evolucao.avgHr;
+    if (hr.length >= 2) {
+      const diff = hr[hr.length - 1].hr - hr[0].hr;
+      bullets.push({
+        text: diff < 0
+          ? `FC média caiu ${Math.abs(diff)} bpm — sinal claro de melhora aeróbica.`
+          : diff > 5
+          ? `FC média subiu ${diff} bpm — monitore fadiga e recuperação.`
+          : "FC média estável. Boa adaptação ao estímulo atual.",
+        positive: diff <= 0,
+      });
+    }
+
+    if (bullets.length === 0 && evolucao.hasData) {
+      bullets.push({ text: "Continue registrando treinos para ver insights personalizados aqui.", positive: true });
+    }
+
+    return bullets;
+  }
+
+  const wvTrend = weeklyVolumeTrend();
+  const mthTrend = monthlyVolumeTrend();
+  const pTrend = paceTrend();
+  const hTrend = hrTrend();
+  const v2Trend = vo2Trend();
+  const wTrend = weightTrend();
+  const bullets = summaryBullets();
+
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl space-y-7">
@@ -89,39 +205,55 @@ export default function EvolutionPage() {
       </div>
 
       {/* Resumo interpretativo */}
-      <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/8 to-card p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="h-4 w-4 text-primary" />
-          <p className="text-sm font-semibold text-text">Resumo das últimas 4 semanas</p>
+      {(evolucao.hasData || bullets.length > 0) && (
+        <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/8 to-card p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <p className="text-sm font-semibold text-text">Resumo das últimas 4 semanas</p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {bullets.map((item, i) => {
+              const Icon = item.positive ? TrendingUp : TrendingDown;
+              return (
+                <div key={i} className="flex items-start gap-2.5 rounded-xl bg-card-hover/60 p-3">
+                  <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${item.positive ? "text-success" : "text-warning"}`} />
+                  <p className="text-xs text-text-muted leading-relaxed">{item.text}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {[
-            { label: "Você está correndo 28s/km mais rápido do que há 7 semanas.", positive: true },
-            { label: "Sua carga subiu dentro da zona segura — sem picos de overtraining.", positive: true },
-            { label: "Risco atual baixo. Boa janela para avançar na periodização.", positive: true },
-          ].map((item, i) => (
-            <div key={i} className="flex items-start gap-2.5 rounded-xl bg-card-hover/60 p-3">
-              <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-              <p className="text-xs text-text-muted leading-relaxed">{item.label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <ChartCard title="Volume semanal" description="Quilômetros percorridos por semana" trend="up" trendLabel="+8% nas últimas 4 semanas">
+        <ChartCard
+          title="Volume semanal"
+          description="Quilômetros percorridos por semana"
+          trend={wvTrend ? (wvTrend.up ? "up" : "down") : undefined}
+          trendLabel={wvTrend?.label}
+        >
           {evolucao.weeklyVolume.length > 0
             ? <AreaTrend data={evolucao.weeklyVolume} dataKey="km" color="#38bdf8" unit=" km" />
             : <EmptyChart />}
         </ChartCard>
 
-        <ChartCard title="Volume mensal" description="Total de quilômetros por mês" trend="up" trendLabel="Recorde em maio: 168 km">
+        <ChartCard
+          title="Volume mensal"
+          description="Total de quilômetros por mês"
+          trend={mthTrend ? "up" : undefined}
+          trendLabel={mthTrend ?? undefined}
+        >
           {evolucao.monthlyVolume.length > 0
             ? <BarTrend data={evolucao.monthlyVolume} dataKey="km" color="#C6F24E" unit=" km" />
             : <EmptyChart />}
         </ChartCard>
 
-        <ChartCard title="Pace médio" description="Evolução do ritmo médio semanal (min/km)" trend="up" trendLabel="28s/km mais rápido em 7 semanas">
+        <ChartCard
+          title="Pace médio"
+          description="Evolução do ritmo médio semanal (min/km)"
+          trend={pTrend ? "up" : undefined}
+          trendLabel={pTrend ?? undefined}
+        >
           {evolucao.avgPace.length > 0
             ? <LineTrend data={evolucao.avgPace} dataKey="paceSec" color="#84cc16" reverse formatValue={(v) => formatPace(v)} />
             : <EmptyChart />}
@@ -130,8 +262,6 @@ export default function EvolutionPage() {
         <ChartCard
           title="Carga de treino"
           description="Carga semanal estimada (UA = duração × RPE)"
-          trend="up"
-          trendLabel="Dentro da faixa segura de progressão"
           tooltip="UA = Unidades Arbitrárias. Mede a carga de treino combinando duração (min) e percepção de esforço (RPE de 1 a 10) de cada sessão, somadas na semana — quanto maior, mais intenso foi o estímulo total."
         >
           {evolucao.trainingLoad.length > 0
@@ -139,13 +269,23 @@ export default function EvolutionPage() {
             : <EmptyChart />}
         </ChartCard>
 
-        <ChartCard title="FC média" description="Frequência cardíaca média durante os treinos" trend="down" trendLabel="-7 bpm — sinal de melhora aeróbica">
+        <ChartCard
+          title="FC média"
+          description="Frequência cardíaca média durante os treinos"
+          trend={hTrend ? "down" : undefined}
+          trendLabel={hTrend ?? undefined}
+        >
           {evolucao.avgHr.length > 0
             ? <LineTrend data={evolucao.avgHr} dataKey="hr" color="#ef4444" unit=" bpm" />
             : <EmptyChart />}
         </ChartCard>
 
-        <ChartCard title="VO2 estimado" description="Estimativa de consumo máximo de oxigênio (ml/kg/min)" trend="up" trendLabel="+3.5 pontos em 6 meses">
+        <ChartCard
+          title="VO2 estimado"
+          description="Estimativa de consumo máximo de oxigênio (ml/kg/min)"
+          trend={v2Trend ? "up" : undefined}
+          trendLabel={v2Trend ?? undefined}
+        >
           {evolucao.vo2History.length > 0
             ? <LineTrend data={evolucao.vo2History} dataKey="vo2" color="#38bdf8" unit=" ml/kg/min" />
             : <EmptyChart />}
@@ -161,7 +301,12 @@ export default function EvolutionPage() {
             : <EmptyChart />}
         </ChartCard>
 
-        <ChartCard title="Evolução do peso" description="Peso corporal ao longo dos meses (kg)" trend="down" trendLabel="-2.8 kg desde janeiro">
+        <ChartCard
+          title="Evolução do peso"
+          description="Peso corporal ao longo dos meses (kg)"
+          trend={wTrend ? "down" : undefined}
+          trendLabel={wTrend ?? undefined}
+        >
           {evolucao.weightHistory.length > 0
             ? <AreaTrend data={evolucao.weightHistory} dataKey="kg" color="#46E0C8" unit=" kg" />
             : <EmptyChart />}

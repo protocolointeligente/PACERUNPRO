@@ -132,6 +132,23 @@ export default function GeradorPeriodizacaoPage() {
   }
 
   function handleGenerate() {
+    const config = {
+      sport,
+      goal,
+      level,
+      daysPerWeek,
+      trainingDays,
+      weeks,
+      hasEvent,
+      eventName: hasEvent ? eventName : "",
+      eventDate: hasEvent ? eventDate : "",
+      notes,
+    };
+    try {
+      localStorage.setItem("gerador_periodizacao_config", JSON.stringify(config));
+    } catch {
+      // localStorage unavailable (private mode) — navigate anyway
+    }
     const dest =
       sport === "Força"
         ? "/treinador/prescricao/forca"

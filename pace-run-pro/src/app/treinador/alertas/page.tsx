@@ -86,6 +86,7 @@ export default function AlertasPage() {
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (data?.expiringPlans) setExpiringPlans(data.expiringPlans);
+        if (data?.alerts) setAlerts(data.alerts);
       })
       .catch(() => null);
   }, []);

@@ -109,13 +109,75 @@ function pdfFooter(today: string) {
 </div>`;
 }
 
+interface ReportData {
+  summary: {
+    totalKm: number;
+    sessionsCompleted: number;
+    sessionsTotal: number;
+    adherencePct: number;
+    avgRpe: number;
+    totalLoad: number;
+    sessionsLost: number;
+  };
+  workouts: {
+    date: string;
+    title: string;
+    distanceKm: number | null;
+    paceStr: string | null;
+    rpe: number | null;
+    load: number | null;
+    status: string;
+  }[];
+  checkIns: {
+    date: string;
+    rpe: number | null;
+    pain: number | null;
+    sleep: number | null;
+    fatigue: number | null;
+    mood: number | null;
+  }[];
+}
+
+function workoutStatusTag(status: string) {
+  if (status === "CONCLUIDO") return `<span class="tag-green tag">✓ Completo</span>`;
+  if (status === "PERDIDO") return `<span class="tag-amber tag">✗ Perdido</span>`;
+  return `<span class="tag">— Pendente</span>`;
+}
+
 function buildIndividualPdf(
   athleteName: string,
   period: string,
   coachName: string,
   coachCredential: string,
-  today: string
+  today: string,
+  data?: ReportData
 ): string {
+  const s = data?.summary;
+  const workoutRows = data?.workouts.map((w) => `
+    <tr>
+      <td>${w.date}</td>
+      <td>${w.title}</td>
+      <td>${w.distanceKm != null ? w.distanceKm + " km" : "—"}</td>
+      <td>${w.paceStr ?? "—"}</td>
+      <td>${w.rpe ?? "—"}</td>
+      <td>${w.load ?? "—"}</td>
+      <td>${workoutStatusTag(w.status)}</td>
+    </tr>`).join("") ?? "";
+
+  const checkInRows = data?.checkIns.map((c) => `
+    <tr>
+      <td>${c.date}</td>
+      <td>${c.rpe ?? "—"}</td>
+      <td>${c.pain != null ? c.pain + " / 10" : "—"}</td>
+      <td>${c.sleep != null ? c.sleep + " / 10" : "—"}</td>
+      <td>${c.fatigue != null ? c.fatigue + " / 10" : "—"}</td>
+      <td>${c.mood != null ? c.mood + " / 10" : "—"}</td>
+    </tr>`).join("") ?? "";
+
+  const analysisText = s
+    ? `${athleteName} realizou ${s.sessionsCompleted} de ${s.sessionsTotal} sessões no período, com ${s.adherencePct}% de adesão e volume total de ${s.totalKm} km. RPE médio: ${s.avgRpe}. Carga acumulada: ${s.totalLoad} UA.`
+    : `Adicione observações sobre a evolução e recomendações para o próximo ciclo de ${athleteName}.`;
+
   return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/>
 <title>Relatório ${athleteName}</title>
 <style>${PDF_BASE_STYLES}</style></head><body>
@@ -129,47 +191,34 @@ ${pdfHeader(coachName, coachCredential, today)}
 <div class="section">
   <div class="section-title">Resumo do período</div>
   <div class="grid-3">
-    <div class="stat-card"><div class="stat-label">Volume total</div><div class="stat-value">127<span class="stat-unit">km</span></div><div class="stat-delta">▲ +8% vs. período anterior</div></div>
-    <div class="stat-card"><div class="stat-label">Sessões realizadas</div><div class="stat-value">18<span class="stat-unit">treinos</span></div><div class="stat-delta">▲ 86% de adesão</div></div>
-    <div class="stat-card"><div class="stat-label">Carga acumulada</div><div class="stat-value">1.872<span class="stat-unit">UA</span></div></div>
-    <div class="stat-card"><div class="stat-label">RPE médio</div><div class="stat-value">6.4</div></div>
-    <div class="stat-card"><div class="stat-label">Pace médio</div><div class="stat-value">5:12<span class="stat-unit">/km</span></div></div>
-    <div class="stat-card"><div class="stat-label">Sessões perdidas</div><div class="stat-value">3</div></div>
+    <div class="stat-card"><div class="stat-label">Volume total</div><div class="stat-value">${s?.totalKm ?? "—"}<span class="stat-unit">km</span></div>${s ? `<div class="stat-delta">Adesão: ${s.adherencePct}%</div>` : ""}</div>
+    <div class="stat-card"><div class="stat-label">Sessões realizadas</div><div class="stat-value">${s?.sessionsCompleted ?? "—"}<span class="stat-unit">treinos</span></div>${s ? `<div class="stat-delta">${s.adherencePct}% de adesão</div>` : ""}</div>
+    <div class="stat-card"><div class="stat-label">Carga acumulada</div><div class="stat-value">${s?.totalLoad ?? "—"}<span class="stat-unit">UA</span></div></div>
+    <div class="stat-card"><div class="stat-label">RPE médio</div><div class="stat-value">${s?.avgRpe ?? "—"}</div></div>
+    <div class="stat-card"><div class="stat-label">Sessões programadas</div><div class="stat-value">${s?.sessionsTotal ?? "—"}</div></div>
+    <div class="stat-card"><div class="stat-label">Sessões perdidas</div><div class="stat-value">${s?.sessionsLost ?? "—"}</div></div>
   </div>
 </div>
 
-<div class="section">
+${workoutRows ? `<div class="section">
   <div class="section-title">Histórico de treinos</div>
   <table>
     <tr><th>Data</th><th>Treino</th><th>Distância</th><th>Pace</th><th>RPE</th><th>Carga UA</th><th>Status</th></tr>
-    <tr><td>07/06</td><td>Intervalado 8×400m</td><td>9,2 km</td><td>4:38/km</td><td>7</td><td>124</td><td><span class="tag-green tag">✓ Completo</span></td></tr>
-    <tr><td>05/06</td><td>Longo progressivo</td><td>18 km</td><td>5:20/km</td><td>6</td><td>216</td><td><span class="tag-green tag">✓ Completo</span></td></tr>
-    <tr><td>03/06</td><td>Trote regenerativo</td><td>5 km</td><td>6:10/km</td><td>3</td><td>45</td><td><span class="tag-green tag">✓ Completo</span></td></tr>
-    <tr><td>01/06</td><td>Tempo run 8 km</td><td>8 km</td><td>4:52/km</td><td>7</td><td>168</td><td><span class="tag-green tag">✓ Completo</span></td></tr>
-    <tr><td>29/05</td><td>Fartlek 10 km</td><td>10 km</td><td>5:05/km</td><td>6</td><td>180</td><td><span class="tag-green tag">✓ Completo</span></td></tr>
-    <tr><td>27/05</td><td>Corrida base</td><td>12 km</td><td>5:30/km</td><td>5</td><td>150</td><td><span class="tag-amber tag">⚠ Parcial</span></td></tr>
+    ${workoutRows}
   </table>
-</div>
+</div>` : ""}
 
-<div class="section">
+${checkInRows ? `<div class="section">
   <div class="section-title">Check-ins de bem-estar</div>
   <table>
     <tr><th>Data</th><th>RPE pós</th><th>Dor muscular</th><th>Qualidade do sono</th><th>Fadiga</th><th>Humor</th></tr>
-    <tr><td>07/06</td><td>7</td><td>2 / 10</td><td>7 / 10</td><td>4 / 10</td><td>8 / 10</td></tr>
-    <tr><td>05/06</td><td>6</td><td>1 / 10</td><td>8 / 10</td><td>3 / 10</td><td>9 / 10</td></tr>
-    <tr><td>03/06</td><td>8</td><td>3 / 10</td><td>6 / 10</td><td>6 / 10</td><td>7 / 10</td></tr>
-    <tr><td>01/06</td><td>5</td><td>1 / 10</td><td>9 / 10</td><td>2 / 10</td><td>8 / 10</td></tr>
+    ${checkInRows}
   </table>
-</div>
+</div>` : ""}
 
 <div class="section">
   <div class="section-title">Análise e recomendações do treinador</div>
-  <p class="notes">
-    ${athleteName} apresentou boa progressão de volume nas últimas 4 semanas, com adesão de 86% — acima da média da equipe.
-    Os indicadores de bem-estar se mantiveram estáveis, sem sinais de sobrecarga crônica.<br/><br/>
-    <strong>Próximo ciclo:</strong> Recomenda-se manutenção do volume na semana de deload e introdução de um treino de limiar de 10 km.
-    Monitorar fadiga nos dias após o treino longo.
-  </p>
+  <p class="notes">${analysisText}</p>
 </div>
 
 ${pdfSignature(coachName, coachCredential)}
@@ -508,6 +557,7 @@ export default function ReportsPage() {
   const [period, setPeriod] = useState(periods[1]);
   const [format, setFormat] = useState<FormatId>("PDF");
   const [generated, setGenerated] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const athlete = useMemo(() => athletes.find((a) => a.id === scope), [athletes, scope]);
   const needsAthlete = reportType === "individual" || reportType === "avaliacao-fisica" || reportType === "periodizacao" || reportType === "forca";
@@ -516,18 +566,28 @@ export default function ReportsPage() {
     setGenerated(true);
   }
 
-  function downloadReport() {
+  async function downloadReport() {
     const today = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
     const athleteName = needsAthlete && athlete ? athlete.name : "Equipe";
+    const athleteId = needsAthlete && athlete ? athlete.id : "equipe";
+
+    setDownloading(true);
+    let reportData: ReportData | undefined;
+    try {
+      const params = new URLSearchParams({ athleteId, period });
+      const res = await fetch(`/api/treinador/relatorios/data?${params}`);
+      if (res.ok) reportData = await res.json() as ReportData;
+    } catch {
+      // proceed without data if fetch fails
+    }
+    setDownloading(false);
 
     if (format === "CSV") {
-      const csv = [
-        "Data,Atleta,RPE,Dor,Sono,Fadiga,Humor",
-        `01/06/2026,${athleteName},7,2,7,4,8`,
-        `03/06/2026,${athleteName},6,1,8,3,9`,
-        `05/06/2026,${athleteName},8,3,6,6,7`,
-        `07/06/2026,${athleteName},5,1,9,2,8`,
-      ].join("\n");
+      const header = "Data,Atleta,RPE,Dor,Sono,Fadiga,Humor";
+      const rows = reportData?.checkIns.map((c) =>
+        `${c.date},${athleteName},${c.rpe ?? ""},${c.pain ?? ""},${c.sleep ?? ""},${c.fatigue ?? ""},${c.mood ?? ""}`
+      ) ?? [];
+      const csv = [header, ...rows].join("\n");
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -539,7 +599,11 @@ export default function ReportsPage() {
     }
 
     if (format === "Excel") {
-      const tsv = `Data\tAtleta\tRPE\tDor\tSono\tFadiga\tHumor\n01/06\t${athleteName}\t7\t2\t7\t4\t8\n03/06\t${athleteName}\t6\t1\t8\t3\t9\n`;
+      const header = "Data\tAtleta\tRPE\tDor\tSono\tFadiga\tHumor";
+      const rows = reportData?.checkIns.map((c) =>
+        `${c.date}\t${athleteName}\t${c.rpe ?? ""}\t${c.pain ?? ""}\t${c.sleep ?? ""}\t${c.fatigue ?? ""}\t${c.mood ?? ""}`
+      ) ?? [];
+      const tsv = [header, ...rows].join("\n");
       const blob = new Blob([tsv], { type: "application/vnd.ms-excel;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -554,7 +618,7 @@ export default function ReportsPage() {
     let html = "";
     switch (reportType) {
       case "individual":
-        html = buildIndividualPdf(athleteName, period, coachName, coachCredential, today);
+        html = buildIndividualPdf(athleteName, period, coachName, coachCredential, today, reportData);
         break;
       case "avaliacao-fisica":
         html = buildAvaliacaoPdf(athleteName, coachName, coachCredential, today);
@@ -569,7 +633,7 @@ export default function ReportsPage() {
         html = buildEquipePdf(coachName, coachCredential, today, period, athletes.length || 4);
         break;
       default:
-        html = buildIndividualPdf(athleteName, period, coachName, coachCredential, today);
+        html = buildIndividualPdf(athleteName, period, coachName, coachCredential, today, reportData);
     }
 
     const win = window.open("", "_blank", "width=960,height=800");
@@ -694,10 +758,11 @@ export default function ReportsPage() {
                       <div className="mt-3 flex gap-2">
                         <button
                           onClick={downloadReport}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 border border-primary/30 px-3.5 py-2 text-sm font-semibold text-primary hover:bg-primary/25 transition-colors"
+                          disabled={downloading}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 border border-primary/30 px-3.5 py-2 text-sm font-semibold text-primary hover:bg-primary/25 transition-colors disabled:opacity-50"
                         >
                           <Download className="h-4 w-4" />
-                          {format === "PDF" ? "Abrir PDF" : `Baixar ${format}`}
+                          {downloading ? "Carregando dados..." : format === "PDF" ? "Abrir PDF" : `Baixar ${format}`}
                         </button>
                         <button onClick={() => setGenerated(false)} className="px-3 py-2 text-sm text-text-muted hover:text-text transition-colors">
                           Novo relatório
