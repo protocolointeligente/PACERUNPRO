@@ -17,6 +17,7 @@ import {
   Copy,
   Users,
   GripVertical,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -245,6 +246,81 @@ const CSS_ZONES = [
   { zone: "T5", label: "Sprint / Potência", cssOffset: "Abaixo", color: "#ef4444" },
 ];
 
+// ── Strength auto-generate ───────────────────────────────────────────────────
+
+const STRENGTH_OBJECTIVES = [
+  { id: "HIPERTROFIA", label: "Hipertrofia" },
+  { id: "FORCA_MAX",   label: "Força Máxima" },
+  { id: "POTENCIA",    label: "Potência" },
+  { id: "FUNCIONAL",   label: "Funcional" },
+  { id: "RESISTENCIA", label: "Resistência" },
+  { id: "DELOAD",      label: "Deload" },
+];
+
+const MUSCLE_GROUPS = [
+  { id: "FULL_BODY",  label: "Full Body" },
+  { id: "INFERIORES", label: "Membros Inferiores" },
+  { id: "SUPERIORES", label: "Membros Superiores" },
+  { id: "PUSH",       label: "Push (empurrar)" },
+  { id: "PULL",       label: "Pull (puxar)" },
+  { id: "CORE",       label: "Core / Estabilização" },
+];
+
+function buildStrengthSuggestion(obj: string, group: string): { title: string; mainSet: string; duration: number; rpe: number; pct1RM: number } {
+  const t: Record<string, Record<string, { title: string; mainSet: string; duration: number; rpe: number; pct1RM: number }>> = {
+    HIPERTROFIA: {
+      FULL_BODY: { title: "Hipertrofia — Full Body", mainSet: "Aquecimento: 5min mobilidade geral\n\nA. Agachamento 4×10 @70% 1RM (descanso 90s)\nB. Supino Reto 3×10 @70% 1RM (descanso 90s)\nC. Remada Curvada 3×10 @68% 1RM (descanso 90s)\nD. Desenvolvimento 3×12 RPE 7\nE1. Rosca Direta 3×12 RPE 6\nE2. Tríceps Corda 3×12 RPE 6\nF. Panturrilha 3×15\n\nVolta à calma: 5min", duration: 75, rpe: 7, pct1RM: 70 },
+      INFERIORES: { title: "Hipertrofia — Membros Inferiores", mainSet: "Aquecimento: 5min mobilidade articular\n\nA. Agachamento Livre 4×10 @70% 1RM (descanso 90s)\nB. Leg Press 3×12 @65% 1RM (descanso 60s)\nC1. Afundo Alternado 3×12/perna RPE 7\nC2. Mesa Flexora 3×12 RPE 7\nD. Panturrilha em Pé 4×15 (descanso 45s)\n\nVolta à calma: 5min alongamento", duration: 65, rpe: 7, pct1RM: 70 },
+      SUPERIORES: { title: "Hipertrofia — Membros Superiores", mainSet: "Aquecimento: 5min mobilidade escapular\n\nA. Supino Reto 4×10 @70% 1RM (descanso 90s)\nB. Remada Curvada 4×10 @70% 1RM (descanso 90s)\nC1. Desenvolvimento Halter 3×12 RPE 7\nC2. Puxada Frontal 3×12 RPE 7\nD1. Rosca Direta 3×12 RPE 6\nD2. Tríceps Testa 3×12 RPE 6\n\nVolta à calma: 5min", duration: 65, rpe: 7, pct1RM: 70 },
+      PUSH: { title: "Hipertrofia — Push (Empurrar)", mainSet: "Aquecimento: 5min mobilidade de ombros\n\nA. Supino Reto 4×10 @70% 1RM (descanso 90s)\nB. Supino Inclinado 3×12 @65% 1RM (descanso 90s)\nC. Desenvolvimento Halter 3×12 RPE 7\nD. Elevação Lateral 4×15 RPE 6\nE1. Tríceps Corda 3×15 RPE 6\nE2. Tríceps Banco 3×15 RPE 6\n\nVolta à calma: 5min", duration: 60, rpe: 7, pct1RM: 68 },
+      PULL: { title: "Hipertrofia — Pull (Puxar)", mainSet: "Aquecimento: 5min mobilidade escapular\n\nA. Remada Curvada 4×10 @70% 1RM (descanso 90s)\nB. Puxada Frontal 4×10 (descanso 90s)\nC. Remada Unilateral 3×12/lado RPE 7\nD. Remada Máquina 3×12 RPE 7\nE1. Rosca Direta 3×12 RPE 6\nE2. Rosca Martelo 3×12 RPE 6\n\nVolta à calma: 5min", duration: 60, rpe: 7, pct1RM: 68 },
+      CORE: { title: "Hipertrofia — Core", mainSet: "A. Prancha 3×45s\nB. Abdominal Supra 3×20\nC. Abdominal Infra 3×15\nD. Elevação de Quadril 3×20\nE. Rotação Russa 3×20 total\nF. Superman 3×15\nG. Bird Dog 3×10/lado\n\nVolta à calma: 5min", duration: 40, rpe: 6, pct1RM: 0 },
+    },
+    FORCA_MAX: {
+      FULL_BODY: { title: "Força Máxima — Full Body", mainSet: "Aquecimento: progressivo até carga\n\nA. Terra 5×3 @87% 1RM (descanso 4–5min)\nB. Agachamento 4×4 @85% 1RM (descanso 4min)\nC. Supino 4×4 @85% 1RM (descanso 3min)\nD. Remada Pesada 3×5 @82% 1RM (descanso 3min)\n\nVolta à calma: 10min mobilidade", duration: 90, rpe: 9, pct1RM: 87 },
+      INFERIORES: { title: "Força Máxima — Membros Inferiores", mainSet: "Aquecimento: progressivo\n\nA. Agachamento Livre 5×5 @85% 1RM (descanso 3–4min)\nB. Terra Romeno 4×5 @80% 1RM (descanso 3min)\nC. Leg Press 3×8 @80% 1RM (descanso 2min)\nD. Acessório: Panturrilha 3×12\n\nVolta à calma: 5min mobilidade", duration: 75, rpe: 9, pct1RM: 85 },
+      SUPERIORES: { title: "Força Máxima — Membros Superiores", mainSet: "Aquecimento: progressivo\n\nA. Supino Reto 5×5 @85% 1RM (descanso 3–4min)\nB. Remada Curvada 4×5 @82% 1RM (descanso 3min)\nC. Desenvolvimento 3×8 @80% 1RM (descanso 2min)\nD. Acessório: 2×10 por grupo auxiliar\n\nVolta à calma: 5min", duration: 70, rpe: 9, pct1RM: 85 },
+      PUSH: { title: "Força Máxima — Push", mainSet: "A. Supino Reto 6×3 @88% 1RM (descanso 4min)\nB. Supino Inclinado 3×5 @80% (descanso 3min)\nC. Desenvolvimento 3×6 @78% (descanso 3min)\nD. Acessório leve 2×10", duration: 70, rpe: 9, pct1RM: 88 },
+      PULL: { title: "Força Máxima — Pull", mainSet: "A. Remada Curvada 5×5 @85% 1RM (descanso 3–4min)\nB. Puxada Ponderada 4×4 @85% (descanso 3min)\nC. Remada Máquina 3×6 @80% (descanso 2min)\nD. Acessório de cotovelo 2×10", duration: 65, rpe: 9, pct1RM: 85 },
+      CORE: { title: "Força Máxima — Core / Anti-rotação", mainSet: "A. Barra Fixa Ponderada 4×4 (descanso 3min)\nB. Prancha Ponderada 3×40s\nC. Pallof Press 3×10/lado (carga progressiva)\nD. Abdominal Roda 3×8 (controlado)\nE. Farmer's Walk 3×20m", duration: 40, rpe: 8, pct1RM: 0 },
+    },
+    POTENCIA: {
+      FULL_BODY: { title: "Potência — Full Body", mainSet: "Aquecimento: ativação neural 8–10min\n\nA. Power Clean 5×3 @70% 1RM (descanso 3min)\nB. Agachamento Jump 3×5 @40% 1RM (descanso 2min)\nC. Medicine Ball Slam 3×8 (descanso 90s)\nD. Sprint 5×20m (descanso completo)\n\nVolta à calma: 5min", duration: 55, rpe: 8, pct1RM: 65 },
+      INFERIORES: { title: "Potência — Membros Inferiores", mainSet: "Aquecimento: ativação neural 8min\n\nA. Box Jump 4×5 @máximo (descanso 2–3min)\nB. Agachamento Explosivo 4×4 @60% 1RM (descanso 2min)\nC. Salto Horizontal 3×5 (descanso 2min)\nD. Step Up Explosivo 3×8/lado\n\nVolta à calma: 5min", duration: 55, rpe: 8, pct1RM: 60 },
+      SUPERIORES: { title: "Potência — Membros Superiores", mainSet: "A. Supino com Banda (velocidade) 4×4 @50–60% 1RM rápido\nB. Arremesso MB contra parede 4×6\nC. Flexão Explosiva 3×8\nD. Pull-over Explosivo 3×8", duration: 45, rpe: 8, pct1RM: 55 },
+      PUSH: { title: "Potência — Push", mainSet: "A. Supino Balístico 4×4 @50% 1RM (explosivo)\nB. Arremesso MB 3×8\nC. Flexão com Palmada 3×6\nD. Desenvolvimento Explosivo 3×6", duration: 45, rpe: 8, pct1RM: 50 },
+      PULL: { title: "Potência — Pull", mainSet: "A. Remada Explosiva 4×4 @60% 1RM\nB. Pull-over KB 3×8 rápido\nC. High Pull 4×5 @55% 1RM\nD. Barra Fixa Explosiva 3×5", duration: 45, rpe: 8, pct1RM: 60 },
+      CORE: { title: "Potência — Core Reativo", mainSet: "A. MB Rotacional Slam 3×10\nB. MB Chest Pass contra parede 3×10\nC. Rotação Russa Rápida 3×20\nD. Sprint Lateral 4×10m\nE. Salto Lateral 3×8/lado", duration: 35, rpe: 7, pct1RM: 0 },
+    },
+    FUNCIONAL: {
+      FULL_BODY: { title: "Funcional — Full Body", mainSet: "Aquecimento: 5min cardio leve + mobilidade\n\nCircuito A (3 rodadas, 45s trabalho/15s descanso):\n1. Burpee · 2. Agachamento com Salto · 3. Flexão · 4. Remada Elástico · 5. Afundo Alternado\n\nCircuito B (3 rodadas):\n1. Prancha com Alcance 30s · 2. Mountain Climber 30s · 3. Superman 15 reps · 4. Bird Dog 10/lado\n\nVolta à calma: 5min", duration: 50, rpe: 7, pct1RM: 0 },
+      INFERIORES: { title: "Funcional — Membros Inferiores", mainSet: "A. Agachamento Pistol Assistido 3×8/lado\nB. Afundo Caminhando 3×12/lado\nC. Step Up Lateral 3×10/lado\nD. Romanian DL Unilateral 3×10/lado\nE. Salto Caixote 3×5\nF. Panturrilha Unilateral 3×12/lado", duration: 50, rpe: 7, pct1RM: 0 },
+      SUPERIORES: { title: "Funcional — Membros Superiores", mainSet: "A. Flexão com Variações 4×10\nB. Remada TRX 3×12\nC. Face Pull 3×15\nD. Rotação Externa 3×15\nE. Arremesso MB Peitoral 3×10\nF. Curl Isométrico 3×30s", duration: 45, rpe: 6, pct1RM: 0 },
+      PUSH: { title: "Funcional — Push", mainSet: "A. Flexão Diamante 3×10 · B. Pike Push-up 3×10 · C. Arremesso MB 3×10 · D. Lateral Raise Unilateral 3×12 · E. Rotação Peitoral 3×10", duration: 40, rpe: 6, pct1RM: 0 },
+      PULL: { title: "Funcional — Pull", mainSet: "A. Pull-up / Remada Invertida 4×8 · B. Face Pull 3×15 · C. Rotação Externa 3×15 · D. KB Row 3×10/lado · E. Chin-up com Pausa 3×5", duration: 40, rpe: 6, pct1RM: 0 },
+      CORE: { title: "Funcional — Core & Estabilização", mainSet: "Aquecimento: mobilidade lombar\n\nA. Prancha Frontal 3×45s\nB. Prancha Lateral 3×30s/lado\nC. Dead Bug 3×10 (controlado)\nD. Pallof Press 3×12/lado\nE. KB Swing 3×15\nF. Rotação com Disco 3×15\nG. Abdominal Roda 3×8\n\nVolta à calma: 5min", duration: 45, rpe: 6, pct1RM: 0 },
+    },
+    RESISTENCIA: {
+      FULL_BODY: { title: "Resistência Muscular — Full Body", mainSet: "Aquecimento: 5min + mobilidade\n\nCircuito (4 rodadas, 50s trabalho/10s entre exercícios, 60s entre rodadas):\n1. Agachamento · 2. Flexão · 3. Afundo Alternado · 4. Remada Elástico · 5. Desenvolvimento Halter leve · 6. Abdominal · 7. Burpee Modificado\n\nVolta à calma: 5min", duration: 50, rpe: 7, pct1RM: 50 },
+      INFERIORES: { title: "Resistência Muscular — Membros Inferiores", mainSet: "A. Agachamento 3×20 @50% 1RM (descanso 45s)\nB. Leg Press 3×20 @50% (descanso 45s)\nC. Afundo 3×15/perna (descanso 45s)\nD. Mesa Flexora 3×20 @50% (descanso 45s)\nE. Panturrilha 4×25 (descanso 30s)\n\nVolta à calma: 5min", duration: 55, rpe: 6, pct1RM: 50 },
+      SUPERIORES: { title: "Resistência Muscular — Membros Superiores", mainSet: "A. Flexão 3×20 · B. Remada 3×20 @50% · C. Desenvolvimento 3×20 @50% · D. Rosca 3×20 @50% · E. Tríceps 3×20 @50%\n\nDescanso: 45s entre séries", duration: 50, rpe: 6, pct1RM: 50 },
+      PUSH: { title: "Resistência — Push", mainSet: "A. Supino 4×15 @55% · B. Desenvolvimento 4×15 @55% · C. Elevação Lateral 4×20 · D. Tríceps 4×20\nDescanso: 45s", duration: 45, rpe: 6, pct1RM: 55 },
+      PULL: { title: "Resistência — Pull", mainSet: "A. Remada 4×15 @55% · B. Puxada 4×15 · C. Face Pull 4×20 · D. Rosca 4×20\nDescanso: 45s", duration: 45, rpe: 6, pct1RM: 55 },
+      CORE: { title: "Resistência — Core", mainSet: "Circuito 4 rodadas (40s/20s):\n1. Prancha · 2. Mountain Climber · 3. Abdominal Bicicleta · 4. Elevação de Pernas · 5. Superman · 6. Rotação Russa", duration: 35, rpe: 6, pct1RM: 0 },
+    },
+    DELOAD: {
+      FULL_BODY: { title: "Deload — Recuperação Ativa Full Body", mainSet: "(Volume −40%, intensidade −40%)\n\nA. Agachamento 3×8 @60% 1RM habitual\nB. Supino 3×8 @60% 1RM habitual\nC. Remada 3×8 @60%\nD. Mobilidade: 10min alongamento geral\n\nFoco: técnica, sem falha muscular, recuperação", duration: 45, rpe: 5, pct1RM: 60 },
+      INFERIORES: { title: "Deload — Membros Inferiores", mainSet: "Volume reduzido 40%\n\nA. Agachamento 3×6 @60% 1RM\nB. Leg Press 3×8 @60%\nC. Mesa Flexora 3×8 @60%\nD. Panturrilha 3×12\nE. Mobilidade quadril 10min", duration: 40, rpe: 5, pct1RM: 60 },
+      SUPERIORES: { title: "Deload — Membros Superiores", mainSet: "A. Supino 3×6 @60% · B. Remada 3×6 @60% · C. Desenvolvimento 3×8 leve · D. Acessórios 2×10 @60%\n\nFoco: recuperação total", duration: 40, rpe: 5, pct1RM: 60 },
+      PUSH: { title: "Deload — Push", mainSet: "A. Supino 3×6 @60% · B. Desenvolvimento 3×8 leve · C. Elevação Lateral 2×15 leve\nFoco: fluir, sem dor", duration: 35, rpe: 4, pct1RM: 58 },
+      PULL: { title: "Deload — Pull", mainSet: "A. Remada 3×6 @60% · B. Puxada 3×8 (leve) · C. Mobilidade escapular 10min\nFoco: recuperação ativa", duration: 35, rpe: 4, pct1RM: 58 },
+      CORE: { title: "Deload — Core Regenerativo", mainSet: "A. Respiração Diafragmática 3×10\nB. Prancha Leve 3×20s\nC. Mobilidade Lombar 10min\nD. Alongamento Hip Flexors 3×30s\n\nFoco: recuperação e mobilidade", duration: 25, rpe: 3, pct1RM: 0 },
+    },
+  };
+  const objMap = t[obj] ?? t.HIPERTROFIA;
+  return objMap[group] ?? objMap.FULL_BODY ?? Object.values(objMap)[0];
+}
+
 // ── Date helpers ─────────────────────────────────────────────────────────────
 
 function getMondayOf(d: Date): Date {
@@ -316,6 +392,11 @@ export default function PrescricaoPage() {
   const [multiAthlete, setMultiAthlete] = useState(false);
   const [selectedAthletes, setSelectedAthletes] = useState<string[]>([]);
 
+  // Strength auto-generate
+  const [strengthObjective, setStrengthObjective] = useState("HIPERTROFIA");
+  const [muscleGroup, setMuscleGroup] = useState("FULL_BODY");
+  const [showStrengthSuggestion, setShowStrengthSuggestion] = useState(false);
+
   // Drag-to-duplicate
   const [draggingWorkout, setDraggingWorkout] = useState<CalendarWorkout | null>(null);
   const [dragOverDate, setDragOverDate] = useState<string | null>(null);
@@ -347,6 +428,18 @@ export default function PrescricaoPage() {
 
   useEffect(() => { if (athleteId) loadWeek(weekStart); }, [athleteId, weekStart, loadWeek]);
 
+  // Pre-select sport from URL ?sport= param
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search).get("sport") as SportMode | null;
+    if (sp && SPORTS.find((s) => s.id === sp)) {
+      changeSport(sp);
+      setShowPanel(true);
+      if (sp === "STRENGTH") setShowStrengthSuggestion(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function prevWeek() { setWeekStart((w) => addDays(w, -7)); }
   function nextWeek() { setWeekStart((w) => addDays(w, 7)); }
   function goToday() { setWeekStart(getMondayOf(new Date())); }
@@ -359,6 +452,19 @@ export default function PrescricaoPage() {
     setBlocks([]);
     const sportInfo = SPORTS.find((sp) => sp.id === s)!;
     setIntensityMethod(sportInfo.methods[0].id);
+    setShowStrengthSuggestion(s === "STRENGTH");
+  }
+
+  function applyStrengthSuggestion() {
+    const s = buildStrengthSuggestion(strengthObjective, muscleGroup);
+    setTitle(s.title);
+    setMainSet(s.mainSet);
+    setDurationMin(String(s.duration));
+    setRpe(String(s.rpe));
+    if (s.pct1RM > 0) {
+      setOneRmPct(String(s.pct1RM));
+      setIntensityMethod("1RM_PCT");
+    }
   }
 
   function changeWorkoutType(t: string) {
@@ -691,6 +797,55 @@ export default function PrescricaoPage() {
                   </select>
                 </div>
 
+                {/* Strength auto-generate */}
+                {sport === "STRENGTH" && (
+                  <div className={cn("rounded-xl border p-3 space-y-3 transition-colors", showStrengthSuggestion ? "border-primary/30 bg-primary/5" : "border-border bg-background/40")}>
+                    <button
+                      onClick={() => setShowStrengthSuggestion((v) => !v)}
+                      className="w-full flex items-center gap-2"
+                    >
+                      <Sparkles className={cn("h-4 w-4", showStrengthSuggestion ? "text-primary" : "text-text-muted")} />
+                      <span className={cn("text-xs font-semibold uppercase tracking-wider flex-1 text-left", showStrengthSuggestion ? "text-primary" : "text-text-muted")}>
+                        Sugestão de treino
+                      </span>
+                      <span className="text-[10px] text-text-muted">{showStrengthSuggestion ? "fechar ▲" : "abrir ▼"}</span>
+                    </button>
+                    {showStrengthSuggestion && (
+                      <div className="space-y-2.5">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-text-muted uppercase tracking-wider">Objetivo</label>
+                            <select
+                              value={strengthObjective}
+                              onChange={(e) => setStrengthObjective(e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-text outline-none focus:border-primary/60 appearance-none"
+                            >
+                              {STRENGTH_OBJECTIVES.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-text-muted uppercase tracking-wider">Grupos musculares</label>
+                            <select
+                              value={muscleGroup}
+                              onChange={(e) => setMuscleGroup(e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-text outline-none focus:border-primary/60 appearance-none"
+                            >
+                              {MUSCLE_GROUPS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <button
+                          onClick={applyStrengthSuggestion}
+                          className="w-full rounded-xl bg-primary text-primary-foreground py-2 text-xs font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" /> Gerar sugestão de treino
+                        </button>
+                        <p className="text-[10px] text-text-muted text-center">Baseado na periodização · editável antes de salvar</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Intensity method */}
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-wider text-text-muted">Intensidade — método</label>
@@ -901,14 +1056,26 @@ export default function PrescricaoPage() {
 
                 {/* Athlete / Multi-athlete */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-text-muted">Atleta(s)</label>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-text-muted">Atleta(s)</label>
+                  {/* Mode toggle */}
+                  <div className="flex rounded-xl border border-border overflow-hidden">
                     <button
-                      onClick={() => setMultiAthlete((v) => !v)}
-                      className="flex items-center gap-1.5 text-xs text-text-muted hover:text-primary transition-colors"
+                      onClick={() => setMultiAthlete(false)}
+                      className={cn(
+                        "flex-1 py-2 text-xs font-semibold transition-all border-r border-border",
+                        !multiAthlete ? "bg-primary/10 text-primary" : "text-text-muted hover:text-text bg-background"
+                      )}
                     >
-                      <Users className="h-3.5 w-3.5" />
-                      {multiAthlete ? "Seleção múltipla ✓" : "Aplicar para vários"}
+                      Atleta único
+                    </button>
+                    <button
+                      onClick={() => { setMultiAthlete(true); setSelectedAthletes([athleteId]); }}
+                      className={cn(
+                        "flex-1 py-2 text-xs font-semibold transition-all flex items-center justify-center gap-1.5",
+                        multiAthlete ? "bg-primary/10 text-primary" : "text-text-muted hover:text-text bg-background"
+                      )}
+                    >
+                      <Users className="h-3.5 w-3.5" /> Vários atletas
                     </button>
                   </div>
                   {!multiAthlete ? (
@@ -920,7 +1087,8 @@ export default function PrescricaoPage() {
                       {athletes.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                     </select>
                   ) : (
-                    <div className="rounded-xl border border-border bg-background/60 p-2 space-y-1 max-h-36 overflow-y-auto">
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-2 space-y-1 max-h-40 overflow-y-auto">
+                      <p className="text-[10px] text-primary px-2 pb-1">Selecione os atletas que receberão este treino:</p>
                       {athletes.map((a) => (
                         <label key={a.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-card-hover cursor-pointer text-sm">
                           <input
@@ -936,7 +1104,9 @@ export default function PrescricaoPage() {
                         </label>
                       ))}
                       {selectedAthletes.length > 0 && (
-                        <p className="text-center text-xs text-primary pt-1">{selectedAthletes.length} atleta(s) selecionado(s)</p>
+                        <p className="text-center text-xs font-semibold text-primary pt-1 border-t border-primary/20 mt-1">
+                          {selectedAthletes.length} atleta(s) selecionado(s)
+                        </p>
                       )}
                     </div>
                   )}

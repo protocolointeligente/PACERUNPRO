@@ -25,6 +25,9 @@ import {
   ClipboardList,
   BarChart3,
   Wand2,
+  Activity,
+  Bike,
+  Waves,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -71,7 +74,10 @@ const coreNav: NavItem[] = [
   { href: "/treinador/configuracoes/zonas",      label: "Zonas de treino",   icon: Zap                                       },
 
   // — Modalidades —
-  { href: "/treinador/prescricao/triatlo",              label: "Triathlon",            icon: Trophy,    sectionStart: "Modalidades" },
+  { href: "/treinador/prescricao?sport=RUN",            label: "Corrida",              icon: Activity,  sectionStart: "Modalidades" },
+  { href: "/treinador/prescricao?sport=BIKE",           label: "Ciclismo",             icon: Bike                                  },
+  { href: "/treinador/prescricao?sport=SWIM",           label: "Natação",              icon: Waves                                 },
+  { href: "/treinador/prescricao/triatlo",              label: "Triathlon",            icon: Trophy                                },
   { href: "/treinador/prescricao/forca",                label: "Força",                icon: Dumbbell                              },
   { href: "/treinador/prescricao/forca-periodizacao",   label: "Força — Periodização", icon: BarChart3                             },
 
