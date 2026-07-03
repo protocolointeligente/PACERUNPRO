@@ -145,6 +145,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
       mainSet: true,
       cooldown: true,
       targetPaceSecPerKm: true,
+      targetPacePer100m: true,
       targetDistanceKm: true,
       targetDurationMin: true,
       targetRpe: true,
@@ -254,12 +255,24 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
 
         <CardContent className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
           {workout.targetDistanceKm != null && (
-            <Metric icon={MapPin} label="Distância" value={`${workout.targetDistanceKm} km`} color={color} />
+            <Metric
+              icon={MapPin}
+              label="Distância"
+              value={
+                workout.sport === "SWIM"
+                  ? `${Math.round(workout.targetDistanceKm * 1000)} m`
+                  : `${workout.targetDistanceKm} km`
+              }
+              color={color}
+            />
           )}
           {workout.targetDurationMin != null && (
             <Metric icon={Clock} label="Tempo estimado" value={`${workout.targetDurationMin} min`} color={color} />
           )}
-          {workout.targetPaceSecPerKm != null && (
+          {workout.sport === "SWIM" && workout.targetPacePer100m != null && (
+            <Metric icon={Gauge} label="Pace alvo" value={`${formatPace(workout.targetPacePer100m)} /100m`} color={color} />
+          )}
+          {workout.sport !== "SWIM" && workout.targetPaceSecPerKm != null && (
             <Metric icon={Gauge} label="Pace alvo" value={formatPace(workout.targetPaceSecPerKm)} color={color} />
           )}
           {workout.targetHrZone && (

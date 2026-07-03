@@ -84,5 +84,64 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── Chargeback / Dispute handling ──────────────────────────────────────────
+  if (event.type === "charge.dispute.created") {
+    const dispute = event.data.object as import("stripe").Stripe.Dispute;
+    await handleDispute(dispute, "REFUNDED");
+  }
+
+  if (event.type === "charge.dispute.closed") {
+    const dispute = event.data.object as import("stripe").Stripe.Dispute;
+    // Won = we keep the money; revert to PAID. Lost = funds returned; REFUNDED.
+    const targetStatus = dispute.status === "won" ? "PAID" : "REFUNDED";
+    await handleDispute(dispute, targetStatus);
+  }
+
   return NextResponse.json({ received: true });
+}
+
+async function handleDispute(
+  dispute: import("stripe").Stripe.Dispute,
+  status: "PAID" | "REFUNDED",
+) {
+  const paymentIntentId =
+    typeof dispute.payment_intent === "string"
+      ? dispute.payment_intent
+      : dispute.payment_intent?.id;
+
+  if (!paymentIntentId) return;
+
+  // Resolve payment intent → checkout session → order / purchase
+  const stripe = getStripe();
+  let stripeSessionId: string | undefined;
+  try {
+    const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntentId, limit: 1 });
+    stripeSessionId = sessions.data[0]?.id;
+  } catch {
+    return; // Stripe API error — skip gracefully
+  }
+
+  if (!stripeSessionId) return;
+
+  await Promise.allSettled([
+    prisma.marketplaceOrder.updateMany({
+      where: { stripeSessionId },
+      data: { status },
+    }),
+    prisma.planPurchase.updateMany({
+      where: { stripeSessionId },
+      data: { status },
+    }),
+  ]);
+
+  // If dispute lost, freeze commission payout
+  if (status === "REFUNDED") {
+    const order = await prisma.marketplaceOrder.findFirst({ where: { stripeSessionId }, select: { id: true } });
+    if (order) {
+      await prisma.marketplaceCommission.updateMany({
+        where: { orderId: order.id },
+        data: { paidOut: false },
+      }).catch(() => null);
+    }
+  }
 }

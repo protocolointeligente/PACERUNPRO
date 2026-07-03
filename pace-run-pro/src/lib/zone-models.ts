@@ -111,7 +111,7 @@ export const ZONE_PRESETS: ZoneModelPreset[] = [
       { number: 1, name: "Recuperação",          color: "#4ade80", minPct: 115, maxPct: 999, description: "Fácil / técnica" },
       { number: 2, name: "Base Aeróbica",        color: "#38bdf8", minPct: 108, maxPct: 115, description: "Longo e aeróbico" },
       { number: 3, name: "Desenvolvimento",      color: "#a78bfa", minPct: 103, maxPct: 108, description: "Desenvolvimento aeróbico" },
-      { number: 4, name: "Limiar Anaeróbico",   color: "#fb923c", minPct: 100, maxPct: 103, description: "Pace limiar de corrida" },
+      { number: 4, name: "Limiar Anaeróbico",   color: "#fb923c", minPct: 100, maxPct: 103, description: "Pace limiar de natação (CSS)" },
       { number: 5, name: "VO2máx / Competição", color: "#f87171", minPct: 90,  maxPct: 100, description: "Ritmo de prova" },
     ],
   },

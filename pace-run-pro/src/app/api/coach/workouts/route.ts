@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
     targetDistanceKm,
     targetDurationMin,
     targetPaceSecPerKm,
+    targetPacePer100m,
     targetRpe,
     objective,
   } = body as {
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
     targetDistanceKm?: number;
     targetDurationMin?: number;
     targetPaceSecPerKm?: number;
+    targetPacePer100m?: number;
     targetRpe?: number;
     objective?: string;
   };
@@ -76,6 +78,7 @@ export async function POST(req: NextRequest) {
       ...(targetDistanceKm != null ? { targetDistanceKm } : {}),
       ...(targetDurationMin != null ? { targetDurationMin } : {}),
       ...(targetPaceSecPerKm != null ? { targetPaceSecPerKm } : {}),
+      ...(targetPacePer100m != null ? { targetPacePer100m } : {}),
       ...(targetRpe != null ? { targetRpe } : {}),
     },
     select: { id: true, date: true, title: true, type: true, status: true, structured: true },

@@ -41,28 +41,46 @@ export default async function AthleteListPage() {
   const session = await getSession();
   if (!session?.user?.id) redirect("/login");
 
-  const coach = await prisma.coach.findUnique({
-    where: { userId: session.user.id },
-    select: {
-      athletes: {
-        select: {
-          id: true,
-          status: true,
-          adherenceRate: true,
-          goal: true,
-          level: true,
-          raceDate: true,
-          user: { select: { name: true, avatarUrl: true } },
-          checkins: {
-            orderBy: { date: "desc" },
-            take: 1,
-            select: { date: true },
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const [coach, recentLogs] = await Promise.all([
+    prisma.coach.findUnique({
+      where: { userId: session.user.id },
+      select: {
+        id: true,
+        athletes: {
+          select: {
+            id: true,
+            status: true,
+            adherenceRate: true,
+            goal: true,
+            level: true,
+            raceDate: true,
+            user: { select: { name: true, avatarUrl: true } },
+            checkins: {
+              orderBy: { date: "desc" },
+              take: 1,
+              select: { date: true },
+            },
           },
+          orderBy: { user: { name: "asc" } },
         },
-        orderBy: { user: { name: "asc" } },
       },
-    },
-  });
+    }),
+    prisma.workoutLog.findMany({
+      where: { startedAt: { gte: sevenDaysAgo } },
+      select: { athleteId: true, durationSec: true, rpe: true },
+    }),
+  ]);
+
+  const loadByAthlete = new Map<string, number>();
+  for (const log of recentLogs) {
+    const dur = (log.durationSec ?? 0) / 60;
+    const rpe = Math.min(log.rpe ?? 5, 10);
+    const prev = loadByAthlete.get(log.athleteId) ?? 0;
+    loadByAthlete.set(log.athleteId, prev + Math.round(dur * rpe));
+  }
 
   const athletes: AthleteRow[] = (coach?.athletes ?? []).map((a) => ({
     id: a.id,
@@ -72,7 +90,7 @@ export default async function AthleteListPage() {
     level: LEVEL_LABELS[a.level] ?? "Iniciante",
     status: (a.status as "ativo" | "risco" | "inativo") ?? "ativo",
     adherence: a.adherenceRate ?? 0,
-    weeklyLoad: 0,
+    weeklyLoad: loadByAthlete.get(a.id) ?? 0,
     lastCheckIn: formatLastCheckIn(a.checkins[0]?.date),
     raceDate: formatRaceDate(a.raceDate),
   }));
