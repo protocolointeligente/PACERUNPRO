@@ -197,6 +197,7 @@ model Athlete {
 
   shoes              Shoe[]
   sportProfiles      AthleteSportProfile[]
+  raceEvents         RaceEvent[]
   dailyLoads         DailyLoad[]
 
   createdAt          DateTime @default(now())
@@ -255,6 +256,7 @@ model Coach {
   challenges        Challenge[]
   appointments      Appointment[]
   coachAvailability CoachAvailability[]
+  raceEvents         RaceEvent[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -308,15 +310,21 @@ model TrainingPlan {
 
   purchaseId  String?  @unique  // link to the PlanPurchase that originated this plan
 
-  name        String
-  goal        Goal
-  raceDate    DateTime?
-  macrocycle  String?  // nome/descrição do macrociclo
-  phase       CyclePhase @default(BASE)
-  startDate   DateTime
-  endDate     DateTime
+  name             String
+  goal             Goal
+  raceDate         DateTime?
+  targetRaceName   String?
+  macrocycle       String?  // nome/descrição do macrociclo
+  phase            CyclePhase @default(BASE)
+  status           String   @default("DRAFT") // DRAFT | ACTIVE | COMPLETED | ARCHIVED
+  loadPattern      String?  // LINEAR | ONDULATORIO | BLOCO | POLARIZADO
+  currentVolumeKm  Float?
+  maxVolumeKm      Float?
+  startDate        DateTime
+  endDate          DateTime
 
   weeks       TrainingWeek[]
+  raceEvents  RaceEvent[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -483,6 +491,8 @@ model WorkoutLog {
   gpsTrack     Json?
   splits       Json?
   rpe          Int?
+  painLevel    Int?   // 0-10 dor reportada pelo atleta
+  fatigueLevel Int?   // 0-10 fadiga reportada pelo atleta
   feeling      String?
 
   // ── Carga calculada ───────────────────────────────────
@@ -734,6 +744,52 @@ model Metric {
 
   @@index([athleteId, date])
   @@map("metrics")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Eventos de prova no calendário (alvo de periodização)
+// ────────────────────────────────────────────────────────────────────────────
+
+enum RaceEventPriority {
+  A  // prova principal do ciclo
+  B  // prova secundária
+  C  // prova de preparação / teste
+}
+
+enum RaceEventType {
+  RACE     // prova competitiva
+  TEST     // teste de performance
+  EVENT    // evento não-competitivo
+}
+
+model RaceEvent {
+  id          String           @id @default(cuid())
+  athleteId   String
+  athlete     Athlete          @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  coachId     String?
+  coach       Coach?           @relation(fields: [coachId], references: [id])
+  planId      String?
+  plan        TrainingPlan?    @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  title       String
+  date        DateTime
+  type        RaceEventType    @default(RACE)
+  priority    RaceEventPriority @default(A)
+  distanceKm  Float?
+  location    String?
+  description String?
+  goalTime    String?          // meta do atleta (ex: "3:45:00")
+
+  completed   Boolean          @default(false)
+  actualTime  String?
+  notes       String?
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([athleteId, date])
+  @@index([planId])
+  @@map("race_events")
 }
 
 // ────────────────────────────────────────────────────────────────────────────
