@@ -13,7 +13,7 @@ const B2C_PLAN_PRICES: Record<string, number> = {
 };
 
 export async function POST(req: NextRequest) {
-  const rl = checkoutLimiter(req);
+  const rl = await checkoutLimiter(req);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Muitas tentativas de pagamento. Aguarde um momento e tente novamente." },
@@ -32,10 +32,8 @@ export async function POST(req: NextRequest) {
     customerName: string;
     customerEmail: string;
     customerCpf: string;
-    cardNumber?: string;
-    cardName?: string;
-    cardExpiry?: string;
-    cardCvv?: string;
+    /** Encrypted card token from PagBank.js — PAN and CVV must never be sent here */
+    encryptedCard?: string;
   };
 
   const { method, planId, planName, autoRenew, voucherCode, customerName, customerEmail, customerCpf } = body;
@@ -103,22 +101,20 @@ export async function POST(req: NextRequest) {
         planName,
         notificationUrl,
       });
-      // Track voucher usage (fire-and-forget, atomic)
       if (usedVoucherId) {
-        prisma.$executeRaw`UPDATE vouchers SET "usedCount" = "usedCount" + 1 WHERE id = ${usedVoucherId} AND ("maxUses" IS NULL OR "usedCount" < "maxUses")`.catch(() => null);
+        await prisma.$executeRaw`UPDATE vouchers SET "usedCount" = "usedCount" + 1 WHERE id = ${usedVoucherId} AND ("maxUses" IS NULL OR "usedCount" < "maxUses")`;
       }
       return NextResponse.json(result);
     }
 
     if (method === "cartao") {
-      const { cardNumber, cardName, cardExpiry, cardCvv } = body;
-      if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
+      const { encryptedCard } = body;
+      if (!encryptedCard) {
         return NextResponse.json(
-          { error: "Dados do cartão incompletos." },
+          { error: "Dados do cartão incompletos. Recarregue a página e tente novamente." },
           { status: 400 }
         );
       }
-      const [expMonth, expYear] = cardExpiry.split("/");
       const result = await createCreditCardOrder({
         referenceId,
         customerName,
@@ -126,15 +122,11 @@ export async function POST(req: NextRequest) {
         customerCpf: customerCpf ?? "",
         amountCents,
         planName,
-        cardNumber,
-        cardExpMonth: expMonth,
-        cardExpYear: expYear?.length === 2 ? `20${expYear}` : expYear,
-        cardCvv,
-        cardHolderName: cardName,
+        encryptedCard,
         notificationUrl,
       });
       if (usedVoucherId) {
-        prisma.$executeRaw`UPDATE vouchers SET "usedCount" = "usedCount" + 1 WHERE id = ${usedVoucherId} AND ("maxUses" IS NULL OR "usedCount" < "maxUses")`.catch(() => null);
+        await prisma.$executeRaw`UPDATE vouchers SET "usedCount" = "usedCount" + 1 WHERE id = ${usedVoucherId} AND ("maxUses" IS NULL OR "usedCount" < "maxUses")`;
       }
       return NextResponse.json(result);
     }

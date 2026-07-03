@@ -5,7 +5,7 @@ import { leadsLimiter } from "@/lib/rate-limit";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
-  const rl = leadsLimiter(req);
+  const rl = await leadsLimiter(req);
   if (!rl.ok) {
     return NextResponse.json({ error: "Muitas tentativas. Aguarde e tente novamente." }, { status: 429 });
   }

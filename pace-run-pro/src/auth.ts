@@ -38,7 +38,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials, request) {
         // Rate-limit login attempts per IP (10 per 15 min)
         if (request) {
-          const rl = loginLimiter(request);
+          const rl = await loginLimiter(request);
           if (!rl.ok) return null;
         }
         if (!credentials?.email || !credentials?.password) return null;

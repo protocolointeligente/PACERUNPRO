@@ -10,7 +10,7 @@ function formatPace(secPerKm: number | null | undefined): string | null {
 }
 
 export async function POST(req: NextRequest) {
-  const rl = iaTreinadoraLimiter(req);
+  const rl = await iaTreinadoraLimiter(req);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Limite de mensagens atingido. Aguarde um momento antes de enviar mais." },

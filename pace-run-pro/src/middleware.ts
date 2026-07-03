@@ -12,6 +12,9 @@ const PROTECTED_API_PREFIXES = [
   "/api/integrations/",
   "/api/checkins",
   "/api/treinador/",
+  "/api/marketplace/",
+  "/api/messages/",
+  "/api/notifications",
 ];
 
 export default auth((req) => {
@@ -40,11 +43,14 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Role-based routing: only enforce soft redirects for coach/athlete routes.
-  // Admin routes are NOT blocked here — the admin layout server component re-reads
-  // the DB role via auth() and is the authoritative access gate. Blocking here
-  // based on the JWT role causes false negatives when the JWT is stale (e.g. first
-  // Google login before ADMIN_EMAILS was configured).
+  // Role-based routing.
+  // Admin pages: block non-admins at the edge as defence-in-depth. The server
+  // layout is still the authoritative gate (it re-reads DB role), so false
+  // negatives from stale JWTs are caught there.
+  if (isLoggedIn && isAdminRoute && role !== "ADMIN") {
+    return NextResponse.redirect(new URL("/atleta/dashboard", nextUrl));
+  }
+
   if (isLoggedIn && isCoachRoute && !["COACH", "ADMIN"].includes(role ?? "")) {
     return NextResponse.redirect(new URL("/atleta/dashboard", nextUrl));
   }

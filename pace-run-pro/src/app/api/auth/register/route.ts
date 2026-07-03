@@ -67,7 +67,7 @@ const WELCOME_HTML = (name: string, role: "COACH" | "ATHLETE") =>
 </div>`;
 
 export async function POST(req: NextRequest) {
-  const rl = authRegisterLimiter(req);
+  const rl = await authRegisterLimiter(req);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Muitas tentativas de cadastro. Aguarde alguns minutos e tente novamente." },

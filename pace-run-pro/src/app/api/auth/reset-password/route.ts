@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { resetPasswordLimiter } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
-  const rl = resetPasswordLimiter(request);
+  const rl = await resetPasswordLimiter(request);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente." },

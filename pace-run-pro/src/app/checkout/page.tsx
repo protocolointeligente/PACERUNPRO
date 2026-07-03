@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, Copy, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { Logo } from "@/components/logo";
@@ -121,6 +121,22 @@ function formatCpf(value: string) {
 }
 
 // ── Inner content (reads searchParams) ───────────────────────────────────
+// PagBank.js type shim — loaded via script tag at runtime
+declare global {
+  interface Window {
+    PagSeguro?: {
+      encryptCard: (opts: {
+        publicKey: string;
+        holder: string;
+        number: string;
+        expMonth: string;
+        expYear: string;
+        securityCode: string;
+      }) => { encryptedCard: string; hasErrors: boolean; errors?: unknown[] };
+    };
+  }
+}
+
 function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -140,12 +156,23 @@ function CheckoutContent() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerCpf, setCustomerCpf] = useState("");
 
-  // Payment
+  // Payment — raw card fields only kept in component state, never sent to our server
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cartao");
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
+
+  // PagBank public key for client-side card encryption
+  const pagbankPubKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    fetch("/api/checkout/pagbank-pubkey")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { publicKey?: string } | null) => {
+        if (d?.publicKey) pagbankPubKeyRef.current = d.publicKey;
+      })
+      .catch(() => null);
+  }, []);
 
   // PIX result
   const [pixText, setPixText] = useState<string | null>(null);
@@ -190,11 +217,34 @@ function CheckoutContent() {
       setError("CPF é obrigatório para pagamento via PIX.");
       return;
     }
+
+    let encryptedCard: string | undefined;
     if (paymentMethod === "cartao") {
       if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
         setError("Preencha todos os dados do cartão.");
         return;
       }
+      // Encrypt card data client-side — PAN and CVV never travel to our server
+      const pubKey = pagbankPubKeyRef.current;
+      if (!pubKey || !window.PagSeguro) {
+        setError("Módulo de segurança de cartão não carregado. Recarregue a página.");
+        return;
+      }
+      const [expMonth, rawYear] = cardExpiry.split("/");
+      const expYear = rawYear?.length === 2 ? `20${rawYear}` : rawYear;
+      const result = window.PagSeguro.encryptCard({
+        publicKey: pubKey,
+        holder: cardName,
+        number: cardNumber.replace(/\s/g, ""),
+        expMonth: expMonth?.trim() ?? "",
+        expYear: expYear?.trim() ?? "",
+        securityCode: cardCvv,
+      });
+      if (result.hasErrors) {
+        setError("Dados do cartão inválidos. Verifique e tente novamente.");
+        return;
+      }
+      encryptedCard = result.encryptedCard;
     }
 
     setProcessing(true);
@@ -210,9 +260,7 @@ function CheckoutContent() {
           customerName: customerName.trim(),
           customerEmail: customerEmail.trim(),
           customerCpf: customerCpf.replace(/\D/g, ""),
-          ...(paymentMethod === "cartao"
-            ? { cardNumber: cardNumber.replace(/\s/g, ""), cardName, cardExpiry, cardCvv }
-            : {}),
+          ...(paymentMethod === "cartao" ? { encryptedCard } : {}),
         }),
       });
 
@@ -328,6 +376,9 @@ function CheckoutContent() {
 
   return (
     <>
+      {/* Load PagBank.js for client-side card encryption (PCI DSS) */}
+      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+      <script src="https://sdk.pagseguro.com/pagseguro-sdk.js" />
       <StepIndicator current={step} total={2} />
 
       {/* ── Step 1: Plan selection ── */}

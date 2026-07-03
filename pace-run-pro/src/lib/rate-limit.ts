@@ -1,55 +1,74 @@
 /**
- * Sliding-window rate limiter (in-memory, per-process).
+ * Distributed rate limiter backed by Upstash Redis.
  *
- * For a single-instance deployment this is sufficient.
- * For multi-instance/serverless at scale, replace with Upstash Redis:
- * https://github.com/upstash/ratelimit-js
+ * Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in the Vercel
+ * dashboard (or .env.local) to enable Redis-backed limiting across all
+ * serverless instances.  When those vars are absent the module falls back
+ * to the in-process Map, which is fine for local development but provides
+ * no cross-instance protection.
  *
- * Usage:
- *   const result = rateLimit(req, { limit: 5, windowMs: 60_000 });
- *   if (!result.ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+ * Upstash free tier: https://console.upstash.com/
  */
 
-interface RateLimitOptions {
-  /** Maximum requests allowed in the window. */
-  limit: number;
-  /** Window size in milliseconds. */
-  windowMs: number;
-  /** Optional key suffix to create separate buckets per endpoint. */
-  key?: string;
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
+// ── Redis client (lazy; null when env vars are missing) ───────────────────
+
+function getRedis(): Redis | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+  return new Redis({ url, token });
 }
+
+const redis = getRedis();
+
+// ── Upstash sliding-window limiters ──────────────────────────────────────
+
+function makeUpstashLimiter(requests: number, windowSec: number, prefix: string) {
+  if (!redis) return null;
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(requests, `${windowSec} s`),
+    prefix: `rl:${prefix}`,
+    analytics: false,
+  });
+}
+
+// ── In-memory fallback (dev only) ────────────────────────────────────────
 
 interface RateLimitResult {
   ok: boolean;
   remaining: number;
-  resetAt: number; // epoch ms when the window resets
+  resetAt: number;
 }
 
-// ip:key → array of request timestamps
 const store = new Map<string, number[]>();
 
-// Purge stale entries every 5 minutes to avoid unbounded growth
-setInterval(() => {
-  const now = Date.now();
-  for (const [k, timestamps] of store) {
-    // keep only last 10 minutes to be safe
-    const fresh = timestamps.filter((t) => now - t < 600_000);
-    if (fresh.length === 0) store.delete(k);
-    else store.set(k, fresh);
-  }
-}, 300_000);
-
-function getIp(req: Request): string {
-  // Works in Next.js Edge / Node runtimes
-  const forwarded = req.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
-  const realIp = req.headers.get("x-real-ip");
-  return realIp ?? "unknown";
+// Purge stale entries every 5 minutes
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [k, timestamps] of store) {
+      const fresh = timestamps.filter((t) => now - t < 600_000);
+      if (fresh.length === 0) store.delete(k);
+      else store.set(k, fresh);
+    }
+  }, 300_000);
 }
 
-export function rateLimit(
+function getIp(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return req.headers.get("x-real-ip") ?? "unknown";
+}
+
+function inMemoryLimit(
   req: Request,
-  { limit, windowMs, key = "" }: RateLimitOptions,
+  limit: number,
+  windowMs: number,
+  key: string,
 ): RateLimitResult {
   const ip = getIp(req);
   const bucketKey = `${ip}:${key}`;
@@ -60,62 +79,88 @@ export function rateLimit(
   timestamps.push(now);
   store.set(bucketKey, timestamps);
 
-  const remaining = Math.max(0, limit - timestamps.length);
-  const resetAt = (timestamps[0] ?? now) + windowMs;
-
-  return { ok: timestamps.length <= limit, remaining, resetAt };
+  return {
+    ok: timestamps.length <= limit,
+    remaining: Math.max(0, limit - timestamps.length),
+    resetAt: (timestamps[0] ?? now) + windowMs,
+  };
 }
 
-/** Returns a pre-configured rate limiter for a specific endpoint. */
-export function createRateLimiter(opts: RateLimitOptions) {
-  return (req: Request) => rateLimit(req, opts);
+// ── Public factory ────────────────────────────────────────────────────────
+
+interface LimiterOptions {
+  /** Max requests per window */
+  limit: number;
+  /** Window in milliseconds */
+  windowMs: number;
+  /** Unique key for this endpoint */
+  key: string;
 }
 
-// Pre-configured limiters for each critical endpoint
+export function createRateLimiter({ limit, windowMs, key }: LimiterOptions) {
+  const windowSec = Math.round(windowMs / 1000);
+  const upstash = makeUpstashLimiter(limit, windowSec, key);
+
+  return async (req: Request): Promise<RateLimitResult> => {
+    if (upstash) {
+      const ip = getIp(req);
+      const result = await upstash.limit(ip);
+      return {
+        ok: result.success,
+        remaining: result.remaining,
+        resetAt: result.reset,
+      };
+    }
+    return inMemoryLimit(req, limit, windowMs, key);
+  };
+}
+
+// ── Pre-configured limiters ───────────────────────────────────────────────
+
 export const authRegisterLimiter = createRateLimiter({
   limit: 5,
-  windowMs: 15 * 60 * 1000, // 5 requests per 15 minutes
+  windowMs: 15 * 60 * 1000,
   key: "auth:register",
 });
 
 export const iaTreinadoraLimiter = createRateLimiter({
   limit: 20,
-  windowMs: 60 * 1000, // 20 requests per minute
+  windowMs: 60 * 1000,
   key: "ia-treinadora",
 });
 
 export const checkoutLimiter = createRateLimiter({
   limit: 10,
-  windowMs: 60 * 1000, // 10 requests per minute
+  windowMs: 60 * 1000,
   key: "checkout",
 });
 
 export const forgotPasswordLimiter = createRateLimiter({
   limit: 3,
-  windowMs: 15 * 60 * 1000, // 3 requests per 15 minutes
+  windowMs: 15 * 60 * 1000,
   key: "auth:forgot-password",
 });
 
 export const voucherValidateLimiter = createRateLimiter({
   limit: 10,
-  windowMs: 60 * 1000, // 10 requests per minute
+  windowMs: 60 * 1000,
   key: "voucher:validate",
 });
 
 export const resetPasswordLimiter = createRateLimiter({
   limit: 5,
-  windowMs: 15 * 60 * 1000, // 5 requests per 15 minutes
+  windowMs: 15 * 60 * 1000,
   key: "auth:reset-password",
 });
 
 export const leadsLimiter = createRateLimiter({
   limit: 3,
-  windowMs: 60 * 1000, // 3 lead submissions per minute per IP
+  windowMs: 60 * 1000,
   key: "leads",
 });
 
 export const loginLimiter = createRateLimiter({
   limit: 10,
-  windowMs: 15 * 60 * 1000, // 10 login attempts per 15 minutes per IP
+  windowMs: 15 * 60 * 1000,
   key: "auth:login",
 });

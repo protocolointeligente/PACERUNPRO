@@ -97,11 +97,8 @@ export async function createCreditCardOrder(params: {
   customerCpf: string;
   amountCents: number;
   planName: string;
-  cardNumber: string;
-  cardExpMonth: string;
-  cardExpYear: string;
-  cardCvv: string;
-  cardHolderName: string;
+  /** Encrypted card token produced by PagBank.js in the browser — replaces raw PAN/CVV */
+  encryptedCard: string;
   notificationUrl: string;
 }): Promise<CardOrderResult> {
   const res = await fetch(`${PAGBANK_BASE_URL}/orders`, {
@@ -135,11 +132,7 @@ export async function createCreditCardOrder(params: {
             installments: 1,
             capture: true,
             card: {
-              number: params.cardNumber.replace(/\D/g, ""),
-              exp_month: params.cardExpMonth,
-              exp_year: params.cardExpYear,
-              security_code: params.cardCvv,
-              holder: { name: params.cardHolderName },
+              encrypted: params.encryptedCard,
             },
           },
         },
