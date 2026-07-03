@@ -61,16 +61,26 @@ export default async function CoachDashboardPage() {
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-  const recentLogs = user?.coach?.id
-    ? await prisma.workoutLog.findMany({
-        where: {
-          athlete: { coachId: user.coach.id },
-          startedAt: { gte: sevenDaysAgo },
-        },
-        select: { athleteId: true, durationSec: true, rpe: true },
-      })
-    : [];
+  const athleteIds = (user?.coach?.athletes ?? []).map((a) => a.id);
+
+  const [recentLogs, latestAssessments] = await Promise.all([
+    user?.coach?.id
+      ? prisma.workoutLog.findMany({
+          where: { athlete: { coachId: user.coach.id }, startedAt: { gte: sevenDaysAgo } },
+          select: { athleteId: true, durationSec: true, rpe: true },
+        })
+      : Promise.resolve([]),
+    athleteIds.length > 0
+      ? prisma.physicalAssessment.groupBy({
+          by: ["athleteId"],
+          where: { athleteId: { in: athleteIds } },
+          _max: { assessedAt: true },
+        })
+      : Promise.resolve([]),
+  ]);
 
   const loadByAthlete = new Map<string, number>();
   for (const log of recentLogs) {
@@ -79,6 +89,15 @@ export default async function CoachDashboardPage() {
     const existing = loadByAthlete.get(log.athleteId) ?? 0;
     loadByAthlete.set(log.athleteId, existing + Math.round(dur * rpe));
   }
+
+  // Assessment stats
+  const assessedMap = new Map(latestAssessments.map((a) => [a.athleteId, a._max.assessedAt]));
+  const noAssessmentCount = athleteIds.filter((id) => !assessedMap.has(id)).length;
+  const reassessmentCount = latestAssessments.filter((a) => {
+    const last = a._max.assessedAt;
+    return last != null && last < ninetyDaysAgo;
+  }).length;
+  const pendingAssessmentCount = noAssessmentCount; // athletes with no assessment = pending
 
   const rawAthletes = user?.coach?.athletes ?? [];
   const athletes: AthleteRow[] = rawAthletes.map((a) => ({
@@ -103,6 +122,9 @@ export default async function CoachDashboardPage() {
       athleteCount={athletes.length}
       athletesAtRisk={athletesAtRisk}
       athletes={athletes}
+      noAssessmentCount={noAssessmentCount}
+      pendingAssessmentCount={pendingAssessmentCount}
+      reassessmentCount={reassessmentCount}
     />
   );
 }

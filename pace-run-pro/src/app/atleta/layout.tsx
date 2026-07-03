@@ -75,6 +75,32 @@ export default async function AtletaLayout({ children }: { children: React.React
     redirect("/assinar");
   }
 
+  // Warn the athlete 7 days before expiry (fire-and-forget notification, deduped per 24h)
+  if (!subExpired && sub?.renewsAt) {
+    const daysLeft = Math.ceil((sub.renewsAt.getTime() - now.getTime()) / 86400000);
+    if (daysLeft > 0 && daysLeft <= 7 && session.user.id) {
+      const uid = session.user.id;
+      void (async () => {
+        const title = daysLeft === 1 ? "Assinatura vence amanhã!" : `Assinatura vence em ${daysLeft} dias`;
+        const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const already = await prisma.notification.findFirst({
+          where: { userId: uid, title, createdAt: { gte: cutoff } },
+          select: { id: true },
+        });
+        if (!already) {
+          await prisma.notification.create({
+            data: {
+              userId: uid,
+              title,
+              body: "Renove seu plano para continuar acessando a plataforma sem interrupção.",
+              link: "/atleta/assinar",
+            },
+          });
+        }
+      })().catch(() => null);
+    }
+  }
+
   const isExempt = GATE_EXEMPT_PREFIXES.some((p) => pathname.startsWith(p));
 
   if (!isExempt && user?.athlete) {

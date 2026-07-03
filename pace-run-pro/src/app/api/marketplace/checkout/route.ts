@@ -132,9 +132,23 @@ export async function POST(req: NextRequest) {
   const stripe = getStripe();
   const coachStripeAccountId = product.store?.stripeAccountId ?? null;
   const netCents = finalPriceCents - Math.round(finalPriceCents * commissionPct);
+  const isSubscription = product.type === "ASSINATURA";
+
+  // Build Connect transfer options differently for payment vs subscription mode
+  const connectOptions = coachStripeAccountId
+    ? isSubscription
+      ? {
+          subscription_data: {
+            application_fee_percent: Math.round(commissionPct * 10000) / 100,
+            transfer_data: { destination: coachStripeAccountId },
+            metadata: { marketplaceOrderId: order.id, productId, athleteId: athlete.id },
+          },
+        }
+      : { payment_intent_data: { transfer_data: { destination: coachStripeAccountId, amount: netCents } } }
+    : {};
 
   const checkoutSession = await stripe.checkout.sessions.create({
-    mode: "payment",
+    mode: isSubscription ? "subscription" : "payment",
     payment_method_types: ["card"],
     line_items: [{
       price_data: {
@@ -145,6 +159,7 @@ export async function POST(req: NextRequest) {
           description: product.store?.name ? `por ${product.store.name}` : "PACE RUN PRO",
           images: product.coverUrl ? [product.coverUrl] : [],
         },
+        ...(isSubscription ? { recurring: { interval: "month" as const } } : {}),
       },
       quantity: 1,
     }],
@@ -157,10 +172,7 @@ export async function POST(req: NextRequest) {
     cancel_url: `${appUrl}/marketplace/${product.slug}`,
     customer_email: session.user.email ?? undefined,
     locale: "pt-BR",
-    // Route net amount to coach's connected Stripe account when available
-    ...(coachStripeAccountId
-      ? { payment_intent_data: { transfer_data: { destination: coachStripeAccountId, amount: netCents } } }
-      : {}),
+    ...connectOptions,
   });
 
   await prisma.marketplaceOrder.update({ where: { id: order.id }, data: { stripeSessionId: checkoutSession.id } });

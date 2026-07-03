@@ -239,7 +239,7 @@ function TemplateCard({
                         </span>
                         <span className="shrink-0 text-text-muted">{ex.rest}</span>
                         <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">
-                          {ex.rpe * 10}%
+                          RPE {ex.rpe}
                         </span>
                       </div>
                     );

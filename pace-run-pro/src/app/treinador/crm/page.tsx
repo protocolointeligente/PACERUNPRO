@@ -36,6 +36,7 @@ interface CrmLead {
   createdAt: string;
   lastContact: string;
   avatar: string;
+  convertedAt?: string | null;
 }
 import { cn } from "@/lib/utils";
 
@@ -59,7 +60,7 @@ const STAGE_LABELS: Record<LeadStage, string> = {
   perdido: "Perdido",
 };
 
-const KANBAN_STAGES: LeadStage[] = ["novo", "contato", "proposta", "ganho"];
+const KANBAN_STAGES: LeadStage[] = ["novo", "contato", "proposta", "negociacao", "ganho", "perdido"];
 
 const STAGE_COLORS: Record<LeadStage, string> = {
   novo: "bg-slate-600 text-slate-100",
@@ -121,6 +122,8 @@ interface ApiLead {
   stage: string;
   notes: string | null;
   monthlyFeeCents: number | null;
+  convertedAt: string | null;
+  convertedAthleteId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -144,6 +147,7 @@ function apiLeadToCrmLead(l: ApiLead): CrmLead {
     createdAt: l.createdAt.slice(0, 10),
     lastContact: l.updatedAt.slice(0, 10),
     avatar: toInitials(l.name) || "??",
+    convertedAt: l.convertedAt,
   };
 }
 
@@ -166,7 +170,7 @@ function SourceBadge({ source }: { source: CrmLead["source"] }) {
 function LeadCard({ lead, onAdvance, onConvert }: { lead: CrmLead; onAdvance: () => void; onConvert: () => void }) {
   const canAdvance = lead.stage !== "ganho" && lead.stage !== "perdido";
   const isWon = lead.stage === "ganho";
-  const isConverted = lead.notes?.includes("[Convertido em atleta]") ?? false;
+  const isConverted = !!lead.convertedAt;
 
   return (
     <motion.div
@@ -369,7 +373,7 @@ function CrmContent() {
       setLeads((prev) =>
         prev.map((l) =>
           l.id === id
-            ? { ...l, stage: "ganho" as LeadStage, notes: (l.notes ? l.notes + "\n" : "") + "[Convertido em atleta]" }
+            ? { ...l, stage: "ganho" as LeadStage, convertedAt: new Date().toISOString() }
             : l
         )
       );

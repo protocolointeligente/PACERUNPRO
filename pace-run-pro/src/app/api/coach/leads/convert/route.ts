@@ -67,14 +67,13 @@ export async function POST(req: NextRequest) {
     athleteId = newUser.athlete!.id;
   }
 
-  // Mark lead as converted (stage stays "ganho", we update the notes)
+  // Mark lead as converted with a dedicated field (not string-in-notes)
   await prisma.lead.update({
     where: { id: leadId },
     data: {
       stage: "ganho",
-      notes: lead.notes
-        ? `${lead.notes}\n[Convertido em atleta]`
-        : "[Convertido em atleta]",
+      convertedAt: new Date(),
+      convertedAthleteId: athleteId,
     },
   });
 

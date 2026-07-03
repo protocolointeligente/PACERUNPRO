@@ -23,7 +23,7 @@ export async function GET() {
 
   const [activeSubs, payments, mktCommissions, expenses] = await Promise.all([
     prisma.subscription.findMany({
-      where: { status: { in: ["ACTIVE", "TRIAL"] } },
+      where: { status: "ACTIVE" },
       select: { plan: true, status: true, startedAt: true, renewsAt: true },
     }),
     prisma.payment.findMany({

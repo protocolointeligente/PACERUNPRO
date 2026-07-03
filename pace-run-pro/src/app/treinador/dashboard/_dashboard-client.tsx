@@ -39,6 +39,9 @@ export interface CoachDashboardProps {
   athleteCount: number;
   athletesAtRisk: number;
   athletes: AthleteRow[];
+  noAssessmentCount: number;
+  pendingAssessmentCount: number;
+  reassessmentCount: number;
 }
 
 interface ActionCenterData {
@@ -70,7 +73,7 @@ const QUICK_ACTIONS = [
   { label: "Biblioteca", description: "Modelos de treino multisport", href: "/treinador/biblioteca", icon: Library, color: "#FFB020", bg: "rgba(255,176,32,0.12)" },
 ];
 
-export default function CoachDashboard({ firstName, credential, athleteCount, athletesAtRisk: riskCount, athletes }: CoachDashboardProps) {
+export default function CoachDashboard({ firstName, credential, athleteCount, athletesAtRisk: riskCount, athletes, noAssessmentCount, pendingAssessmentCount, reassessmentCount }: CoachDashboardProps) {
   const [center, setCenter] = useState<ActionCenterData | null>(null);
 
   useEffect(() => {
@@ -229,10 +232,10 @@ export default function CoachDashboard({ firstName, credential, athleteCount, at
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { label: "Testes pendentes",      value: "—", icon: Activity,     accent: "#FFB020", href: "/treinador/prescricao/avaliacoes/testes" },
-            { label: "Avaliações pendentes",  value: "—", icon: ClipboardList, accent: "#B78BFF", href: "/treinador/prescricao/avaliacoes/fisica" },
-            { label: "Sem avaliação",         value: athleteCount > 0 ? athleteCount : "—", icon: Users, accent: "#FF5A4D", href: "/treinador/prescricao/avaliacoes/fisica" },
-            { label: "Reavaliações",          value: "—", icon: ClipboardCheck, accent: "#46E0C8", href: "/treinador/prescricao/avaliacoes" },
+            { label: "Testes pendentes",      value: athleteCount > 0 ? 0 : "—", icon: Activity,     accent: "#FFB020", href: "/treinador/prescricao/avaliacoes/testes" },
+            { label: "Avaliações pendentes",  value: pendingAssessmentCount, icon: ClipboardList, accent: "#B78BFF", href: "/treinador/prescricao/avaliacoes/fisica" },
+            { label: "Sem avaliação",         value: noAssessmentCount, icon: Users, accent: "#FF5A4D", href: "/treinador/prescricao/avaliacoes/fisica" },
+            { label: "Reavaliações",          value: reassessmentCount, icon: ClipboardCheck, accent: "#46E0C8", href: "/treinador/prescricao/avaliacoes" },
           ].map((w) => {
             const Icon = w.icon;
             return (
