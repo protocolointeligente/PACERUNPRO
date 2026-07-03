@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const product = await prisma.marketplaceProduct.findUnique({
     where: { id: productId, published: true },
-    include: { store: { select: { name: true } } },
+    include: { store: { select: { name: true, stripeAccountId: true } } },
   });
   if (!product) return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 });
 
@@ -75,6 +75,9 @@ export async function POST(req: NextRequest) {
 
   // Stripe checkout
   const stripe = getStripe();
+  const coachStripeAccountId = product.store?.stripeAccountId ?? null;
+  const netCents = product.priceCents - Math.round(product.priceCents * commissionPct);
+
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: "payment",
     payment_method_types: ["card"],
@@ -99,6 +102,10 @@ export async function POST(req: NextRequest) {
     cancel_url: `${appUrl}/marketplace/${product.slug}`,
     customer_email: session.user.email ?? undefined,
     locale: "pt-BR",
+    // Route net amount to coach's connected Stripe account when available
+    ...(coachStripeAccountId
+      ? { payment_intent_data: { transfer_data: { destination: coachStripeAccountId, amount: netCents } } }
+      : {}),
   });
 
   await prisma.marketplaceOrder.update({ where: { id: order.id }, data: { stripeSessionId: checkoutSession.id } });

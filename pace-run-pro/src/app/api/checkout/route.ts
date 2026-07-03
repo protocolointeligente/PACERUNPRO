@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getSession } from "@/lib/auth-guard";
 import { createPixOrder, createCreditCardOrder } from "@/lib/pagbank";
 import { checkoutLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
+
+const CheckoutSchema = z.object({
+  method:        z.enum(["pix", "cartao"]),
+  planId:        z.string().min(1).max(50),
+  planName:      z.string().min(1).max(100),
+  autoRenew:     z.boolean().optional(),
+  voucherCode:   z.string().max(50).optional(),
+  customerName:  z.string().min(2).max(100),
+  customerEmail: z.string().email(),
+  customerCpf:   z.string().regex(/^\d{11}$/, "CPF deve ter 11 dígitos numéricos").optional(),
+  encryptedCard: z.string().max(2000).optional(),
+});
 
 // Canonical B2C plan prices — source of truth on the server
 const B2C_PLAN_PRICES: Record<string, number> = {
@@ -23,24 +36,14 @@ export async function POST(req: NextRequest) {
 
   const session = await getSession();
 
-  const body = (await req.json()) as {
-    method: string;
-    planId: string;
-    planName: string;
-    autoRenew?: boolean;
-    voucherCode?: string;
-    customerName: string;
-    customerEmail: string;
-    customerCpf: string;
-    /** Encrypted card token from PagBank.js — PAN and CVV must never be sent here */
-    encryptedCard?: string;
-  };
-
-  const { method, planId, planName, autoRenew, voucherCode, customerName, customerEmail, customerCpf } = body;
-
-  if (!method || !planId || !customerName || !customerEmail) {
-    return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
+  const raw = await req.json();
+  const parsed = CheckoutSchema.safeParse(raw);
+  if (!parsed.success) {
+    const first = parsed.error.issues[0];
+    return NextResponse.json({ error: first?.message ?? "Dados inválidos." }, { status: 400 });
   }
+  const body = parsed.data;
+  const { method, planId, planName, autoRenew, voucherCode, customerName, customerEmail, customerCpf } = body;
 
   // Server-side price computation — never trust client-sent amounts
   const basePriceCents = B2C_PLAN_PRICES[planId];

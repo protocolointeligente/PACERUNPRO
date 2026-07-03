@@ -10,9 +10,12 @@ export async function GET(_req: NextRequest) {
   const [commissions, products, orders, stores] = await Promise.all([
     prisma.marketplaceCommission.findMany({
       select: { grossCents: true, commissionCents: true, netCents: true, paidOut: true, createdAt: true, coachId: true },
+      orderBy: { createdAt: "desc" },
+      take: 500,
     }),
     prisma.marketplaceProduct.findMany({
       select: { id: true, title: true, type: true, priceCents: true, purchases: true, published: true, coachId: true },
+      take: 500,
     }),
     prisma.marketplaceOrder.findMany({
       select: { id: true, status: true, totalCents: true, createdAt: true },

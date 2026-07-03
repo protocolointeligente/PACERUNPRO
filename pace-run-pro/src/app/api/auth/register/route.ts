@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { authRegisterLimiter } from "@/lib/rate-limit";
-import { SubscriptionPlan } from "@prisma/client";
+import { Goal, SubscriptionPlan } from "@prisma/client";
 import { sendEmail } from "@/lib/email";
+
+const RegisterSchema = z.object({
+  name:         z.string().min(2).max(100),
+  email:        z.string().email(),
+  password:     z.string().min(8).max(128),
+  tosAccepted:  z.literal(true),
+  role:         z.enum(["COACH", "ATHLETE"]).optional(),
+  phone:        z.string().max(20).optional().nullable(),
+  city:         z.string().max(100).optional().nullable(),
+  goal:         z.nativeEnum(Goal).optional().nullable(),
+  studentCount: z.coerce.number().int().min(0).max(10000).optional(),
+  coachId:      z.string().optional().nullable(),
+  inviteToken:  z.string().max(200).optional().nullable(),
+});
 
 const BASE_URL = process.env.NEXTAUTH_URL ?? "https://www.pacerunpro.com.br";
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "").split(",").filter(Boolean);
@@ -76,20 +91,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { name, email, password, phone, city, goal, role, studentCount, coachId, inviteToken, tosAccepted } = await req.json();
-
-    if (!name || !email || !password) {
-      return NextResponse.json({ error: "Campos obrigatórios faltando." }, { status: 400 });
+    const raw = await req.json();
+    const parsed = RegisterSchema.safeParse(raw);
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      return NextResponse.json({ error: first?.message ?? "Dados inválidos." }, { status: 400 });
     }
-    if (typeof password !== "string" || password.length < 8) {
-      return NextResponse.json({ error: "A senha deve ter pelo menos 8 caracteres." }, { status: 400 });
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: "Formato de e-mail inválido." }, { status: 400 });
-    }
-    if (!tosAccepted) {
-      return NextResponse.json({ error: "É necessário aceitar os Termos de Serviço para criar sua conta." }, { status: 400 });
-    }
+    const { name, email, password, phone, city, goal, role, studentCount, coachId, inviteToken, tosAccepted } = parsed.data;
+    void tosAccepted; // always true per schema
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -140,7 +149,9 @@ export async function POST(req: NextRequest) {
         role: isCoach ? "COACH" : "ATHLETE",
         ...(isCoach
           ? { coach: { create: { specialties: [] } } }
-          : { athlete: { create: { goal: goal ?? null, ...(coachRecord ? { coachId: coachRecord.id } : {}) } } }),
+          : coachRecord
+            ? { athlete: { create: { goal: goal ?? null, coachId: coachRecord.id } } }
+            : { athlete: { create: { goal: goal ?? null } } }),
       },
       select: { id: true, email: true, name: true, role: true },
     });
