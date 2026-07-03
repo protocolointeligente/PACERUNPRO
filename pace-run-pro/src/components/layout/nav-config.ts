@@ -65,7 +65,7 @@ export const athleteMoreNav: NavItem[] = [
   { href: "/atleta/comunidade",   label: "Comunidade",            icon: Trophy,        sectionStart: "Social"   },
   { href: "/atleta/biblioteca",   label: "Minha biblioteca",      icon: BookOpen                                },
   { href: "/atleta/tenis",        label: "Tênis tracker",         icon: Shirt                                   },
-  { href: "/loja",                label: "Loja de treinos",       icon: ShoppingBag, sectionStart: "Comprar"    },
+  { href: "/atleta/loja",          label: "Loja de treinos",       icon: ShoppingBag, sectionStart: "Comprar"    },
   { href: "/atleta/cursos",       label: "Meus cursos",           icon: BookOpen,      sectionStart: "Aprender" },
   { href: "/atleta/desafios",     label: "Desafios",              icon: Trophy                                  },
   { href: "/atleta/universidade", label: "PACE University",       icon: GraduationCap                          },

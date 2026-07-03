@@ -28,6 +28,9 @@ import {
   Activity,
   Bike,
   Waves,
+  Store,
+  Package,
+  ShoppingCart,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -90,12 +93,15 @@ const coreNav: NavItem[] = [
 
 // Starter+ (tier ≥ 1)
 const businessNavBase: NavItem[] = [
-  { href: "/treinador/gestao",       label: "Gestão & vendas",      icon: DollarSign,  sectionStart: "Negócio" },
-  { href: "/treinador/planos-venda", label: "Meus planos",          icon: PackagePlus },
-  { href: "/treinador/loja-planos",  label: "Loja de planilhas",    icon: ShoppingBag },
-  { href: "/treinador/financeiro",   label: "Config. financeiras",  icon: Wallet      },
-  { href: "/treinador/minha-pagina", label: "Minha página pública", icon: Globe       },
-  { href: "/treinador/crm",          label: "CRM de leads",         icon: Kanban      },
+  { href: "/treinador/marketplace",           label: "Visão geral",          icon: Store,       sectionStart: "Marketplace" },
+  { href: "/treinador/marketplace/produtos",  label: "Produtos",             icon: Package                                  },
+  { href: "/treinador/marketplace/pedidos",   label: "Pedidos",              icon: ShoppingCart                             },
+  { href: "/treinador/marketplace/financeiro",label: "Financeiro",           icon: Wallet                                   },
+  { href: "/treinador/gestao",                label: "Gestão & vendas",      icon: DollarSign,  sectionStart: "Negócio"    },
+  { href: "/treinador/planos-venda",          label: "Meus planos",          icon: PackagePlus                              },
+  { href: "/treinador/loja-planos",           label: "Loja de planilhas",    icon: ShoppingBag                              },
+  { href: "/treinador/minha-pagina",          label: "Minha página pública", icon: Globe                                    },
+  { href: "/treinador/crm",                   label: "CRM de leads",         icon: Kanban                                   },
 ];
 
 // Pro+ (tier ≥ 2)
