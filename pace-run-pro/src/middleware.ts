@@ -7,7 +7,6 @@ const { auth } = NextAuth(authConfig);
 const PROTECTED_API_PREFIXES = [
   "/api/coach/",
   "/api/atleta/",
-  "/api/athlete/",
   "/api/admin/",
   "/api/integrations/",
   "/api/checkins",

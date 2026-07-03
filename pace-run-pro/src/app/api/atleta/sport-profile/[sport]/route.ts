@@ -9,7 +9,6 @@ function isSportType(val: string): val is SportType {
   return VALID_SPORTS.includes(val as SportType);
 }
 
-// GET /api/athlete/sport-profile/[sport]
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ sport: string }> },
@@ -35,7 +34,6 @@ export async function GET(
   return NextResponse.json({ profile: profile ?? null });
 }
 
-// PUT /api/athlete/sport-profile/[sport]
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ sport: string }> },
@@ -60,8 +58,8 @@ export async function PUT(
   const profile = await prisma.athleteSportProfile.upsert({
     where: { athleteId_sport: { athleteId: athlete.id, sport: sportEnum } },
     create: {
-      athleteId:            athlete.id,
-      sport:                sportEnum,
+      athleteId:             athlete.id,
+      sport:                 sportEnum,
       thresholdPaceSecPerKm: body.thresholdPaceSecPerKm ?? null,
       vdot:                  body.vdot ?? null,
       vamKmh:                body.vamKmh ?? null,
@@ -98,7 +96,6 @@ export async function PUT(
   return NextResponse.json({ profile });
 }
 
-// DELETE /api/athlete/sport-profile/[sport]
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ sport: string }> },
