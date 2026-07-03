@@ -112,13 +112,23 @@ self.addEventListener("push", (e) => {
 
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  const url = e.notification.data?.url ?? "/atleta/dashboard";
+  const targetPath = e.notification.data?.url ?? "/atleta/dashboard";
+  const targetUrl = new URL(targetPath, self.location.origin).href;
+
   e.waitUntil(
-    self.clients.matchAll({ type: "window" }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes(url) && "focus" in client) return client.focus();
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      // Prefer an existing tab already showing the target path
+      const exactMatch = clientList.find((c) => c.url === targetUrl);
+      if (exactMatch) return exactMatch.focus();
+
+      // Navigate the first available visible window to the deep link
+      const anyWindow = clientList.find((c) => "navigate" in c);
+      if (anyWindow) {
+        return anyWindow.focus().then(() => anyWindow.navigate(targetUrl));
       }
-      if (self.clients.openWindow) return self.clients.openWindow(url);
+
+      // No window open — open a new one
+      return self.clients.openWindow(targetUrl);
     })
   );
 });

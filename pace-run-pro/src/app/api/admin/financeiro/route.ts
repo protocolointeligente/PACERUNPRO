@@ -21,7 +21,7 @@ export async function GET() {
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
-  const [activeSubs, payments, mktCommissions, expenses] = await Promise.all([
+  const [activeSubs, payments, mktCommissions, expenses, mktOrdersWithType] = await Promise.all([
     prisma.subscription.findMany({
       where: { status: "ACTIVE" },
       select: { plan: true, status: true, startedAt: true, renewsAt: true },
@@ -41,9 +41,17 @@ export async function GET() {
       orderBy: { date: "desc" },
       take: 50,
     }),
+    // Fetch paid orders with product type to separate recurring vs one-time GMV
+    prisma.marketplaceOrder.findMany({
+      where: { status: "PAID" },
+      select: {
+        totalCents: true,
+        items: { select: { product: { select: { type: true } } }, take: 1 },
+      },
+    }),
   ]);
 
-  // MRR from active subscriptions
+  // MRR from active subscriptions (recurring B2B revenue only)
   const mrr = activeSubs.reduce((sum, s) => sum + (PLAN_PRICE[s.plan] ?? 0), 0);
   const arr = mrr * 12;
 
@@ -61,11 +69,18 @@ export async function GET() {
     .filter((p) => p.paidAt && p.paidAt >= startOfLastMonth && p.paidAt <= endOfLastMonth)
     .reduce((sum, p) => sum + p.amountCents, 0);
 
-  // Marketplace GMV (total orders paid)
-  const mktGmv = await prisma.marketplaceOrder.aggregate({
-    where: { status: "PAID" },
-    _sum: { totalCents: true },
-  });
+  // Marketplace GMV split: recurring (ASSINATURA) vs one-time
+  let mktGmvRecurring = 0;
+  let mktGmvOneTime = 0;
+  for (const order of mktOrdersWithType) {
+    const productType = order.items[0]?.product?.type;
+    if (productType === "ASSINATURA") {
+      mktGmvRecurring += order.totalCents;
+    } else {
+      mktGmvOneTime += order.totalCents;
+    }
+  }
+  const mktGmv = mktGmvRecurring + mktGmvOneTime;
   const mktTake = mktCommissions.reduce((sum, c) => sum + c.commissionCents, 0);
 
   // Expenses this month
@@ -89,7 +104,9 @@ export async function GET() {
     revenueGrowthPct: revenueLastMonth > 0
       ? Math.round(((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 1000) / 10
       : 0,
-    mktGmv: mktGmv._sum.totalCents ?? 0,
+    mktGmv,
+    mktGmvRecurring,
+    mktGmvOneTime,
     mktTake,
     expensesThisMonth,
     netThisMonth: revenueThisMonth - expensesThisMonth,

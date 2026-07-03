@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo, JetBrains_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { headers } from "next/headers";
 import { CookieConsent } from "@/components/cookie-consent";
 import { ToastProvider } from "@/components/toast/toast-provider";
 import { PwaInit } from "@/components/pwa/pwa-init";
@@ -62,6 +63,7 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <html
@@ -70,7 +72,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-full flex flex-col font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>

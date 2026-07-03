@@ -102,6 +102,7 @@ model User {
   pushSubscriptions   PushSubscription[]
   messagesSent        Message[]          @relation("MessagesSent")
   consentRecords      DataConsentRecord[]
+  marketplaceAffiliate MarketplaceAffiliate?
 
   @@map("users")
 }
@@ -231,6 +232,7 @@ model Coach {
   kycSubmittedAt  DateTime?
   kycReviewedAt   DateTime?
   kycNotes        String?
+  certifications  String[]  @default([])
 
   plans             CoachPlan[]
   athletes          Athlete[]
@@ -1371,6 +1373,7 @@ model PlanPurchase {
   currency        String            @default("BRL")
   status          PlanPurchaseStatus @default(PENDING)
   stripeSessionId String?
+  deletedAt       DateTime?
 
   createdAt       DateTime          @default(now())
 
@@ -1591,6 +1594,8 @@ model MarketplaceOrder {
   couponId        String?
   coupon          MarketplaceCoupon? @relation(fields: [couponId], references: [id])
   discountCents   Int?
+  affiliateCode   String?
+  referral        MarketplaceReferral?
 
   items           MarketplaceOrderItem[]
   commissions     MarketplaceCommission[]
@@ -1912,4 +1917,39 @@ model DataConsentRecord {
 
   @@index([userId])
   @@map("data_consent_records")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Marketplace Affiliates (referral program)
+// ────────────────────────────────────────────────────────────────────────────
+
+model MarketplaceAffiliate {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code          String   @unique
+  commissionPct Float    @default(0.10)
+  totalSales    Int      @default(0)
+  totalEarned   Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  referrals     MarketplaceReferral[]
+
+  @@map("marketplace_affiliates")
+}
+
+model MarketplaceReferral {
+  id           String   @id @default(cuid())
+  affiliateId  String
+  affiliate    MarketplaceAffiliate @relation(fields: [affiliateId], references: [id])
+  orderId      String   @unique
+  order        MarketplaceOrder     @relation(fields: [orderId], references: [id])
+  earningCents Int      @default(0)
+  status       String   @default("PENDING")
+  createdAt    DateTime @default(now())
+
+  @@index([affiliateId])
+  @@map("marketplace_referrals")
 }

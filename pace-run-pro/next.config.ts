@@ -4,6 +4,10 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+const isDev = process.env.NODE_ENV === "development";
+
+// CSP is now applied dynamically in middleware (with per-request nonce).
+// Keep other security headers here so they are applied at the CDN/edge level too.
 const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
@@ -14,13 +18,22 @@ const securityHeaders = [
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
   },
+  // Fallback static CSP (middleware will override with nonce for page routes)
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://sdk.pagseguro.com https://www.googletagmanager.com https://*.sentry.io",
+      [
+        "script-src 'self'",
+        isDev ? "'unsafe-eval'" : "",
+        "'unsafe-inline'",
+        "https://js.stripe.com",
+        "https://sdk.pagseguro.com",
+        "https://www.googletagmanager.com",
+        "https://*.sentry.io",
+      ].filter(Boolean).join(" "),
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' blob: data: https://images.unsplash.com https://lh3.googleusercontent.com https://sandbox.api.pagseguro.com https://api.pagseguro.com",
+      "img-src 'self' blob: data: https://images.unsplash.com https://lh3.googleusercontent.com https://*.googleusercontent.com https://sandbox.api.pagseguro.com https://api.pagseguro.com https://res.cloudinary.com https://*.amazonaws.com https://avatars.githubusercontent.com https://*.pacerunpro.com.br",
       "font-src 'self'",
       "connect-src 'self' https://api.pagseguro.com https://sandbox.api.pagseguro.com https://api.stripe.com https://api.anthropic.com https://*.sentry.io https://www.strava.com wss:",
       "frame-src https://js.stripe.com https://hooks.stripe.com",
@@ -44,6 +57,13 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "*.googleusercontent.com" },
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "*.cloudinary.com" },
+      { protocol: "https", hostname: "*.amazonaws.com" },
+      { protocol: "https", hostname: "avatars.githubusercontent.com" },
+      { protocol: "https", hostname: "*.pacerunpro.com.br" },
+      { protocol: "https", hostname: "pacerunpro.com.br" },
     ],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 86400,

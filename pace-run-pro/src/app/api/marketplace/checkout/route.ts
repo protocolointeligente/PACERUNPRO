@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
+import { getMarketplaceConfig } from "@/lib/marketplace-config";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -15,8 +16,8 @@ export async function POST(req: NextRequest) {
   const athlete = await prisma.athlete.findUnique({ where: { userId: session.user.id }, select: { id: true } });
   if (!athlete) return NextResponse.json({ error: "Atleta não encontrado" }, { status: 404 });
 
-  const body = await req.json().catch(() => ({})) as { productId?: string; couponCode?: string };
-  const { productId, couponCode } = body;
+  const body = await req.json().catch(() => ({})) as { productId?: string; couponCode?: string; affiliateCode?: string };
+  const { productId, couponCode, affiliateCode } = body;
   if (!productId) return NextResponse.json({ error: "productId obrigatório" }, { status: 400 });
 
   const product = await prisma.marketplaceProduct.findUnique({
@@ -25,10 +26,9 @@ export async function POST(req: NextRequest) {
   });
   if (!product) return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 });
 
-  // Get commission config
-  const config = await prisma.marketplaceConfig.findFirst();
-  const defaultPct = config?.defaultCommissionPct ?? 0.15;
-  const commissionPct = product.commissionPct ?? defaultPct;
+  // Get commission config (singleton guard ensures record always exists)
+  const config = await getMarketplaceConfig();
+  const commissionPct = product.commissionPct ?? config.defaultCommissionPct;
 
   // Resolve coupon discount
   let appliedCouponId: string | null = null;
@@ -64,6 +64,16 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Validate affiliate code
+  let appliedAffiliate: { id: string; commissionPct: number } | null = null;
+  if (affiliateCode) {
+    const affiliate = await prisma.marketplaceAffiliate.findUnique({
+      where: { code: affiliateCode.toUpperCase() },
+      select: { id: true, commissionPct: true, isActive: true },
+    });
+    if (affiliate?.isActive) appliedAffiliate = affiliate;
+  }
+
   const finalPriceCents = product.priceCents - discountCents;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://pacerunpro.com.br";
@@ -76,6 +86,7 @@ export async function POST(req: NextRequest) {
         totalCents: 0,
         discountCents: discountCents > 0 ? discountCents : undefined,
         couponId: appliedCouponId ?? undefined,
+        affiliateCode: appliedAffiliate ? affiliateCode?.toUpperCase() : undefined,
         status: "PAID",
         items: { create: [{ productId: product.id, priceCents: 0, status: "FULFILLED" }] },
         commissions: {
@@ -106,6 +117,7 @@ export async function POST(req: NextRequest) {
       totalCents: finalPriceCents,
       discountCents: discountCents > 0 ? discountCents : undefined,
       couponId: appliedCouponId ?? undefined,
+      affiliateCode: appliedAffiliate ? affiliateCode?.toUpperCase() : undefined,
       status: "PENDING",
       items: { create: [{ productId: product.id, priceCents: finalPriceCents }] },
       commissions: {
@@ -119,6 +131,23 @@ export async function POST(req: NextRequest) {
       },
     },
   });
+
+  // Record affiliate referral
+  if (appliedAffiliate) {
+    const earningCents = Math.round(finalPriceCents * appliedAffiliate.commissionPct);
+    await prisma.marketplaceReferral.create({
+      data: {
+        affiliateId: appliedAffiliate.id,
+        orderId: order.id,
+        earningCents,
+        status: "PENDING",
+      },
+    });
+    await prisma.marketplaceAffiliate.update({
+      where: { id: appliedAffiliate.id },
+      data: { totalSales: { increment: 1 } },
+    });
+  }
 
   // Increment coupon usage counter
   if (appliedCouponId) {

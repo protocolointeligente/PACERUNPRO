@@ -151,6 +151,7 @@ function generatePeriodization(totalWeeks: number, sessions: number, level: Leve
   const baseEnd = Math.round(totalWeeks * 0.35);
   const construcaoEnd = baseEnd + Math.round(totalWeeks * 0.3);
   const especificoEnd = construcaoEnd + Math.round(totalWeeks * 0.25);
+  const taperWeekCount = totalWeeks - especificoEnd;
 
   const cfg = sport === "RUN"
     ? { startPerSession: LEVEL_KM_CONFIG[level].startPerSession, weeklyGrowth: LEVEL_KM_CONFIG[level].weeklyGrowth, maxKm: LEVEL_KM_CONFIG[level].maxKm }
@@ -160,6 +161,9 @@ function generatePeriodization(totalWeeks: number, sessions: number, level: Leve
   const baseWeekVolume = cfg
     ? cfg.startPerSession * Math.max(1, sessions)
     : sportCfg.start;
+
+  // Peak km reached at the final específico week
+  const peakKm = Math.min(baseWeekVolume + (especificoEnd - 1) * sportCfg.growth, sportCfg.max);
 
   return Array.from({ length: totalWeeks }, (_, i) => {
     const week = i + 1;
@@ -171,26 +175,41 @@ function generatePeriodization(totalWeeks: number, sessions: number, level: Leve
     else if (week <= especificoEnd) phase = "Específico";
     else phase = "Taper";
 
-    const peakVolume = Math.min(
-      baseWeekVolume + (week - 1) * sportCfg.growth,
-      sportCfg.max
-    );
-    const km = Math.round(isDeload ? Math.max(baseWeekVolume * 0.6, peakVolume * 0.6) : peakVolume);
+    let km: number;
+    let volume: number;
+    let intensity: number;
+    let weekSessions: number;
 
-    const baseVolume = isDeload ? 60 : 70 + Math.min(week * 1.5, 25);
-    const volume = Math.round(Math.min(baseVolume, 100));
-    const intensity = isDeload ? 50 : Math.round(40 + week * 2.5);
+    if (phase === "Taper") {
+      // Automated taper: progressively reduce volume toward race week
+      // pos 1 = first taper week, taperWeekCount = race week
+      const taperPos = week - especificoEnd;
+      const ratio = taperWeekCount <= 1 ? 1 : (taperPos - 1) / (taperWeekCount - 1);
+      // Volume drops from 70% of peak → 40% of peak across taper weeks
+      const taperFactor = 0.70 - 0.30 * ratio;
+      km = Math.round(peakKm * taperFactor);
+      volume = Math.round(55 - 15 * ratio);   // 55% → 40%
+      intensity = Math.round(55 - 15 * ratio); // same as volume for taper
+      weekSessions = Math.max(1, sessions - Math.round(ratio));
+    } else {
+      const peakVolume = Math.min(baseWeekVolume + (week - 1) * sportCfg.growth, sportCfg.max);
+      km = Math.round(isDeload ? Math.max(baseWeekVolume * 0.6, peakVolume * 0.6) : peakVolume);
+      const baseVolume = isDeload ? 60 : 70 + Math.min(week * 1.5, 25);
+      volume = Math.round(Math.min(baseVolume, 100));
+      intensity = isDeload ? 50 : Math.round(40 + week * 2.5);
+      weekSessions = isDeload ? Math.max(1, sessions - 1) : sessions;
+    }
 
     return {
       week,
       phase,
       mesocycle: Math.ceil(week / 4),
-      isDeload,
+      isDeload: phase !== "Taper" && isDeload,
       volume,
       intensity: Math.min(intensity, 95),
       notes: "",
       km,
-      sessions: isDeload ? Math.max(1, sessions - 1) : sessions,
+      sessions: weekSessions,
     };
   });
 }

@@ -36,6 +36,13 @@ export async function GET(req: NextRequest) {
 
   const userIds = subscriptions.map((s) => s.userId);
 
+  // Dedup: skip users who already received today's reminder (idempotency guard)
+  const alreadyNotified = await prisma.notification.findMany({
+    where: { userId: { in: userIds }, title: "Treino de hoje", createdAt: { gte: today } },
+    select: { userId: true },
+  });
+  const notifiedSet = new Set(alreadyNotified.map((n) => n.userId));
+
   const workoutsToday = await prisma.workout.findMany({
     where: {
       date: { gte: today, lt: tomorrow },
@@ -60,8 +67,12 @@ export async function GET(req: NextRequest) {
 
   let sent = 0;
   const staleEndpoints: string[] = [];
+  const notifyCreates: Array<{ userId: string; title: string; body: string; link: string }> = [];
 
   for (const sub of subscriptions) {
+    // Skip if already notified today (webhook retry protection)
+    if (notifiedSet.has(sub.userId)) continue;
+
     const workout = workoutByUser.get(sub.userId);
     if (!workout) continue;
 
@@ -71,9 +82,12 @@ export async function GET(req: NextRequest) {
       ? `${workout.targetDurationMin} min`
       : workout.type;
 
+    const firstName = sub.user.name.split(" ")[0];
+    const body = `${workout.type} — ${label}. Bora lá, ${firstName}!`;
+
     const payload = JSON.stringify({
       title: "Treino de hoje",
-      body: `${workout.type} — ${label}. Bora lá, ${sub.user.name.split(" ")[0]}!`,
+      body,
       url: "/atleta/plano",
     });
 
@@ -83,6 +97,7 @@ export async function GET(req: NextRequest) {
         payload,
       );
       sent++;
+      notifyCreates.push({ userId: sub.userId, title: "Treino de hoje", body, link: "/atleta/plano" });
     } catch (err: unknown) {
       const status = (err as { statusCode?: number }).statusCode;
       if (status === 410 || status === 404) {
@@ -91,10 +106,15 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Record notifications to prevent duplicate pushes on cron retry
+  if (notifyCreates.length > 0) {
+    await prisma.notification.createMany({ data: notifyCreates, skipDuplicates: true });
+  }
+
   // Clean up expired subscriptions
   if (staleEndpoints.length > 0) {
     await prisma.pushSubscription.deleteMany({ where: { endpoint: { in: staleEndpoints } } });
   }
 
-  return NextResponse.json({ sent, stale: staleEndpoints.length });
+  return NextResponse.json({ sent, stale: staleEndpoints.length, skipped: notifiedSet.size });
 }
