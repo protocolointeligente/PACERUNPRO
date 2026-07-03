@@ -87,6 +87,13 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(product, { status: 201 });
 }
 
+// Fields coaches are allowed to update on their own products
+const PATCH_ALLOWED = new Set([
+  "type", "title", "slug", "description", "coverUrl", "priceCents",
+  "durationWeeks", "level", "sport", "format", "eventDate", "maxParticipants",
+  "deliveryDays", "included", "content", "fileUrl", "published",
+]);
+
 // PATCH — update marketplace product
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
@@ -94,11 +101,22 @@ export async function PATCH(req: NextRequest) {
   if (!coach) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await req.json();
-  const { id, ...data } = body;
+  const { id } = body;
   if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
 
   const product = await prisma.marketplaceProduct.findFirst({ where: { id, coachId: coach.id } });
   if (!product) return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 });
+
+  // Allowlist to prevent mass assignment (coaches cannot set featured, commissionPct, storeId, coachId, etc.)
+  const data = Object.fromEntries(
+    Object.entries(body).filter(([k]) => PATCH_ALLOWED.has(k))
+  );
+
+  // Slug uniqueness check if being changed
+  if (data.slug && data.slug !== product.slug) {
+    const exists = await prisma.marketplaceProduct.findFirst({ where: { slug: data.slug as string } });
+    if (exists) return NextResponse.json({ error: "Slug já existe" }, { status: 409 });
+  }
 
   const updated = await prisma.marketplaceProduct.update({ where: { id }, data });
   return NextResponse.json(updated);

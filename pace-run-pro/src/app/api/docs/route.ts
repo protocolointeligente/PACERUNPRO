@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-
-export const runtime = "edge";
+import { auth } from "@/auth";
 
 const spec = {
   openapi: "3.0.3",
@@ -352,11 +351,10 @@ const spec = {
   },
 };
 
-export function GET() {
-  return NextResponse.json(spec, {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "public, max-age=3600",
-    },
-  });
+export async function GET() {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+  return NextResponse.json(spec);
 }

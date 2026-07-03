@@ -35,9 +35,15 @@ export async function GET(req: NextRequest) {
     }
 
     const data = (await res.json()) as {
+      reference_id?: string;
       charges?: Array<{ status: string }>;
       qr_codes?: Array<{ status: string }>;
     };
+
+    // Ownership check — referenceId is always prefixed with userId (see /api/checkout/route.ts)
+    if (!data.reference_id?.startsWith(session.user.id + "_")) {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+    }
 
     // PIX paid when qr_code status is PAID, or a charge is PAID
     const chargePaid = data.charges?.some((c) => c.status === "PAID");

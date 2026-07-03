@@ -26,7 +26,7 @@ export function NotificationBell() {
 
   async function fetchNotifications() {
     try {
-      const res = await fetch("/api/atleta/notificacoes", { credentials: "include" });
+      const res = await fetch("/api/notifications", { credentials: "include" });
       if (!res.ok) return;
       const data = await res.json();
       setUnread(data.unreadCount ?? 0);
@@ -56,7 +56,7 @@ export function NotificationBell() {
 
   async function markRead(ids?: string[]) {
     try {
-      await fetch("/api/atleta/notificacoes", {
+      await fetch("/api/notifications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
