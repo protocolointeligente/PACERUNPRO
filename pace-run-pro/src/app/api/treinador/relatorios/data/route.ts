@@ -99,6 +99,21 @@ export async function GET(req: Request) {
     take: 100,
   });
 
+  // Fetch latest physical assessment for individual athlete
+  const latestAssessment = !isTeam
+    ? await prisma.physicalAssessment.findFirst({
+        where: { athleteId: athleteId! },
+        orderBy: { assessedAt: "desc" },
+        select: {
+          assessedAt: true,
+          weightKg: true, bodyFatPct: true, muscleMassKg: true, bmi: true,
+          waistCm: true, hipCm: true, thighCm: true, calfCm: true,
+          chestCm: true, neckCm: true, armCm: true, forearmCm: true,
+          vo2max: true, restingHr: true, hrv: true, notes: true,
+        },
+      })
+    : null;
+
   // Fetch check-ins for the period
   let athleteIds: string[] = [];
   if (!isTeam) {
@@ -183,6 +198,28 @@ export async function GET(req: Request) {
   const adherencePct =
     scheduled.length > 0 ? Math.round((completed.length / scheduled.length) * 100) : 0;
 
+  const assessment = latestAssessment
+    ? {
+        assessedAt:  latestAssessment.assessedAt.toLocaleDateString("pt-BR"),
+        weightKg:    latestAssessment.weightKg,
+        bodyFatPct:  latestAssessment.bodyFatPct,
+        muscleMassKg: latestAssessment.muscleMassKg,
+        bmi:         latestAssessment.bmi,
+        waistCm:     latestAssessment.waistCm,
+        hipCm:       latestAssessment.hipCm,
+        thighCm:     latestAssessment.thighCm,
+        calfCm:      latestAssessment.calfCm,
+        chestCm:     latestAssessment.chestCm,
+        neckCm:      latestAssessment.neckCm,
+        armCm:       latestAssessment.armCm,
+        forearmCm:   latestAssessment.forearmCm,
+        vo2max:      latestAssessment.vo2max,
+        restingHr:   latestAssessment.restingHr,
+        hrv:         latestAssessment.hrv,
+        notes:       latestAssessment.notes,
+      }
+    : null;
+
   return NextResponse.json({
     summary: {
       totalKm,
@@ -195,5 +232,6 @@ export async function GET(req: Request) {
     },
     workouts: workouts.slice(0, 20),
     checkIns: checkIns.slice(0, 20),
+    assessment,
   });
 }

@@ -109,33 +109,42 @@ function pdfFooter(today: string) {
 </div>`;
 }
 
+interface AssessmentData {
+  assessedAt: string;
+  weightKg:    number | null; bodyFatPct: number | null; muscleMassKg: number | null; bmi: number | null;
+  waistCm:     number | null; hipCm: number | null; thighCm: number | null; calfCm: number | null;
+  chestCm:     number | null; neckCm: number | null; armCm: number | null; forearmCm: number | null;
+  vo2max:      number | null; restingHr: number | null; hrv: number | null; notes: string | null;
+}
+
+interface TeamAthleteRow {
+  athleteId: string; name: string; totalKm: number;
+  sessionsCompleted: number; adherencePct: number;
+  avgRpe: number | null; totalLoad: number; status: "overreach" | "abaixo" | "ok";
+}
+
+interface TeamData {
+  teamStats: {
+    avgAdherence: number; avgRpe: number | null; avgVolumeKm: number;
+    avgLoad: number; overreachCount: number; belowTargetCount: number; totalAthletes: number;
+  } | null;
+  athletes: TeamAthleteRow[];
+}
+
 interface ReportData {
   summary: {
-    totalKm: number;
-    sessionsCompleted: number;
-    sessionsTotal: number;
-    adherencePct: number;
-    avgRpe: number;
-    totalLoad: number;
-    sessionsLost: number;
+    totalKm: number; sessionsCompleted: number; sessionsTotal: number;
+    adherencePct: number; avgRpe: number; totalLoad: number; sessionsLost: number;
   };
   workouts: {
-    date: string;
-    title: string;
-    distanceKm: number | null;
-    paceStr: string | null;
-    rpe: number | null;
-    load: number | null;
-    status: string;
+    date: string; title: string; distanceKm: number | null;
+    paceStr: string | null; rpe: number | null; load: number | null; status: string;
   }[];
   checkIns: {
-    date: string;
-    rpe: number | null;
-    pain: number | null;
-    sleep: number | null;
-    fatigue: number | null;
-    mood: number | null;
+    date: string; rpe: number | null; pain: number | null;
+    sleep: number | null; fatigue: number | null; mood: number | null;
   }[];
+  assessment?: AssessmentData | null;
 }
 
 function workoutStatusTag(status: string) {
@@ -226,90 +235,88 @@ ${pdfFooter(today)}
 </body></html>`;
 }
 
+function fmt(v: number | null | undefined, decimals = 1): string {
+  if (v == null) return "—";
+  return v.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
 function buildAvaliacaoPdf(
   athleteName: string,
   coachName: string,
   coachCredential: string,
-  today: string
+  today: string,
+  a?: AssessmentData | null,
 ): string {
+  const noData = !a;
+  const assessDate = a?.assessedAt ?? today;
+
+  const circumferenceRows = [
+    ["Cintura", a?.waistCm], ["Quadril", a?.hipCm], ["Coxa", a?.thighCm], ["Panturrilha", a?.calfCm],
+    ["Peito", a?.chestCm], ["Pescoço", a?.neckCm], ["Braço", a?.armCm], ["Antebraço", a?.forearmCm],
+  ].map(([label, val]) => `<tr><td>${label}</td><td>${fmt(val as number | null)} cm</td><td>—</td></tr>`).join("");
+
+  const analysisText = a
+    ? [
+        a.bodyFatPct != null ? `Gordura corporal: ${fmt(a.bodyFatPct)}%.` : "",
+        a.muscleMassKg != null ? `Massa muscular: ${fmt(a.muscleMassKg)} kg.` : "",
+        a.vo2max != null ? `VO₂máx estimado: ${fmt(a.vo2max)} ml/kg/min.` : "",
+        a.restingHr != null ? `FC repouso: ${a.restingHr} bpm.` : "",
+        a.notes ? `\n\nObservações do treinador: ${a.notes}` : "",
+      ].filter(Boolean).join(" ") || "Dados da avaliação registrados."
+    : `Nenhuma avaliação física registrada para ${athleteName}. Realize uma avaliação em Atletas → Avaliação física para gerar um relatório com dados reais.`;
+
   return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/>
 <title>Avaliação Física — ${athleteName}</title>
 <style>${PDF_BASE_STYLES}
-.tbl-comp td:first-child { font-weight: 600; color: #444; width: 220px; }
+.tbl-comp td:first-child { font-weight: 600; color: #444; width: 200px; }
 .tbl-comp td:nth-child(2) { color: #1a1a2e; font-weight: 700; }
-.tbl-comp td:nth-child(3) { color: #22c55e; font-size: 11px; }
+.no-data-banner { background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:16px 20px;margin:16px 0;font-size:13px;color:#92400e; }
 </style></head><body>
 <button class="print-btn no-print" onclick="window.print()">⬇ Salvar PDF</button>
 ${pdfHeader(coachName, coachCredential, today)}
 
 <span class="badge">Avaliação Física Completa</span>
 <h1>${athleteName}</h1>
-<p style="color:#666;font-size:13px;margin-bottom:4px;">Avaliação realizada em ${today} · Protocolo Jackson-Pollock 7 dobras</p>
+<p style="color:#666;font-size:13px;margin-bottom:4px;">Data da avaliação: ${assessDate}</p>
+
+${noData ? `<div class="no-data-banner">⚠ Nenhuma avaliação física registrada para este atleta. Os campos abaixo mostram "—". Cadastre uma avaliação para obter o relatório completo.</div>` : ""}
 
 <div class="section">
   <div class="section-title">Composição corporal</div>
   <div class="grid-3">
-    <div class="stat-card"><div class="stat-label">Massa total</div><div class="stat-value">72,4<span class="stat-unit">kg</span></div><div class="stat-delta">▼ −1,2 kg (90 dias)</div></div>
-    <div class="stat-card"><div class="stat-label">Gordura corporal</div><div class="stat-value">14,8<span class="stat-unit">%</span></div><div class="stat-delta">▼ −1,5 pp</div></div>
-    <div class="stat-card"><div class="stat-label">Massa muscular</div><div class="stat-value">55,6<span class="stat-unit">kg</span></div><div class="stat-delta">▲ +0,4 kg</div></div>
-    <div class="stat-card"><div class="stat-label">IMC</div><div class="stat-value">22,9<span class="stat-unit">kg/m²</span></div></div>
-    <div class="stat-card"><div class="stat-label">TMB estimada</div><div class="stat-value">1.780<span class="stat-unit">kcal</span></div><div style="font-size:10px;color:#888;margin-top:2px;">Mifflin-St Jeor</div></div>
-    <div class="stat-card"><div class="stat-label">GET (ativo)</div><div class="stat-value">2.848<span class="stat-unit">kcal</span></div></div>
+    <div class="stat-card"><div class="stat-label">Massa total</div><div class="stat-value">${fmt(a?.weightKg)}<span class="stat-unit">kg</span></div></div>
+    <div class="stat-card"><div class="stat-label">Gordura corporal</div><div class="stat-value">${fmt(a?.bodyFatPct)}<span class="stat-unit">%</span></div></div>
+    <div class="stat-card"><div class="stat-label">Massa muscular</div><div class="stat-value">${fmt(a?.muscleMassKg)}<span class="stat-unit">kg</span></div></div>
+    <div class="stat-card"><div class="stat-label">IMC</div><div class="stat-value">${fmt(a?.bmi)}<span class="stat-unit">kg/m²</span></div></div>
+    <div class="stat-card"><div class="stat-label">VO₂máx estimado</div><div class="stat-value">${fmt(a?.vo2max)}<span class="stat-unit">ml/kg/min</span></div></div>
+    <div class="stat-card"><div class="stat-label">FC repouso</div><div class="stat-value">${a?.restingHr ?? "—"}<span class="stat-unit">bpm</span></div></div>
   </div>
 </div>
+
+${a?.hrv != null ? `<div class="section">
+  <div class="section-title">Variabilidade da FC (HRV)</div>
+  <div class="grid-3">
+    <div class="stat-card"><div class="stat-label">HRV (RMSSD)</div><div class="stat-value">${fmt(a.hrv)}<span class="stat-unit">ms</span></div></div>
+  </div>
+</div>` : ""}
 
 <div class="section">
   <div class="section-title">Circunferências (cm)</div>
   <div class="grid-2">
     <table class="tbl-comp">
-      <tr><th>Medida</th><th>Atual</th><th>Delta</th></tr>
-      <tr><td>Cintura</td><td>78 cm</td><td style="color:#22c55e">▼ −2 cm</td></tr>
-      <tr><td>Quadril</td><td>96 cm</td><td style="color:#22c55e">▼ −1 cm</td></tr>
-      <tr><td>Coxa</td><td>54 cm</td><td>→ 0</td></tr>
-      <tr><td>Panturrilha</td><td>36 cm</td><td style="color:#22c55e">▲ +0,5 cm</td></tr>
+      <tr><th>Medida</th><th>Atual</th><th>Δ anterior</th></tr>
+      ${circumferenceRows.slice(0, 4 * 3)}
     </table>
     <table class="tbl-comp">
-      <tr><th>Medida</th><th>Atual</th><th>Delta</th></tr>
-      <tr><td>Peito</td><td>102 cm</td><td>→ 0</td></tr>
-      <tr><td>Pescoço</td><td>38 cm</td><td>→ 0</td></tr>
-      <tr><td>Braço</td><td>34 cm</td><td style="color:#22c55e">▲ +0,5 cm</td></tr>
-      <tr><td>Antebraço</td><td>28 cm</td><td>→ 0</td></tr>
+      <tr><th>Medida</th><th>Atual</th><th>Δ anterior</th></tr>
+      ${circumferenceRows.slice(4 * 3)}
     </table>
   </div>
 </div>
 
 <div class="section">
-  <div class="section-title">Dobras cutâneas — JP7 (mm)</div>
-  <table>
-    <tr><th>Ponto</th><th>Medida (mm)</th><th>Classificação</th></tr>
-    <tr><td>Peitoral</td><td>8</td><td><span class="tag-green tag">Ótimo</span></td></tr>
-    <tr><td>Axilar médio</td><td>10</td><td><span class="tag-green tag">Ótimo</span></td></tr>
-    <tr><td>Tríceps</td><td>11</td><td><span class="tag-green tag">Bom</span></td></tr>
-    <tr><td>Subescapular</td><td>13</td><td><span class="tag-green tag">Bom</span></td></tr>
-    <tr><td>Suprailíaco</td><td>14</td><td><span class="tag-amber tag">Regular</span></td></tr>
-    <tr><td>Abdominal</td><td>16</td><td><span class="tag-amber tag">Regular</span></td></tr>
-    <tr><td>Coxa</td><td>15</td><td><span class="tag-amber tag">Regular</span></td></tr>
-    <tr><td><strong>Somatório</strong></td><td><strong>87 mm</strong></td><td><strong>Gordura: 14,8%</strong></td></tr>
-  </table>
-</div>
-
-<div class="section">
-  <div class="section-title">Testes de performance</div>
-  <div class="grid-3">
-    <div class="stat-card"><div class="stat-label">VO₂máx estimado</div><div class="stat-value">54<span class="stat-unit">ml/kg/min</span></div><div class="stat-delta">▲ +2 vs. anterior</div></div>
-    <div class="stat-card"><div class="stat-label">FC repouso</div><div class="stat-value">52<span class="stat-unit">bpm</span></div></div>
-    <div class="stat-card"><div class="stat-label">HRV (RMSSD)</div><div class="stat-value">68<span class="stat-unit">ms</span></div></div>
-  </div>
-</div>
-
-<div class="section">
-  <div class="section-title">Análise e prescrição nutricional estimada</div>
-  <p class="notes">
-    Composição corporal dentro dos parâmetros ideais para performance de endurance. Redução de gordura
-    corporal de 1,5 pp em 90 dias demonstra ajuste adequado no balanço energético.<br/><br/>
-    <strong>Prescrição calórica:</strong> Manter GET de 2.848 kcal/dia com periodização nutricional.
-    Proteína: 1,8–2,2 g/kg/dia (130–159 g). Carboidratos: 5–7 g/kg nos dias de treino intenso.
-  </p>
+  <div class="section-title">Análise do treinador</div>
+  <p class="notes">${analysisText}</p>
 </div>
 
 ${pdfSignature(coachName, coachCredential)}
@@ -490,40 +497,62 @@ function buildEquipePdf(
   coachCredential: string,
   today: string,
   period: string,
-  athleteCount: number
+  teamData?: TeamData | null,
 ): string {
+  const ts = teamData?.teamStats;
+  const athleteRows = (teamData?.athletes ?? []).map((a) => {
+    const statusTag =
+      a.status === "overreach"
+        ? `<span class="tag-amber tag">⚠ Overreach</span>`
+        : a.status === "abaixo"
+          ? `<span class="tag-amber tag">⚠ Abaixo</span>`
+          : `<span class="tag-green tag">✓ OK</span>`;
+    return `<tr>
+      <td>${a.name}</td>
+      <td>${fmt(a.totalKm)}</td>
+      <td>${a.sessionsCompleted}</td>
+      <td>${a.adherencePct}%</td>
+      <td>${a.avgRpe != null ? fmt(a.avgRpe) : "—"}</td>
+      <td>${a.totalLoad}</td>
+      <td>${statusTag}</td>
+    </tr>`;
+  }).join("");
+
+  const noData = !ts;
+
   return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/>
 <title>Carga da equipe</title>
-<style>${PDF_BASE_STYLES}</style></head><body>
+<style>${PDF_BASE_STYLES}
+.no-data-banner { background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:16px 20px;margin:16px 0;font-size:13px;color:#92400e; }
+</style></head><body>
 <button class="print-btn no-print" onclick="window.print()">⬇ Salvar PDF</button>
 ${pdfHeader(coachName, coachCredential, today)}
 
 <span class="badge">Carga da Equipe</span>
-<h1>Equipe — ${athleteCount} atletas</h1>
+<h1>Equipe — ${ts?.totalAthletes ?? "—"} atletas</h1>
 <p style="color:#666;font-size:13px;margin-bottom:4px;">Período: ${period}</p>
+
+${noData ? `<div class="no-data-banner">⚠ Nenhum dado encontrado para o período selecionado.</div>` : ""}
 
 <div class="section">
   <div class="section-title">Métricas da equipe</div>
   <div class="grid-3">
-    <div class="stat-card"><div class="stat-label">Adesão média</div><div class="stat-value">82<span class="stat-unit">%</span></div></div>
-    <div class="stat-card"><div class="stat-label">RPE médio</div><div class="stat-value">6.2</div></div>
-    <div class="stat-card"><div class="stat-label">Volume médio/atleta</div><div class="stat-value">94<span class="stat-unit">km</span></div></div>
-    <div class="stat-card"><div class="stat-label">Carga média (UA)</div><div class="stat-value">1.420</div></div>
-    <div class="stat-card"><div class="stat-label">Atletas em overreach</div><div class="stat-value">2</div></div>
-    <div class="stat-card"><div class="stat-label">Atletas abaixo da meta</div><div class="stat-value">3</div></div>
+    <div class="stat-card"><div class="stat-label">Adesão média</div><div class="stat-value">${ts ? ts.avgAdherence : "—"}<span class="stat-unit">%</span></div></div>
+    <div class="stat-card"><div class="stat-label">RPE médio</div><div class="stat-value">${ts?.avgRpe != null ? fmt(ts.avgRpe) : "—"}</div></div>
+    <div class="stat-card"><div class="stat-label">Volume médio/atleta</div><div class="stat-value">${ts ? fmt(ts.avgVolumeKm) : "—"}<span class="stat-unit">km</span></div></div>
+    <div class="stat-card"><div class="stat-label">Carga média (UA)</div><div class="stat-value">${ts?.avgLoad ?? "—"}</div></div>
+    <div class="stat-card"><div class="stat-label">Atletas em overreach</div><div class="stat-value">${ts?.overreachCount ?? "—"}</div></div>
+    <div class="stat-card"><div class="stat-label">Atletas abaixo da meta</div><div class="stat-value">${ts?.belowTargetCount ?? "—"}</div></div>
   </div>
 </div>
 
-<div class="section">
+${athleteRows ? `<div class="section">
   <div class="section-title">Resumo por atleta</div>
   <table>
     <tr><th>Atleta</th><th>Volume (km)</th><th>Sessões</th><th>Adesão</th><th>RPE médio</th><th>Carga UA</th><th>Status</th></tr>
-    <tr><td>João Silva</td><td>127</td><td>18</td><td>86%</td><td>6.4</td><td>1.872</td><td><span class="tag-green tag">✓ Ótimo</span></td></tr>
-    <tr><td>Maria Santos</td><td>98</td><td>15</td><td>79%</td><td>5.8</td><td>1.240</td><td><span class="tag-green tag">✓ Bom</span></td></tr>
-    <tr><td>Pedro Costa</td><td>142</td><td>21</td><td>91%</td><td>7.8</td><td>2.180</td><td><span class="tag-amber tag">⚠ Overreach</span></td></tr>
-    <tr><td>Ana Oliveira</td><td>62</td><td>11</td><td>58%</td><td>5.2</td><td>870</td><td><span class="tag-amber tag">⚠ Abaixo</span></td></tr>
+    ${athleteRows}
   </table>
-</div>
+</div>` : ""}
 
 ${pdfSignature(coachName, coachCredential)}
 ${pdfFooter(today)}
@@ -573,10 +602,17 @@ export default function ReportsPage() {
 
     setDownloading(true);
     let reportData: ReportData | undefined;
+    let teamData: TeamData | undefined;
     try {
-      const params = new URLSearchParams({ athleteId, period });
-      const res = await fetch(`/api/treinador/relatorios/data?${params}`);
-      if (res.ok) reportData = await res.json() as ReportData;
+      if (reportType === "carga-equipe") {
+        const params = new URLSearchParams({ period });
+        const res = await fetch(`/api/treinador/relatorios/equipe?${params}`);
+        if (res.ok) teamData = await res.json() as TeamData;
+      } else {
+        const params = new URLSearchParams({ athleteId, period });
+        const res = await fetch(`/api/treinador/relatorios/data?${params}`);
+        if (res.ok) reportData = await res.json() as ReportData;
+      }
     } catch {
       // proceed without data if fetch fails
     }
@@ -621,7 +657,7 @@ export default function ReportsPage() {
         html = buildIndividualPdf(athleteName, period, coachName, coachCredential, today, reportData);
         break;
       case "avaliacao-fisica":
-        html = buildAvaliacaoPdf(athleteName, coachName, coachCredential, today);
+        html = buildAvaliacaoPdf(athleteName, coachName, coachCredential, today, reportData?.assessment);
         break;
       case "periodizacao":
         html = buildPeriodizacaoPdf(athleteName, period, coachName, coachCredential, today);
@@ -630,7 +666,7 @@ export default function ReportsPage() {
         html = buildForcaPdf(athleteName, coachName, coachCredential, today);
         break;
       case "carga-equipe":
-        html = buildEquipePdf(coachName, coachCredential, today, period, athletes.length || 4);
+        html = buildEquipePdf(coachName, coachCredential, today, period, teamData);
         break;
       default:
         html = buildIndividualPdf(athleteName, period, coachName, coachCredential, today, reportData);
