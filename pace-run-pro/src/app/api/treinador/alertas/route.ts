@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
@@ -28,6 +28,8 @@ interface SmartAlert {
 }
 
 const SEVERITY_ORDER: Record<AlertSeverity, number> = { critico: 0, atencao: 1, info: 2 };
+
+const DISMISSED_TITLE = "ALERT_DISMISSED";
 
 export async function GET() {
   const session = await getSession();
@@ -81,6 +83,13 @@ export async function GET() {
       data: { status: "LIBERADO" },
     });
   }
+
+  // ── Dismissed alert IDs (persisted by PATCH handler) ─────────────────────
+  const dismissedNotifications = await prisma.notification.findMany({
+    where: { userId: session.user.id, title: DISMISSED_TITLE },
+    select: { link: true },
+  });
+  const dismissedIds = new Set(dismissedNotifications.map((n) => n.link ?? ""));
 
   // ── Smart Alerts ─────────────────────────────────────────────────────────
 
@@ -156,8 +165,6 @@ export async function GET() {
       }
     }
 
-    let counter = 0;
-
     for (const athleteId of athleteIds) {
       const athleteName = athleteNameMap.get(athleteId) ?? "Atleta";
       const workouts = workoutsByAthlete.get(athleteId) ?? [];
@@ -169,8 +176,9 @@ export async function GET() {
 
       if (overdueReleased.length > 0) {
         if (completedWorkouts.length === 0) {
+          const alertId = `absence-never-${athleteId}`;
           alerts.push({
-            id: `absence-never-${athleteId}-${++counter}`,
+            id: alertId,
             athleteId,
             athleteName,
             severity: "critico",
@@ -180,14 +188,15 @@ export async function GET() {
             recommendation:
               "Verifique se o atleta consegue acessar a plataforma e como registrar as sessões concluídas.",
             daysAgo: 0,
-            read: false,
+            read: dismissedIds.has(alertId),
           });
         } else {
           const lastDate = completedWorkouts[completedWorkouts.length - 1].date;
           const daysSince = Math.floor((now.getTime() - lastDate.getTime()) / 86_400_000);
           if (daysSince > 5) {
+            const alertId = `absence-${athleteId}`;
             alerts.push({
-              id: `absence-${athleteId}-${++counter}`,
+              id: alertId,
               athleteId,
               athleteName,
               severity: "critico",
@@ -198,7 +207,7 @@ export async function GET() {
               recommendation:
                 "Entre em contato com o atleta para entender o motivo da ausência e, se necessário, ajuste a carga ou reagende as sessões.",
               daysAgo: 0,
-              read: false,
+              read: dismissedIds.has(alertId),
             });
           }
         }
@@ -220,8 +229,9 @@ export async function GET() {
       }
 
       if (painStreak >= 3) {
+        const alertId = `pain-${athleteId}`;
         alerts.push({
-          id: `pain-${athleteId}-${++counter}`,
+          id: alertId,
           athleteId,
           athleteName,
           severity: "critico",
@@ -232,7 +242,7 @@ export async function GET() {
           recommendation:
             "Reduza imediatamente a carga de treino. Considere encaminhar para avaliação médica ou fisioterapêutica antes da próxima sessão intensa.",
           daysAgo: 0,
-          read: false,
+          read: dismissedIds.has(alertId),
         });
       }
 
@@ -245,8 +255,9 @@ export async function GET() {
 
       if (lastWeekScheduled >= 3 && lastWeekCompleted / lastWeekScheduled < 0.65) {
         const pct = Math.round((lastWeekCompleted / lastWeekScheduled) * 100);
+        const alertId = `adherence-${athleteId}`;
         alerts.push({
-          id: `adherence-${athleteId}-${++counter}`,
+          id: alertId,
           athleteId,
           athleteName,
           severity: "atencao",
@@ -257,7 +268,7 @@ export async function GET() {
           recommendation:
             "Revise o volume e intensidade do plano. Converse com o atleta sobre possíveis impedimentos externos.",
           daysAgo: 0,
-          read: false,
+          read: dismissedIds.has(alertId),
         });
       }
 
@@ -272,8 +283,9 @@ export async function GET() {
 
       if (prevWeekLoad > 0 && thisWeekLoad > prevWeekLoad * 1.3) {
         const spikePct = Math.round((thisWeekLoad / prevWeekLoad - 1) * 100);
+        const alertId = `overtraining-${athleteId}`;
         alerts.push({
-          id: `overtraining-${athleteId}-${++counter}`,
+          id: alertId,
           athleteId,
           athleteName,
           severity: "atencao",
@@ -284,11 +296,11 @@ export async function GET() {
           recommendation:
             "Monitore sinais de fadiga e dor nos próximos check-ins. Considere reduzir volume ou intensidade na próxima sessão.",
           daysAgo: 0,
-          read: false,
+          read: dismissedIds.has(alertId),
         });
       }
 
-      // 5. ACWR — overtraining (P2.3)
+      // 5. ACWR — overtraining
       const latestLoad = latestDailyLoadByAthlete.get(athleteId);
       if (latestLoad && latestLoad.acwr !== null) {
         const acwr = latestLoad.acwr as number;
@@ -296,8 +308,9 @@ export async function GET() {
           (now.getTime() - latestLoad.date.getTime()) / 86_400_000,
         );
         if (acwr > 1.5) {
+          const alertId = `acwr-critico-${athleteId}`;
           alerts.push({
-            id: `acwr-critico-${athleteId}-${++counter}`,
+            id: alertId,
             athleteId,
             athleteName,
             severity: "critico",
@@ -308,11 +321,12 @@ export async function GET() {
             recommendation:
               "Reduza a carga de treino imediatamente. Priorize sessões regenerativas e monitore sinais de fadiga, dor e queda de desempenho.",
             daysAgo: daysAgoLoad,
-            read: false,
+            read: dismissedIds.has(alertId),
           });
         } else if (acwr < 0.8) {
+          const alertId = `acwr-info-${athleteId}`;
           alerts.push({
-            id: `acwr-info-${athleteId}-${++counter}`,
+            id: alertId,
             athleteId,
             athleteName,
             severity: "info",
@@ -323,12 +337,12 @@ export async function GET() {
             recommendation:
               "Aumente progressivamente a carga de treino para evitar perda de forma. Eleve o volume de forma gradual (≤ 10% por semana).",
             daysAgo: daysAgoLoad,
-            read: false,
+            read: dismissedIds.has(alertId),
           });
         }
       }
 
-      // 6. Strength vs. high-intensity run conflict (P2.4)
+      // 6. Strength vs. high-intensity run conflict
       const STRENGTH_TYPES = ["FORCA", "FUNCIONAL"];
       const HIGH_INTENSITY_RUN_TYPES = [
         "INTERVALADO_CURTO",
@@ -340,7 +354,6 @@ export async function GET() {
         "PROVA",
       ];
 
-      // Group all fetched workouts for this athlete by date string
       type WorkoutTypeRow = { type: string | null; date: Date };
       const workoutsByDate = new Map<string, WorkoutTypeRow[]>();
       for (const w of workouts) {
@@ -358,7 +371,6 @@ export async function GET() {
         );
         if (strengthInDay.length === 0) continue;
 
-        // Check same day and adjacent days (±1 day) for high-intensity runs
         const baseDate = new Date(dateKey);
         const adjacentKeys = [
           new Date(baseDate.getTime() - 86_400_000).toISOString().slice(0, 10),
@@ -378,8 +390,9 @@ export async function GET() {
         if (conflictingRuns.length > 0) {
           const strengthLabels = strengthInDay.map((w) => w.type as string).join(", ");
           const runLabels = conflictingRuns.map((r) => `${r.type} (${r.date})`).join("; ");
+          const alertId = `conflict-strength-run-${athleteId}-${dateKey}`;
           alerts.push({
-            id: `conflict-strength-run-${athleteId}-${dateKey}-${++counter}`,
+            id: alertId,
             athleteId,
             athleteName,
             severity: "atencao",
@@ -391,7 +404,7 @@ export async function GET() {
             daysAgo: Math.floor(
               (now.getTime() - new Date(dateKey).getTime()) / 86_400_000,
             ),
-            read: false,
+            read: dismissedIds.has(alertId),
           });
           conflictAlertPushed = true;
         }
@@ -416,4 +429,38 @@ export async function GET() {
     })),
     alerts,
   });
+}
+
+export async function PATCH(req: NextRequest) {
+  const session = await getSession();
+  if (!session?.user?.id || session.user.role !== "COACH") {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
+  const body = await req.json() as { ids: string[] };
+  if (!Array.isArray(body.ids) || body.ids.length === 0) {
+    return NextResponse.json({ error: "ids obrigatório" }, { status: 400 });
+  }
+
+  // Fetch already-dismissed IDs to avoid duplicates
+  const existing = await prisma.notification.findMany({
+    where: { userId: session.user.id, title: DISMISSED_TITLE, link: { in: body.ids } },
+    select: { link: true },
+  });
+  const alreadyDismissed = new Set(existing.map((n) => n.link ?? ""));
+  const newIds = body.ids.filter((id) => !alreadyDismissed.has(id));
+
+  if (newIds.length > 0) {
+    await prisma.notification.createMany({
+      data: newIds.map((alertId) => ({
+        userId: session!.user!.id as string,
+        title: DISMISSED_TITLE,
+        body: "Alerta marcado como lido pelo treinador",
+        link: alertId,
+        read: true,
+      })),
+    });
+  }
+
+  return NextResponse.json({ ok: true, dismissed: body.ids.length });
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
@@ -77,6 +78,7 @@ function SeverityIcon({ severity }: { severity: SmartAlert["severity"] }) {
 }
 
 export default function AlertasPage() {
+  const router = useRouter();
   const [alerts, setAlerts] = useState<SmartAlert[]>([]);
   const [filter, setFilter] = useState<AlertSeverity | "todos">("todos");
   const [expiringPlans, setExpiringPlans] = useState<ExpiringPlan[]>([]);
@@ -96,12 +98,31 @@ export default function AlertasPage() {
   const atencao = alerts.filter((a) => a.severity === "atencao").length;
   const info = alerts.filter((a) => a.severity === "info").length;
 
+  const persistDismiss = useCallback(async (ids: string[]) => {
+    try {
+      await fetch("/api/treinador/alertas", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+    } catch {
+      // non-blocking — local state already updated
+    }
+  }, []);
+
   function markRead(id: string) {
     setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, read: true } : a)));
+    persistDismiss([id]);
   }
 
   function markAllRead() {
+    const unreadIds = alerts.filter((a) => !a.read).map((a) => a.id);
     setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
+    if (unreadIds.length > 0) persistDismiss(unreadIds);
+  }
+
+  function sendMessage(athleteId: string) {
+    router.push(`/treinador/mensagens?athleteId=${athleteId}`);
   }
 
   const filtered = filter === "todos" ? alerts : alerts.filter((a) => a.severity === filter);
@@ -352,6 +373,7 @@ export default function AlertasPage() {
                               size="sm"
                               variant="secondary"
                               className="gap-1.5"
+                              onClick={() => sendMessage(a.athleteId)}
                             >
                               <MessageSquare className="h-3.5 w-3.5" />
                               Enviar mensagem
