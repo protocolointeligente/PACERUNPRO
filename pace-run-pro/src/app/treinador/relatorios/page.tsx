@@ -20,6 +20,7 @@ const reportTypes = [
   { id: "forca",             label: "Força — Schoenfeld",         description: "MEV/MRV, mesociclos e ondulação de intensidade." },
   { id: "carga-equipe",      label: "Carga da equipe",            description: "Volume, RPE médio e adesão de todos os atletas." },
   { id: "checkins",          label: "Exportação de check-ins",    description: "Histórico bruto de RPE, dor, sono, fadiga e humor." },
+  { id: "financeiro",        label: "Receitas do marketplace",    description: "Exportação CSV das vendas e comissões do marketplace." },
 ] as const;
 
 type ReportTypeId = (typeof reportTypes)[number]["id"];
@@ -601,6 +602,26 @@ export default function ReportsPage() {
     const athleteId = needsAthlete && athlete ? athlete.id : "equipe";
 
     setDownloading(true);
+
+    // Financial report — direct CSV download from revenue API
+    if (reportType === "financeiro") {
+      try {
+        const res = await fetch("/api/coach/revenue?format=csv");
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `receitas-marketplace-${new Date().toISOString().slice(0, 10)}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      } finally {
+        setDownloading(false);
+      }
+      return;
+    }
+
     let reportData: ReportData | undefined;
     let teamData: TeamData | undefined;
     try {

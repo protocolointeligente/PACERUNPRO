@@ -204,6 +204,13 @@ model Athlete {
   @@map("athletes")
 }
 
+enum KycStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
 model Coach {
   id           String   @id @default(cuid())
   userId       String   @unique
@@ -216,6 +223,13 @@ model Coach {
   logoUrl         String?
   whatsapp        String?
   onboardingDone  String[]  @default([])  // completed step ids: ["invite","workout","plan"]
+
+  // KYC básico
+  kycStatus       KycStatus @default(PENDING)
+  kycDocumentUrl  String?
+  kycSubmittedAt  DateTime?
+  kycReviewedAt   DateTime?
+  kycNotes        String?
 
   plans             CoachPlan[]
   athletes          Athlete[]
@@ -234,6 +248,7 @@ model Coach {
   marketplaceProducts MarketplaceProduct[]
   marketplaceCommissions MarketplaceCommission[]
   marketplacePayouts MarketplacePayout[]
+  marketplaceCoupons MarketplaceCoupon[]
   challenges        Challenge[]
   appointments      Appointment[]
   coachAvailability CoachAvailability[]
@@ -1477,6 +1492,7 @@ model MarketplaceStore {
   stripeAccountId String?  // Stripe Connect account
 
   products      MarketplaceProduct[]
+  coupons       MarketplaceCoupon[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -1568,6 +1584,10 @@ model MarketplaceOrder {
   stripeSessionId String?
   pagbankOrderId  String?
   notes           String?
+
+  couponId        String?
+  coupon          MarketplaceCoupon? @relation(fields: [couponId], references: [id])
+  discountCents   Int?
 
   items           MarketplaceOrderItem[]
   commissions     MarketplaceCommission[]
@@ -1668,6 +1688,33 @@ model MarketplaceConfig {
   updatedAt           DateTime @updatedAt
 
   @@map("marketplace_config")
+}
+
+model MarketplaceCoupon {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  storeId         String?
+  store           MarketplaceStore? @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  coachId         String?
+  coach           Coach?   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  discountPct     Float?   // 0.0–1.0, e.g. 0.20 = 20% off
+  discountCents   Int?     // fixed amount off in cents
+  minOrderCents   Int?     // minimum order value to apply coupon
+  maxUses         Int?     // null = unlimited
+  usedCount       Int      @default(0)
+  expiresAt       DateTime?
+  isActive        Boolean  @default(true)
+  description     String?
+
+  orders          MarketplaceOrder[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([storeId])
+  @@index([coachId])
+  @@map("marketplace_coupons")
 }
 
 // ────────────────────────────────────────────────────────────────────────────

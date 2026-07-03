@@ -102,8 +102,8 @@ export async function GET() {
   const alerts: SmartAlert[] = [];
 
   if (athleteIds.length > 0) {
-    // Bulk-fetch workouts and check-ins for all athletes (last 14 days)
-    const [recentWorkouts, recentCheckIns] = await Promise.all([
+    // Bulk-fetch workouts, check-ins, and daily loads for all athletes
+    const [recentWorkouts, recentCheckIns, dailyLoads] = await Promise.all([
       prisma.workout.findMany({
         where: {
           date: { gte: ago14 },
@@ -112,6 +112,7 @@ export async function GET() {
         select: {
           date: true,
           status: true,
+          type: true,
           targetDurationMin: true,
           week: { select: { plan: { select: { athleteId: true } } } },
         },
@@ -121,6 +122,11 @@ export async function GET() {
         where: { athleteId: { in: athleteIds }, date: { gte: ago14 } },
         select: { athleteId: true, date: true, pain: true },
         orderBy: { date: "asc" },
+      }),
+      prisma.dailyLoad.findMany({
+        where: { athleteId: { in: athleteIds }, date: { gte: ago7 } },
+        select: { athleteId: true, date: true, acwr: true },
+        orderBy: { date: "desc" },
       }),
     ]);
 
@@ -139,6 +145,15 @@ export async function GET() {
     for (const c of recentCheckIns) {
       if (!checkInsByAthlete.has(c.athleteId)) checkInsByAthlete.set(c.athleteId, []);
       checkInsByAthlete.get(c.athleteId)!.push(c);
+    }
+
+    // Build map of latest DailyLoad per athlete (results already ordered desc)
+    type DailyLoadRow = (typeof dailyLoads)[number];
+    const latestDailyLoadByAthlete = new Map<string, DailyLoadRow>();
+    for (const dl of dailyLoads) {
+      if (!latestDailyLoadByAthlete.has(dl.athleteId)) {
+        latestDailyLoadByAthlete.set(dl.athleteId, dl);
+      }
     }
 
     let counter = 0;
@@ -271,6 +286,115 @@ export async function GET() {
           daysAgo: 0,
           read: false,
         });
+      }
+
+      // 5. ACWR — overtraining (P2.3)
+      const latestLoad = latestDailyLoadByAthlete.get(athleteId);
+      if (latestLoad && latestLoad.acwr !== null) {
+        const acwr = latestLoad.acwr as number;
+        const daysAgoLoad = Math.floor(
+          (now.getTime() - latestLoad.date.getTime()) / 86_400_000,
+        );
+        if (acwr > 1.5) {
+          alerts.push({
+            id: `acwr-critico-${athleteId}-${++counter}`,
+            athleteId,
+            athleteName,
+            severity: "critico",
+            category: "overtraining",
+            title: "ACWR elevado — risco de overtraining",
+            description: `${athleteName} apresenta ACWR de ${acwr.toFixed(2)}, indicando carga aguda muito acima da base crônica. Risco elevado de lesão ou overtraining.`,
+            metric: `ACWR: ${acwr.toFixed(2)} (limite crítico: > 1.5)`,
+            recommendation:
+              "Reduza a carga de treino imediatamente. Priorize sessões regenerativas e monitore sinais de fadiga, dor e queda de desempenho.",
+            daysAgo: daysAgoLoad,
+            read: false,
+          });
+        } else if (acwr < 0.8) {
+          alerts.push({
+            id: `acwr-info-${athleteId}-${++counter}`,
+            athleteId,
+            athleteName,
+            severity: "info",
+            category: "volume",
+            title: "ACWR baixo — possível destreino",
+            description: `${athleteName} apresenta ACWR de ${acwr.toFixed(2)}, sugerindo que a carga aguda está abaixo da base crônica. Pode indicar destreino ou período de tapering.`,
+            metric: `ACWR: ${acwr.toFixed(2)} (limite mínimo: < 0.8)`,
+            recommendation:
+              "Aumente progressivamente a carga de treino para evitar perda de forma. Eleve o volume de forma gradual (≤ 10% por semana).",
+            daysAgo: daysAgoLoad,
+            read: false,
+          });
+        }
+      }
+
+      // 6. Strength vs. high-intensity run conflict (P2.4)
+      const STRENGTH_TYPES = ["FORCA", "FUNCIONAL"];
+      const HIGH_INTENSITY_RUN_TYPES = [
+        "INTERVALADO_CURTO",
+        "INTERVALADO_LONGO",
+        "TEMPO_RUN",
+        "FARTLEK",
+        "PROGRESSIVO",
+        "SUBIDA",
+        "PROVA",
+      ];
+
+      // Group all fetched workouts for this athlete by date string
+      type WorkoutTypeRow = { type: string | null; date: Date };
+      const workoutsByDate = new Map<string, WorkoutTypeRow[]>();
+      for (const w of workouts) {
+        const dateKey = w.date.toISOString().slice(0, 10);
+        if (!workoutsByDate.has(dateKey)) workoutsByDate.set(dateKey, []);
+        workoutsByDate.get(dateKey)!.push(w);
+      }
+
+      let conflictAlertPushed = false;
+      for (const [dateKey, dayWorkouts] of workoutsByDate.entries()) {
+        if (conflictAlertPushed) break;
+
+        const strengthInDay = dayWorkouts.filter(
+          (w) => w.type !== null && STRENGTH_TYPES.includes(w.type as string),
+        );
+        if (strengthInDay.length === 0) continue;
+
+        // Check same day and adjacent days (±1 day) for high-intensity runs
+        const baseDate = new Date(dateKey);
+        const adjacentKeys = [
+          new Date(baseDate.getTime() - 86_400_000).toISOString().slice(0, 10),
+          dateKey,
+          new Date(baseDate.getTime() + 86_400_000).toISOString().slice(0, 10),
+        ];
+
+        const conflictingRuns: { type: string; date: string }[] = [];
+        for (const adjKey of adjacentKeys) {
+          for (const w of workoutsByDate.get(adjKey) ?? []) {
+            if (w.type !== null && HIGH_INTENSITY_RUN_TYPES.includes(w.type as string)) {
+              conflictingRuns.push({ type: w.type as string, date: adjKey });
+            }
+          }
+        }
+
+        if (conflictingRuns.length > 0) {
+          const strengthLabels = strengthInDay.map((w) => w.type as string).join(", ");
+          const runLabels = conflictingRuns.map((r) => `${r.type} (${r.date})`).join("; ");
+          alerts.push({
+            id: `conflict-strength-run-${athleteId}-${dateKey}-${++counter}`,
+            athleteId,
+            athleteName,
+            severity: "atencao",
+            category: "fadiga",
+            title: "Conflito treino de força + corrida intensa",
+            description: `${athleteName} tem treino de força (${strengthLabels}) em ${dateKey} e corrida de alta intensidade (${runLabels}) em datas próximas.`,
+            recommendation:
+              "Separe as sessões de força e corrida intensa por pelo menos 24h ou reduza a intensidade de uma das sessões para evitar acúmulo de fadiga.",
+            daysAgo: Math.floor(
+              (now.getTime() - new Date(dateKey).getTime()) / 86_400_000,
+            ),
+            read: false,
+          });
+          conflictAlertPushed = true;
+        }
       }
     }
   }

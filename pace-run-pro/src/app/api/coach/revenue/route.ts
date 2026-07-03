@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { withCache } from "@/lib/cache";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "COACH") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -19,21 +20,30 @@ export async function GET() {
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
 
+  // Skip cache for CSV exports (user expects fresh data)
+  const format = req.nextUrl.searchParams.get("format");
+  const CACHE_TTL = format === "csv" ? 0 : 180; // 3-minute cache for JSON
+
   // All paid purchases for this coach's products
-  const purchases = await prisma.planPurchase.findMany({
-    where: {
-      status: "PAID",
-      product: { coachId: coach.id },
-    },
-    select: {
-      id: true,
-      pricePaidCents: true,
-      createdAt: true,
-      product: { select: { id: true, title: true, sport: true } },
-      athlete: { select: { user: { select: { name: true } } } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const purchases = await withCache(
+    `revenue:${coach.id}`,
+    CACHE_TTL,
+    () =>
+      prisma.planPurchase.findMany({
+        where: {
+          status: "PAID",
+          product: { coachId: coach.id },
+        },
+        select: {
+          id: true,
+          pricePaidCents: true,
+          createdAt: true,
+          product: { select: { id: true, title: true, sport: true } },
+          athlete: { select: { user: { select: { name: true } } } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+  );
 
   const totalCents = purchases.reduce((s, p) => s + p.pricePaidCents, 0);
 
@@ -87,6 +97,25 @@ export async function GET() {
     pricePaidCents: p.pricePaidCents,
     createdAt: p.createdAt.toISOString(),
   }));
+
+  // CSV export
+  if (format === "csv") {
+    const rows = purchases.map((p) => [
+      p.createdAt.toISOString(),
+      `"${(p.athlete.user.name ?? "Atleta").replace(/"/g, '""')}"`,
+      `"${p.product.title.replace(/"/g, '""')}"`,
+      `"${p.product.sport ?? ""}"`,
+      (p.pricePaidCents / 100).toFixed(2),
+    ]);
+    const header = "Data,Atleta,Produto,Modalidade,Valor (R$)";
+    const csv = [header, ...rows.map((r) => r.join(","))].join("\n");
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="receita-${new Date().toISOString().slice(0, 10)}.csv"`,
+      },
+    });
+  }
 
   return NextResponse.json({
     totalCents,
