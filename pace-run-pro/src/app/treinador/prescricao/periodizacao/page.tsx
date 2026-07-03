@@ -295,8 +295,10 @@ export default function PeriodizacaoPage() {
   // Treinos state
   const [view, setView] = useState<ViewTab>("macro");
   const [vdotValue, setVdotValue] = useState("");
+  const [raceName, setRaceName] = useState("");
   const [raceDistId, setRaceDistId] = useState("5000");
   const [raceTime, setRaceTime] = useState("");
+  const [liberateError, setLiberateError] = useState("");
   const [workoutsMap, setWorkoutsMap] = useState<Record<number, GeneratedWorkout[]>>({});
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
   const [editingKey, setEditingKey] = useState<string | null>(null);
@@ -333,7 +335,7 @@ export default function PeriodizacaoPage() {
       if (!raw) return;
       const draft = JSON.parse(raw) as {
         goal?: Goal; level?: Level; totalWeeks?: number; trainingDays?: string[];
-        weeks?: Week[]; vdotValue?: string; raceDistId?: string; raceTime?: string;
+        weeks?: Week[]; vdotValue?: string; raceName?: string; raceDistId?: string; raceTime?: string;
         workoutsMap?: Record<number, GeneratedWorkout[]>;
       };
       if (!draft.weeks?.length) return;
@@ -345,6 +347,7 @@ export default function PeriodizacaoPage() {
       setGenerated(true);
       setSaved(false);
       setVdotValue(draft.vdotValue ?? "");
+      setRaceName(draft.raceName ?? "");
       setRaceDistId(draft.raceDistId ?? "5000");
       setRaceTime(draft.raceTime ?? "");
       if (draft.workoutsMap && Object.keys(draft.workoutsMap).length > 0) {
@@ -361,7 +364,7 @@ export default function PeriodizacaoPage() {
     const timer = setTimeout(() => {
       try {
         localStorage.setItem(DRAFT_KEY, JSON.stringify({
-          goal, level, totalWeeks, trainingDays, weeks, vdotValue, raceDistId, raceTime, workoutsMap,
+          goal, level, totalWeeks, trainingDays, weeks, vdotValue, raceName, raceDistId, raceTime, workoutsMap,
         }));
       } catch { /* storage unavailable */ }
     }, 1500);
@@ -434,10 +437,21 @@ export default function PeriodizacaoPage() {
   async function handleLiberar() {
     if (selectedAthletes.length === 0 || totalWorkouts === 0) return;
     setLiberating(true);
+    setLiberateError("");
+
+    // Compute the race date as the end of the plan (startDate + totalWeeks * 7 days)
+    const planStartDate = new Date();
+    planStartDate.setHours(0, 0, 0, 0);
+    const dow = planStartDate.getDay();
+    const add = dow === 1 ? 0 : dow === 0 ? 1 : 8 - dow;
+    planStartDate.setDate(planStartDate.getDate() + add);
+    const planRaceDate = new Date(planStartDate);
+    planRaceDate.setDate(planRaceDate.getDate() + totalWeeks * 7);
+
     try {
-      await Promise.all(
-        selectedAthletes.map((athleteId) =>
-          fetch("/api/planos", {
+      const results = await Promise.all(
+        selectedAthletes.map(async (athleteId) => {
+          const res = await fetch("/api/planos", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -447,17 +461,28 @@ export default function PeriodizacaoPage() {
               totalWeeks,
               trainingDays,
               liberar: true,
+              targetRaceName: raceName || undefined,
+              raceDate: planRaceDate.toISOString(),
               weeks,
               workoutsMap: Object.fromEntries(
                 Object.entries(workoutsMap).map(([k, v]) => [k, v])
               ),
             }),
-          })
-        )
+          });
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            throw new Error(d.error ?? `Erro ao liberar para atleta ${athleteId}`);
+          }
+          return res.json();
+        })
       );
-      setLiberated(true);
-      try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
-      setTimeout(() => setLiberated(false), 4000);
+      if (results.every(Boolean)) {
+        setLiberated(true);
+        try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+        setTimeout(() => setLiberated(false), 4000);
+      }
+    } catch (err) {
+      setLiberateError(err instanceof Error ? err.message : "Erro ao liberar plano. Tente novamente.");
     } finally {
       setLiberating(false);
     }
@@ -793,6 +818,17 @@ export default function PeriodizacaoPage() {
                   </div>
 
                   <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-text-muted">Nome da prova (opcional)</label>
+                    <input
+                      type="text"
+                      placeholder="Ex.: São Silvestre 2026"
+                      value={raceName}
+                      onChange={(e) => setRaceName(e.target.value)}
+                      className={cn(inputClass, "text-sm py-2")}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
                     <label className="text-[11px] font-medium text-text-muted">Distância</label>
                     <div className="relative">
                       <select
@@ -971,19 +1007,24 @@ export default function PeriodizacaoPage() {
                         </Button>
                       )}
                       {view === "treinos" && totalWorkouts > 0 && (
-                        <Button
-                          variant={liberated ? "success" : "primary"}
-                          size="sm"
-                          disabled={selectedAthletes.length === 0 || liberating}
-                          onClick={handleLiberar}
-                          title={selectedAthletes.length === 0 ? "Selecione pelo menos um atleta" : ""}
-                        >
-                          {liberated ? (
-                            <><CheckCircle2 className="h-4 w-4" /> Liberado!</>
-                          ) : (
-                            <><Send className="h-4 w-4" /> {liberating ? "Liberando…" : `Liberar para ${selectedAthletes.length > 1 ? `${selectedAthletes.length} atletas` : "atleta"}`}</>
+                        <div className="flex flex-col items-end gap-1.5">
+                          <Button
+                            variant={liberated ? "success" : "primary"}
+                            size="sm"
+                            disabled={selectedAthletes.length === 0 || liberating}
+                            onClick={handleLiberar}
+                            title={selectedAthletes.length === 0 ? "Selecione pelo menos um atleta" : ""}
+                          >
+                            {liberated ? (
+                              <><CheckCircle2 className="h-4 w-4" /> Liberado!</>
+                            ) : (
+                              <><Send className="h-4 w-4" /> {liberating ? "Liberando…" : `Liberar para ${selectedAthletes.length > 1 ? `${selectedAthletes.length} atletas` : "atleta"}`}</>
+                            )}
+                          </Button>
+                          {liberateError && (
+                            <p className="max-w-xs rounded-lg bg-error/10 px-2 py-1 text-[10px] text-error">{liberateError}</p>
                           )}
-                        </Button>
+                        </div>
                       )}
                     </div>
                   </div>

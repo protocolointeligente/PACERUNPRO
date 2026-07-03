@@ -69,6 +69,8 @@ export async function POST(req: NextRequest) {
     totalWeeks: number;
     trainingDays: string[];
     liberar: boolean;
+    targetRaceName?: string;
+    raceDate?: string;
     weeks: Array<{
       week: number;
       phase: string;
@@ -116,11 +118,16 @@ export async function POST(req: NextRequest) {
     data: {
       athleteId,
       coachId: coach.id,
-      name: `${goal} — ${body.totalWeeks} semanas`,
+      name: body.targetRaceName
+        ? `${body.targetRaceName} — ${body.totalWeeks} semanas`
+        : `${goal} — ${body.totalWeeks} semanas`,
       goal: goalEnum,
       startDate,
       endDate,
       macrocycle: goal,
+      status: liberar ? "ACTIVE" : "DRAFT",
+      targetRaceName: body.targetRaceName ?? null,
+      raceDate: body.raceDate ? new Date(body.raceDate) : endDate,
       weeks: {
         create: weeks.map((w) => {
           const weekStart = new Date(startDate);
