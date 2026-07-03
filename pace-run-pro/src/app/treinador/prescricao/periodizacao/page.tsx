@@ -21,6 +21,7 @@ import {
   Send,
   CheckCircle2,
   X,
+  LayoutGrid,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -113,7 +114,7 @@ interface Week {
 
 type Goal = "5k" | "10k" | "Meia-maratona" | "Maratona" | "Trail" | "Personalizado";
 type Level = "Iniciante" | "Intermediário" | "Avançado";
-type ViewTab = "macro" | "treinos";
+type ViewTab = "macro" | "treinos" | "timeline";
 
 // ── Days of the week ─────────────────────────────────────────────────────────
 
@@ -524,6 +525,16 @@ export default function PeriodizacaoPage() {
                       {totalWorkouts}
                     </span>
                   )}
+                </button>
+                <button
+                  onClick={() => setView("timeline")}
+                  className={cn(
+                    "flex items-center gap-1 rounded-md px-3 py-1 text-xs font-medium transition-all",
+                    view === "timeline" ? "bg-primary text-white shadow-sm" : "text-text-muted hover:text-text"
+                  )}
+                >
+                  <LayoutGrid className="h-3 w-3" />
+                  Timeline
                 </button>
               </div>
             </>
@@ -1034,6 +1045,11 @@ export default function PeriodizacaoPage() {
                         </div>
                       </div>
                     </>
+                  )}
+
+                  {/* ── TIMELINE VIEW ── */}
+                  {view === "timeline" && (
+                    <PlanTimeline weeks={weeks} sport={sportMode} />
                   )}
 
                   {/* ── TREINOS VIEW ── */}
@@ -1683,7 +1699,7 @@ function PeriodizacaoPrintTable({
   );
 }
 
-// ── PeriodizacaoCharts ────────────────────────────────────────────────────────
+// ── Shared phase colors ───────────────────────────────────────────────────────
 
 const PHASE_HEX: Record<Phase, string> = {
   Base:       "#38bdf8",
@@ -1691,6 +1707,135 @@ const PHASE_HEX: Record<Phase, string> = {
   Específico: "#f59e0b",
   Taper:      "#22c55e",
 };
+
+// ── PlanTimeline ──────────────────────────────────────────────────────────────
+
+function PlanTimeline({ weeks, sport }: { weeks: Week[]; sport: SportMode }) {
+  if (weeks.length === 0) return null;
+
+  const peakWeek = weeks.reduce((best, w) => (w.volume > best.volume ? w : best), weeks[0]);
+  const taperStart = weeks.find((w) => w.phase === "Taper")?.week;
+  const totalKm = weeks.reduce((s, w) => s + w.km, 0);
+  const maxKm = Math.max(...weeks.map((w) => w.km));
+
+  return (
+    <div className="space-y-4 print:hidden">
+      {/* Horizontal week blocks */}
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
+          Timeline — {weeks.length} semanas
+        </p>
+        <div className="overflow-x-auto pb-2">
+          <div className="flex gap-1" style={{ minWidth: Math.max(320, weeks.length * 52) }}>
+            {weeks.map((w) => {
+              const isDeload = w.isDeload;
+              const isPeak = w.week === peakWeek.week;
+              const isTaperStart = w.week === taperStart;
+              const heightPct = Math.round((w.km / maxKm) * 100);
+              return (
+                <div key={w.week} className="flex flex-col items-center gap-1" style={{ width: 48, minWidth: 48 }}>
+                  {/* Label above */}
+                  <div className="text-center h-4">
+                    {isPeak && <span className="text-[9px] font-bold text-warning">PICO</span>}
+                    {isTaperStart && !isPeak && <span className="text-[9px] font-bold text-success">TAPER</span>}
+                    {isDeload && !isPeak && !isTaperStart && <span className="text-[9px] text-warning">↓</span>}
+                  </div>
+                  {/* Volume bar */}
+                  <div className="relative flex h-24 w-full items-end justify-center rounded-lg overflow-hidden bg-card-hover/50">
+                    <div
+                      className="w-full transition-all rounded-sm"
+                      style={{
+                        height: `${Math.max(8, heightPct)}%`,
+                        backgroundColor: PHASE_HEX[w.phase],
+                        opacity: isDeload ? 0.45 : 0.85,
+                      }}
+                    />
+                  </div>
+                  {/* Week number */}
+                  <span className={`text-[10px] font-bold ${isPeak ? "text-warning" : "text-text-muted"}`}>
+                    {w.week}
+                  </span>
+                  {/* Mesocycle divider */}
+                  {w.week % 4 === 0 && w.week < weeks.length && (
+                    <div className="absolute bottom-0 right-0 h-full w-px bg-border/60" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        {/* Phase legend */}
+        <div className="mt-3 flex flex-wrap gap-3 border-t border-border pt-3">
+          {(["Base", "Construção", "Específico", "Taper"] as Phase[]).map((p) => (
+            <span key={p} className="flex items-center gap-1.5 text-[10px] text-text-muted">
+              <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: PHASE_HEX[p] }} />
+              {p} ({weeks.filter((w) => w.phase === p).length} sem)
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Phase blocks horizontal Gantt */}
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted">
+          Distribuição por mesociclo
+        </p>
+        <div className="space-y-3">
+          {Object.entries(
+            weeks.reduce((acc, w) => {
+              if (!acc[w.mesocycle]) acc[w.mesocycle] = [];
+              acc[w.mesocycle].push(w);
+              return acc;
+            }, {} as Record<number, Week[]>)
+          ).map(([meso, mesoWeeks]) => {
+            const phase = mesoWeeks[0].phase;
+            const kmTotal = mesoWeeks.reduce((s, w) => s + w.km, 0);
+            return (
+              <div key={meso} className="flex items-center gap-3">
+                <span className="w-14 shrink-0 text-xs text-text-muted">Meso {meso}</span>
+                <div className="flex flex-1 gap-0.5 overflow-hidden rounded-lg">
+                  {mesoWeeks.map((w) => (
+                    <div
+                      key={w.week}
+                      className="flex flex-1 flex-col items-center justify-center rounded-sm py-2 text-center"
+                      style={{
+                        backgroundColor: `${PHASE_HEX[w.phase]}${w.isDeload ? "44" : "cc"}`,
+                      }}
+                    >
+                      <span className="text-[9px] font-bold text-white/90">{w.week}</span>
+                      {w.isDeload && <span className="text-[8px] text-white/70">D</span>}
+                    </div>
+                  ))}
+                </div>
+                <div className="shrink-0 text-right text-[10px] text-text-muted w-20">
+                  <span style={{ color: PHASE_HEX[phase] }} className="font-semibold">{phase}</span>
+                  <br />{kmTotal} {SPORT_VOLUME_UNIT[sport]}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Summary stats */}
+        <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border pt-4">
+          <div className="text-center">
+            <p className="text-lg font-bold text-text">{totalKm}</p>
+            <p className="text-[10px] text-text-muted uppercase">{SPORT_VOLUME_UNIT[sport]} totais</p>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold text-text">{peakWeek.km}</p>
+            <p className="text-[10px] text-text-muted uppercase">Pico (Sem. {peakWeek.week})</p>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold text-text">{weeks.filter((w) => w.isDeload).length}</p>
+            <p className="text-[10px] text-text-muted uppercase">Semanas Deload</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── PeriodizacaoCharts ────────────────────────────────────────────────────────
 
 function computeTrainingLoad(weeks: Week[]): { ctl: number; atl: number; tsb: number }[] {
   const dailyTss: number[] = [];

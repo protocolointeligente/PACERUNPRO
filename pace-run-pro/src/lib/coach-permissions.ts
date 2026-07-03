@@ -27,6 +27,7 @@ import {
   Trophy,
   ClipboardList,
   BarChart3,
+  Wand2,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -66,14 +67,16 @@ const coreNav: NavItem[] = [
   { href: "/treinador/prescricao",  label: "Prescrição", icon: CalendarDays   },
 
   // — Prescrição —
-  { href: "/treinador/prescricao/periodizacao",   label: "Periodização",    icon: BarChart3,       sectionStart: "Prescrição" },
-  { href: "/treinador/prescricao/avaliacoes",     label: "Avaliações",      icon: ClipboardList                              },
+  { href: "/treinador/prescricao/gerador",        label: "Gerador de planos", icon: Wand2,           sectionStart: "Prescrição" },
+  { href: "/treinador/prescricao/periodizacao",   label: "Periodização",      icon: BarChart3,                               },
+  { href: "/treinador/prescricao/avaliacoes",     label: "Avaliações",        icon: ClipboardList                            },
 
   // — Modalidades —
   { href: "/treinador/prescricao/corrida",        label: "Corrida — VDOT",  icon: Activity,        sectionStart: "Modalidades" },
   { href: "/treinador/prescricao/ciclismo",       label: "Ciclismo — FTP",  icon: Bike                                        },
   { href: "/treinador/prescricao/natacao",        label: "Natação — CSS",   icon: Waves                                       },
   { href: "/treinador/prescricao/forca",          label: "Força",           icon: Dumbbell                                    },
+  { href: "/treinador/prescricao/forca-periodizacao", label: "Força — Periodização", icon: BarChart3                              },
   { href: "/treinador/prescricao/triatlo",        label: "Triathlon",       icon: Trophy                                      },
   { href: "/treinador/configuracoes/zonas",       label: "Zonas de treino", icon: Zap                                         },
 
