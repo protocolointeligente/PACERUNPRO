@@ -115,6 +115,29 @@ export function createRateLimiter({ limit, windowMs, key }: LimiterOptions) {
   };
 }
 
+// Variant that limits by an explicit identifier (e.g. userId) rather than IP
+export function createRateLimiterById({ limit, windowMs, key }: LimiterOptions) {
+  const windowSec = Math.round(windowMs / 1000);
+  const upstash = makeUpstashLimiter(limit, windowSec, key);
+
+  return async (identifier: string): Promise<RateLimitResult> => {
+    if (upstash) {
+      const result = await upstash.limit(identifier);
+      return { ok: result.success, remaining: result.remaining, resetAt: result.reset };
+    }
+    const now = Date.now();
+    const windowStart = now - windowMs;
+    const timestamps = (store.get(identifier) ?? []).filter((t) => t > windowStart);
+    timestamps.push(now);
+    store.set(identifier, timestamps);
+    return {
+      ok: timestamps.length <= limit,
+      remaining: Math.max(0, limit - timestamps.length),
+      resetAt: (timestamps[0] ?? now) + windowMs,
+    };
+  };
+}
+
 // ── Pre-configured limiters ───────────────────────────────────────────────
 
 export const authRegisterLimiter = createRateLimiter({
@@ -163,4 +186,10 @@ export const loginLimiter = createRateLimiter({
   limit: 10,
   windowMs: 15 * 60 * 1000,
   key: "auth:login",
+});
+
+export const messagesAiLimiter = createRateLimiterById({
+  limit: 10,
+  windowMs: 60 * 1000,
+  key: "messages:ai",
 });

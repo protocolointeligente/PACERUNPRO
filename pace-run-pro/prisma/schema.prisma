@@ -101,6 +101,7 @@ model User {
   workoutLogComments  WorkoutLogComment[]
   pushSubscriptions   PushSubscription[]
   messagesSent        Message[]          @relation("MessagesSent")
+  consentRecords      DataConsentRecord[]
 
   @@map("users")
 }
@@ -1886,4 +1887,27 @@ model DailyLoad {
   @@unique([athleteId, date])
   @@index([athleteId, date])
   @@map("daily_loads")
+}
+
+enum ConsentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  MARKETING_EMAILS
+  DATA_PROCESSING
+}
+
+model DataConsentRecord {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ConsentType
+  granted   Boolean     @default(true)
+  ipAddress String?
+  userAgent String?
+  version   String?
+  revokedAt DateTime?
+  createdAt DateTime    @default(now())
+
+  @@index([userId])
+  @@map("data_consent_records")
 }

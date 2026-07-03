@@ -330,8 +330,10 @@ function buildPeriodizacaoPdf(
   period: string,
   coachName: string,
   coachCredential: string,
-  today: string
+  today: string,
+  data?: ReportData
 ): string {
+  const s = data?.summary;
   const phases = [
     { name: "Base",       weeks: 4, color: "#38bdf8", intensity: "60–65%", volume: "Alto",    focus: "Aeróbico extensivo, adaptação" },
     { name: "Construção", weeks: 5, color: "#6366f1", intensity: "70–78%", volume: "Muito alto", focus: "Limiar, VO₂máx, progressão" },
@@ -397,12 +399,25 @@ ${pdfHeader(coachName, coachCredential, today)}
   </table>
 </div>
 
+${s ? `<div class="section">
+  <div class="section-title">Dados reais do período: ${period}</div>
+  <div class="grid-3">
+    <div class="stat-card"><div class="stat-label">Volume realizado</div><div class="stat-value">${s.totalKm}<span class="stat-unit">km</span></div></div>
+    <div class="stat-card"><div class="stat-label">Sessões realizadas</div><div class="stat-value">${s.sessionsCompleted}<span class="stat-unit">/${s.sessionsTotal}</span></div></div>
+    <div class="stat-card"><div class="stat-label">Adesão</div><div class="stat-value">${s.adherencePct}<span class="stat-unit">%</span></div></div>
+    <div class="stat-card"><div class="stat-label">RPE médio</div><div class="stat-value">${s.avgRpe}</div></div>
+    <div class="stat-card"><div class="stat-label">Carga acumulada</div><div class="stat-value">${s.totalLoad}<span class="stat-unit">UA</span></div></div>
+    <div class="stat-card"><div class="stat-label">Sessões perdidas</div><div class="stat-value">${s.sessionsLost}</div></div>
+  </div>
+</div>` : ""}
+
 <div class="section">
   <div class="section-title">Observações do treinador</div>
   <p class="notes">
     Periodização linear-dupla com ênfase em volume aeróbico nas primeiras 9 semanas (Base + Construção).
     A fase Específica prioriza o pace de prova e corridas contínuas longas acima de 32 km.
     O Taper começa na semana 14, com redução progressiva de 40% do volume mantendo a intensidade.
+    ${s ? `Dados do período registrado: ${s.totalKm} km totais, ${s.adherencePct}% de adesão, carga acumulada ${s.totalLoad} UA.` : ""}
   </p>
 </div>
 
@@ -415,8 +430,10 @@ function buildForcaPdf(
   athleteName: string,
   coachName: string,
   coachCredential: string,
-  today: string
+  today: string,
+  data?: ReportData
 ): string {
+  const s = data?.summary;
   const mesoTypes = [
     { name: "Anatomical Adaptation", weeks: 3, color: "#94a3b8", pct: 50, reps: "15–20", rir: 4 },
     { name: "Hypertrophy",           weeks: 4, color: "#6366f1", pct: 67, reps: "6–12",  rir: 2 },
@@ -487,6 +504,17 @@ ${pdfHeader(coachName, coachCredential, today)}
     <div class="stat-card"><div class="stat-label">Deload</div><p style="font-size:13px;margin-top:6px;">Redução de 30–40% do volume na semana 12, mantendo intensidade para supercompensação.</p></div>
   </div>
 </div>
+
+${s ? `<div class="section">
+  <div class="section-title">Dados reais do período</div>
+  <div class="grid-3">
+    <div class="stat-card"><div class="stat-label">Sessões realizadas</div><div class="stat-value">${s.sessionsCompleted}<span class="stat-unit">/${s.sessionsTotal}</span></div></div>
+    <div class="stat-card"><div class="stat-label">Adesão</div><div class="stat-value">${s.adherencePct}<span class="stat-unit">%</span></div></div>
+    <div class="stat-card"><div class="stat-label">RPE médio</div><div class="stat-value">${s.avgRpe}</div></div>
+    <div class="stat-card"><div class="stat-label">Carga acumulada</div><div class="stat-value">${s.totalLoad}<span class="stat-unit">UA</span></div></div>
+    <div class="stat-card"><div class="stat-label">Sessões perdidas</div><div class="stat-value">${s.sessionsLost}</div></div>
+  </div>
+</div>` : ""}
 
 ${pdfSignature(coachName, coachCredential)}
 ${pdfFooter(today)}
@@ -681,10 +709,10 @@ export default function ReportsPage() {
         html = buildAvaliacaoPdf(athleteName, coachName, coachCredential, today, reportData?.assessment);
         break;
       case "periodizacao":
-        html = buildPeriodizacaoPdf(athleteName, period, coachName, coachCredential, today);
+        html = buildPeriodizacaoPdf(athleteName, period, coachName, coachCredential, today, reportData);
         break;
       case "forca":
-        html = buildForcaPdf(athleteName, coachName, coachCredential, today);
+        html = buildForcaPdf(athleteName, coachName, coachCredential, today, reportData);
         break;
       case "carga-equipe":
         html = buildEquipePdf(coachName, coachCredential, today, period, teamData);

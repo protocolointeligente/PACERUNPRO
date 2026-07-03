@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { messagesAiLimiter } from "@/lib/rate-limit";
+
+function sanitizeForPrompt(content: string): string {
+  return content
+    .replace(/\n?(system|assistant|human|user):\s*/gi, " ")
+    .replace(/```[\s\S]*?```/g, "[código]")
+    .substring(0, 500);
+}
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ conversationId: string }> }) {
   const session = await getSession();
   if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+
+  const rl = await messagesAiLimiter(session.user.id);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Limite de mensagens atingido. Aguarde 1 minuto." },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
 
   const { conversationId } = await params;
   const userId = session.user.id;
@@ -28,7 +44,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ con
   });
 
   const historyText = recentMessages
-    .map((m) => `${m.fromUser.name}: ${m.content}`)
+    .map((m) => `${m.fromUser.name}: ${sanitizeForPrompt(m.content)}`)
     .join("\n");
 
   const systemPrompt = `Você é o assistente de treinamento do PACERUNPRO. Ajude o atleta ${athleteUser?.name ?? ""}

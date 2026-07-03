@@ -356,5 +356,8 @@ export async function GET() {
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
+  if (session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  }
   return NextResponse.json(spec);
 }

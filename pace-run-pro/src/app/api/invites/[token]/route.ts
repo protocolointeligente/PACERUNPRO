@@ -40,7 +40,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 // POST — redeem invite: link the authenticated athlete to the coach
-export async function POST(_req: NextRequest, { params }: Params) {
+export async function POST(req: NextRequest, { params }: Params) {
   const { token } = await params;
   const session = await getSession();
   if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
@@ -57,6 +57,25 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
   const athlete = await prisma.athlete.findUnique({ where: { userId: session.user.id }, select: { id: true, coachId: true } });
   if (!athlete) return NextResponse.json({ error: "Perfil de atleta não encontrado" }, { status: 404 });
+
+  // Prevent silent coach override — require explicit confirmation
+  if (athlete.coachId && athlete.coachId !== invite.coachId) {
+    const body = await req.json().catch(() => ({})) as { confirmOverride?: boolean };
+    if (!body.confirmOverride) {
+      const currentCoach = await prisma.coach.findUnique({
+        where: { id: athlete.coachId },
+        select: { user: { select: { name: true } } },
+      });
+      return NextResponse.json(
+        {
+          warning: "already_has_coach",
+          currentCoachName: currentCoach?.user.name ?? "Seu treinador atual",
+          message: "Você já possui um treinador vinculado. Envie confirmOverride: true para confirmar a troca.",
+        },
+        { status: 409 }
+      );
+    }
+  }
 
   // Link athlete to coach + mark invite used in a transaction
   await prisma.$transaction([
