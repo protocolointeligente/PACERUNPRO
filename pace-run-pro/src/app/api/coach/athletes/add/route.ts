@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     });
     const sub = coachUser?.subscriptions?.[0];
     const planIsActive = sub && (sub.status === "ACTIVE" || sub.status === "TRIAL") && (!sub.renewsAt || sub.renewsAt > new Date());
-    const SLOT_LIMITS: Record<string, number> = { FREE: 1, ATHLETE: 20, COACH: 80, TEAM: 250 };
+    const SLOT_LIMITS: Record<string, number> = { FREE: 3, ATHLETE: 20, COACH: 80, TEAM: 250 };
     const maxSlots = planIsActive ? (SLOT_LIMITS[sub!.plan] ?? 1) : 1;
 
     const currentCount = await prisma.athlete.count({ where: { coachId: coach.id } });

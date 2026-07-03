@@ -97,6 +97,8 @@ export interface AthleteRow {
 
 interface Props {
   athletes: AthleteRow[];
+  currentPlan?: string;
+  athleteCount?: number;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -860,7 +862,7 @@ function CopyWeekModal({
 const TABS = ["Todos", "Com treino", "Sem plano", "Em risco"] as const;
 type Tab = (typeof TABS)[number];
 
-export default function AthleteListClient({ athletes: staticAthletes }: Props) {
+export default function AthleteListClient({ athletes: staticAthletes, currentPlan, athleteCount }: Props) {
   const [weekStart, setWeekStart] = useState<Date>(() => getMondayOf(new Date()));
   const [weeklyData, setWeeklyData] = useState<WeeklyData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -969,6 +971,27 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
       <Header total={staticAthletes.length} />
 
       {actionCenter && <ActionBanner data={actionCenter} />}
+
+      {currentPlan === "FREE" && (athleteCount ?? 0) >= 3 && (
+        <div className="rounded-2xl border border-warning/40 bg-warning/5 p-4 flex items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-text">Limite do plano gratuito atingido</p>
+            <p className="mt-0.5 text-xs text-text-muted">Você atingiu o limite de 3 atletas no plano gratuito. Faça upgrade para adicionar mais atletas.</p>
+          </div>
+          <a href="/treinador/planos" className="shrink-0 rounded-xl bg-warning/20 px-3 py-1.5 text-xs font-semibold text-warning hover:bg-warning/30 transition-colors">
+            Ver planos
+          </a>
+        </div>
+      )}
+
+      {currentPlan === "FREE" && (athleteCount ?? 0) === 2 && (
+        <div className="rounded-2xl border border-border bg-card-hover p-3 flex items-center justify-between gap-3">
+          <p className="text-xs text-text-muted">Você tem <strong className="text-text">2 de 3 vagas</strong> usadas no plano gratuito.</p>
+          <a href="/treinador/planos" className="shrink-0 text-xs text-primary hover:underline">
+            Upgrade →
+          </a>
+        </div>
+      )}
 
       {/* Week navigation */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

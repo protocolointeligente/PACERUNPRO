@@ -17,7 +17,7 @@ interface NotifItem {
 
 const POLL_MS = 60_000;
 
-export function NotificationBell() {
+export function NotificationBell({ role }: { role?: string }) {
   const router = useRouter();
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState<NotifItem[]>([]);
@@ -26,13 +26,14 @@ export function NotificationBell() {
 
   async function fetchNotifications() {
     try {
-      const res = await fetch("/api/notifications", { credentials: "include" });
+      const endpoint = role === "COACH" ? "/api/coach/notificacoes" : "/api/notifications";
+      const res = await fetch(endpoint, { credentials: "include" });
       if (!res.ok) return;
       const data = await res.json();
       setUnread(data.unreadCount ?? 0);
       setItems(data.notifications ?? []);
     } catch {
-      // silent — network failures shouldn't break the UI
+      // silent
     }
   }
 

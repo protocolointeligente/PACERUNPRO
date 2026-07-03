@@ -44,7 +44,7 @@ export default async function AthleteListPage() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const [coach, recentLogs] = await Promise.all([
+  const [coach, recentLogs, coachUser] = await Promise.all([
     prisma.coach.findUnique({
       where: { userId: session.user.id },
       select: {
@@ -72,7 +72,22 @@ export default async function AthleteListPage() {
       where: { startedAt: { gte: sevenDaysAgo } },
       select: { athleteId: true, durationSec: true, rpe: true },
     }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        subscriptions: {
+          orderBy: { startedAt: "desc" },
+          take: 1,
+          select: { plan: true, status: true, renewsAt: true },
+        },
+      },
+    }),
   ]);
+
+  const sub = coachUser?.subscriptions?.[0];
+  const planIsActive = sub && (sub.status === "ACTIVE" || sub.status === "TRIAL") && (!sub.renewsAt || sub.renewsAt > new Date());
+  const currentPlan = planIsActive ? sub.plan : "FREE";
+  const athleteCount = coach?.athletes.length ?? 0;
 
   const loadByAthlete = new Map<string, number>();
   for (const log of recentLogs) {
@@ -95,5 +110,5 @@ export default async function AthleteListPage() {
     raceDate: formatRaceDate(a.raceDate),
   }));
 
-  return <AthleteListClient athletes={athletes} />;
+  return <AthleteListClient athletes={athletes} currentPlan={currentPlan} athleteCount={athleteCount} />;
 }

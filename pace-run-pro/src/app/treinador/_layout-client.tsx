@@ -72,6 +72,7 @@ function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUr
       userName={userName}
       userSubtitle={userCredential || "Treinador"}
       avatarUrl={userAvatarUrl}
+      notificationRole="COACH"
       sidebarFooterSlot={process.env.NODE_ENV !== "production" ? <RoleSwitcher /> : undefined}
       headerActions={
         <Link href="/treinador/prescricao/corrida">

@@ -43,6 +43,7 @@ interface PrescribedExercise {
   reps: string;
   rest: string;
   rpe: number;
+  percent1RM?: number;
 }
 
 interface SessionBlock {
@@ -50,6 +51,7 @@ interface SessionBlock {
   label: string;
   dayLabels: string[];
   exercises: PrescribedExercise[];
+  sessionType: string;
 }
 
 const sessionLabelsByDivision: Record<string, string[]> = {
@@ -74,6 +76,15 @@ const defaultDayLabelsByDivision: Record<string, string[]> = {
 
 const WEEK_DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"] as const;
 
+const SESSION_TYPES = [
+  "Hipertrofia",
+  "Força Máxima",
+  "Potência",
+  "Resistência Muscular",
+  "Metabólico",
+  "Reabilitação",
+] as const;
+
 let uidCounter = 0;
 function nextUid() {
   uidCounter += 1;
@@ -88,6 +99,7 @@ function buildSessions(division: string): SessionBlock[] {
     label,
     dayLabels: [days[i] ?? "Seg"],
     exercises: [],
+    sessionType: "Hipertrofia",
   }));
 }
 
@@ -614,7 +626,7 @@ export default function StrengthPrescriptionPage() {
   function addCustomSession() {
     setSessions((prev) => [
       ...prev,
-      { id: `s-custom-${prev.length}`, label: `Treino ${prev.length + 1}`, dayLabels: ["Seg"], exercises: [] },
+      { id: `s-custom-${prev.length}`, label: `Treino ${prev.length + 1}`, dayLabels: ["Seg"], exercises: [], sessionType: "Hipertrofia" },
     ]);
     setActiveIndex(sessions.length);
   }
@@ -639,6 +651,7 @@ export default function StrengthPrescriptionPage() {
           athleteId: athlete.id,
           sessions: sessions.map((s) => ({
             label: s.label,
+            sessionType: s.sessionType,
             dayLabels: s.dayLabels,
             exercises: s.exercises.map((e) => ({
               libraryId: e.libraryId,
@@ -647,6 +660,7 @@ export default function StrengthPrescriptionPage() {
               reps: e.reps,
               rest: e.rest,
               rpe: e.rpe,
+              percent1RM: e.percent1RM,
             })),
           })),
           startDate,
@@ -723,6 +737,7 @@ export default function StrengthPrescriptionPage() {
         rest: e.rest,
         rpe: e.rpe,
       })),
+      sessionType: "Hipertrofia",
     }));
 
     if (matchDivision !== division) {
@@ -1019,6 +1034,26 @@ export default function StrengthPrescriptionPage() {
                       />
                     </label>
 
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {SESSION_TYPES.map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setSessions((prev) =>
+                            prev.map((s) => s.id === activeSession.id ? { ...s, sessionType: t } : s)
+                          )}
+                          className={cn(
+                            "rounded-full border px-3 py-1 text-[11px] font-medium transition-colors",
+                            activeSession.sessionType === t
+                              ? "border-primary/60 bg-primary/15 text-primary"
+                              : "border-border bg-card text-text-muted hover:border-primary/30"
+                          )}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+
                     {activeSession.exercises.length === 0 && (
                       <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-text-muted">
                         Nenhum exercício adicionado ainda. Selecione exercícios da biblioteca ao lado para
@@ -1047,7 +1082,7 @@ export default function StrengthPrescriptionPage() {
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
-                        <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
                           <label className="block">
                             <span className="mb-1 block text-[10px] uppercase tracking-wider text-text-muted">
                               Séries
@@ -1093,6 +1128,22 @@ export default function StrengthPrescriptionPage() {
                               value={ex.rpe}
                               onChange={(e) =>
                                 patchExercise(ex.uid, { rpe: Number(e.target.value) || 1 })
+                              }
+                              className={miniInputClass}
+                            />
+                          </label>
+                          <label className="block">
+                            <span className="mb-1 block text-[10px] uppercase tracking-wider text-text-muted">
+                              % 1RM (opc.)
+                            </span>
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              placeholder="—"
+                              value={ex.percent1RM ?? ""}
+                              onChange={(e) =>
+                                patchExercise(ex.uid, { percent1RM: e.target.value ? Number(e.target.value) : undefined })
                               }
                               className={miniInputClass}
                             />

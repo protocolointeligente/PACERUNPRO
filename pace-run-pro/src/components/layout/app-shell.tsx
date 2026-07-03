@@ -31,6 +31,7 @@ interface AppShellProps {
   sidebarFooterSlot?: React.ReactNode;
   /** Extra actions rendered in the topbar (right side, before notifications) */
   headerActions?: React.ReactNode;
+  notificationRole?: string;
 }
 
 export function AppShell({
@@ -43,6 +44,7 @@ export function AppShell({
   children,
   sidebarFooterSlot,
   headerActions,
+  notificationRole,
 }: AppShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -246,7 +248,7 @@ export function AppShell({
               <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-primary" />
               {roleLabel}
             </Badge>
-            <NotificationBell />
+            <NotificationBell role={notificationRole} />
             <Avatar className="h-9 w-9 lg:hidden">
               <AvatarImage src={avatarUrl} alt={userName} />
               <AvatarFallback>{userName.slice(0, 2).toUpperCase()}</AvatarFallback>

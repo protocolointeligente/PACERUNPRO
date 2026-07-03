@@ -38,10 +38,12 @@ interface PrescribedExercise {
   reps: string;
   rest: string;
   rpe: number;
+  percent1RM?: number;
 }
 
 interface StrengthSession {
   label: string;
+  sessionType?: string;
   dayLabels: string[]; // multiple days: ["Seg", "Qui"] → one workout per day
   exercises: PrescribedExercise[];
 }
@@ -124,7 +126,7 @@ export async function POST(req: NextRequest) {
           strengthWorkout: {
             create: {
               split: strengthSplit,
-              label: s.label,
+              label: s.sessionType ? `${s.sessionType} — ${s.label}` : s.label,
               blocks: {
                 create: s.exercises.map((ex, idx) => ({
                   exerciseId: exerciseIds[idx],
@@ -133,6 +135,7 @@ export async function POST(req: NextRequest) {
                   reps: ex.reps,
                   restSec: parseRestSec(ex.rest),
                   rpe: ex.rpe,
+                  load: ex.percent1RM ? `${ex.percent1RM}% 1RM` : null,
                 })),
               },
             },
