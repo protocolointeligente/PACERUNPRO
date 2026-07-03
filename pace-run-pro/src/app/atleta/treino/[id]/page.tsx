@@ -18,6 +18,7 @@ import { formatPace } from "@/lib/utils";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { WorkoutActions } from "@/components/workout/workout-actions";
+import { WorkoutLogSection } from "@/components/workout/workout-log-section";
 import type { WorkoutBlock } from "@/lib/workout-blocks";
 
 const WORKOUT_TYPE_LABELS: Record<string, string> = {
@@ -498,6 +499,15 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
           </CardContent>
         </Card>
       )}
+
+      {/* Planned vs actual log */}
+      <WorkoutLogSection
+        workoutId={workout.id}
+        status={workout.status}
+        plannedDistanceKm={workout.targetDistanceKm}
+        plannedDurationMin={workout.targetDurationMin}
+        plannedRpe={workout.targetRpe}
+      />
 
       {/* CTA */}
       <WorkoutActions workoutId={workout.id} sport={workout.sport ?? "RUN"} />

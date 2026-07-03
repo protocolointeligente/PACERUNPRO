@@ -41,7 +41,7 @@ export async function GET() {
   const curr = getWeekBounds(0);
   const prev = getWeekBounds(1);
 
-  const [logsThis, logsPrev, scheduled] = await Promise.all([
+  const [logsThis, logsPrev, plannedWorkouts] = await Promise.all([
     prisma.workoutLog.findMany({
       where: { athleteId: athlete.id, startedAt: { gte: curr.start, lt: curr.end } },
       select: {
@@ -63,13 +63,26 @@ export async function GET() {
         rpe: true,
       },
     }),
-    prisma.workout.count({
+    prisma.workout.findMany({
       where: {
         date: { gte: curr.start, lt: curr.end },
         week: { plan: { athleteId: athlete.id } },
       },
+      select: {
+        id: true,
+        title: true,
+        type: true,
+        status: true,
+        targetDistanceKm: true,
+        targetDurationMin: true,
+        targetRpe: true,
+        date: true,
+      },
+      orderBy: { date: "asc" },
     }),
   ]);
+
+  const scheduled = plannedWorkouts.length;
 
   const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
 
@@ -193,6 +206,20 @@ export async function GET() {
   const riskLevel: "low" | "medium" | "high" =
     adherence >= 85 ? "low" : adherence >= 70 ? "medium" : "high";
 
+  // Planned vs actual breakdown
+  const plannedVolumeKm = plannedWorkouts.reduce((s, w) => s + (w.targetDistanceKm ?? 0), 0);
+  const plannedDurationMin = plannedWorkouts.reduce((s, w) => s + (w.targetDurationMin ?? 0), 0);
+  const actualVolumeKm = logsThis.reduce((s, l) => s + (l.distanceKm ?? 0), 0);
+  const actualDurationMin = logsThis.reduce((s, l) => s + Math.round((l.durationSec ?? 0) / 60), 0);
+
+  const statusCounts = {
+    CONCLUIDO: plannedWorkouts.filter((w) => w.status === "CONCLUIDO").length,
+    PERDIDO:   plannedWorkouts.filter((w) => w.status === "PERDIDO").length,
+    LIBERADO:  plannedWorkouts.filter((w) => w.status === "LIBERADO").length,
+    AGENDADO:  plannedWorkouts.filter((w) => w.status === "AGENDADO").length,
+    AJUSTADO:  plannedWorkouts.filter((w) => w.status === "AJUSTADO").length,
+  };
+
   return NextResponse.json({
     weekLabel: curr.label,
     metrics,
@@ -200,6 +227,24 @@ export async function GET() {
     adherence,
     riskLevel,
     highlights,
+    // Planned vs actual summary
+    plannedVolumeKm: Math.round(plannedVolumeKm * 10) / 10,
+    actualVolumeKm:  Math.round(actualVolumeKm * 10) / 10,
+    plannedDurationMin,
+    actualDurationMin,
+    plannedSessions: scheduled,
+    completedSessions: statusCounts.CONCLUIDO,
+    statusCounts,
+    workouts: plannedWorkouts.map((w) => ({
+      id: w.id,
+      title: w.title,
+      type: w.type,
+      status: w.status,
+      date: w.date,
+      targetDistanceKm: w.targetDistanceKm,
+      targetDurationMin: w.targetDurationMin,
+      targetRpe: w.targetRpe,
+    })),
     recommendation:
       adherence >= 85
         ? "Continue com a consistência — você está progredindo muito bem!"
