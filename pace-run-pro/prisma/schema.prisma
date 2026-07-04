@@ -523,6 +523,7 @@ model WorkoutLog {
   athleteFeedback  String?
 
   comments     WorkoutLogComment[]
+  setLogs      SetLog[]
 
   createdAt    DateTime @default(now())
 
@@ -531,6 +532,23 @@ model WorkoutLog {
   @@index([workoutId])
   @@index([source, externalActivityId])
   @@map("workout_logs")
+}
+
+model SetLog {
+  id           String     @id @default(cuid())
+  workoutLogId String
+  workoutLog   WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+  exerciseId   String?
+  exerciseName String?
+  setNum       Int
+  loadKg       Float?
+  reps         Int?
+  rpe          Int?
+  completed    Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+
+  @@index([workoutLogId])
+  @@map("set_logs")
 }
 
 model WorkoutLogComment {
