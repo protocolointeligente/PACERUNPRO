@@ -127,38 +127,110 @@ const WORKOUT_SPORT_MAP: Record<string, SportKey> = Object.fromEntries(
   )
 );
 
-// hex + rgb for inline style (avoids Tailwind JIT purging dynamic classes)
-const SPORT_COLORS: Record<SportKey, { hex: string; rgb: string }> = {
-  RUN:       { hex: "#F97316", rgb: "249,115,22"   },
-  BIKE:      { hex: "#3B82F6", rgb: "59,130,246"   },
-  SWIM:      { hex: "#06B6D4", rgb: "6,182,212"    },
-  STRENGTH:  { hex: "#A855F7", rgb: "168,85,247"   },
-  TRIATHLON: { hex: "#10B981", rgb: "16,185,129"   },
-  BRICK:     { hex: "#F43F5E", rgb: "244,63,94"    },
-  MOBILITY:  { hex: "#22C55E", rgb: "34,197,94"    },
-  REST:      { hex: "#94A3B8", rgb: "148,163,184"  },
+// Per workout-type color (mirrors prescricao/page.tsx TYPE_COLORS)
+const TYPE_COLORS: Record<string, string> = {
+  RODAGEM_LEVE: "#84cc16", INTERVALADO_CURTO: "#ef4444",
+  INTERVALADO_LONGO: "#FFB020", TEMPO_RUN: "#eab308", FARTLEK: "#a78bfa",
+  PROGRESSIVO: "#38bdf8", LONGAO: "#22c55e", REGENERATIVO: "#94a3b8",
+  SUBIDA: "#fb923c", PROVA: "#ec4899", TECNICA: "#22c55e",
+  ENDURANCE_BIKE: "#3b82f6", SWEET_SPOT: "#8b5cf6", TEMPO_BIKE: "#f59e0b",
+  THRESHOLD_BIKE: "#ef4444", VO2MAX_BIKE: "#ec4899", RECOVERY_BIKE: "#10b981",
+  LONG_RIDE: "#06b6d4", ANAEROBIC_BIKE: "#ef4444", SPRINT_BIKE: "#ec4899",
+  TECNICA_NATACAO: "#06b6d4", ENDURANCE_NATACAO: "#22c55e",
+  INTERVALADO_NATACAO: "#f97316", LIMIAR_NATACAO: "#ef4444",
+  SPRINT_NATACAO: "#ec4899", RECUPERACAO_NATACAO: "#94a3b8",
+  AGUAS_ABERTAS: "#0ea5e9", FORCA: "#46E0C8", FUNCIONAL: "#46E0C8",
+  MOBILIDADE: "#84cc16", RECUPERACAO: "#94a3b8",
+  SIMULADO_TRIATHLON: "#8b5cf6", TREINO_COMBINADO: "#38bdf8", TRANSICAO: "#94a3b8",
+  BRICK_BIKE_RUN: "#f97316", BRICK_SWIM_BIKE: "#06b6d4",
 };
 
-// Workout subtype → intensity level (1 = easy, 5 = max)
-const WORKOUT_INTENSITY: Record<string, number> = {
-  REGENERATIVO: 1, RECOVERY_BIKE: 1, RECUPERACAO_NATACAO: 1, RECUPERACAO: 1, MOBILIDADE: 1,
-  RODAGEM_LEVE: 2, TECNICA: 2, ENDURANCE_BIKE: 2, TECNICA_NATACAO: 2, ENDURANCE_NATACAO: 2, LONG_RIDE: 2,
-  FARTLEK: 3, PROGRESSIVO: 3, LONGAO: 3, SWEET_SPOT: 3, TEMPO_BIKE: 3, LIMIAR_NATACAO: 3, AGUAS_ABERTAS: 3,
-  TREINO_COMBINADO: 3, TRANSICAO: 3, SIMULADO_TRIATHLON: 3, FUNCIONAL: 3, FORCA: 3, BRICK_SWIM_BIKE: 3,
-  SUBIDA: 4, TEMPO_RUN: 4, INTERVALADO_LONGO: 4, THRESHOLD_BIKE: 4, INTERVALADO_NATACAO: 4, BRICK_BIKE_RUN: 4,
-  INTERVALADO_CURTO: 5, PROVA: 5, VO2MAX_BIKE: 5, ANAEROBIC_BIKE: 5, SPRINT_BIKE: 5, SPRINT_NATACAO: 5,
+const STATUS_BADGE: Record<string, { label: string; dot: string }> = {
+  CONCLUIDO: { label: "Concluído", dot: "#22c55e" },
+  LIBERADO:  { label: "Prog.",     dot: "#94a3b8" },
+  AGENDADO:  { label: "Agendado",  dot: "#94a3b8" },
+  PERDIDO:   { label: "Perdido",   dot: "#ef4444" },
+  AJUSTADO:  { label: "Ajustado",  dot: "#f59e0b" },
 };
 
-function getWorkoutStyle(sport: SportKey, workoutType: string, rpe?: number | null) {
-  const colors = SPORT_COLORS[sport];
-  const intensityLevel = rpe ? Math.ceil(rpe / 2) : (WORKOUT_INTENSITY[workoutType] ?? 2);
-  // bg opacity: 0.08 (easy) → 0.22 (max)
-  const bgOpacity = (0.06 + (intensityLevel / 5) * 0.16).toFixed(2);
+function getTypeColor(workoutType: string): string {
+  return TYPE_COLORS[workoutType] ?? "#94a3b8";
+}
+
+// ── Intensity ─────────────────────────────────────────────────────
+
+type IntensityMethod = "VDOT" | "ZONES" | "FTP" | "CSS" | "RPE" | "1RM_PCT";
+
+const SPORT_METHODS: Record<SportKey, { id: IntensityMethod; label: string }[]> = {
+  RUN:       [{ id: "VDOT", label: "VDOT" }, { id: "ZONES", label: "Zonas FC" }, { id: "RPE", label: "RPE" }],
+  BIKE:      [{ id: "FTP", label: "Zonas FTP" }, { id: "ZONES", label: "Zonas FC" }, { id: "RPE", label: "RPE" }],
+  SWIM:      [{ id: "CSS", label: "CSS" }, { id: "ZONES", label: "Zonas FC" }, { id: "RPE", label: "RPE" }],
+  STRENGTH:  [{ id: "1RM_PCT", label: "% de 1RM" }, { id: "RPE", label: "RPE" }],
+  TRIATHLON: [{ id: "RPE", label: "RPE" }],
+  BRICK:     [{ id: "RPE", label: "RPE" }],
+  MOBILITY:  [{ id: "RPE", label: "RPE" }],
+  REST:      [{ id: "RPE", label: "RPE" }],
+};
+
+const VDOT_PACES: Record<number, { E: string; M: string; T: string; I: string; R: string }> = {
+  30: { E: "8:19", M: "7:25", T: "7:00", I: "6:38", R: "6:19" },
+  35: { E: "7:20", M: "6:33", T: "6:09", I: "5:52", R: "5:36" },
+  40: { E: "6:33", M: "5:50", T: "5:29", I: "5:12", R: "4:58" },
+  45: { E: "5:56", M: "5:19", T: "4:59", I: "4:44", R: "4:31" },
+  50: { E: "5:27", M: "4:54", T: "4:35", I: "4:21", R: "4:09" },
+  55: { E: "5:04", M: "4:32", T: "4:15", I: "4:01", R: "3:50" },
+  60: { E: "4:44", M: "4:14", T: "3:58", I: "3:45", R: "3:35" },
+  65: { E: "4:27", M: "3:59", T: "3:43", I: "3:31", R: "3:22" },
+  70: { E: "4:13", M: "3:46", T: "3:31", I: "3:19", R: "3:11" },
+  75: { E: "4:00", M: "3:34", T: "3:20", I: "3:08", R: "3:00" },
+};
+
+function lookupVdot(v: number) {
+  const keys = Object.keys(VDOT_PACES).map(Number).sort((a, b) => a - b);
+  const low = keys.filter((k) => k <= v).at(-1);
+  const high = keys.filter((k) => k > v)[0];
+  if (!low && !high) return null;
+  if (!low) return VDOT_PACES[high!];
+  if (!high) return VDOT_PACES[low];
+  const t = (v - low) / (high - low);
+  const lerp = (a: string, b: string) => {
+    const toSec = (s: string) => { const [m, sec] = s.split(":").map(Number); return m * 60 + sec; };
+    const fromSec = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
+    return fromSec(toSec(a) + t * (toSec(b) - toSec(a)));
+  };
   return {
-    borderLeft: `3px solid ${colors.hex}`,
-    backgroundColor: `rgba(${colors.rgb},${bgOpacity})`,
+    E: lerp(VDOT_PACES[low].E, VDOT_PACES[high].E),
+    M: lerp(VDOT_PACES[low].M, VDOT_PACES[high].M),
+    T: lerp(VDOT_PACES[low].T, VDOT_PACES[high].T),
+    I: lerp(VDOT_PACES[low].I, VDOT_PACES[high].I),
+    R: lerp(VDOT_PACES[low].R, VDOT_PACES[high].R),
   };
 }
+
+const FC_ZONES = [
+  { zone: "Z1", label: "Recuperação Ativa",  fcPct: "<60%",    rpe: "1–3",  color: "#94a3b8" },
+  { zone: "Z2", label: "Aeróbico Base",       fcPct: "60–70%",  rpe: "4–5",  color: "#22c55e" },
+  { zone: "Z3", label: "Tempo / Aeróbico+",  fcPct: "71–80%",  rpe: "6–7",  color: "#eab308" },
+  { zone: "Z4", label: "Limiar Anaeróbico",  fcPct: "81–90%",  rpe: "8",    color: "#f97316" },
+  { zone: "Z5", label: "VO₂máx",             fcPct: ">90%",    rpe: "9–10", color: "#ef4444" },
+];
+
+const FTP_ZONES = [
+  { zone: "Z1", label: "Recuperação",         ftpPct: "<55%",     color: "#94a3b8" },
+  { zone: "Z2", label: "Endurance",           ftpPct: "56–75%",   color: "#22c55e" },
+  { zone: "Z3", label: "Tempo",               ftpPct: "76–90%",   color: "#38bdf8" },
+  { zone: "Z4", label: "Limiar (Sweet Spot)", ftpPct: "91–105%",  color: "#eab308" },
+  { zone: "Z5", label: "VO₂máx",             ftpPct: "106–120%", color: "#f97316" },
+  { zone: "Z6", label: "Anaeróbico",          ftpPct: ">121%",    color: "#ef4444" },
+];
+
+const CSS_ZONES = [
+  { zone: "T1", label: "Volume / Base",     cssOffset: "+15s",   color: "#22c55e" },
+  { zone: "T2", label: "Aeróbico",          cssOffset: "+10s",   color: "#38bdf8" },
+  { zone: "T3", label: "Limiar CSS−",       cssOffset: "+5s",    color: "#eab308" },
+  { zone: "T4", label: "Ritmo CSS",         cssOffset: "CSS",    color: "#f97316" },
+  { zone: "T5", label: "Sprint / Potência", cssOffset: "Abaixo", color: "#ef4444" },
+];
 
 const MONTH_NAMES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -231,6 +303,21 @@ interface FormState {
   targetPacePer100mMin: string;
   targetPacePer100mSec: string;
   targetPowerWatts: string;
+  // Intensity method
+  intensityMethod: IntensityMethod;
+  vdotValue: string;
+  ftpValue: string;
+  cssValue: string;
+  targetZone: string;
+  oneRmPct: string;
+}
+
+function defaultMethod(sport: SportKey): IntensityMethod {
+  if (sport === "RUN") return "VDOT";
+  if (sport === "BIKE") return "FTP";
+  if (sport === "SWIM") return "CSS";
+  if (sport === "STRENGTH") return "1RM_PCT";
+  return "RPE";
 }
 
 function emptyForm(sport: SportKey): FormState {
@@ -249,6 +336,12 @@ function emptyForm(sport: SportKey): FormState {
     targetPacePer100mMin: "",
     targetPacePer100mSec: "",
     targetPowerWatts: "",
+    intensityMethod: defaultMethod(sport),
+    vdotValue: "50",
+    ftpValue: "250",
+    cssValue: "1:45",
+    targetZone: "Z2",
+    oneRmPct: "75",
   };
 }
 
@@ -257,6 +350,7 @@ function workoutToForm(w: CalendarWorkout): FormState {
   const pSec = w.targetPaceSecPerKm != null ? w.targetPaceSecPerKm % 60 : "";
   const p100Min = w.targetPacePer100m != null ? Math.floor(w.targetPacePer100m / 60) : "";
   const p100Sec = w.targetPacePer100m != null ? w.targetPacePer100m % 60 : "";
+  const sport = getSportForType(w.type);
   return {
     title: w.title,
     workoutType: w.type,
@@ -272,6 +366,12 @@ function workoutToForm(w: CalendarWorkout): FormState {
     targetPacePer100mMin: p100Min !== "" ? String(p100Min) : "",
     targetPacePer100mSec: p100Sec !== "" ? String(p100Sec) : "",
     targetPowerWatts: w.targetPowerWatts != null ? String(w.targetPowerWatts) : "",
+    intensityMethod: defaultMethod(sport),
+    vdotValue: "50",
+    ftpValue: w.targetPowerWatts != null ? String(w.targetPowerWatts) : "250",
+    cssValue: "1:45",
+    targetZone: "Z2",
+    oneRmPct: "75",
   };
 }
 
@@ -647,11 +747,10 @@ export default function CalendarClient({
 
                 {/* Workout chips */}
                 {dayWorkouts.map((w) => {
-                  const sport = getSportForType(w.type);
-                  const sportCfg = getSport(sport);
-                  const chipStyle = getWorkoutStyle(sport, w.type, w.targetRpe);
-                  const borderColor = SPORT_COLORS[sport].hex;
+                  const color = getTypeColor(w.type);
+                  const sportCfg = getSport(getSportForType(w.type));
                   const isCut = clipboard?.action === "cut" && clipboard.workout.id === w.id;
+                  const statusInfo = STATUS_BADGE[w.status];
 
                   const meta: string[] = [];
                   if (w.targetDurationMin) meta.push(`${w.targetDurationMin}min`);
@@ -671,34 +770,50 @@ export default function CalendarClient({
                         setCtxMenu({ x: e.clientX, y: e.clientY, workout: w });
                       }}
                       onClick={() => openEdit(w)}
-                      style={chipStyle}
+                      style={{
+                        borderColor: `${color}40`,
+                        backgroundColor: `${color}12`,
+                      }}
                       className={[
-                        "flex items-start gap-1 px-1.5 py-1 rounded-r-md cursor-pointer group transition-opacity",
+                        "rounded-xl p-1.5 border flex flex-col gap-0.5 cursor-pointer group transition-opacity",
                         isCut ? "opacity-40 outline outline-1 outline-orange-400" : "hover:opacity-90",
                         dragId === w.id ? "opacity-50" : "",
                       ].join(" ")}
                     >
-                      <span className="text-[11px] flex-shrink-0 mt-[1px]">{sportCfg.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <div
-                          className="text-[11px] font-semibold truncate"
-                          style={{ color: borderColor }}
-                        >
-                          {w.title}
+                      <div className="flex items-start gap-1">
+                        <span className="text-[10px] flex-shrink-0 mt-[1px]">{sportCfg.emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <div
+                            className="text-[11px] font-semibold truncate leading-tight"
+                            style={{ color }}
+                          >
+                            {w.title}
+                          </div>
+                          {meta.length > 0 && (
+                            <div className="text-[10px] text-white/50 truncate">{meta.join(" · ")}</div>
+                          )}
                         </div>
-                        {meta.length > 0 && (
-                          <div className="text-[10px] text-white/55 truncate">{meta.join(" · ")}</div>
-                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCtxMenu({ x: e.clientX, y: e.clientY, workout: w });
+                          }}
+                          className="opacity-0 group-hover:opacity-60 p-0.5 rounded hover:bg-white/10 flex-shrink-0"
+                        >
+                          <MoreVertical size={10} />
+                        </button>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCtxMenu({ x: e.clientX, y: e.clientY, workout: w });
-                        }}
-                        className="opacity-0 group-hover:opacity-60 p-0.5 rounded hover:bg-white/10 flex-shrink-0"
-                      >
-                        <MoreVertical size={10} />
-                      </button>
+                      {statusInfo && w.status !== "LIBERADO" && (
+                        <div className="flex items-center gap-1">
+                          <span
+                            className="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: statusInfo.dot }}
+                          />
+                          <span className="text-[9px]" style={{ color: statusInfo.dot }}>
+                            {statusInfo.label}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -853,6 +968,271 @@ function CtxItem({
       {icon}
       {label}
     </button>
+  );
+}
+
+function IntensitySection({
+  sport,
+  form,
+  set,
+}: {
+  sport: SportKey;
+  form: FormState;
+  set: (field: keyof FormState, value: string) => void;
+}) {
+  const methods = SPORT_METHODS[sport];
+  const method = form.intensityMethod;
+
+  const vdotNum = Number(form.vdotValue) || 50;
+  const vdotPaces = lookupVdot(Math.max(30, Math.min(75, vdotNum)));
+
+  const INPUT_CLS =
+    "bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors";
+
+  return (
+    <div className="rounded-xl border border-white/8 bg-white/3 p-3 flex flex-col gap-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-[11px] text-white/40 font-medium mr-1">Intensidade</span>
+        {methods.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => set("intensityMethod", m.id)}
+            className={[
+              "px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors border",
+              method === m.id
+                ? "bg-orange-500 border-orange-500 text-white"
+                : "border-white/10 text-white/50 hover:text-white hover:border-white/30",
+            ].join(" ")}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {/* VDOT */}
+      {method === "VDOT" && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <label className="text-[11px] text-white/40 w-12 flex-shrink-0">VDOT</label>
+            <input
+              type="number"
+              min="30"
+              max="75"
+              className={`w-20 ${INPUT_CLS}`}
+              value={form.vdotValue}
+              onChange={(e) => set("vdotValue", e.target.value)}
+            />
+            <input
+              type="range"
+              min="30"
+              max="75"
+              className="flex-1 accent-orange-500"
+              value={form.vdotValue}
+              onChange={(e) => set("vdotValue", e.target.value)}
+            />
+          </div>
+          {vdotPaces && (
+            <div className="grid grid-cols-5 gap-1">
+              {(["E", "M", "T", "I", "R"] as const).map((zone) => (
+                <div key={zone} className="flex flex-col items-center gap-0.5 bg-white/5 rounded-lg p-1.5">
+                  <span className="text-[9px] text-white/40 font-bold">{zone}</span>
+                  <span className="text-[11px] text-white font-mono">{vdotPaces[zone]}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Zonas FC */}
+      {method === "ZONES" && (
+        <div className="grid grid-cols-1 gap-1">
+          {FC_ZONES.map((z) => (
+            <button
+              key={z.zone}
+              type="button"
+              onClick={() => set("targetZone", z.zone)}
+              className={[
+                "flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition-colors",
+                form.targetZone === z.zone
+                  ? "border-opacity-60 bg-opacity-20"
+                  : "border-white/8 bg-transparent hover:bg-white/5",
+              ].join(" ")}
+              style={
+                form.targetZone === z.zone
+                  ? { borderColor: `${z.color}80`, backgroundColor: `${z.color}18` }
+                  : undefined
+              }
+            >
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: z.color }}
+              />
+              <span className="text-[11px] font-semibold w-5" style={{ color: z.color }}>{z.zone}</span>
+              <span className="text-[11px] text-white/70 flex-1">{z.label}</span>
+              <span className="text-[10px] text-white/35">{z.fcPct}</span>
+              <span className="text-[10px] text-white/35 ml-1">RPE {z.rpe}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Zonas FTP */}
+      {method === "FTP" && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <label className="text-[11px] text-white/40 w-20 flex-shrink-0">FTP (W)</label>
+            <input
+              type="number"
+              min="0"
+              className={`w-24 ${INPUT_CLS}`}
+              value={form.ftpValue}
+              onChange={(e) => set("ftpValue", e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-1">
+            {FTP_ZONES.map((z) => (
+              <button
+                key={z.zone}
+                type="button"
+                onClick={() => set("targetZone", z.zone)}
+                className={[
+                  "flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition-colors",
+                  form.targetZone === z.zone ? "" : "border-white/8 bg-transparent hover:bg-white/5",
+                ].join(" ")}
+                style={
+                  form.targetZone === z.zone
+                    ? { borderColor: `${z.color}80`, backgroundColor: `${z.color}18` }
+                    : undefined
+                }
+              >
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: z.color }} />
+                <span className="text-[11px] font-semibold w-5" style={{ color: z.color }}>{z.zone}</span>
+                <span className="text-[11px] text-white/70 flex-1">{z.label}</span>
+                <span className="text-[10px] text-white/35">{z.ftpPct}</span>
+                {form.ftpValue && (
+                  <span className="text-[10px] text-white/50 ml-1 font-mono">
+                    {
+                      (() => {
+                        const ftp = Number(form.ftpValue);
+                        const [lo, hi] = z.ftpPct.replace(">", "").replace("<", "").split("–").map(Number);
+                        if (!ftp) return "";
+                        if (z.ftpPct.startsWith("<")) return `<${Math.round(ftp * lo / 100)}W`;
+                        if (z.ftpPct.startsWith(">")) return `>${Math.round(ftp * lo / 100)}W`;
+                        return `${Math.round(ftp * lo / 100)}–${Math.round(ftp * hi / 100)}W`;
+                      })()
+                    }
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* CSS */}
+      {method === "CSS" && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <label className="text-[11px] text-white/40 w-24 flex-shrink-0">CSS /100m</label>
+            <input
+              type="text"
+              className={`w-24 ${INPUT_CLS}`}
+              placeholder="1:45"
+              value={form.cssValue}
+              onChange={(e) => set("cssValue", e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-1">
+            {CSS_ZONES.map((z) => (
+              <button
+                key={z.zone}
+                type="button"
+                onClick={() => set("targetZone", z.zone)}
+                className={[
+                  "flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition-colors",
+                  form.targetZone === z.zone ? "" : "border-white/8 bg-transparent hover:bg-white/5",
+                ].join(" ")}
+                style={
+                  form.targetZone === z.zone
+                    ? { borderColor: `${z.color}80`, backgroundColor: `${z.color}18` }
+                    : undefined
+                }
+              >
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: z.color }} />
+                <span className="text-[11px] font-semibold w-5" style={{ color: z.color }}>{z.zone}</span>
+                <span className="text-[11px] text-white/70 flex-1">{z.label}</span>
+                <span className="text-[10px] text-white/35">{z.cssOffset}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* RPE */}
+      {method === "RPE" && (
+        <div className="flex flex-col gap-2">
+          <label className="text-[11px] text-white/40">RPE alvo (1–10)</label>
+          <div className="flex gap-1 flex-wrap">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((r) => {
+              const rpeColor =
+                r <= 3 ? "#22c55e" : r <= 5 ? "#84cc16" : r <= 7 ? "#eab308" : r <= 9 ? "#f97316" : "#ef4444";
+              const selected = form.targetRpe === String(r);
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => set("targetRpe", String(r))}
+                  className="w-8 h-8 rounded-lg text-xs font-semibold border transition-colors"
+                  style={
+                    selected
+                      ? { borderColor: rpeColor, backgroundColor: `${rpeColor}30`, color: rpeColor }
+                      : { borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }
+                  }
+                >
+                  {r}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* % 1RM */}
+      {method === "1RM_PCT" && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <label className="text-[11px] text-white/40 w-16 flex-shrink-0">% de 1RM</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              className={`w-20 ${INPUT_CLS}`}
+              placeholder="75"
+              value={form.oneRmPct}
+              onChange={(e) => set("oneRmPct", e.target.value)}
+            />
+            <input
+              type="range"
+              min="0"
+              max="100"
+              className="flex-1 accent-orange-500"
+              value={form.oneRmPct}
+              onChange={(e) => set("oneRmPct", e.target.value)}
+            />
+            <span className="text-sm font-semibold text-white/70 w-10">{form.oneRmPct}%</span>
+          </div>
+          <div className="text-[11px] text-white/40 mt-1">
+            {Number(form.oneRmPct) < 60 && "Resistência / Volume (baixa carga)"}
+            {Number(form.oneRmPct) >= 60 && Number(form.oneRmPct) < 70 && "Hipertrofia — fase volume"}
+            {Number(form.oneRmPct) >= 70 && Number(form.oneRmPct) < 80 && "Hipertrofia — intensidade moderada"}
+            {Number(form.oneRmPct) >= 80 && Number(form.oneRmPct) < 90 && "Força — alta intensidade"}
+            {Number(form.oneRmPct) >= 90 && "Força máxima / 1RM"}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1024,6 +1404,11 @@ function PrescriptionForm({
           />
         </div>
       </div>
+
+      {/* Intensity method */}
+      {SPORT_METHODS[sport].length > 0 && (
+        <IntensitySection sport={sport} form={form} set={set} />
+      )}
 
       {/* Objective */}
       <div>
