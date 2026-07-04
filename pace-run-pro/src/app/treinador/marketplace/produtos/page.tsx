@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Edit2, Package, X, Loader2, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Edit2, Package, X, Loader2, Send, RotateCcw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+
+type ListingStatus = "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "SUSPENDED";
 
 interface MarketProduct {
   id: string;
@@ -13,12 +15,20 @@ interface MarketProduct {
   description: string;
   priceCents: number;
   published: boolean;
+  listingStatus: ListingStatus;
   featured: boolean;
   purchases: number;
   level: string | null;
   sport: string | null;
   durationWeeks: number | null;
 }
+
+const STATUS_CONFIG: Record<ListingStatus, { label: string; variant: "outline" | "warning" | "success" | "danger" }> = {
+  DRAFT:          { label: "Rascunho",       variant: "outline"  },
+  PENDING_REVIEW: { label: "Em revisão",     variant: "warning"  },
+  APPROVED:       { label: "Aprovado",       variant: "success"  },
+  SUSPENDED:      { label: "Suspenso",       variant: "danger"   },
+};
 
 const TYPE_OPTIONS = [
   { value: "PLANILHA", label: "Planilha de treino" },
@@ -129,11 +139,20 @@ export default function MarketplaceProductsPage() {
     await load();
   }
 
-  async function togglePublish(p: MarketProduct) {
+  async function submitForReview(id: string) {
     await fetch("/api/coach/marketplace/products", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: p.id, published: !p.published }),
+      body: JSON.stringify({ id, submitForReview: true }),
+    });
+    await load();
+  }
+
+  async function cancelReview(id: string) {
+    await fetch("/api/coach/marketplace/products", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, cancelReview: true }),
     });
     await load();
   }
@@ -225,15 +244,11 @@ export default function MarketplaceProductsPage() {
                   <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-text-muted">O que está incluído (uma linha por item)</span>
                   <textarea rows={4} value={form.included} onChange={(e) => setForm((f) => ({ ...f, included: e.target.value }))} placeholder={"Planilha de treinos\nFeedback semanal\nSuporto via WhatsApp"} className={inputCls} />
                 </label>
-                <div className="col-span-full flex gap-6">
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={form.published} onChange={(e) => setForm((f) => ({ ...f, published: e.target.checked }))} className="h-4 w-4 accent-primary" />
-                    <span className="text-sm text-text">Publicar agora</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={form.featured} onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))} className="h-4 w-4 accent-primary" />
-                    <span className="text-sm text-text">Marcar como destaque</span>
-                  </label>
+                <div className="col-span-full rounded-xl border border-border/60 bg-card-hover/40 px-4 py-3">
+                  <p className="text-xs text-text-muted">
+                    <span className="font-semibold text-text">Fluxo de publicação:</span>{" "}
+                    Produtos salvos ficam como <strong>Rascunho</strong>. Use o botão "Enviar para revisão" na lista para submetê-lo — um administrador irá aprovar antes de aparecer no marketplace.
+                  </p>
                 </div>
               </div>
               {error && <p className="rounded-xl bg-red-500/10 border border-red-500/30 px-3.5 py-2.5 text-sm text-red-400">{error}</p>}
@@ -274,13 +289,35 @@ export default function MarketplaceProductsPage() {
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Badge variant={p.published ? "success" : "outline"} className="text-[10px] hidden sm:flex">{p.published ? "Publicado" : "Rascunho"}</Badge>
-                <button onClick={() => togglePublish(p)} className="rounded-lg border border-border p-2 text-text-muted hover:text-text hover:bg-card-hover" title={p.published ? "Despublicar" : "Publicar"}>
-                  {p.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-                <button onClick={() => openEdit(p)} className="rounded-lg border border-border p-2 text-text-muted hover:text-text hover:bg-card-hover">
-                  <Edit2 className="h-4 w-4" />
-                </button>
+                {(() => {
+                  const cfg = STATUS_CONFIG[p.listingStatus ?? "DRAFT"];
+                  return <Badge variant={cfg.variant} className="text-[10px] hidden sm:flex">{cfg.label}</Badge>;
+                })()}
+                {p.listingStatus === "DRAFT" && (
+                  <button
+                    onClick={() => submitForReview(p.id)}
+                    className="flex items-center gap-1 rounded-lg border border-primary/30 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
+                    title="Enviar para revisão"
+                  >
+                    <Send className="h-3 w-3" />
+                    <span className="hidden sm:inline">Revisar</span>
+                  </button>
+                )}
+                {p.listingStatus === "PENDING_REVIEW" && (
+                  <button
+                    onClick={() => cancelReview(p.id)}
+                    className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-text-muted hover:bg-card-hover"
+                    title="Cancelar envio para revisão"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    <span className="hidden sm:inline">Cancelar</span>
+                  </button>
+                )}
+                {(p.listingStatus === "DRAFT" || p.listingStatus === "PENDING_REVIEW") && (
+                  <button onClick={() => openEdit(p)} className="rounded-lg border border-border p-2 text-text-muted hover:text-text hover:bg-card-hover">
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                )}
                 <button onClick={() => handleDelete(p.id)} disabled={deleting === p.id} className="rounded-lg border border-red-500/30 p-2 text-red-400 hover:bg-red-500/10 disabled:opacity-50">
                   {deleting === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                 </button>

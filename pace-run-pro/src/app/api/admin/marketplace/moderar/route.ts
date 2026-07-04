@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, requireAdmin } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { writeAuditLog } from "@/lib/audit";
 
-// GET — list all products pending moderation (unpublished)
+// GET — list all products with listingStatus
 export async function GET() {
   const session = await getSession();
   const denied = requireAdmin(session);
   if (denied) return denied;
 
   const products = await prisma.marketplaceProduct.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 200,
+    orderBy: [{ listingStatus: "asc" }, { createdAt: "desc" }],
+    take: 300,
     select: {
       id: true,
       title: true,
@@ -18,6 +19,7 @@ export async function GET() {
       priceCents: true,
       published: true,
       featured: true,
+      listingStatus: true,
       createdAt: true,
       purchases: true,
       coach: { select: { user: { select: { name: true } } } },
@@ -28,20 +30,49 @@ export async function GET() {
   return NextResponse.json({ products });
 }
 
-// PATCH — approve (publish) or reject (unpublish), set featured
+// PATCH — change listing status (approve, suspend, reset to draft), set featured
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
   const denied = requireAdmin(session);
   if (denied) return denied;
 
-  const body = await req.json() as { id?: string; published?: boolean; featured?: boolean };
-  const { id, published, featured } = body;
+  const body = await req.json() as {
+    id?: string;
+    listingStatus?: "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "SUSPENDED";
+    featured?: boolean;
+  };
+  const { id, listingStatus, featured } = body;
   if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
 
   const data: Record<string, unknown> = {};
-  if (typeof published === "boolean") data.published = published;
+
+  if (listingStatus !== undefined) {
+    data.listingStatus = listingStatus;
+    // Keep published in sync with listingStatus
+    data.published = listingStatus === "APPROVED";
+  }
+
   if (typeof featured === "boolean") data.featured = featured;
 
   const updated = await prisma.marketplaceProduct.update({ where: { id }, data });
-  return NextResponse.json({ product: { id: updated.id, published: updated.published, featured: updated.featured } });
+
+  // Write audit trail
+  if (listingStatus !== undefined) {
+    await writeAuditLog({
+      userId: session?.user?.id,
+      action: `PRODUCT_${listingStatus}`,
+      entity: "MarketplaceProduct",
+      entityId: id,
+      meta: { listingStatus, featured },
+    });
+  }
+
+  return NextResponse.json({
+    product: {
+      id: updated.id,
+      published: updated.published,
+      listingStatus: updated.listingStatus,
+      featured: updated.featured,
+    },
+  });
 }

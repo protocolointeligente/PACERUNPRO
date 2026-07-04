@@ -1610,6 +1610,13 @@ enum MarketplaceOrderStatus {
   REFUNDED
 }
 
+enum ListingStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  SUSPENDED
+}
+
 model MarketplaceProduct {
   id          String   @id @default(cuid())
   storeId     String?
@@ -1638,11 +1645,12 @@ model MarketplaceProduct {
   content       Json?
   fileUrl       String?
 
-  published     Boolean  @default(false)
-  featured      Boolean  @default(false)
-  purchases     Int      @default(0)
+  published     Boolean       @default(false)
+  listingStatus ListingStatus @default(DRAFT)
+  featured      Boolean       @default(false)
+  purchases     Int           @default(0)
   rating        Float?
-  ratingCount   Int      @default(0)
+  ratingCount   Int           @default(0)
 
   commissionPct Float?
 
@@ -1658,6 +1666,7 @@ model MarketplaceProduct {
   @@index([storeId])
   @@index([coachId])
   @@index([type, published])
+  @@index([listingStatus])
   @@map("marketplace_products")
 }
 
@@ -2037,4 +2046,24 @@ model MarketplaceReferral {
 
   @@index([affiliateId])
   @@map("marketplace_referrals")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Audit log — append-only trail for sensitive operations
+// ────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  meta      Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

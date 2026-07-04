@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, requireAdmin } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { writeAuditLog } from "@/lib/audit";
 
 // GET — list unpaid commissions grouped by coach
 export async function GET() {
@@ -81,6 +82,14 @@ export async function POST(req: NextRequest) {
   await prisma.marketplaceCommission.updateMany({
     where: { id: { in: unpaid.map((c) => c.id) } },
     data: { paidOut: true, paidAt: new Date(), payoutId: payout.id },
+  });
+
+  await writeAuditLog({
+    userId: session?.user?.id,
+    action: "PAYOUT_CREATED",
+    entity: "MarketplacePayout",
+    entityId: payout.id,
+    meta: { coachId, amountCents: totalNet, method, count: unpaid.length },
   });
 
   return NextResponse.json({ payoutId: payout.id, amountCents: totalNet, count: unpaid.length });

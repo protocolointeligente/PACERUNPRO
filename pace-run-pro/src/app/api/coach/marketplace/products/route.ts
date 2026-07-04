@@ -79,8 +79,9 @@ export async function POST(req: NextRequest) {
       included: included ?? [],
       content: content ?? null,
       fileUrl: fileUrl ?? null,
-      published: published ?? false,
-      featured: featured ?? false,
+      // Coaches always start in DRAFT — only admins can approve/publish
+      published: false,
+      listingStatus: "DRAFT",
     },
   });
 
@@ -88,10 +89,11 @@ export async function POST(req: NextRequest) {
 }
 
 // Fields coaches are allowed to update on their own products
+// Note: published and listingStatus are NOT here — coaches can only submit for review
 const PATCH_ALLOWED = new Set([
   "type", "title", "slug", "description", "coverUrl", "priceCents",
   "durationWeeks", "level", "sport", "format", "eventDate", "maxParticipants",
-  "deliveryDays", "included", "content", "fileUrl", "published",
+  "deliveryDays", "included", "content", "fileUrl",
 ]);
 
 // PATCH — update marketplace product
@@ -101,13 +103,42 @@ export async function PATCH(req: NextRequest) {
   if (!coach) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await req.json();
-  const { id } = body;
+  const { id, submitForReview, cancelReview } = body;
   if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
 
   const product = await prisma.marketplaceProduct.findFirst({ where: { id, coachId: coach.id } });
   if (!product) return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 });
 
-  // Allowlist to prevent mass assignment (coaches cannot set featured, commissionPct, storeId, coachId, etc.)
+  // Submit for admin review (DRAFT → PENDING_REVIEW)
+  if (submitForReview) {
+    if (product.listingStatus !== "DRAFT") {
+      return NextResponse.json({ error: "Apenas rascunhos podem ser submetidos para revisão" }, { status: 400 });
+    }
+    const updated = await prisma.marketplaceProduct.update({
+      where: { id },
+      data: { listingStatus: "PENDING_REVIEW" },
+    });
+    return NextResponse.json(updated);
+  }
+
+  // Cancel review submission (PENDING_REVIEW → DRAFT)
+  if (cancelReview) {
+    if (product.listingStatus !== "PENDING_REVIEW") {
+      return NextResponse.json({ error: "Produto não está em revisão" }, { status: 400 });
+    }
+    const updated = await prisma.marketplaceProduct.update({
+      where: { id },
+      data: { listingStatus: "DRAFT" },
+    });
+    return NextResponse.json(updated);
+  }
+
+  // Coaches cannot edit products that are approved or suspended (contact admin)
+  if (product.listingStatus === "APPROVED" || product.listingStatus === "SUSPENDED") {
+    return NextResponse.json({ error: "Produtos aprovados ou suspensos não podem ser editados diretamente. Entre em contato com o suporte." }, { status: 403 });
+  }
+
+  // Allowlist to prevent mass assignment
   const data = Object.fromEntries(
     Object.entries(body).filter(([k]) => PATCH_ALLOWED.has(k))
   );
