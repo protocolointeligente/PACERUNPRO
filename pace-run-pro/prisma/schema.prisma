@@ -1019,6 +1019,7 @@ model Subscription {
   userId     String
   user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan       SubscriptionPlan   @default(FREE)
+  planSlug   String?            @map("plan_slug")
   status     SubscriptionStatus @default(TRIAL)
   autoRenew  Boolean            @default(false)
   startedAt  DateTime           @default(now())
@@ -1163,6 +1164,12 @@ model BillingSettings {
   autoChargeDayOfMonth  Int?    @default(5)   // dia do vencimento mensal
   gracePeriodDays       Int?    @default(3)   // dias antes de notificar
   blockAfterDays        Int?    @default(15)  // dias de atraso para bloquear acesso
+
+  // White-label / domínio personalizado
+  customDomain        String?   @map("custom_domain")
+  domainVerified      Boolean   @default(false) @map("domain_verified")
+  domainVerifiedAt    DateTime? @map("domain_verified_at")
+  whiteLabelConfig    Json?     @map("white_label_config")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

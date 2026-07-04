@@ -121,15 +121,18 @@ export async function POST(req: NextRequest) {
 
     let subscriptionId: string;
 
+    // Store exact planId slug for B2B plans so layout can differentiate tiers
+    const planSlug = planId.startsWith("b2b-") ? planId : null;
+
     if (existingSub) {
       await prisma.subscription.update({
         where: { id: existingSub.id },
-        data: { plan, status: "ACTIVE", renewsAt, autoRenew },
+        data: { plan, planSlug, status: "ACTIVE", renewsAt, autoRenew },
       });
       subscriptionId = existingSub.id;
     } else {
       const newSub = await prisma.subscription.create({
-        data: { userId, plan, status: "ACTIVE", renewsAt, autoRenew },
+        data: { userId, plan, planSlug, status: "ACTIVE", renewsAt, autoRenew },
       });
       subscriptionId = newSub.id;
     }

@@ -4,8 +4,10 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import TreinadorLayoutClient from "./_layout-client";
 
-function subPlanToBillingPlan(plan: string): string {
-  if (plan === "TEAM") return "b2b-unlimited";
+function subPlanToBillingPlan(plan: string, planSlug?: string | null): string {
+  // planSlug stores the exact B2B plan (b2b-starter, b2b-pro, etc.) when purchased via B2B checkout
+  if (planSlug) return planSlug;
+  if (plan === "TEAM") return "b2b-assessoria";
   if (plan === "COACH") return "b2b-pro";
   if (plan === "ATHLETE") return "b2b-starter";
   return "b2b-free";
@@ -26,7 +28,7 @@ export default async function TreinadorLayout({ children }: { children: React.Re
       subscriptions: {
         orderBy: { startedAt: "desc" },
         take: 1,
-        select: { plan: true, status: true, renewsAt: true },
+        select: { plan: true, planSlug: true, status: true, renewsAt: true },
       },
     },
   }).catch(() => null);
@@ -35,7 +37,7 @@ export default async function TreinadorLayout({ children }: { children: React.Re
   const now = new Date();
   const isExpired = sub?.renewsAt != null && sub.renewsAt < now;
   const isActiveOrTrial = (sub?.status === "ACTIVE" || sub?.status === "TRIAL") && !isExpired;
-  const planId = isActiveOrTrial ? subPlanToBillingPlan(sub!.plan) : "b2b-free";
+  const planId = isActiveOrTrial ? subPlanToBillingPlan(sub!.plan, sub!.planSlug) : "b2b-free";
 
   const hdrs = await headers();
   const pathname = hdrs.get("x-pathname") ?? "";
