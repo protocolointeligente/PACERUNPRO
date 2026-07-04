@@ -13,11 +13,15 @@ import {
   Waves,
   Trophy,
   Dumbbell,
-  Star,
+  Zap,
   CalendarDays,
   Target,
   Users,
   ChevronRight,
+  Sprout,
+  TrendingUp,
+  Flame,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,19 +33,19 @@ type LevelId = "Iniciante" | "Intermediário" | "Avançado" | "PRO / Elite";
 
 interface SportCard {
   id: SportId;
-  emoji: string;
   label: string;
   subtitle: string;
   Icon: React.ElementType;
+  color: string;
 }
 
 const SPORTS: SportCard[] = [
-  { id: "Corrida",    emoji: "🏃", label: "Corrida",    subtitle: "VDOT · Pace · Zonas",          Icon: Activity },
-  { id: "Ciclismo",  emoji: "🚴", label: "Ciclismo",   subtitle: "FTP · Potência",                Icon: Bike },
-  { id: "Natação",   emoji: "🏊", label: "Natação",    subtitle: "CSS · Pace",                    Icon: Waves },
-  { id: "Triathlon", emoji: "🏅", label: "Triathlon",  subtitle: "Multi-sport",                   Icon: Trophy },
-  { id: "Força",     emoji: "💪", label: "Força",      subtitle: "Schoenfeld · 1RM",              Icon: Dumbbell },
-  { id: "Funcional", emoji: "⭐", label: "Funcional",  subtitle: "Mobilidade · Core",             Icon: Star },
+  { id: "Corrida",    label: "Corrida",    subtitle: "VDOT · Pace · Zonas",  Icon: Activity, color: "#f97316" },
+  { id: "Ciclismo",  label: "Ciclismo",   subtitle: "FTP · Potência",        Icon: Bike,     color: "#eab308" },
+  { id: "Natação",   label: "Natação",    subtitle: "CSS · Pace",            Icon: Waves,    color: "#38bdf8" },
+  { id: "Triathlon", label: "Triathlon",  subtitle: "Multi-sport",           Icon: Trophy,   color: "#a855f7" },
+  { id: "Força",     label: "Força",      subtitle: "Schoenfeld · 1RM",      Icon: Dumbbell, color: "#46E0C8" },
+  { id: "Funcional", label: "Funcional",  subtitle: "Mobilidade · Core",     Icon: Layers,   color: "#4ade80" },
 ];
 
 const GOALS_BY_SPORT: Record<SportId, string[]> = {
@@ -55,17 +59,18 @@ const GOALS_BY_SPORT: Record<SportId, string[]> = {
 
 interface LevelCard {
   id: LevelId;
-  emoji: string;
   label: string;
   description: string;
   progression: string;
+  Icon: React.ElementType;
+  color: string;
 }
 
 const LEVELS: LevelCard[] = [
-  { id: "Iniciante",    emoji: "🌱", label: "Iniciante",    description: "Menos de 1 ano de treino estruturado.",          progression: "Progressão rápida" },
-  { id: "Intermediário",emoji: "📈", label: "Intermediário",description: "1–3 anos. Progressão semanal/mensal.",            progression: "Progressão semanal" },
-  { id: "Avançado",     emoji: "🏆", label: "Avançado",     description: "3+ anos. Periodização em blocos.",               progression: "Blocos de periodização" },
-  { id: "PRO / Elite",  emoji: "⚡", label: "PRO / Elite",  description: "Atletas de alto rendimento.",                    progression: "Periodização ondulatória" },
+  { id: "Iniciante",     label: "Iniciante",     description: "Menos de 1 ano de treino estruturado.",   progression: "Progressão rápida",          Icon: Sprout,     color: "#4ade80" },
+  { id: "Intermediário", label: "Intermediário",  description: "1–3 anos. Progressão semanal/mensal.",    progression: "Progressão semanal",         Icon: TrendingUp, color: "#38bdf8" },
+  { id: "Avançado",      label: "Avançado",       description: "3+ anos. Periodização em blocos.",        progression: "Blocos de periodização",      Icon: Flame,      color: "#f97316" },
+  { id: "PRO / Elite",   label: "PRO / Elite",    description: "Atletas de alto rendimento.",             progression: "Periodização ondulatória",    Icon: Zap,        color: "#a855f7" },
 ];
 
 const WEEK_DAYS_SHORT = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB", "DOM"] as const;
@@ -248,13 +253,18 @@ export default function GeradorPeriodizacaoPage() {
                     type="button"
                     onClick={() => { setSport(s.id); setGoal(""); }}
                     className={cn(
-                      "flex flex-col items-center gap-2.5 rounded-xl border p-4 transition-all text-center",
+                      "flex flex-col items-center gap-3 rounded-xl border p-4 transition-all text-center",
                       sport === s.id
                         ? "border-primary/60 bg-primary/15"
                         : "border-border bg-card hover:border-primary/30 hover:bg-card-hover"
                     )}
                   >
-                    <span className="text-4xl">{s.emoji}</span>
+                    <span
+                      className="flex h-11 w-11 items-center justify-center rounded-xl"
+                      style={{ backgroundColor: `${s.color}22` }}
+                    >
+                      <s.Icon className="h-6 w-6" style={{ color: s.color }} />
+                    </span>
                     <div>
                       <p className={cn("text-sm font-bold", sport === s.id ? "text-primary" : "text-text")}>{s.label}</p>
                       <p className="mt-0.5 text-[11px] text-text-muted leading-snug">{s.subtitle}</p>
@@ -314,7 +324,12 @@ export default function GeradorPeriodizacaoPage() {
                         : "border-border bg-card hover:border-primary/30 hover:bg-card-hover"
                     )}
                   >
-                    <span className="text-2xl">{l.emoji}</span>
+                    <span
+                      className="flex h-8 w-8 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: `${l.color}22` }}
+                    >
+                      <l.Icon className="h-4 w-4" style={{ color: l.color }} />
+                    </span>
                     <div>
                       <p className={cn("text-sm font-bold", level === l.id ? "text-primary" : "text-text")}>{l.label}</p>
                       <p className="mt-1 text-[11px] text-text-muted leading-snug">{l.description}</p>
@@ -491,7 +506,14 @@ export default function GeradorPeriodizacaoPage() {
 
               <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
                 <div className="flex items-center gap-3 pb-4 border-b border-border">
-                  <span className="text-3xl">{sportCard?.emoji}</span>
+                  {sportCard && (
+                    <span
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                      style={{ backgroundColor: `${sportCard.color}22` }}
+                    >
+                      <sportCard.Icon className="h-5 w-5" style={{ color: sportCard.color }} />
+                    </span>
+                  )}
                   <div>
                     <p className="font-display text-lg font-bold text-text">{sport}</p>
                     <p className="text-sm text-text-muted">{goal}</p>
@@ -502,7 +524,7 @@ export default function GeradorPeriodizacaoPage() {
                   <SummaryRow
                     icon={<Users className="h-4 w-4 text-primary" />}
                     label="Nível"
-                    value={`${levelCard?.emoji} ${level}`}
+                    value={level}
                     sub={levelCard?.progression}
                   />
                   <SummaryRow
