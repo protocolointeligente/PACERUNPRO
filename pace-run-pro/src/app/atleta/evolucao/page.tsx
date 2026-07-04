@@ -25,6 +25,11 @@ export default function EvolutionPage() {
   const [bodyPhotos, setBodyPhotos] = useState<(string | null)[]>([null, null, null]);
   const fileRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
 
+  const [racePrediction, setRacePrediction] = useState<{
+    vdot: number | null;
+    predictions: { id: string; label: string; timeSec: number; timeStr: string; paceStr: string }[];
+  }>({ vdot: null, predictions: [] });
+
   const [evolucao, setEvolucao] = useState<{
     weeklyVolume: { label: string; km: number }[];
     monthlyVolume: { label: string; km: number }[];
@@ -52,6 +57,12 @@ export default function EvolutionPage() {
     fetch("/api/atleta/peak-pace")
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d?.data) setPeakPace(d.data); })
+      .catch(() => null);
+    fetch("/api/atleta/race-prediction")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { vdot?: number | null; predictions?: typeof racePrediction.predictions } | null) => {
+        if (d) setRacePrediction({ vdot: d.vdot ?? null, predictions: d.predictions ?? [] });
+      })
       .catch(() => null);
     fetch("/api/atleta/training-load")
       .then((r) => r.ok ? r.json() : null)
@@ -300,6 +311,40 @@ export default function EvolutionPage() {
         >
           <CtlAtlTsbChart data={loadSeries} />
         </ChartCard>
+
+        {/* ── Race prediction ── */}
+        {racePrediction.predictions.length > 0 && (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <CardTitle>Previsão de tempos de prova</CardTitle>
+                  <CardDescription>
+                    Baseado no seu melhor esforço recente — VDOT {racePrediction.vdot} (Jack Daniels)
+                  </CardDescription>
+                </div>
+                <Badge variant="primary">VDOT {racePrediction.vdot}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+                {racePrediction.predictions.map((p) => (
+                  <div
+                    key={p.id}
+                    className="rounded-xl border border-border bg-card-hover/40 p-3 text-center"
+                  >
+                    <div className="mb-1 text-[10px] font-medium text-text-muted">{p.label}</div>
+                    <div className="font-display text-base font-bold text-primary">{p.timeStr}</div>
+                    <div className="mt-0.5 text-[10px] text-text-muted">{p.paceStr}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-text-muted">
+                Previsões baseadas no seu melhor pace sustentado nos últimos 90 dias. Para uma estimativa mais precisa, realize um teste específico de 5 km ou similar.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         <ChartCard
           title="FC média"

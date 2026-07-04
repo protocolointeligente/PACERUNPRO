@@ -132,3 +132,33 @@ export const RACE_DISTANCES = [
   { id: "21097", label: "Meia maratona", meters: 21097 },
   { id: "42195", label: "Maratona", meters: 42195 },
 ] as const;
+
+/**
+ * Prediz o tempo de prova (segundos) para uma distância dado um VDOT.
+ * Resolve o inverso de calculateVDOT via busca binária (60 iterações ≈ precisão < 1 s).
+ */
+export function predictRaceTime(vdot: number, distanceM: number): number {
+  if (vdot <= 0 || distanceM <= 0) return 0;
+  // Bounds: 2 min/km (elite) a 15 min/km (caminhada)
+  let lo = (distanceM / 1000) * 120;
+  let hi = (distanceM / 1000) * 900;
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    // calculateVDOT decreases as time increases (slower pace → lower VDOT estimate)
+    if (calculateVDOT(distanceM, mid) > vdot) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return Math.round((lo + hi) / 2);
+}
+
+/** Formata segundos em "H:MM:SS" ou "MM:SS". */
+export function formatRaceTime(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.round(seconds % 60);
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}

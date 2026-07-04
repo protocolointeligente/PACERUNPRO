@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { formStatus, FORM_LABELS, type LoadDay } from "@/lib/training-load";
+import { formStatus, FORM_LABELS, type LoadDay, type LoadAlert } from "@/lib/training-load";
+import { acwrRisk, ACWR_RISK_LABELS } from "@/lib/sports-science/acwr";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 function getGreeting() {
@@ -313,6 +314,58 @@ function QuickMetrics({
   );
 }
 
+// ── overtraining alert banner ───────────────────────────────────────────────
+function OvertrainingBanner({ alerts, acwr }: { alerts: LoadAlert[]; acwr: number | null }) {
+  if (alerts.length === 0 && (acwr === null || acwr <= 1.3)) return null;
+
+  const acwrRiskLevel = acwr !== null ? acwrRisk(acwr) : "optimal";
+  const showAcwr = acwr !== null && (acwrRiskLevel === "caution" || acwrRiskLevel === "danger");
+  const acwrInfo = showAcwr ? ACWR_RISK_LABELS[acwrRiskLevel] : null;
+
+  const primaryAlert = alerts[0];
+  const borderColor = showAcwr && acwrRiskLevel === "danger"
+    ? "#EF4444"
+    : showAcwr && acwrRiskLevel === "caution"
+    ? "#F59E0B"
+    : "#F59E0B";
+  const bgColor = showAcwr && acwrRiskLevel === "danger"
+    ? "rgba(239,68,68,0.08)"
+    : "rgba(245,158,11,0.08)";
+
+  return (
+    <div style={{
+      background: bgColor,
+      border: `1px solid ${borderColor}`,
+      borderRadius: 16, padding: 14, marginBottom: 12,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+        <span style={{ fontSize: 18 }}>⚠️</span>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: borderColor }}>
+          {showAcwr && acwrRiskLevel === "danger" ? "Alto risco de sobrecarga" : "Atenção à carga de treino"}
+        </div>
+      </div>
+      {showAcwr && acwrInfo && (
+        <div style={{ fontSize: 13, color: "#ECEAE3", marginBottom: 4, fontWeight: 600 }}>
+          ACWR {acwr?.toFixed(2)} — {acwrInfo.label}
+        </div>
+      )}
+      {primaryAlert && (
+        <div style={{ fontSize: 12, color: "#B9BCC0", lineHeight: 1.5 }}>
+          {primaryAlert.message}
+        </div>
+      )}
+      {showAcwr && acwrInfo && !primaryAlert && (
+        <div style={{ fontSize: 12, color: "#B9BCC0", lineHeight: 1.5 }}>
+          {acwrInfo.recommendation}
+        </div>
+      )}
+      <div style={{ marginTop: 8, fontSize: 11, color: "#5C636B" }}>
+        Informe seu treinador se sentir fadiga excessiva ou dor.
+      </div>
+    </div>
+  );
+}
+
 // ── empty state ─────────────────────────────────────────────────────────────
 function EmptyState({ tsb }: { tsb: number | null }) {
   const hasLoad = tsb !== null;
@@ -384,6 +437,8 @@ export default function AthleteDashboard() {
   const [workoutsLoading, setWorkoutsLoading] = useState(true);
   const [tsb, setTsb] = useState<number | null>(null);
   const [ctl, setCtl] = useState<number | null>(null);
+  const [acwr, setAcwr] = useState<number | null>(null);
+  const [alerts, setAlerts] = useState<LoadAlert[]>([]);
   const [series, setSeries] = useState<LoadDay[]>([]);
   const [weeklyStats, setWeeklyStats] = useState<{ totalKm: number; adherencePct: number | null } | null>(null);
 
@@ -400,12 +455,18 @@ export default function AthleteDashboard() {
     fetch("/api/atleta/training-load")
       .then((r) => r.ok ? r.json() : null)
       .then((d: {
-        latest?: { tsb: number; ctl: number } | null;
+        latest?: { tsb: number; ctl: number; atl: number } | null;
         series?: LoadDay[];
+        alerts?: LoadAlert[];
         weeklyStats?: { totalKm: number; adherencePct: number | null };
       } | null) => {
-        if (d?.latest) { setTsb(d.latest.tsb); setCtl(d.latest.ctl); }
+        if (d?.latest) {
+          setTsb(d.latest.tsb);
+          setCtl(d.latest.ctl);
+          if (d.latest.ctl > 0) setAcwr(Math.round((d.latest.atl / d.latest.ctl) * 100) / 100);
+        }
         if (d?.series?.length) setSeries(d.series.slice(-14));
+        if (d?.alerts) setAlerts(d.alerts);
         if (d?.weeklyStats) setWeeklyStats(d.weeklyStats);
       })
       .catch(() => null);
@@ -476,6 +537,9 @@ export default function AthleteDashboard() {
             Semana {week}
           </div>
         </div>
+
+        {/* ── Overtraining alert ── */}
+        <OvertrainingBanner alerts={alerts} acwr={acwr} />
 
         {/* ── Today workouts ── */}
         {workoutsLoading ? (

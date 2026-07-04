@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { MessageNotifier } from "@/components/messages/message-notifier";
@@ -17,6 +18,23 @@ export default function AtletaLayoutClient({
   avatarUrl?: string;
   children: React.ReactNode;
 }) {
+  // Apply coach white-label branding (primary color) if available
+  useEffect(() => {
+    fetch("/api/atleta/coach-branding")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { primaryColor?: string; assessoriaName?: string | null } | null) => {
+        if (!d?.primaryColor) return;
+        document.documentElement.style.setProperty("--color-primary", d.primaryColor);
+        // Also set the RGB variant for opacity utilities
+        const hex = d.primaryColor.replace("#", "");
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        document.documentElement.style.setProperty("--color-primary-rgb", `${r} ${g} ${b}`);
+      })
+      .catch(() => null);
+  }, []);
+
   return (
     <AppShell
       nav={athleteNav}
