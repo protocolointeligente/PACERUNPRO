@@ -1,6 +1,5 @@
--- CreateTable: PagBankSellerAccount
--- Stores PagBank Connect OAuth2 authorization data per coach
-CREATE TABLE "pagbank_seller_accounts" (
+-- CreateTable: PagBankSellerAccount (idempotent)
+CREATE TABLE IF NOT EXISTS "pagbank_seller_accounts" (
     "id" TEXT NOT NULL,
     "coachId" TEXT NOT NULL,
     "pagbankAccountId" TEXT NOT NULL,
@@ -16,12 +15,18 @@ CREATE TABLE "pagbank_seller_accounts" (
     CONSTRAINT "pagbank_seller_accounts_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "pagbank_seller_accounts_coachId_key" ON "pagbank_seller_accounts"("coachId");
-CREATE INDEX "pagbank_seller_accounts_pagbankAccountId_idx" ON "pagbank_seller_accounts"("pagbankAccountId");
+-- CreateIndex (idempotent)
+CREATE UNIQUE INDEX IF NOT EXISTS "pagbank_seller_accounts_coachId_key" ON "pagbank_seller_accounts"("coachId");
+CREATE INDEX IF NOT EXISTS "pagbank_seller_accounts_pagbankAccountId_idx" ON "pagbank_seller_accounts"("pagbankAccountId");
 
-ALTER TABLE "pagbank_seller_accounts"
-    ADD CONSTRAINT "pagbank_seller_accounts_coachId_fkey"
-    FOREIGN KEY ("coachId") REFERENCES "coaches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey (idempotent)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'pagbank_seller_accounts_coachId_fkey') THEN
+    ALTER TABLE "pagbank_seller_accounts"
+      ADD CONSTRAINT "pagbank_seller_accounts_coachId_fkey"
+      FOREIGN KEY ("coachId") REFERENCES "coaches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
 
 -- Update commission rate from 15% to 10% on all existing stores
 UPDATE "marketplace_stores" SET "commissionPct" = 0.10 WHERE "commissionPct" = 0.15;

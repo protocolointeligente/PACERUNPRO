@@ -1,5 +1,5 @@
--- CreateTable: CoachAthlete (N:M junction — non-breaking, coexists with Athlete.coachId)
-CREATE TABLE "coach_athletes" (
+-- CreateTable: CoachAthlete (N:M junction — fully idempotent)
+CREATE TABLE IF NOT EXISTS "coach_athletes" (
     "id" TEXT NOT NULL,
     "coach_id" TEXT NOT NULL,
     "athlete_id" TEXT NOT NULL,
@@ -11,34 +11,37 @@ CREATE TABLE "coach_athletes" (
     CONSTRAINT "coach_athletes_pkey" PRIMARY KEY ("id")
 );
 
--- Populate from existing coachId (mark as primary)
+-- Populate from existing coachId (athletes."coachId" is camelCase — no @map annotation)
 INSERT INTO "coach_athletes" ("id", "coach_id", "athlete_id", "is_primary", "role", "assigned_at")
-SELECT
-    gen_random_uuid()::text,
-    "coach_id",
-    "id",
-    true,
-    'coach',
-    NOW()
+SELECT gen_random_uuid()::text, "coachId", "id", true, 'coach', NOW()
 FROM "athletes"
-WHERE "coach_id" IS NOT NULL;
+WHERE "coachId" IS NOT NULL
+ON CONFLICT ("coach_id", "athlete_id") DO NOTHING;
 
--- CreateIndex
-CREATE UNIQUE INDEX "coach_athletes_coach_id_athlete_id_key" ON "coach_athletes"("coach_id", "athlete_id");
-CREATE INDEX "coach_athletes_coach_id_idx" ON "coach_athletes"("coach_id");
-CREATE INDEX "coach_athletes_athlete_id_idx" ON "coach_athletes"("athlete_id");
+-- CreateIndex (idempotent)
+CREATE UNIQUE INDEX IF NOT EXISTS "coach_athletes_coach_id_athlete_id_key" ON "coach_athletes"("coach_id", "athlete_id");
+CREATE INDEX IF NOT EXISTS "coach_athletes_coach_id_idx" ON "coach_athletes"("coach_id");
+CREATE INDEX IF NOT EXISTS "coach_athletes_athlete_id_idx" ON "coach_athletes"("athlete_id");
 
--- AddForeignKey
-ALTER TABLE "coach_athletes"
-    ADD CONSTRAINT "coach_athletes_coach_id_fkey"
-    FOREIGN KEY ("coach_id") REFERENCES "coaches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey (idempotent)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'coach_athletes_coach_id_fkey') THEN
+    ALTER TABLE "coach_athletes"
+      ADD CONSTRAINT "coach_athletes_coach_id_fkey"
+      FOREIGN KEY ("coach_id") REFERENCES "coaches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
 
-ALTER TABLE "coach_athletes"
-    ADD CONSTRAINT "coach_athletes_athlete_id_fkey"
-    FOREIGN KEY ("athlete_id") REFERENCES "athletes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'coach_athletes_athlete_id_fkey') THEN
+    ALTER TABLE "coach_athletes"
+      ADD CONSTRAINT "coach_athletes_athlete_id_fkey"
+      FOREIGN KEY ("athlete_id") REFERENCES "athletes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
 
--- CreateTable: ProcessedStripeEvent (idempotency guard)
-CREATE TABLE "processed_stripe_events" (
+-- CreateTable: ProcessedStripeEvent (idempotent)
+CREATE TABLE IF NOT EXISTS "processed_stripe_events" (
     "id" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -46,5 +49,5 @@ CREATE TABLE "processed_stripe_events" (
     CONSTRAINT "processed_stripe_events_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE INDEX "processed_stripe_events_created_at_idx" ON "processed_stripe_events"("created_at");
+-- CreateIndex (idempotent)
+CREATE INDEX IF NOT EXISTS "processed_stripe_events_created_at_idx" ON "processed_stripe_events"("created_at");
