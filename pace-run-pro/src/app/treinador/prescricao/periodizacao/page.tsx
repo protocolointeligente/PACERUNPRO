@@ -281,6 +281,8 @@ export default function PeriodizacaoPage() {
 
   // Mode picker state
   const [showModePicker, setShowModePicker] = useState(true);
+  const [showParamsModal, setShowParamsModal] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
   const [pickerSport, setPickerSport] = useState<"RUN" | "BIKE" | "SWIM" | "TRIATHLON" | "STRENGTH">("RUN");
 
   // Macro state
@@ -369,6 +371,9 @@ export default function PeriodizacaoPage() {
           setGenerated(true);
           setSaved(false);
           setDraftRestored(true);
+          setShowModePicker(false);
+          setShowParamsModal(false);
+          setShowResultModal(true);
           return;
         }
       }
@@ -396,6 +401,9 @@ export default function PeriodizacaoPage() {
         setWorkoutsMap(draft.workoutsMap);
       }
       setDraftRestored(true);
+      setShowModePicker(false);
+      setShowParamsModal(false);
+      setShowResultModal(true);
     } catch { /* storage unavailable */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -440,6 +448,9 @@ export default function PeriodizacaoPage() {
     setExpandedWeek(null);
     setEditingKey(null);
     setLiberated(false);
+    setShowResultModal(false);
+    setShowParamsModal(false);
+    setShowModePicker(true);
   }
 
   function buildWorkoutsMap(): Record<number, GeneratedWorkout[]> {
@@ -619,6 +630,7 @@ export default function PeriodizacaoPage() {
                   } else {
                     setSportMode(pickerSport as SportMode);
                     setShowModePicker(false);
+                    setShowParamsModal(true);
                   }
                 }}
                 className="flex flex-col items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-4 text-sm font-medium text-white hover:border-primary/40 hover:bg-primary/10 transition-all"
@@ -639,16 +651,177 @@ export default function PeriodizacaoPage() {
         </div>
       )}
 
+      {/* ── Step 2: Parameters Modal ── */}
+      {showParamsModal && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 backdrop-blur-sm overflow-y-auto py-8">
+          <div className="w-full max-w-[560px] mx-4 rounded-2xl border border-border bg-[#1a1d2e] shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-border/40">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{SPORT_EMOJIS[sportMode]}</span>
+                <div>
+                  <h2 className="text-base font-semibold text-white">Periodização {SPORT_LABELS[sportMode]}</h2>
+                  <p className="text-xs text-text-muted">Configure os parâmetros do plano</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setShowParamsModal(false); setShowModePicker(true); }}
+                className="rounded-lg p-1.5 text-text-muted hover:text-white transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {/* Content */}
+            <div className="p-5 space-y-5">
+              {/* Athletes */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">Atletas</label>
+                  {selectedAthletes.length > 0 && (
+                    <span className="text-[11px] text-primary">{selectedAthletes.length} selecionado{selectedAthletes.length > 1 ? "s" : ""}</span>
+                  )}
+                </div>
+                <div className="space-y-1 rounded-xl border border-white/10 bg-white/5 p-2 max-h-36 overflow-y-auto">
+                  {athletes.map((a) => {
+                    const selected = selectedAthletes.includes(a.id);
+                    return (
+                      <label key={a.id} className={cn("flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 transition-colors", selected ? "bg-primary/10 text-primary" : "hover:bg-white/5 text-white")}>
+                        <input type="checkbox" checked={selected} onChange={() => toggleAthlete(a.id)} className="accent-primary h-3.5 w-3.5" />
+                        <span className="text-xs font-medium">{a.name}</span>
+                      </label>
+                    );
+                  })}
+                  {athletes.length === 0 && <p className="text-xs text-text-muted px-2 py-1">Nenhum atleta cadastrado</p>}
+                </div>
+              </div>
+
+              {/* Goal (RUN only) */}
+              {sportMode === "RUN" && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">Objetivo</label>
+                  <div className="relative">
+                    <select className={cn(selectClass, "bg-white/5 border-white/10 text-white")} value={goal} onChange={(e) => setGoal(e.target.value as Goal)}>
+                      {goals.map((g) => <option key={g} value={g}>{g}</option>)}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                  </div>
+                </div>
+              )}
+
+              {/* Level */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">Nível</label>
+                <div className="flex gap-2">
+                  {levels.map((l) => (
+                    <button key={l} onClick={() => setLevel(l)} className={cn("flex-1 rounded-lg border py-2 text-xs font-medium transition-all", level === l ? "border-primary/50 bg-primary/10 text-primary" : "border-white/10 bg-white/5 text-text-muted hover:text-white")}>
+                      {l === "Intermediário" ? "Inter." : l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Training days */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">Dias de treino</label>
+                  <span className="text-[11px] text-text-muted">{trainingDays.length}×/semana</span>
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {ALL_DAYS.map((day) => {
+                    const sel = trainingDays.includes(day);
+                    return (
+                      <button key={day} type="button" onClick={() => toggleDay(day)} title={day} className={cn("rounded-lg border py-2 text-[10px] font-bold transition-all", sel ? "border-primary/60 bg-primary/15 text-primary" : "border-white/10 bg-white/5 text-text-muted hover:text-white")}>
+                        {DAY_ABBR[day]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Weeks */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-text-muted uppercase tracking-wider">Semanas totais</label>
+                  <span className="text-sm font-semibold text-white">{totalWeeks}</span>
+                </div>
+                <input type="range" min={4} max={52} value={totalWeeks} onChange={(e) => setTotalWeeks(Number(e.target.value))} className="w-full accent-primary" />
+                <div className="flex justify-between text-[10px] text-text-muted"><span>4 sem</span><span>52 sem</span></div>
+                <input type="number" min={4} max={52} value={totalWeeks} onChange={(e) => setTotalWeeks(Math.min(52, Math.max(4, Number(e.target.value))))} className={cn(inputClass, "bg-white/5 border-white/10 text-white text-center")} />
+              </div>
+
+              {/* VDOT (RUN only) */}
+              {sportMode === "RUN" && (
+                <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs font-semibold text-primary">VDOT (opcional)</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-text-muted">VDOT direto</label>
+                      <input type="number" min={20} max={85} step={0.5} placeholder="Ex.: 42.5" value={vdotValue} onChange={(e) => setVdotValue(e.target.value)} className={cn(inputClass, "bg-white/5 border-white/10 text-white py-2")} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-text-muted">Nome da prova</label>
+                      <input type="text" placeholder="Ex.: São Silvestre" value={raceName} onChange={(e) => setRaceName(e.target.value)} className={cn(inputClass, "bg-white/5 border-white/10 text-white py-2")} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-text-muted">Distância</label>
+                      <div className="relative">
+                        <select className={cn(selectClass, "bg-white/5 border-white/10 text-white py-2")} value={raceDistId} onChange={(e) => setRaceDistId(e.target.value)}>
+                          {RACE_DISTANCES.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-text-muted">Tempo (MM:SS)</label>
+                      <input type="text" placeholder="Ex.: 22:30" value={raceTime} onChange={(e) => setRaceTime(e.target.value)} className={cn(inputClass, "bg-white/5 border-white/10 text-white py-2")} />
+                    </div>
+                  </div>
+                  {computedVdot && !vdotValue && (
+                    <div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-primary font-semibold">VDOT calculado: {computedVdot}</div>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* Footer */}
+            <div className="p-5 border-t border-border/40">
+              {trainingDays.length === 0 && <p className="text-xs text-warning mb-3">Selecione pelo menos 1 dia de treino.</p>}
+              <Button
+                variant="primary"
+                size="md"
+                className="w-full"
+                disabled={trainingDays.length === 0}
+                onClick={() => {
+                  handleGenerate();
+                  setShowParamsModal(false);
+                  setShowResultModal(true);
+                }}
+              >
+                <Wand2 className="h-4 w-4" />
+                Gerar periodização
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Step 3: Result Modal (full-screen overlay) ── */}
+      {showResultModal && (
+        <div className="fixed inset-0 z-40 bg-background overflow-y-auto">
+
       {/* ── Header ── */}
       <div className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md print:hidden">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center gap-3 flex-wrap">
-          <Link
-            href="/treinador/prescricao/corrida"
+          <button
+            type="button"
+            onClick={() => { setShowResultModal(false); setShowParamsModal(true); }}
             className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Link>
+            Parâmetros
+          </button>
           <span className="text-border">·</span>
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-primary" />
@@ -1396,6 +1569,8 @@ export default function PeriodizacaoPage() {
           )}
         </div>
       </div>
+        </div>
+      )}
     </div>
   );
 }

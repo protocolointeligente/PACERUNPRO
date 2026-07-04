@@ -70,8 +70,9 @@ export async function GET(req: NextRequest) {
   } else {
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
     dateFilter = {
-      gte: todayStart,
+      gte: yesterdayStart,
       lte: new Date(todayStart.getTime() + 30 * 24 * 60 * 60 * 1000),
     };
   }

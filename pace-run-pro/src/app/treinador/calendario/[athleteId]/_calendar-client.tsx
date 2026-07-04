@@ -779,7 +779,7 @@ export default function CalendarClient({
 
   async function handlePasteWeek(targetMonday: Date) {
     if (!weekClipboard || !weekClipboard.workouts.length) return;
-    const sourceMonday = new Date(weekClipboard.sourceMondayKey);
+    const sourceMonday = new Date(weekClipboard.sourceMondayKey + "T00:00:00Z");
     const offsetMs = targetMonday.getTime() - sourceMonday.getTime();
     const offsetDays = Math.round(offsetMs / 86400000);
     setSaving(true);
@@ -789,7 +789,7 @@ export default function CalendarClient({
         const newDate = new Date(Date.UTC(
           wDate.getUTCFullYear(), wDate.getUTCMonth(), wDate.getUTCDate() + offsetDays
         ));
-        await fetch("/api/coach/workouts", {
+        const res = await fetch("/api/coach/workouts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -809,9 +809,15 @@ export default function CalendarClient({
             targetPowerWatts: w.targetPowerWatts,
           }),
         });
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({})) as { error?: string };
+          throw new Error(d.error ?? `Erro ao colar treino (${res.status})`);
+        }
       }
       setWeekClipboard(null);
       await refreshMonth(year, month, athleteId);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Erro ao colar semana. Tente novamente.");
     } finally {
       setSaving(false);
     }

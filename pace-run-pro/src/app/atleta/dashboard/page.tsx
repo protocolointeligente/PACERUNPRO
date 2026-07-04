@@ -434,6 +434,7 @@ export default function AthleteDashboard() {
   const [firstName, setFirstName] = useState("Atleta");
   const [todayWorkouts, setTodayWorkouts] = useState<WorkoutEntry[]>([]);
   const [yesterdayWorkout, setYesterdayWorkout] = useState<WorkoutEntry | null>(null);
+  const [upcomingWorkouts, setUpcomingWorkouts] = useState<WorkoutEntry[]>([]);
   const [workoutsLoading, setWorkoutsLoading] = useState(true);
   const [tsb, setTsb] = useState<number | null>(null);
   const [ctl, setCtl] = useState<number | null>(null);
@@ -478,8 +479,13 @@ export default function AthleteDashboard() {
       .then((data: WorkoutEntry[]) => {
         const todayStr = new Date().toLocaleDateString("sv");
         const yesterdayStr = new Date(Date.now() - 86400000).toLocaleDateString("sv");
+        // Build next 7 days strings for "upcoming" section
+        const nextDays = Array.from({ length: 7 }, (_, i) =>
+          new Date(Date.now() + (i + 1) * 86400000).toLocaleDateString("sv")
+        );
         setTodayWorkouts(data.filter((w) => w.date.slice(0, 10) === todayStr));
         setYesterdayWorkout(data.find((w) => w.date.slice(0, 10) === yesterdayStr) ?? null);
+        setUpcomingWorkouts(data.filter((w) => nextDays.includes(w.date.slice(0, 10))));
       })
       .catch(() => null)
       .finally(() => setWorkoutsLoading(false));
@@ -559,6 +565,54 @@ export default function AthleteDashboard() {
 
         {/* ── PSE Widget ── */}
         <PseWidget yesterdayWorkout={yesterdayWorkout} />
+
+        {/* ── Upcoming workouts this week ── */}
+        {!workoutsLoading && upcomingWorkouts.length > 0 && (
+          <div style={{ marginBottom: 10 }}>
+            <div style={{
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              letterSpacing: "0.14em", textTransform: "uppercase",
+              color: "#5C636B", marginBottom: 8, paddingLeft: 2,
+            }}>
+              Próximos treinos
+            </div>
+            {upcomingWorkouts.slice(0, 5).map((w) => {
+              const d = new Date(w.date + "T00:00:00");
+              const dayLabel = d.toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" });
+              const sportKey = (w.sport ?? "RUN").toUpperCase();
+              const sportCfg = SPORT_ACCENT[sportKey] ?? SPORT_ACCENT.RUN;
+              return (
+                <Link key={w.id} href={`/atleta/treino/${w.id}`} style={{ display: "block", textDecoration: "none" }}>
+                  <div style={{
+                    background: "#0E1116",
+                    border: "1px solid rgba(236,234,227,0.07)",
+                    borderRadius: 14, padding: "11px 14px",
+                    marginBottom: 6,
+                    display: "flex", alignItems: "center", gap: 12,
+                  }}>
+                    <div style={{
+                      width: 34, height: 34, borderRadius: 9,
+                      background: sportCfg.bg, border: `1px solid ${sportCfg.border}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 17, flexShrink: 0,
+                    }}>
+                      {sportKey === "STRENGTH" ? "🏋️" : sportKey === "BIKE" ? "🚴" : sportKey === "SWIM" ? "🏊" : sportKey === "MOBILITY" ? "🧘" : "🏃"}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#ECEAE3", lineHeight: 1.2 }}>{w.title}</div>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#5C636B", marginTop: 2 }}>
+                        {dayLabel}
+                        {w.distanceKm ? ` · ${w.distanceKm}${sportKey === "SWIM" ? "m" : "km"}` : ""}
+                        {w.durationMin ? ` · ~${w.durationMin}min` : ""}
+                      </div>
+                    </div>
+                    <div style={{ color: sportCfg.color, fontSize: 14, flexShrink: 0 }}>›</div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
 
         {/* ── Quick metrics ── */}
         <QuickMetrics tsb={tsb} ctl={ctl} weeklyStats={weeklyStats} />

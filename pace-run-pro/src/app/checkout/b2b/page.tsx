@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Script from "next/script";
 import { Suspense, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, Copy, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
@@ -392,10 +393,11 @@ function B2BCheckoutContent() {
 
   return (
     <>
-      {/* Load PagBank.js for client-side card encryption (PCI DSS) */}
-      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
       {!isFree && (
-        <script src="https://assets.pagseguro.com.br/checkout-sdk/iojs/pagseguro.min.js" />
+        <Script
+          src="https://assets.pagseguro.com.br/checkout-sdk/iojs/pagseguro.min.js"
+          strategy="afterInteractive"
+        />
       )}
 
       <h1 className="mt-8 font-display text-3xl font-extrabold text-text">
