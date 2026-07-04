@@ -37,6 +37,7 @@ export async function PATCH(
     mainSet?: string;
     cooldown?: string;
     notes?: string;
+    status?: string;
     targetDistanceKm?: number | null;
     targetDurationMin?: number | null;
     targetPaceSecPerKm?: number | null;
@@ -57,6 +58,7 @@ export async function PATCH(
     data.date = d;
   }
   if (typeof body.title === "string" && body.title.trim()) data.title = body.title.trim();
+  if (typeof body.status === "string" && body.status.trim()) data.status = body.status.trim();
   if (typeof body.objective === "string") data.objective = body.objective.trim();
   if (typeof body.warmup === "string") data.warmup = body.warmup.trim() || null;
   if (typeof body.mainSet === "string") data.mainSet = body.mainSet.trim() || null;

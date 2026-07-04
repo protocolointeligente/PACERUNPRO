@@ -12,13 +12,16 @@ function dateKey(date: Date): string {
 
 export default async function CalendarioPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ athleteId: string }>;
+  searchParams: Promise<{ addSport?: string }>;
 }) {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "COACH") redirect("/login");
 
   const { athleteId } = await params;
+  const { addSport } = await searchParams;
 
   const coach = await prisma.coach.findUnique({
     where: { userId: session.user.id },
@@ -131,6 +134,7 @@ export default async function CalendarioPage({
       initialLogs={rawLogs}
       initialYear={year}
       initialMonth={month}
+      addSport={addSport ?? null}
       athleteDetail={
         athleteDetail
           ? {

@@ -19,6 +19,9 @@ import {
   AlertTriangle,
   TrendingUp,
   CalendarDays,
+  EyeOff,
+  Eye,
+  Lock,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -81,6 +84,7 @@ interface Props {
   initialYear: number;
   initialMonth: number;
   athleteDetail: AthleteDetail | null;
+  addSport?: string | null;
 }
 
 // ── Constants ─────────────────────────────────────────────────────
@@ -516,6 +520,7 @@ export default function CalendarClient({
   initialYear,
   initialMonth,
   athleteDetail,
+  addSport,
 }: Props) {
   const router = useRouter();
 
@@ -533,6 +538,19 @@ export default function CalendarClient({
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [autoOpened, setAutoOpened] = useState(false);
+
+  // Auto-open prescription modal when addSport URL param is present
+  useEffect(() => {
+    if (!autoOpened && addSport) {
+      const sport = addSport as SportKey;
+      if (SPORT_TYPES.find((s) => s.key === sport)) {
+        setAutoOpened(true);
+        setForm(emptyForm(sport));
+        setModal({ kind: "form", date: dateKey(new Date()), sport });
+      }
+    }
+  }, [addSport, autoOpened]);
 
   // ── Grid ────────────────────────────────────────────────────────
 
@@ -781,13 +799,22 @@ export default function CalendarClient({
     }
   }
 
-  // ── Close context menu on outside click ──────────────────────────
+  // ── Status update (Ocultar / Bloquear) ───────────────────────────
 
-  useEffect(() => {
-    const close = () => setCtxMenu(null);
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, []);
+  async function handleUpdateStatus(id: string, status: string) {
+    setCtxMenu(null);
+    setSaving(true);
+    try {
+      await fetch(`/api/coach/workouts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      await refreshMonth(year, month, athleteId);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   // ── Render ───────────────────────────────────────────────────────
 
@@ -1087,17 +1114,33 @@ export default function CalendarClient({
 
       {/* ── Context menu ───────────────────────────────────────────── */}
       {ctxMenu && (
-        <div
-          className="fixed z-50 bg-[#1e2130] border border-white/10 rounded-xl shadow-2xl py-1 min-w-[164px]"
-          style={{ left: Math.min(ctxMenu.x, window.innerWidth - 180), top: Math.min(ctxMenu.y, window.innerHeight - 200) }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <CtxItem icon={<Pencil size={13} />}       label="Editar"  onClick={() => openEdit(ctxMenu.workout)} />
-          <CtxItem icon={<Scissors size={13} />}     label="Cortar"  onClick={() => handleCut(ctxMenu.workout)} />
-          <CtxItem icon={<Copy size={13} />}         label="Copiar"  onClick={() => handleCopy(ctxMenu.workout)} />
-          <div className="my-1 border-t border-white/10" />
-          <CtxItem icon={<Trash2 size={13} />}       label="Excluir" onClick={() => deleteWorkout(ctxMenu.workout.id)} danger />
-        </div>
+        <>
+          <div className="fixed inset-0 z-40" onMouseDown={() => setCtxMenu(null)} />
+          <div
+            className="fixed z-50 bg-[#1e2130] border border-white/10 rounded-xl shadow-2xl py-1 min-w-[172px]"
+            style={{ left: Math.min(ctxMenu.x, window.innerWidth - 190), top: Math.min(ctxMenu.y, window.innerHeight - 240) }}
+          >
+            <CtxItem icon={<Pencil size={13} />}   label="Editar"  onClick={() => openEdit(ctxMenu.workout)} />
+            <CtxItem icon={<Copy size={13} />}     label="Copiar"  onClick={() => handleCopy(ctxMenu.workout)} />
+            <CtxItem icon={<Scissors size={13} />} label="Recortar" onClick={() => handleCut(ctxMenu.workout)} />
+            <div className="my-1 border-t border-white/10" />
+            <CtxItem
+              icon={ctxMenu.workout.status === "AGENDADO" ? <Eye size={13} /> : <EyeOff size={13} />}
+              label={ctxMenu.workout.status === "AGENDADO" ? "Mostrar" : "Ocultar"}
+              onClick={() => handleUpdateStatus(
+                ctxMenu.workout.id,
+                ctxMenu.workout.status === "AGENDADO" ? "LIBERADO" : "AGENDADO"
+              )}
+            />
+            <CtxItem
+              icon={<Lock size={13} />}
+              label="Bloquear"
+              onClick={() => handleUpdateStatus(ctxMenu.workout.id, "AGENDADO")}
+            />
+            <div className="my-1 border-t border-white/10" />
+            <CtxItem icon={<Trash2 size={13} />}   label="Excluir" onClick={() => deleteWorkout(ctxMenu.workout.id)} danger />
+          </div>
+        </>
       )}
 
       {/* ── Sport picker modal ──────────────────────────────────────── */}
