@@ -256,6 +256,7 @@ model Coach {
   marketplaceCommissions MarketplaceCommission[]
   marketplacePayouts MarketplacePayout[]
   marketplaceCoupons MarketplaceCoupon[]
+  pagbankAccount    PagBankSellerAccount?
   challenges        Challenge[]
   appointments      Appointment[]
   coachAvailability CoachAvailability[]
@@ -309,6 +310,27 @@ model CoachAthlete {
   @@index([coachId])
   @@index([athleteId])
   @@map("coach_athletes")
+}
+
+// Coach's PagBank marketplace seller authorization (OAuth2 Connect)
+model PagBankSellerAccount {
+  id                   String    @id @default(cuid())
+  coachId              String    @unique
+  coach                Coach     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  pagbankAccountId     String    // ACCO_xxx — used in split receivers
+  accessToken          String    // AES-256-GCM encrypted via lib/encryption.ts
+  refreshToken         String?   // encrypted
+  tokenExpiresAt       DateTime?
+  authorizationStatus  String    @default("authorized") // authorized | revoked | expired
+  scopes               String    @default("payments.create payments.read payments.refund accounts.read")
+
+  authorizedAt         DateTime  @default(now())
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([pagbankAccountId])
+  @@map("pagbank_seller_accounts")
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -1597,7 +1619,7 @@ model MarketplaceStore {
   instagramUrl  String?
   whatsapp      String?
 
-  commissionPct Float    @default(0.15)
+  commissionPct Float    @default(0.10)
   isActive      Boolean  @default(true)
   stripeAccountId String?  // Stripe Connect account
 
@@ -1803,7 +1825,7 @@ model MarketplaceReview {
 
 model MarketplaceConfig {
   id                  String   @id @default(cuid())
-  defaultCommissionPct Float    @default(0.15)
+  defaultCommissionPct Float    @default(0.10)
   categoryConfig      Json?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt

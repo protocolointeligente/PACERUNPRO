@@ -88,7 +88,52 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true });
   }
 
-  // referenceId formato: userId_planId_timestamp
+  // ── Marketplace order (referenceId = "mktplace-{orderId}") ─────────────────
+  if (paymentReferenceId.startsWith("mktplace-")) {
+    const orderId = paymentReferenceId.slice("mktplace-".length);
+    try {
+      const order = await prisma.marketplaceOrder.findUnique({
+        where: { id: orderId },
+        select: { id: true, status: true, items: { select: { id: true, productId: true } } },
+      });
+      if (!order) {
+        console.warn("[pagbank marketplace] order não encontrado:", orderId);
+        return NextResponse.json({ received: true });
+      }
+      if (order.status === "PAID" || order.status === "FULFILLED") {
+        return NextResponse.json({ received: true }); // idempotent
+      }
+
+      await prisma.$transaction([
+        prisma.marketplaceOrder.update({
+          where: { id: orderId },
+          data: { status: "PAID" },
+        }),
+        ...order.items.map((item) =>
+          prisma.marketplaceOrderItem.update({
+            where: { id: item.id },
+            data: { status: "PAID" },
+          })
+        ),
+      ]);
+
+      // Increment purchase counter for each product
+      const productIds = [...new Set(order.items.map((i) => i.productId))];
+      await Promise.all(
+        productIds.map((pid) =>
+          prisma.marketplaceProduct.update({ where: { id: pid }, data: { purchases: { increment: 1 } } }).catch(() => null)
+        )
+      );
+
+      console.log("[pagbank marketplace] pedido pago:", orderId);
+    } catch (err) {
+      console.error("[pagbank marketplace] erro:", err);
+      return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    }
+    return NextResponse.json({ received: true });
+  }
+
+  // ── Subscription payment (referenceId = userId_planId_timestamp) ──────────
   const parts = paymentReferenceId.split("_");
   if (parts.length < 3) {
     console.warn("[pagbank] referenceId inesperado:", paymentReferenceId);

@@ -90,6 +90,11 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [reviewSent, setReviewSent] = useState(false);
 
+  // PIX payment
+  const [pix, setPix] = useState<{ copyPaste: string; qrCodeUrl: string | null; expiresAt: string } | null>(null);
+  const [pixOrderId, setPixOrderId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
   // Coupon
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscount, setCouponDiscount] = useState(0);
@@ -160,6 +165,8 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
     if (!product) return;
     setBuying(true);
     setError(null);
+    setPix(null);
+    setPixOrderId(null);
     try {
       const res = await fetch("/api/marketplace/checkout", {
         method: "POST",
@@ -177,6 +184,23 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
       }
       if (data.free) {
         setSuccess(true);
+      } else if (data.pix) {
+        setPix(data.pix);
+        setPixOrderId(data.orderId);
+        // Poll for payment confirmation every 4 seconds
+        const interval = setInterval(async () => {
+          try {
+            const r = await fetch(`/api/marketplace/orders/${data.orderId}/status`);
+            const s = await r.json();
+            if (s.status === "PAID" || s.status === "FULFILLED") {
+              clearInterval(interval);
+              setPix(null);
+              setSuccess(true);
+            }
+          } catch { /* ignore polling errors */ }
+        }, 4000);
+        // Auto-clear polling after 30 minutes
+        setTimeout(() => clearInterval(interval), 30 * 60 * 1000);
       } else if (data.url) {
         window.location.href = data.url;
       }
@@ -185,6 +209,13 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
     } finally {
       setBuying(false);
     }
+  }
+
+  async function handleCopyPix() {
+    if (!pix?.copyPaste) return;
+    await navigator.clipboard.writeText(pix.copyPaste).catch(() => null);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
   }
 
   if (loading) {
@@ -445,6 +476,47 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
                     <CheckCircle2 className="h-4 w-4 shrink-0" />
                     Produto liberado!
                   </div>
+                ) : pix ? (
+                  <div className="space-y-3">
+                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-center">
+                      <p className="mb-2 text-xs font-semibold text-primary">PIX gerado — aguardando pagamento</p>
+                      {pix.qrCodeUrl && (
+                        <img src={pix.qrCodeUrl} alt="QR Code PIX" className="mx-auto h-40 w-40 rounded-lg" />
+                      )}
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-text-muted">Ou copie o código PIX copia e cola:</p>
+                      <div className="flex gap-2">
+                        <input
+                          readOnly
+                          value={pix.copyPaste}
+                          className="flex-1 truncate rounded-xl border border-border bg-background px-3 py-2 text-xs font-mono text-text"
+                        />
+                        <Button variant="secondary" size="sm" onClick={handleCopyPix} className="shrink-0">
+                          {copied ? <CheckCircle2 className="h-3.5 w-3.5 text-success" /> : "Copiar"}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-text-muted">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse inline-block" />
+                      Aguardando confirmação do pagamento...
+                    </div>
+                    <p className="text-xs text-text-muted">
+                      Válido até{" "}
+                      {new Date(pix.expiresAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                    </p>
+                    {pixOrderId && (
+                      <p className="text-center text-xs text-text-muted/40">#{pixOrderId.slice(-8).toUpperCase()}</p>
+                    )}
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => { setPix(null); setPixOrderId(null); }}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
                 ) : (
                   <Button className="w-full gap-2" disabled={buying} onClick={handleBuy}>
                     {buying ? (
@@ -469,7 +541,7 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
                 )}
 
                 <p className="text-center text-xs text-text-muted">
-                  Pagamento seguro via Stripe
+                  Pagamento seguro via PIX (PagBank)
                 </p>
               </CardContent>
             </Card>

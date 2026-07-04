@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { getStripe } from "@/lib/stripe";
-import { getMarketplaceConfig } from "@/lib/marketplace-config";
+import { createPixOrderWithSplit, getMarketplaceAccountId, MARKETPLACE_COMMISSION_RATE } from "@/lib/pagbank";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -16,19 +15,31 @@ export async function POST(req: NextRequest) {
   const athlete = await prisma.athlete.findUnique({ where: { userId: session.user.id }, select: { id: true } });
   if (!athlete) return NextResponse.json({ error: "Atleta não encontrado" }, { status: 404 });
 
-  const body = await req.json().catch(() => ({})) as { productId?: string; couponCode?: string; affiliateCode?: string };
-  const { productId, couponCode, affiliateCode } = body;
+  const body = await req.json().catch(() => ({})) as {
+    productId?: string;
+    couponCode?: string;
+    affiliateCode?: string;
+    customerTaxId?: string; // CPF/CNPJ — required for PagBank
+  };
+  const { productId, couponCode, affiliateCode, customerTaxId } = body;
   if (!productId) return NextResponse.json({ error: "productId obrigatório" }, { status: 400 });
 
   const product = await prisma.marketplaceProduct.findUnique({
     where: { id: productId, published: true },
-    include: { store: { select: { name: true, stripeAccountId: true } } },
+    include: {
+      store: { select: { name: true } },
+      coach: {
+        select: {
+          id: true,
+          pagbankAccount: { select: { pagbankAccountId: true, authorizationStatus: true } },
+        },
+      },
+    },
   });
   if (!product) return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 });
 
-  // Get commission config (singleton guard ensures record always exists)
-  const config = await getMarketplaceConfig();
-  const commissionPct = product.commissionPct ?? config.defaultCommissionPct;
+  // Commission is always MARKETPLACE_COMMISSION_RATE (10%) — centralized via marketplace
+  const commissionPct = MARKETPLACE_COMMISSION_RATE;
 
   // Resolve coupon discount
   let appliedCouponId: string | null = null;
@@ -46,8 +57,7 @@ export async function POST(req: NextRequest) {
     const coachMatch = !coupon?.coachId || coupon.coachId === product.coachId;
     const storeMatch = !coupon?.storeId || coupon.storeId === product.storeId;
     if (
-      coupon &&
-      coupon.isActive &&
+      coupon?.isActive &&
       coachMatch &&
       storeMatch &&
       (!coupon.expiresAt || coupon.expiresAt >= new Date()) &&
@@ -76,8 +86,6 @@ export async function POST(req: NextRequest) {
 
   const finalPriceCents = product.priceCents - discountCents;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://pacerunpro.com.br";
-
   // Free product (or 100% discount)
   if (finalPriceCents === 0) {
     const order = await prisma.marketplaceOrder.create({
@@ -90,27 +98,29 @@ export async function POST(req: NextRequest) {
         status: "PAID",
         items: { create: [{ productId: product.id, priceCents: 0, status: "FULFILLED" }] },
         commissions: {
-          create: [{
-            coachId: product.coachId ?? null,
-            grossCents: 0,
-            commissionPct,
-            commissionCents: 0,
-            netCents: 0,
-          }],
+          create: [{ coachId: product.coachId ?? null, grossCents: 0, commissionPct, commissionCents: 0, netCents: 0 }],
         },
       },
     });
-    if (appliedCouponId) {
-      await prisma.marketplaceCoupon.update({
-        where: { id: appliedCouponId },
-        data: { usedCount: { increment: 1 } },
-      });
-    }
+    if (appliedCouponId) await prisma.marketplaceCoupon.update({ where: { id: appliedCouponId }, data: { usedCount: { increment: 1 } } });
     await prisma.marketplaceProduct.update({ where: { id: productId }, data: { purchases: { increment: 1 } } });
-    return NextResponse.json({ free: true, orderId: order.id, redirectUrl: "/checkout/sucesso?free=1" });
+    return NextResponse.json({ free: true, orderId: order.id });
   }
 
-  // Create order
+  // Coach must have PagBank connected for paid products
+  const coachPagBank = product.coach?.pagbankAccount;
+  if (!coachPagBank || coachPagBank.authorizationStatus !== "authorized") {
+    return NextResponse.json(
+      { error: "Este produto ainda não está disponível para pagamento. O treinador precisa conectar o PagBank." },
+      { status: 422 }
+    );
+  }
+
+  // Calculate split amounts (must sum exactly to totalCents)
+  const marketplaceCents = Math.round(finalPriceCents * commissionPct);
+  const coachCents = finalPriceCents - marketplaceCents;
+
+  // Create internal order record first
   const order = await prisma.marketplaceOrder.create({
     data: {
       athleteId: athlete.id,
@@ -125,8 +135,8 @@ export async function POST(req: NextRequest) {
           coachId: product.coachId ?? null,
           grossCents: finalPriceCents,
           commissionPct,
-          commissionCents: Math.round(finalPriceCents * commissionPct),
-          netCents: finalPriceCents - Math.round(finalPriceCents * commissionPct),
+          commissionCents: marketplaceCents,
+          netCents: coachCents,
         }],
       },
     },
@@ -136,75 +146,51 @@ export async function POST(req: NextRequest) {
   if (appliedAffiliate) {
     const earningCents = Math.round(finalPriceCents * appliedAffiliate.commissionPct);
     await prisma.marketplaceReferral.create({
-      data: {
-        affiliateId: appliedAffiliate.id,
-        orderId: order.id,
-        earningCents,
-        status: "PENDING",
-      },
+      data: { affiliateId: appliedAffiliate.id, orderId: order.id, earningCents, status: "PENDING" },
     });
-    await prisma.marketplaceAffiliate.update({
-      where: { id: appliedAffiliate.id },
-      data: { totalSales: { increment: 1 } },
-    });
+    await prisma.marketplaceAffiliate.update({ where: { id: appliedAffiliate.id }, data: { totalSales: { increment: 1 } } });
   }
-
-  // Increment coupon usage counter
   if (appliedCouponId) {
-    await prisma.marketplaceCoupon.update({
-      where: { id: appliedCouponId },
-      data: { usedCount: { increment: 1 } },
-    });
+    await prisma.marketplaceCoupon.update({ where: { id: appliedCouponId }, data: { usedCount: { increment: 1 } } });
   }
 
-  // Stripe checkout
-  const stripe = getStripe();
-  const coachStripeAccountId = product.store?.stripeAccountId ?? null;
-  const netCents = finalPriceCents - Math.round(finalPriceCents * commissionPct);
-  const isSubscription = product.type === "ASSINATURA";
+  // Create PagBank PIX order with split
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://pacerunpro.com.br";
 
-  // Build Connect transfer options differently for payment vs subscription mode
-  const connectOptions = coachStripeAccountId
-    ? isSubscription
-      ? {
-          subscription_data: {
-            application_fee_percent: Math.round(commissionPct * 10000) / 100,
-            transfer_data: { destination: coachStripeAccountId },
-            metadata: { marketplaceOrderId: order.id, productId, athleteId: athlete.id },
-          },
-        }
-      : { payment_intent_data: { transfer_data: { destination: coachStripeAccountId, amount: netCents } } }
-    : {};
-
-  const checkoutSession = await stripe.checkout.sessions.create({
-    mode: isSubscription ? "subscription" : "payment",
-    payment_method_types: ["card"],
-    line_items: [{
-      price_data: {
-        currency: "brl",
-        unit_amount: finalPriceCents,
-        product_data: {
-          name: product.title,
-          description: product.store?.name ? `por ${product.store.name}` : "PACE RUN PRO",
-          images: product.coverUrl ? [product.coverUrl] : [],
-        },
-        ...(isSubscription ? { recurring: { interval: "month" as const } } : {}),
+  try {
+    const pix = await createPixOrderWithSplit({
+      internalOrderId: order.id,
+      totalCents: finalPriceCents,
+      productName: product.title,
+      customer: {
+        name: session.user.name ?? "Atleta",
+        email: session.user.email ?? "",
+        taxId: customerTaxId ?? "00000000000", // CPF from athlete profile ideally
       },
-      quantity: 1,
-    }],
-    metadata: {
-      marketplaceOrderId: order.id,
-      productId,
-      athleteId: athlete.id,
-    },
-    success_url: `${appUrl}/checkout/sucesso?order_id=${order.id}&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/marketplace/${product.slug}`,
-    customer_email: session.user.email ?? undefined,
-    locale: "pt-BR",
-    ...connectOptions,
-  });
+      receivers: [
+        { accountId: coachPagBank.pagbankAccountId, amountCents: coachCents },
+        { accountId: getMarketplaceAccountId(), amountCents: marketplaceCents },
+      ],
+      notificationUrl: `${appUrl}/api/webhooks/pagbank`,
+    });
 
-  await prisma.marketplaceOrder.update({ where: { id: order.id }, data: { stripeSessionId: checkoutSession.id } });
+    // Store PagBank order ID
+    await prisma.marketplaceOrder.update({
+      where: { id: order.id },
+      data: { pagbankOrderId: pix.pagbankOrderId },
+    });
 
-  return NextResponse.json({ url: checkoutSession.url });
+    return NextResponse.json({
+      orderId: order.id,
+      pix: {
+        copyPaste: pix.pixCopyPaste,
+        qrCodeUrl: pix.pixQrCodeUrl,
+        expiresAt: pix.expiresAt,
+      },
+    });
+  } catch {
+    // Roll back order status to CANCELLED if PagBank call fails
+    await prisma.marketplaceOrder.update({ where: { id: order.id }, data: { status: "CANCELLED" } }).catch(() => null);
+    return NextResponse.json({ error: "Erro ao gerar cobrança PIX. Tente novamente." }, { status: 502 });
+  }
 }

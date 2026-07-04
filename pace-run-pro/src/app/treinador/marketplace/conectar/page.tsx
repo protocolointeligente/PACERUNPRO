@@ -1,43 +1,55 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertCircle, CheckCircle2, CreditCard, ExternalLink, Loader2, ShieldCheck, Zap } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
+import {
+  CheckCircle2,
+  XCircle,
+  ExternalLink,
+  RefreshCw,
+  Shield,
+  AlertTriangle,
+  Banknote,
+} from "lucide-react";
 
-interface ConnectStatus {
+interface PagBankStatus {
   connected: boolean;
-  payoutsEnabled: boolean;
-  accountId: string | null;
+  pagbankAccountId?: string;
+  authorizationStatus?: string;
+  authorizedAt?: string;
 }
 
 export default function ConectarPage() {
-  const [status, setStatus] = useState<ConnectStatus | null>(null);
+  const searchParams = useSearchParams();
+  const success = searchParams.get("success") === "1";
+  const errorParam = searchParams.get("error");
+
+  const [status, setStatus] = useState<PagBankStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-  const isSuccess = params?.get("success") === "1";
-  const isRefresh = params?.get("refresh") === "1";
+  const [error, setError] = useState<string | null>(
+    errorParam === "authorization_denied"
+      ? "Autorização cancelada. Tente novamente."
+      : errorParam === "token_exchange_failed"
+      ? "Erro ao processar autorização. Tente novamente."
+      : null
+  );
 
   useEffect(() => {
-    fetch("/api/coach/stripe-connect/status")
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d) setStatus(d); })
-      .catch(console.error)
+    fetch("/api/coach/pagbank/status")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: PagBankStatus | null) => { if (d) setStatus(d); })
+      .catch(() => null)
       .finally(() => setLoading(false));
-  }, []);
+  }, [success]);
 
   async function handleConnect() {
     setConnecting(true);
     setError(null);
     try {
-      const res = await fetch("/api/coach/stripe-connect/onboard", { method: "POST" });
+      const res = await fetch("/api/coach/pagbank/authorize");
       const data = await res.json();
-      if (!res.ok) { setError(data.error ?? "Erro ao conectar"); return; }
+      if (!res.ok) { setError(data.error ?? "Erro ao iniciar autorização"); return; }
       window.location.href = data.url;
     } catch {
       setError("Erro de conexão. Tente novamente.");
@@ -46,114 +58,139 @@ export default function ConectarPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const isFullyConnected = status?.connected && status?.payoutsEnabled;
+  const isConnected = status?.connected === true;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 px-4 py-8 sm:px-6">
-      {/* Header */}
-      <div>
-        <Badge variant="primary" className="mb-2">Marketplace</Badge>
-        <h1 className="font-display text-2xl font-bold text-text">Conectar pagamentos</h1>
-        <p className="text-sm text-text-muted mt-0.5">
-          Configure sua conta Stripe para receber pagamentos diretamente quando atletas compram seus produtos.
-        </p>
+    <div className="max-w-xl mx-auto px-4 py-10 space-y-6">
+      <div className="flex items-start gap-4">
+        <div className="p-3 rounded-2xl bg-green-100 dark:bg-green-900/30">
+          <Banknote className="w-6 h-6 text-green-600 dark:text-green-400" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold">Conectar pagamentos</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Autorize o PACE RUN PRO a criar cobranças em seu nome via PagBank
+          </p>
+        </div>
       </div>
 
-      {/* Return banners */}
-      {isSuccess && (
-        <div className="flex items-center gap-2.5 rounded-xl border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          Conta Stripe conectada com sucesso! Você já pode receber pagamentos.
-        </div>
-      )}
-      {isRefresh && (
-        <div className="flex items-center gap-2.5 rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-warning">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          Sessão expirada. Por favor, reinicie o processo de conexão.
+      {success && (
+        <div className="flex items-center gap-3 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-800 dark:text-green-300">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          Conta PagBank conectada com sucesso!
         </div>
       )}
 
-      {/* Status card */}
-      <Card className={cn("border-2", isFullyConnected ? "border-success/30 bg-success/5" : "border-border")}>
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl", isFullyConnected ? "bg-success/20" : "bg-primary/10")}>
-              <CreditCard className={cn("h-6 w-6", isFullyConnected ? "text-success" : "text-primary")} />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-display text-base font-semibold text-text">Stripe Connect</p>
-                <Badge variant={isFullyConnected ? "success" : status?.connected ? "warning" : "outline"}>
-                  {isFullyConnected ? "Ativo" : status?.connected ? "Pendente verificação" : "Não conectado"}
-                </Badge>
-              </div>
-              <div className="mt-2 space-y-1.5">
-                <div className="flex items-center gap-2 text-sm">
-                  {status?.connected
-                    ? <CheckCircle2 className="h-4 w-4 text-success" />
-                    : <div className="h-4 w-4 rounded-full border-2 border-text-muted/30" />}
-                  <span className={status?.connected ? "text-text" : "text-text-muted"}>Conta criada e verificada</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  {status?.payoutsEnabled
-                    ? <CheckCircle2 className="h-4 w-4 text-success" />
-                    : <div className="h-4 w-4 rounded-full border-2 border-text-muted/30" />}
-                  <span className={status?.payoutsEnabled ? "text-text" : "text-text-muted"}>Repasses habilitados</span>
-                </div>
-              </div>
-              {status?.accountId && (
-                <p className="mt-2 text-[11px] font-mono text-text-muted/60">{status.accountId}</p>
+      {error && (
+        <div className="flex items-center gap-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-800 dark:text-red-300">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          {error}
+        </div>
+      )}
+
+      <div className="border rounded-2xl overflow-hidden">
+        <div className={`px-5 py-4 flex items-center justify-between ${isConnected ? "bg-green-50 dark:bg-green-900/20" : "bg-muted/50"}`}>
+          <div className="flex items-center gap-3">
+            {loading ? (
+              <RefreshCw className="w-5 h-5 animate-spin text-muted-foreground" />
+            ) : isConnected ? (
+              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+            ) : (
+              <XCircle className="w-5 h-5 text-muted-foreground" />
+            )}
+            <div>
+              <p className="font-semibold text-sm">
+                {loading ? "Verificando…" : isConnected ? "Conta conectada" : "Conta não conectada"}
+              </p>
+              {isConnected && status?.pagbankAccountId && (
+                <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                  {status.pagbankAccountId}
+                </p>
               )}
             </div>
           </div>
-
-          {!isFullyConnected && (
-            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-              <Button onClick={handleConnect} disabled={connecting} className="gap-2 sm:w-auto">
-                {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                {status?.connected ? "Continuar configuração" : "Conectar com Stripe"}
-              </Button>
-            </div>
+          {isConnected && (
+            <span className="text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full px-2.5 py-1 font-medium">
+              Ativo
+            </span>
           )}
-          {error && <p className="mt-2 text-xs text-danger">{error}</p>}
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* How it works */}
-      <Card>
-        <CardContent className="p-6 space-y-5">
-          <h2 className="font-display text-base font-semibold text-text">Como funciona</h2>
-          <div className="space-y-4">
-            {[
-              { icon: ShieldCheck, title: "Pagamento seguro", desc: "O atleta paga via Stripe. Os dados do cartão nunca passam pelos nossos servidores." },
-              { icon: Zap, title: "Repasse automático", desc: "Após o pagamento, 85% do valor é transferido para sua conta Stripe automaticamente." },
-              { icon: CreditCard, title: "Saque quando quiser", desc: "Com Stripe Connect, você controla quando transferir o saldo para sua conta bancária." },
-            ].map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="flex items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                  <Icon className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-text">{title}</p>
-                  <p className="text-xs text-text-muted mt-0.5">{desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="rounded-xl border border-border/40 bg-card-hover/30 px-4 py-3 text-xs text-text-muted">
-        Sem Stripe Connect ativo, os pagamentos são coletados pela PACE e repassados manualmente via PIX no dia 10 do mês seguinte.
+        <div className="px-5 py-4 space-y-3 divide-y divide-border/50">
+          <CheckItem done={isConnected} label="Conta PagBank autorizada" description="Permite criar cobranças PIX em seu nome" />
+          <CheckItem done={isConnected} label="Repasses habilitados" description="90% do valor de cada venda enviado diretamente para sua conta PagBank" className="pt-3" />
+          <CheckItem done={isConnected} label="Produtos disponíveis para venda" description="Seus produtos aprovados ficam visíveis após a conexão" className="pt-3" />
+        </div>
       </div>
+
+      {!isConnected && !loading && (
+        <button
+          onClick={handleConnect}
+          disabled={connecting}
+          className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60 px-4 py-3 rounded-xl font-semibold text-sm transition-colors"
+        >
+          <ExternalLink className="w-4 h-4" />
+          {connecting ? "Redirecionando para PagBank…" : "Autorizar conta PagBank"}
+        </button>
+      )}
+      {isConnected && (
+        <button
+          onClick={handleConnect}
+          disabled={connecting}
+          className="w-full flex items-center justify-center gap-2 border rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Reconectar / atualizar autorização
+        </button>
+      )}
+
+      <div className="border rounded-2xl p-5 space-y-3">
+        <div className="flex items-center gap-2 font-semibold text-sm">
+          <Shield className="w-4 h-4 text-primary" />
+          Modelo de repasse — PACE RUN PRO Marketplace
+        </div>
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <InfoRow label="Taxa da plataforma" value="10% por venda" />
+          <InfoRow label="Repasse ao treinador" value="90% por venda" />
+          <InfoRow label="Ciclo de repasses" value="Quinzenal" />
+          <InfoRow label="Método" value="PIX split automático" />
+        </div>
+        <p className="text-xs text-muted-foreground pt-1 border-t border-border/50">
+          O split é feito diretamente para sua conta PagBank no momento do pagamento — você recebe 90% automaticamente, sem solicitação manual.
+        </p>
+      </div>
+
+      <div className="rounded-2xl bg-muted/50 px-5 py-4 text-xs text-muted-foreground space-y-1">
+        <p className="font-medium text-foreground text-sm mb-2">Pré-requisitos</p>
+        <p>• Conta PagBank ativa (Sandbox para testes, Produção após homologação)</p>
+        <p>• CPF ou CNPJ cadastrado no PagBank</p>
+        <p>• Produtos com status <strong>Aprovado</strong> (revisados por um administrador)</p>
+      </div>
+    </div>
+  );
+}
+
+function CheckItem({ done, label, description, className = "" }: { done: boolean; label: string; description: string; className?: string }) {
+  return (
+    <div className={`flex items-start gap-3 ${className}`}>
+      {done ? (
+        <CheckCircle2 className="w-4 h-4 mt-0.5 text-green-600 dark:text-green-400 shrink-0" />
+      ) : (
+        <div className="w-4 h-4 mt-0.5 rounded-full border-2 border-muted-foreground/30 shrink-0" />
+      )}
+      <div>
+        <p className="text-sm font-medium">{label}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-muted/50 rounded-lg px-3 py-2">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="font-medium">{value}</p>
     </div>
   );
 }
