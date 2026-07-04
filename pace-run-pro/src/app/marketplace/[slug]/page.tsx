@@ -90,6 +90,13 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [reviewSent, setReviewSent] = useState(false);
 
+  // Coupon
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponApplied, setCouponApplied] = useState(false);
+
   const loadReviews = useCallback((productId: string) => {
     fetch(`/api/marketplace/reviews?productId=${productId}`)
       .then((r) => r.ok ? r.json() : null)
@@ -128,6 +135,27 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
     setSubmittingReview(false);
   }
 
+  async function validateCoupon() {
+    if (!product || !couponCode.trim()) return;
+    setValidatingCoupon(true);
+    setCouponError(null);
+    const res = await fetch("/api/marketplace/coupon-validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: couponCode.trim(), productId: product.id }),
+    });
+    const data = await res.json();
+    if (data.valid) {
+      setCouponDiscount(data.discountCents);
+      setCouponApplied(true);
+    } else {
+      setCouponError(data.error ?? "Cupom inválido");
+      setCouponDiscount(0);
+      setCouponApplied(false);
+    }
+    setValidatingCoupon(false);
+  }
+
   async function handleBuy() {
     if (!product) return;
     setBuying(true);
@@ -136,7 +164,7 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
       const res = await fetch("/api/marketplace/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id }),
+        body: JSON.stringify({ productId: product.id, ...(couponApplied && couponCode ? { couponCode: couponCode.toUpperCase() } : {}) }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -364,11 +392,53 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
             <Card className="border-primary/20">
               <CardContent className="p-5 space-y-4">
                 <div>
-                  <p className="font-display text-3xl font-bold text-primary">{fmtPrice(product.priceCents)}</p>
-                  {product.priceCents > 0 && (
-                    <p className="text-xs text-text-muted mt-0.5">Pagamento único</p>
+                  {couponDiscount > 0 ? (
+                    <>
+                      <p className="text-sm line-through text-text-muted">{fmtPrice(product.priceCents)}</p>
+                      <p className="font-display text-3xl font-bold text-success">{fmtPrice(product.priceCents - couponDiscount)}</p>
+                      <p className="text-xs text-success mt-0.5">Desconto: -{fmtPrice(couponDiscount)}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-display text-3xl font-bold text-primary">{fmtPrice(product.priceCents)}</p>
+                      {product.priceCents > 0 && <p className="text-xs text-text-muted mt-0.5">Pagamento único</p>}
+                    </>
                   )}
                 </div>
+
+                {product.priceCents > 0 && !success && (
+                  <div className="space-y-1.5">
+                    <div className="flex gap-2">
+                      <input
+                        value={couponCode}
+                        onChange={(e) => {
+                          const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+                          setCouponCode(v);
+                          if (couponApplied) { setCouponApplied(false); setCouponDiscount(0); }
+                          setCouponError(null);
+                        }}
+                        placeholder="CUPOM"
+                        maxLength={32}
+                        className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm font-mono text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 transition-colors"
+                      />
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={validateCoupon}
+                        disabled={validatingCoupon || !couponCode.trim() || couponApplied}
+                        className="shrink-0"
+                      >
+                        {validatingCoupon
+                          ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-text-muted/30 border-t-text-muted" />
+                          : couponApplied
+                            ? <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                            : "Aplicar"}
+                      </Button>
+                    </div>
+                    {couponError && <p className="text-xs text-danger">{couponError}</p>}
+                    {couponApplied && <p className="text-xs text-success">Cupom aplicado com sucesso!</p>}
+                  </div>
+                )}
 
                 {success ? (
                   <div className="flex items-center gap-2 rounded-xl bg-success/10 px-3 py-2.5 text-sm text-success">
