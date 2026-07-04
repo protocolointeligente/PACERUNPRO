@@ -92,7 +92,7 @@ function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUr
 
 export default function TreinadorLayoutClient({ children, userName, userCredential, userAvatarUrl, planId }: TreinadorLayoutClientProps) {
   return (
-    <CoachRoleProvider initialRole="owner">
+    <CoachRoleProvider initialRole="owner" initialPlanId={planId ?? "b2b-free"}>
       <TreinadorLayoutInner userName={userName} userCredential={userCredential} userAvatarUrl={userAvatarUrl} planId={planId}>
         {children}
       </TreinadorLayoutInner>

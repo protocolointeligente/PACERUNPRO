@@ -36,8 +36,16 @@ export async function POST(req: NextRequest) {
       weightKg: true,
       heightCm: true,
       recoveryScore: true,
+      injuryHistory: true,
+      weeklyAvailability: true,
       loadParams: {
-        select: { thresholdPaceSecPerKm: true, hrMax: true, hrRest: true },
+        select: { thresholdPaceSecPerKm: true, hrMax: true, hrRest: true, ftpWatts: true, swimThresholdSecPer100m: true },
+      },
+      trainingPlans: {
+        where: { status: "ACTIVE" },
+        select: { raceDate: true, goal: true, phase: true },
+        take: 1,
+        orderBy: { startDate: "desc" },
       },
       user: { select: { name: true } },
     },
@@ -101,15 +109,25 @@ export async function POST(req: NextRequest) {
   const series = computeLoadSeries(dailyTss, 30);
   const latest = series[series.length - 1] ?? null;
 
+  const activePlan = athlete.trainingPlans?.[0] ?? null;
   const athleteContext = {
     nome: athlete.user.name,
     objetivo: athlete.goal,
     nivel: athlete.level,
     peso: athlete.weightKg ? `${athlete.weightKg} kg` : null,
     altura: athlete.heightCm ? `${athlete.heightCm} cm` : null,
+    disponibilidadeSemanal: athlete.weeklyAvailability ?? null,
+    historicoLesoes: athlete.injuryHistory ?? null,
     paceLimiar: formatPace(athlete.loadParams?.thresholdPaceSecPerKm),
+    ftpWatts: athlete.loadParams?.ftpWatts ?? null,
+    cssNatacao: athlete.loadParams?.swimThresholdSecPer100m
+      ? `${athlete.loadParams.swimThresholdSecPer100m}s/100m`
+      : null,
     fcMax: athlete.loadParams?.hrMax ?? null,
     fcRepouso: athlete.loadParams?.hrRest ?? null,
+    planoAtivo: activePlan
+      ? { dataProva: activePlan.raceDate?.toISOString().slice(0, 10) ?? null, objetivo: activePlan.goal, fase: activePlan.phase }
+      : null,
     cargaAtual: latest
       ? { CTL: latest.ctl, ATL: latest.atl, TSB: latest.tsb }
       : null,
@@ -138,11 +156,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ reply: getMockReply(messages[messages.length - 1]?.content ?? "") });
   }
 
+  const injuryWarning = athlete.injuryHistory
+    ? `\n\nATENÇÃO — HISTÓRICO DE LESÕES: O atleta possui histórico de lesões registrado: "${athlete.injuryHistory}". Leve isso em consideração em TODAS as recomendações. Nunca sugira exercícios ou volumes que possam agravar essas condições. Recomende sempre avaliação médica ou fisioterapêutica quando pertinente.`
+    : "";
+
   const systemPrompt = `Você é a IA Treinadora do PACE RUN PRO, uma assistente especializada em corrida de rua e triathlon para atletas brasileiros. Você tem acesso ao contexto real do atleta, obtido diretamente da plataforma:
 
 ${JSON.stringify(athleteContext, null, 2)}
 
-Responda sempre em português brasileiro. Seja objetiva, prática e motivadora. Use terminologia de corrida. Limite respostas a 3-4 parágrafos. Não ofereça diagnósticos médicos. Use os dados reais (carga CTL/ATL/TSB, check-ins recentes, treinos recentes) para personalizar suas recomendações ao atleta ${athlete.user.name}.`;
+Responda sempre em português brasileiro. Seja objetiva, prática e motivadora. Use terminologia de corrida. Limite respostas a 3-4 parágrafos. Não ofereça diagnósticos médicos. Use os dados reais (carga CTL/ATL/TSB, check-ins recentes, treinos recentes, plano ativo e disponibilidade semanal) para personalizar suas recomendações ao atleta ${athlete.user.name}.${injuryWarning}`;
 
   const claudeMessages = messages.map((m: { role: string; content: string }) => ({
     role: m.role as "user" | "assistant",

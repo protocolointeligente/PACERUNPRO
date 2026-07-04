@@ -11,14 +11,21 @@ import { decrypt, encrypt } from "@/lib/encryption";
 
 function stravaTypeToWorkoutType(type: string): string {
   switch (type) {
-    case "Run":           return "RODAGEM_LEVE";
-    case "TrailRun":      return "SUBIDA";
-    case "VirtualRun":    return "RODAGEM_LEVE";
-    case "Ride":          return "RODAGEM_LEVE";
-    case "Swim":          return "RODAGEM_LEVE";
-    case "WeightTraining":return "FORCA";
-    case "Workout":       return "FUNCIONAL";
-    default:              return "RODAGEM_LEVE";
+    case "Run":            return "RODAGEM_LEVE";
+    case "TrailRun":       return "SUBIDA";
+    case "VirtualRun":     return "RODAGEM_LEVE";
+    case "Ride":           return "ENDURANCE_BIKE";
+    case "VirtualRide":    return "ENDURANCE_BIKE";
+    case "EBikeRide":      return "ENDURANCE_BIKE";
+    case "MountainBikeRide": return "ENDURANCE_BIKE";
+    case "Swim":           return "ENDURANCE_NATACAO";
+    case "OpenWaterSwim":  return "ENDURANCE_NATACAO";
+    case "WeightTraining": return "FORCA";
+    case "Workout":        return "FUNCIONAL";
+    case "Crossfit":       return "FUNCIONAL";
+    case "Hike":           return "REGENERATIVO";
+    case "Walk":           return "REGENERATIVO";
+    default:               return "RODAGEM_LEVE";
   }
 }
 

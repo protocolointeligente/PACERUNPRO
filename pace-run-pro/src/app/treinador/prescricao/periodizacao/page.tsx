@@ -335,9 +335,44 @@ export default function PeriodizacaoPage() {
     setView("macro");
   }
 
-  // Load draft on mount
+  // Load draft on mount — check IA result first, then fall back to saved draft
   useEffect(() => {
     try {
+      // IA-generated plan from gerador wizard takes precedence
+      const iaRaw = localStorage.getItem("gerador_ia_resultado");
+      if (iaRaw) {
+        localStorage.removeItem("gerador_ia_resultado");
+        const ia = JSON.parse(iaRaw) as {
+          weeks?: Week[]; goal?: string; level?: string; totalWeeks?: number;
+          trainingDays?: string[]; raceName?: string; raceDate?: string; planName?: string;
+        };
+        if (ia.weeks?.length) {
+          const goalMap: Record<string, Goal> = {
+            "5km": "5k", "5k": "5k",
+            "10km": "10k", "10k": "10k",
+            "Meia-Maratona": "Meia-maratona", "Meia-maratona": "Meia-maratona",
+            "Maratona": "Maratona",
+            "Trail": "Trail", "Ultratrail": "Trail",
+          };
+          const levelMap: Record<string, Level> = {
+            "Iniciante": "Iniciante",
+            "Intermediário": "Intermediário",
+            "Avançado": "Avançado",
+            "PRO / Elite": "Avançado",
+          };
+          setGoal(goalMap[ia.goal ?? ""] ?? "Personalizado");
+          setLevel(levelMap[ia.level ?? ""] ?? "Intermediário");
+          setTotalWeeks(ia.totalWeeks ?? ia.weeks.length);
+          setTrainingDays(ia.trainingDays ?? ["Segunda-feira", "Quarta-feira", "Sábado"]);
+          setWeeks(ia.weeks);
+          setRaceName(ia.raceName ?? "");
+          setGenerated(true);
+          setSaved(false);
+          setDraftRestored(true);
+          return;
+        }
+      }
+
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return;
       const draft = JSON.parse(raw) as {

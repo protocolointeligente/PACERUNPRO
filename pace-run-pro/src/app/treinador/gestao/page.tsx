@@ -527,8 +527,8 @@ function StatCard({ icon, label, value, color, bgColor }: StatCardProps) {
 }
 
 export default function GestaoPage() {
-  const { role } = useCoachRole();
-  if (!canAccess(role, "gestao")) {
+  const { role, planId } = useCoachRole();
+  if (!canAccess(role, "gestao", planId)) {
     return <AccessRestricted feature="Gestão & Vendas" currentRole={role} requiredRoles={["autonomo", "owner"]} />;
   }
   return <GestaoContent />;

@@ -631,8 +631,8 @@ function CrmContent() {
 }
 
 export default function CrmPage() {
-  const { role } = useCoachRole();
-  if (!canAccess(role, "crm")) {
+  const { role, planId } = useCoachRole();
+  if (!canAccess(role, "crm", planId)) {
     return <AccessRestricted feature="CRM de Leads" currentRole={role} requiredRoles={["autonomo", "owner"]} />;
   }
   return <CrmContent />;

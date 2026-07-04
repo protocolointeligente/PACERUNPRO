@@ -32,7 +32,7 @@ interface OverviewData {
 }
 
 export default function AdminDashboardPage() {
-  const { role } = useCoachRole();
+  const { role, planId } = useCoachRole();
   const [data, setData] = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +44,7 @@ export default function AdminDashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (!canAccess(role, "admin")) {
+  if (!canAccess(role, "admin", planId)) {
     return <AccessRestricted feature="Admin" currentRole={role} requiredRoles={["owner"]} />;
   }
 

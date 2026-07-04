@@ -114,6 +114,8 @@ export default function GeradorPeriodizacaoPage() {
   const [eventName, setEventName]           = useState("");
   const [eventDate, setEventDate]           = useState("");
   const [notes, setNotes]                   = useState("");
+  const [generating, setGenerating]         = useState(false);
+  const [generateError, setGenerateError]   = useState("");
 
   function canProceed(): boolean {
     if (step === 1) return sport !== "";
@@ -131,29 +133,57 @@ export default function GeradorPeriodizacaoPage() {
     if (step > 1) setStep((s) => s - 1);
   }
 
-  function handleGenerate() {
-    const config = {
-      sport,
-      goal,
-      level,
-      daysPerWeek,
-      trainingDays,
-      weeks,
-      hasEvent,
-      eventName: hasEvent ? eventName : "",
-      eventDate: hasEvent ? eventDate : "",
-      notes,
-    };
-    try {
-      localStorage.setItem("gerador_periodizacao_config", JSON.stringify(config));
-    } catch {
-      // localStorage unavailable (private mode) — navigate anyway
+  async function handleGenerate() {
+    if (sport === "Força") {
+      router.push("/treinador/prescricao/forca");
+      return;
     }
-    const dest =
-      sport === "Força"
-        ? "/treinador/prescricao/forca"
-        : "/treinador/prescricao/periodizacao";
-    router.push(dest);
+    setGenerating(true);
+    setGenerateError("");
+    try {
+      const res = await fetch("/api/treinador/ia-gerador", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sport,
+          goal,
+          level,
+          daysPerWeek,
+          trainingDays,
+          weeks,
+          hasEvent,
+          eventName: hasEvent ? eventName : "",
+          eventDate: hasEvent ? eventDate : "",
+          notes,
+        }),
+      });
+      if (!res.ok) throw new Error("Falha ao gerar plano");
+      const data = await res.json();
+      try {
+        localStorage.setItem("gerador_periodizacao_config", JSON.stringify({
+          sport, goal, level, daysPerWeek, trainingDays, weeks,
+          hasEvent, eventName: hasEvent ? eventName : "",
+          eventDate: hasEvent ? eventDate : "", notes,
+        }));
+        localStorage.setItem("gerador_ia_resultado", JSON.stringify({
+          weeks: data.weeks,
+          planName: data.planName,
+          summary: data.summary,
+          source: data.source,
+          goal,
+          level,
+          totalWeeks: weeks,
+          trainingDays,
+          raceName: hasEvent ? (eventName || "") : "",
+          raceDate: hasEvent ? eventDate : "",
+        }));
+      } catch { /* storage unavailable */ }
+      router.push("/treinador/prescricao/periodizacao");
+    } catch (err) {
+      setGenerateError(err instanceof Error ? err.message : "Erro ao gerar plano");
+    } finally {
+      setGenerating(false);
+    }
   }
 
   function toggleDay(day: string) {
@@ -514,10 +544,26 @@ export default function GeradorPeriodizacaoPage() {
                   size="lg"
                   className="w-full gap-2 text-base"
                   onClick={handleGenerate}
+                  disabled={generating}
                 >
-                  <Wand2 className="h-5 w-5" />
-                  Gerar Periodização
+                  {generating ? (
+                    <>
+                      <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Gerando com IA...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-5 w-5" />
+                      Gerar Periodização com IA
+                    </>
+                  )}
                 </Button>
+
+                {generateError && (
+                  <p className="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+                    {generateError}
+                  </p>
+                )}
 
                 {sport === "Força" && (
                   <Link
@@ -566,9 +612,14 @@ export default function GeradorPeriodizacaoPage() {
               size="md"
               className="gap-2 ml-auto"
               onClick={handleGenerate}
+              disabled={generating}
             >
-              <Check className="h-4 w-4" />
-              Gerar agora
+              {generating ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              {generating ? "Gerando..." : "Gerar agora"}
             </Button>
           )}
         </div>
