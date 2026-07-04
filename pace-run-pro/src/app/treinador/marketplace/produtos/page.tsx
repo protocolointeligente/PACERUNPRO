@@ -247,7 +247,7 @@ export default function MarketplaceProductsPage() {
                 <div className="col-span-full rounded-xl border border-border/60 bg-card-hover/40 px-4 py-3">
                   <p className="text-xs text-text-muted">
                     <span className="font-semibold text-text">Fluxo de publicação:</span>{" "}
-                    Produtos salvos ficam como <strong>Rascunho</strong>. Use o botão "Enviar para revisão" na lista para submetê-lo — um administrador irá aprovar antes de aparecer no marketplace.
+                    Produtos salvos ficam como <strong>Rascunho</strong>. Use o botão &ldquo;Enviar para revisão&rdquo; na lista para submetê-lo — um administrador irá aprovar antes de aparecer no marketplace.
                   </p>
                 </div>
               </div>
