@@ -60,17 +60,32 @@ export async function findOrCreateWeek(
     where: { planId, startDate: weekStart },
   });
   if (!week) {
-    const weekCount = await prisma.trainingWeek.count({ where: { planId } });
-    week = await prisma.trainingWeek.create({
-      data: {
-        planId,
-        weekNumber: weekCount + 1,
-        phase,
-        startDate: weekStart,
-        endDate: weekEnd,
-        released: true,
-      },
+    const maxRow = await prisma.trainingWeek.aggregate({
+      where: { planId },
+      _max: { weekNumber: true },
     });
+    const nextNumber = (maxRow._max.weekNumber ?? 0) + 1;
+    try {
+      week = await prisma.trainingWeek.create({
+        data: {
+          planId,
+          weekNumber: nextNumber,
+          phase,
+          startDate: weekStart,
+          endDate: weekEnd,
+          released: true,
+        },
+      });
+    } catch (err: unknown) {
+      // P2002 = unique constraint; another concurrent request may have created this week
+      if ((err as { code?: string }).code === "P2002") {
+        const existing = await prisma.trainingWeek.findFirst({
+          where: { planId, startDate: weekStart },
+        });
+        if (existing) return existing;
+      }
+      throw err;
+    }
   }
   return week;
 }

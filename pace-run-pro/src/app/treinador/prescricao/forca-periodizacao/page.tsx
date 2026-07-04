@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
   Dumbbell,
   RefreshCw,
   Info,
@@ -27,6 +30,7 @@ type Objective =
   | "definicao"
   | "perf_corrida"
   | "perf_ciclismo"
+  | "perf_natacao"
   | "saude"
   | "reabilitacao";
 
@@ -78,11 +82,12 @@ interface GeneratedPlan {
 
 const OBJECTIVES: { id: Objective; label: string; emoji: string; desc: string }[] = [
   { id: "hipertrofia",   label: "Hipertrofia",     emoji: "💪", desc: "Ganho muscular máximo"         },
-  { id: "forca_maxima",  label: "Força Máxima",     emoji: "🏋️", desc: "1RM e força bruta"             },
   { id: "emagrecimento", label: "Emagrecimento",    emoji: "🔥", desc: "Perda de gordura + músculo"    },
-  { id: "definicao",     label: "Definição",        emoji: "✂️", desc: "Cutting sem perder força"      },
+  { id: "forca_maxima",  label: "Força Máxima",     emoji: "🏋️", desc: "1RM e força bruta"             },
+  { id: "definicao",     label: "Definição Muscular", emoji: "✂️", desc: "Cutting sem perder força"    },
   { id: "perf_corrida",  label: "Perf. Corrida",    emoji: "🏃", desc: "Força para corredores"         },
   { id: "perf_ciclismo", label: "Perf. Ciclismo",   emoji: "🚴", desc: "Potência e resistência"        },
+  { id: "perf_natacao",  label: "Perf. Natação",    emoji: "🏊", desc: "Força para nadadores"          },
   { id: "saude",         label: "Saúde Geral",      emoji: "❤️", desc: "Bem-estar e longevidade"       },
   { id: "reabilitacao",  label: "Reabilitação",     emoji: "🩺", desc: "Recuperação e prevenção"       },
 ];
@@ -94,8 +99,18 @@ const LEVELS: { id: Level; label: string; desc: string }[] = [
   { id: "PRO",           label: "PRO / Elite",   desc: "> 5 anos" },
 ];
 
-const DAYS_OPTIONS = [2, 3, 4, 5] as const;
+const DAYS_OPTIONS = [2, 3, 4, 5, 6, 7] as const;
 const DURATION_OPTIONS = [8, 10, 12, 16, 20, 24] as const;
+
+const WEEK_DAYS = [
+  { key: "Seg", label: "Segunda" },
+  { key: "Ter", label: "Terça" },
+  { key: "Qua", label: "Quarta" },
+  { key: "Qui", label: "Quinta" },
+  { key: "Sex", label: "Sexta" },
+  { key: "Sab", label: "Sábado" },
+  { key: "Dom", label: "Domingo" },
+] as const;
 
 const MESO_COLORS: Record<MesocycleType, string> = {
   "Anatomical Adaptation": "#94a3b8",
@@ -466,12 +481,27 @@ export default function ForcaPeriodizacaoPage() {
   const [level, setLevel] = useState<Level>("Intermediário");
   const [daysPerWeek, setDaysPerWeek] = useState(3);
   const [totalWeeks, setTotalWeeks] = useState(12);
+  const [specificDays, setSpecificDays] = useState<string[]>(["Seg", "Qua", "Sex"]);
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
   const [expandedMeso, setExpandedMeso] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"macro" | "volume" | "intensidade">("macro");
   const [generating, setGenerating] = useState(false);
+  const [wizardStep, setWizardStep] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
+
+  // Auto-open wizard on load if no plan
+  useEffect(() => {
+    if (!plan) setWizardStep(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function toggleDay(day: string) {
+    setSpecificDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  }
 
   const generate = () => {
+    setWizardStep(0);
     setGenerating(true);
     setTimeout(() => {
       const mesocycles = generateMesocycles(objective, level, totalWeeks);
@@ -481,11 +511,244 @@ export default function ForcaPeriodizacaoPage() {
     }, 400);
   };
 
+  const WIZARD_STEPS = [
+    "Objetivo",
+    "Nível",
+    "Duração",
+    "Dias / semana",
+    "Dias específicos",
+  ];
+
   const objInfo = OBJECTIVES.find((o) => o.id === objective)!;
   const levelInfo = LEVELS.find((l) => l.id === level)!;
   const deloads = plan?.mesocycles.filter((m) => m.isDeload).length ?? 0;
 
   return (
+    <>
+    {/* ── Wizard Modal ─────────────────────────────────────────────── */}
+    {wizardStep > 0 && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl">
+          {/* Header */}
+          <div className="border-b border-border px-6 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold uppercase tracking-widest text-text-muted">
+                Passo {wizardStep} de {WIZARD_STEPS.length}
+              </p>
+              {plan && (
+                <button
+                  onClick={() => setWizardStep(0)}
+                  className="text-xs text-text-muted hover:text-text transition-colors"
+                >
+                  Fechar
+                </button>
+              )}
+            </div>
+            {/* Progress */}
+            <div className="flex gap-1.5">
+              {WIZARD_STEPS.map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "h-1.5 flex-1 rounded-full transition-colors",
+                    i < wizardStep ? "bg-primary" : "bg-card-hover"
+                  )}
+                />
+              ))}
+            </div>
+            <h2 className="mt-3 font-display text-lg font-bold text-text">
+              {WIZARD_STEPS[wizardStep - 1]}
+            </h2>
+          </div>
+
+          {/* Step content */}
+          <div className="px-6 py-5 max-h-[60vh] overflow-y-auto">
+
+            {/* Step 1 — Objective */}
+            {wizardStep === 1 && (
+              <div className="grid grid-cols-1 gap-2">
+                {OBJECTIVES.map((obj) => (
+                  <button
+                    key={obj.id}
+                    onClick={() => setObjective(obj.id)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all",
+                      objective === obj.id
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/40 hover:bg-card-hover"
+                    )}
+                  >
+                    <span className="text-2xl">{obj.emoji}</span>
+                    <div>
+                      <p className={cn("text-sm font-semibold", objective === obj.id ? "text-primary" : "text-text")}>
+                        {obj.label}
+                      </p>
+                      <p className="text-xs text-text-muted">{obj.desc}</p>
+                    </div>
+                    {objective === obj.id && (
+                      <CheckCircle2 className="ml-auto h-5 w-5 text-primary shrink-0" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Step 2 — Level */}
+            {wizardStep === 2 && (
+              <div className="grid grid-cols-1 gap-2">
+                {LEVELS.map((lv) => (
+                  <button
+                    key={lv.id}
+                    onClick={() => setLevel(lv.id)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl border px-4 py-4 text-left transition-all",
+                      level === lv.id
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/40 hover:bg-card-hover"
+                    )}
+                  >
+                    <div className="flex-1">
+                      <p className={cn("text-sm font-semibold", level === lv.id ? "text-primary" : "text-text")}>
+                        {lv.label}
+                      </p>
+                      <p className="text-xs text-text-muted">{lv.desc}</p>
+                    </div>
+                    {level === lv.id && (
+                      <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Step 3 — Duration */}
+            {wizardStep === 3 && (
+              <div className="space-y-3">
+                <p className="text-sm text-text-muted">Selecione a duração total do plano</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {DURATION_OPTIONS.map((w) => (
+                    <button
+                      key={w}
+                      onClick={() => setTotalWeeks(w)}
+                      className={cn(
+                        "rounded-xl border py-4 text-center transition-all",
+                        totalWeeks === w
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-text-muted hover:border-primary/40 hover:text-text"
+                      )}
+                    >
+                      <p className="font-display text-2xl font-bold">{w}</p>
+                      <p className="text-xs">semanas</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 4 — Days per week */}
+            {wizardStep === 4 && (
+              <div className="space-y-3">
+                <p className="text-sm text-text-muted">Quantos dias por semana o atleta vai treinar?</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {DAYS_OPTIONS.map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => {
+                        setDaysPerWeek(d);
+                        // Reset specific days to match count
+                        const defaults = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
+                        setSpecificDays(defaults.slice(0, d));
+                      }}
+                      className={cn(
+                        "rounded-xl border py-4 text-center transition-all",
+                        daysPerWeek === d
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-text-muted hover:border-primary/40 hover:text-text"
+                      )}
+                    >
+                      <p className="font-display text-2xl font-bold">{d}</p>
+                      <p className="text-xs">dias</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 5 — Specific days */}
+            {wizardStep === 5 && (
+              <div className="space-y-3">
+                <p className="text-sm text-text-muted">
+                  Selecione exatamente {daysPerWeek} dia{daysPerWeek !== 1 ? "s" : ""} da semana
+                </p>
+                <div className="grid grid-cols-7 gap-1.5">
+                  {WEEK_DAYS.map((wd) => {
+                    const selected = specificDays.includes(wd.key);
+                    return (
+                      <button
+                        key={wd.key}
+                        onClick={() => {
+                          if (selected) {
+                            toggleDay(wd.key);
+                          } else if (specificDays.length < daysPerWeek) {
+                            toggleDay(wd.key);
+                          }
+                        }}
+                        className={cn(
+                          "flex flex-col items-center gap-1 rounded-xl border py-3 text-xs transition-all",
+                          selected
+                            ? "border-primary bg-primary/10 text-primary"
+                            : specificDays.length >= daysPerWeek
+                            ? "border-border text-text-muted/40 cursor-not-allowed"
+                            : "border-border text-text-muted hover:border-primary/40 hover:text-text"
+                        )}
+                      >
+                        <span className="font-bold">{wd.key}</span>
+                        <span className="text-[10px] leading-none opacity-70">{wd.label.slice(0, 3)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-text-muted text-center">
+                  {specificDays.length}/{daysPerWeek} selecionados
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between border-t border-border px-6 py-4">
+            <button
+              onClick={() => setWizardStep((s) => (s > 1 ? (s - 1) as typeof wizardStep : s))}
+              disabled={wizardStep === 1}
+              className="flex items-center gap-1.5 text-sm text-text-muted disabled:opacity-30 hover:text-text transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
+            </button>
+
+            {wizardStep < 5 ? (
+              <button
+                onClick={() => setWizardStep((s) => (s < 5 ? (s + 1) as typeof wizardStep : s))}
+                className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-primary/90 active:scale-95"
+              >
+                Próximo
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                onClick={generate}
+                disabled={specificDays.length !== daysPerWeek}
+                className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-40"
+              >
+                <Dumbbell className="h-4 w-4" />
+                Gerar Periodização
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
     <div className="flex flex-col lg:flex-row gap-6 p-6 min-h-screen">
       {/* ── Sidebar ─────────────────────────────────────────────────────────── */}
       <aside className="w-full lg:w-72 shrink-0 space-y-4">
@@ -832,5 +1095,19 @@ export default function ForcaPeriodizacaoPage() {
         )}
       </main>
     </div>
+
+    {/* Re-open wizard button when plan already generated */}
+    {plan && wizardStep === 0 && (
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => setWizardStep(1)}
+          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/30 hover:bg-primary/90 transition-all active:scale-95"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Nova periodização
+        </button>
+      </div>
+    )}
+    </>
   );
 }

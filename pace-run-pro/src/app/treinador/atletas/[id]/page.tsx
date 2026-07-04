@@ -89,7 +89,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
   const rawLogs = await prisma.workoutLog.findMany({
     where: { athleteId: dbAthlete.id },
     include: { workout: { select: { date: true, title: true } } },
-    orderBy: { workout: { date: "desc" } },
+    orderBy: { createdAt: "desc" },
     take: 5,
   });
   const recentSessions = rawLogs.filter((log) => log.workout).map((log) => ({
@@ -176,7 +176,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
   const volumeLogs = await prisma.workoutLog.findMany({
     where: { athleteId: dbAthlete.id, workout: { date: { gte: eightWeeksAgo } } },
     include: { workout: { select: { date: true } } },
-    orderBy: { workout: { date: "asc" } },
+    orderBy: { createdAt: "asc" },
   });
   const weekMap = new Map<string, number>();
   for (const log of volumeLogs) {

@@ -32,6 +32,7 @@ import {
   Moon,
   Zap,
   Search,
+  Unlock,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -582,6 +583,7 @@ export default function CalendarClient({
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
   const [autoOpened, setAutoOpened] = useState(false);
+  const [releaseDropdown, setReleaseDropdown] = useState(false);
 
   // Auto-open prescription modal when addSport URL param is present
   useEffect(() => {
@@ -823,6 +825,40 @@ export default function CalendarClient({
     }
   }
 
+  // ── Release workouts ─────────────────────────────────────────────
+
+  async function handleRelease(scope: "week" | "15d" | "month") {
+    setReleaseDropdown(false);
+    setSaving(true);
+    const today = new Date();
+    const from = today.toISOString().slice(0, 10);
+    let toDate: Date;
+    if (scope === "week") {
+      toDate = new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000);
+    } else if (scope === "15d") {
+      toDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
+    } else {
+      toDate = new Date(today.getTime() + 29 * 24 * 60 * 60 * 1000);
+    }
+    const to = toDate.toISOString().slice(0, 10);
+    try {
+      const res = await fetch("/api/coach/workouts/release", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ athleteId, from, to }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(d.error ?? `Erro ao liberar (${res.status})`);
+      }
+      await refreshMonth(year, month, athleteId);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Erro ao liberar treinos.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   // ── Drag and drop ────────────────────────────────────────────────
 
   function handleDragStart(e: React.DragEvent, workoutId: string) {
@@ -902,6 +938,42 @@ export default function CalendarClient({
             <option key={a.id} value={a.id} style={{ background: "#1e2130", color: "#fff" }}>{a.name}</option>
           ))}
         </select>
+
+        {/* Release dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setReleaseDropdown((v) => !v)}
+            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition-colors font-semibold"
+          >
+            <Unlock size={14} />
+            Liberar
+          </button>
+          {releaseDropdown && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setReleaseDropdown(false)} />
+              <div className="absolute top-full left-0 mt-1 z-50 bg-[#1e2130] border border-white/15 rounded-xl shadow-xl overflow-hidden min-w-[160px]">
+              <button
+                onClick={() => handleRelease("week")}
+                className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/10 transition-colors"
+              >
+                Próxima semana
+              </button>
+              <button
+                onClick={() => handleRelease("15d")}
+                className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/10 transition-colors border-t border-white/10"
+              >
+                Próximos 15 dias
+              </button>
+              <button
+                onClick={() => handleRelease("month")}
+                className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/10 transition-colors border-t border-white/10"
+              >
+                Próximo mês
+              </button>
+            </div>
+            </>
+          )}
+        </div>
 
         <div className="flex items-center gap-2 ml-auto">
           {saving && <Loader2 size={14} className="animate-spin text-orange-400" />}

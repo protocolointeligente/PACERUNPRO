@@ -10,6 +10,8 @@ import {
   Dumbbell,
   Flame,
   Loader2,
+  Minus,
+  Plus,
   Repeat,
   SkipForward,
   Timer,
@@ -62,8 +64,15 @@ interface ExerciseJsonEntry {
   imageUrl?: string;
 }
 
+interface CompletedSet {
+  exerciseIdx: number;
+  setNum: number;
+  loadKg: number | null;
+  rpe: number | null;
+}
+
 function normName(n: string) {
-  return n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return n.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
 function playBeep() {
@@ -92,7 +101,7 @@ function formatCountdown(seconds: number): string {
 }
 
 const RPE_COLORS = [
-  "", // index 0 unused
+  "",
   "border-success/30 bg-success/10 text-success hover:bg-success/20",
   "border-success/30 bg-success/10 text-success hover:bg-success/20",
   "border-success/30 bg-success/10 text-success hover:bg-success/20",
@@ -119,6 +128,12 @@ export default function StrengthExecPage() {
   const [restRemaining, setRestRemaining] = useState(0);
   const [restTotal, setRestTotal] = useState(0);
   const [showShare, setShowShare] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  // Load tracking per set
+  const [loadKg, setLoadKg] = useState<number>(0);
+  const [loadUnit, setLoadUnit] = useState<"kg" | "lb">("kg");
+  const [completedSets, setCompletedSets] = useState<CompletedSet[]>([]);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(Date.now());
@@ -176,6 +191,12 @@ export default function StrengthExecPage() {
     }
   }, [phase]);
 
+  // Reset image error state when exercise changes
+  useEffect(() => {
+    setImgError(false);
+    setLoadKg(0);
+  }, [exerciseIdx]);
+
   const exercise = exercises[exerciseIdx];
   const totalSets = exercise?.sets ?? 1;
   const isLastExercise = exerciseIdx === exercises.length - 1;
@@ -206,8 +227,24 @@ export default function StrengthExecPage() {
     }
   }, []);
 
+  const recordSet = useCallback(
+    (rpeValue: number | null = null) => {
+      setCompletedSets((prev) => [
+        ...prev,
+        {
+          exerciseIdx,
+          setNum: currentSet,
+          loadKg: loadKg > 0 ? (loadUnit === "lb" ? loadKg * 0.453592 : loadKg) : null,
+          rpe: rpeValue,
+        },
+      ]);
+    },
+    [exerciseIdx, currentSet, loadKg, loadUnit]
+  );
+
   const completeSet = useCallback(() => {
     if (!exercise) return;
+    recordSet(null); // record without RPE for now; RPE captured at end of all sets
     if (currentSet < totalSets) {
       const nextSet = currentSet + 1;
       startRest(exercise.restSec, () => {
@@ -215,20 +252,36 @@ export default function StrengthExecPage() {
         setPhase("working");
       });
     } else {
-      // Last set — ask for RPE
       setPhase("rpe");
     }
-  }, [currentSet, totalSets, exercise, startRest]);
+  }, [currentSet, totalSets, exercise, startRest, recordSet]);
 
-  const confirmRpe = useCallback(() => {
-    if (isLastExercise) {
+  const finishWorkout = useCallback(
+    async (rpeValue: number | null) => {
+      const elapsedSec = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      try {
+        await fetch(`/api/atleta/workouts/${id}/complete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ durationSec: elapsedSec, rpe: rpeValue }),
+        });
+      } catch {}
       setPhase("done");
-    } else {
-      startRest(exercise?.restSec ?? 60, () => {
+    },
+    [id]
+  );
+
+  const confirmRpe = useCallback(
+    (rpeValue: number | null) => {
+      recordSet(rpeValue);
+      if (isLastExercise) {
+        finishWorkout(rpeValue);
+      } else {
         setPhase("between");
-      });
-    }
-  }, [isLastExercise, exercise, startRest]);
+      }
+    },
+    [isLastExercise, recordSet, finishWorkout]
+  );
 
   const skipRest = useCallback(
     (onSkip: () => void) => {
@@ -319,6 +372,8 @@ export default function StrengthExecPage() {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (restProgressPct / 100) * circumference;
 
+  const showGif = exercise.gifUrl && !imgError;
+
   // ── Main execution screen ────────────────────────────────────────────────────
   return (
     <div className="mx-auto max-w-lg space-y-5 pb-8">
@@ -357,13 +412,14 @@ export default function StrengthExecPage() {
           transition={{ duration: 0.3 }}
         >
           <Card className="overflow-hidden border-primary/20">
-            {/* Large GIF */}
+            {/* GIF or placeholder */}
             <div className="relative h-72 w-full bg-card-hover">
-              {exercise.gifUrl ? (
+              {showGif ? (
                 <img
                   src={exercise.gifUrl}
                   alt={exercise.name}
                   className="h-full w-full object-cover"
+                  onError={() => setImgError(true)}
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
@@ -434,6 +490,38 @@ export default function StrengthExecPage() {
                         <span className="text-3xl text-text-muted">/{totalSets}</span>
                       </p>
                     </div>
+
+                    {/* Load input */}
+                    <div className="rounded-xl border border-border bg-card-hover/40 p-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-xs font-semibold text-text-muted">Carga desta série</span>
+                        <button
+                          onClick={() => setLoadUnit((u) => (u === "kg" ? "lb" : "kg"))}
+                          className="rounded-md border border-border px-2 py-0.5 text-xs font-semibold text-primary"
+                        >
+                          {loadUnit}
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-center gap-3">
+                        <button
+                          onClick={() => setLoadKg((v) => Math.max(0, v - 2.5))}
+                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-text-muted transition-colors hover:bg-card-hover active:scale-95"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <div className="flex items-baseline gap-1">
+                          <span className="font-display text-3xl font-bold text-text">{loadKg % 1 === 0 ? loadKg : loadKg.toFixed(1)}</span>
+                          <span className="text-sm text-text-muted">{loadUnit}</span>
+                        </div>
+                        <button
+                          onClick={() => setLoadKg((v) => v + 2.5)}
+                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-text-muted transition-colors hover:bg-card-hover active:scale-95"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
                     <Button
                       size="lg"
                       className="gradient-primary w-full shadow-lg shadow-primary/30"
@@ -442,10 +530,10 @@ export default function StrengthExecPage() {
                       <CheckCircle2 className="h-5 w-5" />
                       Concluir série {currentSet} de {totalSets}
                     </Button>
-                    {isLastExercise && (
+                    {isLastExercise && currentSet === totalSets && (
                       <div className="flex justify-center pt-1">
                         <button
-                          onClick={() => setPhase("done")}
+                          onClick={() => finishWorkout(null)}
                           className="text-xs text-text-muted transition-colors hover:text-text"
                         >
                           Encerrar sessão
@@ -554,7 +642,7 @@ export default function StrengthExecPage() {
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => (
                           <button
                             key={v}
-                            onClick={confirmRpe}
+                            onClick={() => confirmRpe(v)}
                             className={cn(
                               "rounded-xl border py-3 text-sm font-bold transition-colors",
                               RPE_COLORS[v]
@@ -567,7 +655,7 @@ export default function StrengthExecPage() {
                     </div>
                     <div className="flex justify-center">
                       <button
-                        onClick={confirmRpe}
+                        onClick={() => confirmRpe(null)}
                         className="text-xs text-text-muted transition-colors hover:text-text"
                       >
                         Pular avaliação

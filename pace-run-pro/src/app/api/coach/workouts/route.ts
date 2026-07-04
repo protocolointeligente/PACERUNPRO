@@ -71,33 +71,39 @@ export async function POST(req: NextRequest) {
 
   const workoutType = type as WorkoutType;
 
-  const plan = await findOrCreateActivePlan(athleteId, coach.id, new Date());
-  const { weekStart, weekEnd } = computeWeekBounds(workoutDate);
-  const week = await findOrCreateWeek(plan.id, plan.phase, weekStart, weekEnd);
+  try {
+    const plan = await findOrCreateActivePlan(athleteId, coach.id, new Date());
+    const { weekStart, weekEnd } = computeWeekBounds(workoutDate);
+    const week = await findOrCreateWeek(plan.id, plan.phase, weekStart, weekEnd);
 
-  const workout = await prisma.workout.create({
-    data: {
-      weekId: week.id,
-      date: workoutDate,
-      type: workoutType,
-      title,
-      status: "LIBERADO",
-      objective: objective ?? "",
-      warmup: warmup ?? null,
-      mainSet: mainSet ?? null,
-      cooldown: cooldown ?? null,
-      notes: notes ?? null,
-      structured,
-      ...(blocks ? { blocks } : {}),
-      ...(targetDistanceKm != null ? { targetDistanceKm } : {}),
-      ...(targetDurationMin != null ? { targetDurationMin } : {}),
-      ...(targetPaceSecPerKm != null ? { targetPaceSecPerKm } : {}),
-      ...(targetPacePer100m != null ? { targetPacePer100m } : {}),
-      ...(targetPowerWatts != null ? { targetPowerWatts } : {}),
-      ...(targetRpe != null ? { targetRpe } : {}),
-    },
-    select: { id: true, date: true, title: true, type: true, status: true, structured: true },
-  });
+    const workout = await prisma.workout.create({
+      data: {
+        weekId: week.id,
+        date: workoutDate,
+        type: workoutType,
+        title,
+        status: "LIBERADO",
+        objective: objective ?? "",
+        warmup: warmup ?? null,
+        mainSet: mainSet ?? null,
+        cooldown: cooldown ?? null,
+        notes: notes ?? null,
+        structured,
+        ...(blocks ? { blocks } : {}),
+        ...(targetDistanceKm != null ? { targetDistanceKm } : {}),
+        ...(targetDurationMin != null ? { targetDurationMin } : {}),
+        ...(targetPaceSecPerKm != null ? { targetPaceSecPerKm } : {}),
+        ...(targetPacePer100m != null ? { targetPacePer100m } : {}),
+        ...(targetPowerWatts != null ? { targetPowerWatts } : {}),
+        ...(targetRpe != null ? { targetRpe } : {}),
+      },
+      select: { id: true, date: true, title: true, type: true, status: true, structured: true },
+    });
 
-  return NextResponse.json(workout, { status: 201 });
+    return NextResponse.json(workout, { status: 201 });
+  } catch (err: unknown) {
+    console.error("[POST /api/coach/workouts]", err);
+    const msg = err instanceof Error ? err.message : "Erro interno ao criar treino";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
