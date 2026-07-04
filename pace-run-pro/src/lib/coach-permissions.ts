@@ -67,10 +67,10 @@ const coreNav: NavItem[] = [
   { href: "/treinador/atletas",     label: "Atletas",   icon: Users           },
   { href: "/treinador/mensagens",   label: "Mensagens", icon: MessageSquare   },
   { href: "/treinador/alertas",     label: "Alertas",   icon: Bell            },
-  { href: "/treinador/prescricao",  label: "Prescrição", icon: CalendarDays   },
+  { href: "/treinador/calendario",   label: "Calendário", icon: CalendarDays   },
 
   // — Prescrição —
-  { href: "/treinador/prescricao",               label: "Calendário",        icon: CalendarDays,   sectionStart: "Prescrição" },
+  { href: "/treinador/calendario",               label: "Calendário",        icon: CalendarDays,   sectionStart: "Prescrição" },
   { href: "/treinador/prescricao/gerador",       label: "Gerador de planos", icon: Wand2                                     },
   { href: "/treinador/prescricao/periodizacao",  label: "Periodização",      icon: BarChart3                                 },
   { href: "/treinador/prescricao/avaliacoes",    label: "Avaliações",        icon: ClipboardList                             },

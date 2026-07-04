@@ -41,6 +41,7 @@ export async function PATCH(
     targetDurationMin?: number | null;
     targetPaceSecPerKm?: number | null;
     targetPacePer100m?: number | null;
+    targetPowerWatts?: number | null;
     targetRpe?: number | null;
     structured?: boolean;
     blocks?: unknown;
@@ -65,6 +66,7 @@ export async function PATCH(
   if (body.targetDurationMin !== undefined) data.targetDurationMin = body.targetDurationMin;
   if (body.targetPaceSecPerKm !== undefined) data.targetPaceSecPerKm = body.targetPaceSecPerKm;
   if (body.targetPacePer100m !== undefined) data.targetPacePer100m = body.targetPacePer100m;
+  if (body.targetPowerWatts !== undefined) data.targetPowerWatts = body.targetPowerWatts;
   if (body.targetRpe !== undefined) data.targetRpe = body.targetRpe;
   if (typeof body.structured === "boolean") data.structured = body.structured;
   if (body.blocks !== undefined) data.blocks = body.blocks;

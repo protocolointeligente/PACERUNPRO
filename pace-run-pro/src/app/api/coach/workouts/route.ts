@@ -28,8 +28,13 @@ export async function POST(req: NextRequest) {
     targetDurationMin,
     targetPaceSecPerKm,
     targetPacePer100m,
+    targetPowerWatts,
     targetRpe,
     objective,
+    warmup,
+    mainSet,
+    cooldown,
+    notes,
   } = body as {
     athleteId: string;
     date: string;
@@ -41,8 +46,13 @@ export async function POST(req: NextRequest) {
     targetDurationMin?: number;
     targetPaceSecPerKm?: number;
     targetPacePer100m?: number;
+    targetPowerWatts?: number;
     targetRpe?: number;
     objective?: string;
+    warmup?: string;
+    mainSet?: string;
+    cooldown?: string;
+    notes?: string;
   };
 
   if (!athleteId || !date || !title || !type) {
@@ -73,12 +83,17 @@ export async function POST(req: NextRequest) {
       title,
       status: "LIBERADO",
       objective: objective ?? "",
+      warmup: warmup ?? null,
+      mainSet: mainSet ?? null,
+      cooldown: cooldown ?? null,
+      notes: notes ?? null,
       structured,
       ...(blocks ? { blocks } : {}),
       ...(targetDistanceKm != null ? { targetDistanceKm } : {}),
       ...(targetDurationMin != null ? { targetDurationMin } : {}),
       ...(targetPaceSecPerKm != null ? { targetPaceSecPerKm } : {}),
       ...(targetPacePer100m != null ? { targetPacePer100m } : {}),
+      ...(targetPowerWatts != null ? { targetPowerWatts } : {}),
       ...(targetRpe != null ? { targetRpe } : {}),
     },
     select: { id: true, date: true, title: true, type: true, status: true, structured: true },
