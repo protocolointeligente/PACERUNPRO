@@ -39,6 +39,7 @@ import {
   Package,
   Receipt,
   Share2,
+  Shield,
   type LucideIcon,
 } from "lucide-react";
 
@@ -79,6 +80,7 @@ export const athleteMoreNav: NavItem[] = [
   { href: "/atleta/desafios",     label: "Desafios",              icon: Trophy                                  },
   { href: "/atleta/universidade", label: "PACE University",       icon: GraduationCap                          },
   { href: "/atleta/perfil",       label: "Minha conta",           icon: CreditCard,    sectionStart: "Conta"    },
+  { href: "/atleta/dados",        label: "Meus dados & privacidade", icon: Shield                               },
 ];
 
 export const coachNav: NavItem[] = [

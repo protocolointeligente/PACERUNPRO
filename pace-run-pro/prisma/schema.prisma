@@ -201,6 +201,7 @@ model Athlete {
   sportProfiles      AthleteSportProfile[]
   raceEvents         RaceEvent[]
   dailyLoads         DailyLoad[]
+  coachAthletes      CoachAthlete[]
 
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -259,6 +260,7 @@ model Coach {
   appointments      Appointment[]
   coachAvailability CoachAvailability[]
   raceEvents         RaceEvent[]
+  coachAthletes      CoachAthlete[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -288,6 +290,25 @@ model TeamMember {
 
   @@unique([teamId, athleteId])
   @@map("team_members")
+}
+
+// N:M explicit junction — supports multiple coaches per athlete
+// Coexists with Athlete.coachId (primary/legacy coach) for backward compat
+model CoachAthlete {
+  id          String   @id @default(cuid())
+  coachId     String
+  coach       Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId   String
+  athlete     Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  isPrimary   Boolean  @default(false)
+  role        String   @default("coach")  // coach | assistant | nutritionist
+  assignedAt  DateTime @default(now())
+  notes       String?
+
+  @@unique([coachId, athleteId])
+  @@index([coachId])
+  @@index([athleteId])
+  @@map("coach_athletes")
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -2046,6 +2067,16 @@ model MarketplaceReferral {
 
   @@index([affiliateId])
   @@map("marketplace_referrals")
+}
+
+// Stripe webhook idempotency guard
+model ProcessedStripeEvent {
+  id        String   @id  // Stripe event ID (evt_xxx) — natural unique key
+  type      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("processed_stripe_events")
 }
 
 // ────────────────────────────────────────────────────────────────────────────

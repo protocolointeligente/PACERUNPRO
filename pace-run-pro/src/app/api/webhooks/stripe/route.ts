@@ -21,6 +21,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  // Idempotency guard — deduplicate Stripe retries
+  const alreadyProcessed = await prisma.processedStripeEvent.findUnique({ where: { id: event.id } });
+  if (alreadyProcessed) return NextResponse.json({ received: true });
+  await prisma.processedStripeEvent.create({ data: { id: event.id, type: event.type } });
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as import("stripe").Stripe.Checkout.Session;
     const { purchaseId, productId, marketplaceOrderId } = session.metadata ?? {};
