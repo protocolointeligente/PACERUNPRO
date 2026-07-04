@@ -1,9 +1,9 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft, BookOpen, CheckCircle2, Clock, ShoppingCart, Star, Users,
+  ArrowLeft, BookOpen, CheckCircle2, Clock, MessageSquare, Send, ShoppingCart, Star, Users,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +55,25 @@ function fmtPrice(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+interface Review {
+  id: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  athlete: { name: string | null; avatarUrl: string | null };
+}
+
+function StarRow({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) {
+  const s = size === "lg" ? "h-5 w-5" : "h-3.5 w-3.5";
+  return (
+    <span className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((v) => (
+        <Star key={v} className={`${s} ${v <= rating ? "fill-amber-400 text-amber-400" : "text-text-muted/30"}`} />
+      ))}
+    </span>
+  );
+}
+
 export default function MarketplaceProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const [product, setProduct] = useState<ProductDetail | null>(null);
@@ -63,13 +82,51 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Reviews
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [myRating, setMyRating] = useState(0);
+  const [myComment, setMyComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewSent, setReviewSent] = useState(false);
+
+  const loadReviews = useCallback((productId: string) => {
+    fetch(`/api/marketplace/reviews?productId=${productId}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { reviews: Review[] } | null) => { if (d) setReviews(d.reviews); })
+      .catch(console.error);
+  }, []);
+
   useEffect(() => {
     fetch(`/api/marketplace/products/${slug}`)
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d) setProduct(d); })
+      .then((d: ProductDetail | null) => {
+        if (d) {
+          setProduct(d);
+          loadReviews(d.id);
+        }
+      })
       .catch(() => null)
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, loadReviews]);
+
+  async function submitReview() {
+    if (!product || myRating < 1) return;
+    setSubmittingReview(true);
+    setReviewError(null);
+    const res = await fetch("/api/marketplace/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId: product.id, rating: myRating, comment: myComment.trim() || null }),
+    });
+    const data = await res.json();
+    if (!res.ok) { setReviewError(data.error ?? "Erro ao enviar avaliação"); setSubmittingReview(false); return; }
+    setReviewSent(true);
+    setMyRating(0);
+    setMyComment("");
+    loadReviews(product.id);
+    setSubmittingReview(false);
+  }
 
   async function handleBuy() {
     if (!product) return;
@@ -217,6 +274,88 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
               </div>
             </CardContent>
           </Card>
+
+          {/* Reviews */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-text-muted" />
+              <h2 className="font-display text-base font-semibold text-text">
+                Avaliações{reviews.length > 0 && ` (${reviews.length})`}
+              </h2>
+            </div>
+
+            {reviews.length > 0 ? (
+              <div className="space-y-3">
+                {reviews.map((r) => {
+                  const rInitials = (r.athlete.name ?? "?").split(" ").slice(0, 2).map((n: string) => n[0]).join("");
+                  return (
+                    <div key={r.id} className="rounded-xl border border-border bg-card p-4">
+                      <div className="flex items-start gap-3">
+                        <Avatar className="h-8 w-8 shrink-0">
+                          <AvatarImage src={r.athlete.avatarUrl ?? undefined} />
+                          <AvatarFallback className="text-[10px]">{rInitials}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-text">{r.athlete.name ?? "Atleta"}</span>
+                            <StarRow rating={r.rating} />
+                            <span className="text-xs text-text-muted ml-auto">
+                              {new Date(r.createdAt).toLocaleDateString("pt-BR")}
+                            </span>
+                          </div>
+                          {r.comment && <p className="mt-1.5 text-sm text-text-muted">{r.comment}</p>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-text-muted">Nenhuma avaliação ainda. Seja o primeiro!</p>
+            )}
+
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-text">Deixar avaliação</h3>
+                {reviewSent ? (
+                  <div className="flex items-center gap-2 text-sm text-success">
+                    <CheckCircle2 className="h-4 w-4" /> Avaliação enviada com sucesso!
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((v) => (
+                        <button key={v} onClick={() => setMyRating(v)} className="p-0.5">
+                          <Star className={`h-6 w-6 transition-colors ${v <= myRating ? "fill-amber-400 text-amber-400" : "text-text-muted/30 hover:text-amber-300"}`} />
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={myComment}
+                      onChange={(e) => setMyComment(e.target.value)}
+                      placeholder="Conte sua experiência (opcional)..."
+                      rows={3}
+                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors resize-none"
+                    />
+                    {reviewError && <p className="text-xs text-danger">{reviewError}</p>}
+                    <Button
+                      onClick={submitReview}
+                      disabled={submittingReview || myRating < 1}
+                      className="gap-2"
+                      size="sm"
+                    >
+                      {submittingReview ? (
+                        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      ) : (
+                        <Send className="h-3.5 w-3.5" />
+                      )}
+                      Enviar avaliação
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Sticky buy panel */}
