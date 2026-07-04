@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCoachRole } from "@/context/coach-role-context";
 import { canAccess } from "@/lib/coach-permissions";
@@ -13,6 +13,7 @@ import {
   Users,
   UserCheck,
   Layers,
+  AlertCircle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -89,9 +90,53 @@ function PreviewCard({ config }: { config: WhiteLabelConfig }) {
 
 function WhiteLabelContent() {
   const [config, setConfig] = useState<WhiteLabelConfig>({ ...whiteLabelConfig });
-  const [dnsStatus, setDnsStatus] = useState<"idle" | "checking" | "active">("active");
+  const [domainVerified, setDomainVerified] = useState(false);
+  const [dnsStatus, setDnsStatus] = useState<"idle" | "checking" | "verified" | "failed">("idle");
+  const [dnsRecords, setDnsRecords] = useState<string[]>([]);
   const [newDomain, setNewDomain] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load config from API on mount
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const res = await fetch("/api/coach/white-label");
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          customDomain: string | null;
+          domainVerified: boolean;
+          whiteLabelConfig: {
+            assessoriaName?: string;
+            logoEmoji?: string;
+            primaryColor?: string;
+            featuresEnabled?: string[];
+          } | null;
+        };
+
+        setDomainVerified(data.domainVerified ?? false);
+
+        setConfig((prev) => ({
+          ...prev,
+          customDomain: data.customDomain ?? prev.customDomain,
+          assessoriaName: data.whiteLabelConfig?.assessoriaName ?? prev.assessoriaName,
+          logoEmoji: data.whiteLabelConfig?.logoEmoji ?? prev.logoEmoji,
+          primaryColor: data.whiteLabelConfig?.primaryColor ?? prev.primaryColor,
+          featuresEnabled: data.whiteLabelConfig?.featuresEnabled ?? prev.featuresEnabled,
+        }));
+
+        if (data.domainVerified) {
+          setDnsStatus("verified");
+        }
+      } catch {
+        // Ignore load errors — fall back to defaults
+      } finally {
+        setLoading(false);
+      }
+    }
+    void loadConfig();
+  }, []);
 
   function toggleModule(mod: string) {
     setConfig((prev) => ({
@@ -102,14 +147,90 @@ function WhiteLabelContent() {
     }));
   }
 
-  function handleVerifyDns() {
+  async function handleVerifyDns() {
+    const domain = newDomain.trim() || config.customDomain;
+    if (!domain) return;
+
     setDnsStatus("checking");
-    setTimeout(() => setDnsStatus("active"), 2000);
+    setDnsRecords([]);
+    setSaveError(null);
+
+    try {
+      const res = await fetch("/api/coach/white-label/verify-dns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain }),
+      });
+
+      const data = (await res.json()) as {
+        verified: boolean;
+        domain: string;
+        records: string[];
+        error?: string;
+      };
+
+      if (!res.ok) {
+        setDnsStatus("failed");
+        setSaveError(data.error ?? "Erro ao verificar DNS");
+        return;
+      }
+
+      setDnsRecords(data.records ?? []);
+      if (data.verified) {
+        setDnsStatus("verified");
+        setDomainVerified(true);
+        setConfig((prev) => ({ ...prev, customDomain: data.domain }));
+      } else {
+        setDnsStatus("failed");
+        setDomainVerified(false);
+      }
+    } catch {
+      setDnsStatus("failed");
+      setSaveError("Falha de conexão ao verificar DNS");
+    }
   }
 
-  function handleSave() {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  async function handleSave() {
+    setSaveState("saving");
+    setSaveError(null);
+
+    try {
+      const res = await fetch("/api/coach/white-label", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customDomain: newDomain.trim() || config.customDomain || undefined,
+          whiteLabelConfig: {
+            assessoriaName: config.assessoriaName,
+            logoEmoji: config.logoEmoji,
+            primaryColor: config.primaryColor,
+            featuresEnabled: config.featuresEnabled,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        setSaveError(data.error ?? "Erro ao salvar");
+        setSaveState("error");
+        return;
+      }
+
+      setSaveState("saved");
+      setTimeout(() => setSaveState("idle"), 2500);
+    } catch {
+      setSaveError("Falha de conexão ao salvar");
+      setSaveState("error");
+      setTimeout(() => setSaveState("idle"), 3000);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -272,26 +393,48 @@ function WhiteLabelContent() {
                   Domínio personalizado
                 </SectionTitle>
 
-                <div className="flex items-center gap-2 rounded-xl border border-emerald-700/60 bg-emerald-900/20 px-3 py-2.5">
-                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-emerald-300">Domínio ativo</p>
-                    <p className="truncate text-sm font-mono text-text">{config.customDomain}</p>
+                {/* Current domain status */}
+                {config.customDomain && (
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 rounded-xl border px-3 py-2.5",
+                      domainVerified
+                        ? "border-emerald-700/60 bg-emerald-900/20"
+                        : "border-amber-700/60 bg-amber-900/20"
+                    )}
+                  >
+                    {domainVerified ? (
+                      <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <p className={cn("text-xs font-medium", domainVerified ? "text-emerald-300" : "text-amber-300")}>
+                        {domainVerified ? "Domínio ativo" : "DNS não verificado"}
+                      </p>
+                      <p className="truncate text-sm font-mono text-text">{config.customDomain}</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div>
-                  <label className={labelCls}>Novo domínio</label>
+                  <label className={labelCls}>
+                    {config.customDomain ? "Alterar domínio" : "Novo domínio"}
+                  </label>
                   <div className="flex gap-2">
                     <input
                       value={newDomain}
-                      onChange={(e) => setNewDomain(e.target.value)}
+                      onChange={(e) => {
+                        setNewDomain(e.target.value);
+                        setDnsStatus("idle");
+                        setDnsRecords([]);
+                      }}
                       placeholder="app.suaassessoria.com.br"
                       className={cn(inputCls, "flex-1")}
                     />
                     <button
-                      onClick={handleVerifyDns}
-                      disabled={dnsStatus === "checking" || !newDomain.trim()}
+                      onClick={() => void handleVerifyDns()}
+                      disabled={dnsStatus === "checking" || !(newDomain.trim() || config.customDomain)}
                       className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-text transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {dnsStatus === "checking" ? (
@@ -307,15 +450,47 @@ function WhiteLabelContent() {
                 </div>
 
                 <AnimatePresence>
-                  {dnsStatus === "active" && newDomain && (
+                  {dnsStatus === "verified" && (
                     <motion.div
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 8 }}
-                      className="flex items-center gap-2 rounded-xl border border-emerald-700/60 bg-emerald-900/20 px-3 py-2"
+                      className="space-y-1.5"
                     >
-                      <Check className="h-4 w-4 text-emerald-400" />
-                      <span className="text-sm text-emerald-300">DNS verificado — domínio ativo</span>
+                      <div className="flex items-center gap-2 rounded-xl border border-emerald-700/60 bg-emerald-900/20 px-3 py-2">
+                        <Check className="h-4 w-4 text-emerald-400" />
+                        <span className="text-sm text-emerald-300">DNS verificado — domínio ativo</span>
+                      </div>
+                      {dnsRecords.length > 0 && (
+                        <div className="rounded-xl border border-border bg-background/50 px-3 py-2">
+                          {dnsRecords.map((r) => (
+                            <p key={r} className="font-mono text-xs text-text-muted">{r}</p>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                  {dnsStatus === "failed" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      className="space-y-1.5"
+                    >
+                      <div className="flex items-center gap-2 rounded-xl border border-red-700/60 bg-red-900/20 px-3 py-2">
+                        <AlertCircle className="h-4 w-4 text-red-400" />
+                        <span className="text-sm text-red-300">
+                          DNS não encontrado. Adicione um CNAME apontando para{" "}
+                          <span className="font-mono">app.pacerunpro.com.br</span>
+                        </span>
+                      </div>
+                      {dnsRecords.length > 0 && (
+                        <div className="rounded-xl border border-border bg-background/50 px-3 py-2">
+                          {dnsRecords.map((r) => (
+                            <p key={r} className="font-mono text-xs text-text-muted">{r}</p>
+                          ))}
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -349,16 +524,35 @@ function WhiteLabelContent() {
             </Card>
           </motion.div>
 
-          <motion.div custom={5} variants={fadeUp} initial="hidden" animate="show">
+          <motion.div custom={5} variants={fadeUp} initial="hidden" animate="show" className="space-y-2">
+            {saveError && saveState === "error" && (
+              <div className="flex items-center gap-2 rounded-xl border border-red-700/60 bg-red-900/20 px-3 py-2 text-sm text-red-300">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {saveError}
+              </div>
+            )}
             <button
-              onClick={handleSave}
+              onClick={() => void handleSave()}
+              disabled={saveState === "saving"}
               className={cn(
                 "gradient-primary w-full rounded-2xl py-3 text-base font-semibold text-white transition-all",
-                saved && "opacity-80"
+                (saveState === "saved" || saveState === "error") && "opacity-80",
+                saveState === "saving" && "cursor-not-allowed opacity-60"
               )}
             >
               <AnimatePresence mode="wait">
-                {saved ? (
+                {saveState === "saving" ? (
+                  <motion.span
+                    key="saving"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="inline-flex items-center gap-2"
+                  >
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Salvando
+                  </motion.span>
+                ) : saveState === "saved" ? (
                   <motion.span
                     key="saved"
                     initial={{ opacity: 0, y: 8 }}
