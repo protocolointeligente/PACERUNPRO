@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Heart, MessageCircle, Share2, Users, Medal, ChevronUp, ChevronDown, Minus, CalendarDays } from "lucide-react";
+import { Heart, Loader2, MessageCircle, Plus, Send, Share2, Users, Medal, ChevronUp, ChevronDown, Minus, CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,18 @@ import { cn } from "@/lib/utils";
 
 interface Club { id: string; name: string; members: number; location: string }
 interface RankingEntry { position: number; name: string; value: string; trend: string; highlight?: boolean }
+
+interface RealPost {
+  id: string;
+  content: string;
+  imageUrl?: string | null;
+  workoutSummary?: Record<string, unknown> | null;
+  createdAt: string;
+  author: { id: string; name: string; image?: string | null };
+  likesCount: number;
+  likedByMe: boolean;
+  comments: { id: string; content: string; createdAt: string; author: { id: string; name: string } }[];
+}
 
 const CHALLENGES: MonthlyChallenge[] = [];
 const CLUBS: Club[] = [];
@@ -362,10 +374,135 @@ function ChallengeCard({
   );
 }
 
+function RealPostCard({ post, onLike }: { post: RealPost; onLike: (id: string) => void }) {
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [sendingComment, setSendingComment] = useState(false);
+  const [localComments, setLocalComments] = useState(post.comments);
+
+  async function submitComment() {
+    if (!commentText.trim() || sendingComment) return;
+    setSendingComment(true);
+    try {
+      const res = await fetch(`/api/atleta/feed/${post.id}/comment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: commentText.trim() }),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setLocalComments((prev) => [...prev, d.comment]);
+        setCommentText("");
+      }
+    } finally {
+      setSendingComment(false);
+    }
+  }
+
+  function timeAgo(iso: string): string {
+    const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (diff < 60) return "agora";
+    if (diff < 3600) return `${Math.floor(diff / 60)}min`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+    return `${Math.floor(diff / 86400)}d`;
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-4 space-y-3">
+        {/* Author header */}
+        <div className="flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+            {post.author.name?.[0]?.toUpperCase() ?? "?"}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-text">{post.author.name}</p>
+            <p className="text-[11px] text-text-muted">{timeAgo(post.createdAt)}</p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <p className="text-sm text-text leading-relaxed">{post.content}</p>
+
+        {/* Workout summary chips */}
+        {post.workoutSummary && typeof post.workoutSummary === "object" && (
+          <div className="flex flex-wrap gap-1.5">
+            {Object.entries(post.workoutSummary).map(([k, v]) => (
+              <span key={k} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+                {k}: {String(v)}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center gap-4 pt-1">
+          <button
+            onClick={() => onLike(post.id)}
+            className={cn(
+              "flex items-center gap-1.5 text-xs font-semibold transition-colors",
+              post.likedByMe ? "text-danger" : "text-text-muted hover:text-danger"
+            )}
+          >
+            <Heart className={cn("h-4 w-4", post.likedByMe && "fill-danger")} />
+            {post.likesCount}
+          </button>
+          <button
+            onClick={() => setShowComments((v) => !v)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-text transition-colors"
+          >
+            <MessageCircle className="h-4 w-4" />
+            {localComments.length}
+          </button>
+        </div>
+
+        {/* Comments */}
+        {showComments && (
+          <div className="space-y-2 border-t border-border pt-3">
+            {localComments.map((c) => (
+              <div key={c.id} className="flex gap-2">
+                <span className="h-6 w-6 rounded-full bg-card-hover flex items-center justify-center text-[10px] font-bold text-text-muted shrink-0">
+                  {c.author.name?.[0]?.toUpperCase() ?? "?"}
+                </span>
+                <div>
+                  <span className="text-xs font-semibold text-text mr-1">{c.author.name}</span>
+                  <span className="text-xs text-text-muted">{c.content}</span>
+                </div>
+              </div>
+            ))}
+            <div className="flex gap-2 pt-1">
+              <input
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && submitComment()}
+                placeholder="Escreva um comentário…"
+                maxLength={500}
+                className="flex-1 rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20"
+              />
+              <button
+                onClick={submitComment}
+                disabled={!commentText.trim() || sendingComment}
+                className="flex items-center gap-1 rounded-xl bg-primary/90 px-3 py-1.5 text-xs font-semibold text-background disabled:opacity-50"
+              >
+                {sendingComment ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+              </button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function CommunityPage() {
   const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null);
   const [posts, setPosts] = useState<ActivityPost[]>([]);
   const [joinedClubs, setJoinedClubs] = useState<Set<string>>(new Set());
+  const [realPosts, setRealPosts] = useState<RealPost[]>([]);
+  const [feedLoading, setFeedLoading] = useState(true);
+  const [composeText, setComposeText] = useState("");
+  const [publishing, setPublishing] = useState(false);
+  const [showCompose, setShowCompose] = useState(false);
 
   useEffect(() => {
     const pending = localStorage.getItem("newActivityPost");
@@ -374,7 +511,49 @@ export default function CommunityPage() {
       setPosts((prev) => [post, ...prev]);
       localStorage.removeItem("newActivityPost");
     }
+
+    fetch("/api/atleta/feed")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { posts?: RealPost[] } | null) => {
+        if (d?.posts) setRealPosts(d.posts);
+      })
+      .catch(() => null)
+      .finally(() => setFeedLoading(false));
   }, []);
+
+  async function handlePublish() {
+    if (!composeText.trim() || publishing) return;
+    setPublishing(true);
+    try {
+      const res = await fetch("/api/atleta/feed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: composeText.trim() }),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setRealPosts((prev) => [{ ...d.post, likesCount: 0, likedByMe: false, comments: [] }, ...prev]);
+        setComposeText("");
+        setShowCompose(false);
+      }
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  function handleLike(postId: string) {
+    fetch(`/api/atleta/feed/${postId}/like`, { method: "POST" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { liked?: boolean; likesCount?: number } | null) => {
+        if (!d) return;
+        setRealPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId ? { ...p, likedByMe: d.liked ?? p.likedByMe, likesCount: d.likesCount ?? p.likesCount } : p
+          )
+        );
+      })
+      .catch(() => null);
+  }
 
   function toggleClub(id: string) {
     setJoinedClubs((prev) => {
@@ -432,16 +611,71 @@ export default function CommunityPage() {
             </TabsList>
 
             <TabsContent value="feed">
-              <div className="space-y-5">
-                {posts.length === 0 ? (
+              <div className="space-y-4">
+                {/* Compose box */}
+                <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                  {!showCompose ? (
+                    <button
+                      onClick={() => setShowCompose(true)}
+                      className="flex w-full items-center gap-3 text-left"
+                    >
+                      <div className="h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                        <Plus className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="flex-1 rounded-xl border border-border bg-card-hover/40 px-3 py-2 text-sm text-text-muted">
+                        Compartilhe um treino ou pensamento…
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      <textarea
+                        value={composeText}
+                        onChange={(e) => setComposeText(e.target.value)}
+                        placeholder="O que você treinou hoje? Compartilhe com a comunidade…"
+                        maxLength={1000}
+                        rows={3}
+                        autoFocus
+                        className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 resize-none"
+                      />
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-text-muted">{composeText.length}/1000</span>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => { setShowCompose(false); setComposeText(""); }}>
+                            Cancelar
+                          </Button>
+                          <Button size="sm" variant="primary" onClick={handlePublish} disabled={!composeText.trim() || publishing}>
+                            {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                            Publicar
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Real feed from API */}
+                {feedLoading ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="h-6 w-6 animate-spin text-text-muted" />
+                  </div>
+                ) : realPosts.length === 0 && posts.length === 0 ? (
                   <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-12 text-center">
                     <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                       <Users className="h-6 w-6" />
                     </span>
-                    <p className="text-sm font-semibold text-text">Feed em breve</p>
-                    <p className="text-sm text-text-muted">Quando você completar treinos, eles aparecerão aqui para compartilhar com a comunidade.</p>
+                    <p className="text-sm font-semibold text-text">Nenhuma publicação ainda</p>
+                    <p className="text-sm text-text-muted">Seja o primeiro a compartilhar um treino com a comunidade!</p>
                   </div>
                 ) : (
+                  <div className="space-y-4">
+                    {realPosts.map((p) => (
+                      <RealPostCard key={p.id} post={p} onLike={handleLike} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Legacy locally-shared posts */}
+                {posts.length > 0 && (
                   posts.map((post) => <ActivityCard key={post.id} post={post} />)
                 )}
               </div>

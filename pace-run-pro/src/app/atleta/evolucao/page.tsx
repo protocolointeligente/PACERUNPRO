@@ -48,6 +48,20 @@ export default function EvolutionPage() {
   const [loadSeries, setLoadSeries] = useState<LoadDaySport[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [powerAnalysis, setPowerAnalysis] = useState<{
+    hasData: boolean; ftp: number | null; totalSessions: number;
+    avgNp: number | null; avgIf: number | null; totalTss: number;
+    weeklyTss: { week: string; tss: number }[];
+    zones: { zone: string; label: string; pctFtp: string; sessions: number; color: string }[];
+  } | null>(null);
+
+  const [splitsAnalysis, setSplitsAnalysis] = useState<{
+    hasData: boolean; distanceKm: number | null; date: string | null; splitType: string;
+    avgPaceStr: string;
+    splits: { km: number; paceSecPerKm: number; paceStr: string; diffFromAvg: number }[];
+    bestKm: { km: number; paceStr: string }; worstKm: { km: number; paceStr: string };
+  } | null>(null);
+
   useEffect(() => {
     fetch("/api/atleta/evolucao")
       .then((r) => r.ok ? r.json() : null)
@@ -85,6 +99,16 @@ export default function EvolutionPage() {
         // Keep one point every 3 days to reduce chart density
         setLoadSeries(converted.filter((_, i) => i % 3 === 0 || i === converted.length - 1));
       })
+      .catch(() => null);
+
+    fetch("/api/atleta/power-analysis")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setPowerAnalysis(d); })
+      .catch(() => null);
+
+    fetch("/api/atleta/splits-analysis")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setSplitsAnalysis(d); })
       .catch(() => null);
   }, []);
 
@@ -342,6 +366,115 @@ export default function EvolutionPage() {
               <p className="mt-3 text-xs text-text-muted">
                 Previsões baseadas no seu melhor pace sustentado nos últimos 90 dias. Para uma estimativa mais precisa, realize um teste específico de 5 km ou similar.
               </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Power analysis (P3.7) ── */}
+        {powerAnalysis?.hasData && (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <CardTitle>Análise de Potência — Ciclismo</CardTitle>
+                  <CardDescription>Últimas 12 semanas de treinos com medidor de potência</CardDescription>
+                </div>
+                {powerAnalysis.ftp && (
+                  <Badge variant="primary">FTP {powerAnalysis.ftp} W</Badge>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                {powerAnalysis.avgNp != null && (
+                  <div className="rounded-xl border border-border bg-card-hover/40 p-3 text-center">
+                    <div className="text-[10px] font-medium text-text-muted mb-1">NP médio</div>
+                    <div className="font-display text-xl font-bold text-primary">{powerAnalysis.avgNp} W</div>
+                  </div>
+                )}
+                {powerAnalysis.avgIf != null && (
+                  <div className="rounded-xl border border-border bg-card-hover/40 p-3 text-center">
+                    <div className="text-[10px] font-medium text-text-muted mb-1">IF médio</div>
+                    <div className="font-display text-xl font-bold text-text">{powerAnalysis.avgIf.toFixed(2)}</div>
+                  </div>
+                )}
+                <div className="rounded-xl border border-border bg-card-hover/40 p-3 text-center">
+                  <div className="text-[10px] font-medium text-text-muted mb-1">TSS acumulado</div>
+                  <div className="font-display text-xl font-bold text-text">{powerAnalysis.totalTss}</div>
+                </div>
+              </div>
+              {powerAnalysis.zones.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">Distribuição por zona</p>
+                  {powerAnalysis.zones.filter((z) => z.sessions > 0).map((z) => (
+                    <div key={z.zone} className="flex items-center gap-2">
+                      <span className="w-5 text-[11px] font-bold text-text-muted">{z.zone}</span>
+                      <span className="w-20 text-[11px] text-text-muted truncate">{z.label}</span>
+                      <div className="flex-1 h-2 rounded-full bg-card-hover overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${Math.round((z.sessions / powerAnalysis.totalSessions) * 100)}%`,
+                            backgroundColor: z.color,
+                          }}
+                        />
+                      </div>
+                      <span className="w-7 text-right text-[11px] text-text-muted">{z.sessions}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Splits analysis (P3.6) ── */}
+        {splitsAnalysis?.hasData && splitsAnalysis.splits.length >= 2 && (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <CardTitle>Análise de Splits</CardTitle>
+                  <CardDescription>
+                    Último treino com dados de splits — ritmo por km e padrão de prova
+                  </CardDescription>
+                </div>
+                <Badge variant={
+                  splitsAnalysis.splitType === "negative" ? "success" :
+                  splitsAnalysis.splitType === "positive" ? "warning" : "default"
+                }>
+                  {splitsAnalysis.splitType === "negative" ? "Split negativo ↑" :
+                   splitsAnalysis.splitType === "positive" ? "Split positivo ↓" : "Split uniforme"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex gap-4 text-xs text-text-muted">
+                <span>Pace médio: <strong className="text-text">{splitsAnalysis.avgPaceStr}/km</strong></span>
+                <span>Melhor km: <strong className="text-success">km {splitsAnalysis.bestKm.km} ({splitsAnalysis.bestKm.paceStr}/km)</strong></span>
+                <span>Mais lento: <strong className="text-warning">km {splitsAnalysis.worstKm.km} ({splitsAnalysis.worstKm.paceStr}/km)</strong></span>
+              </div>
+              <div className="flex items-end gap-1 h-20 overflow-x-auto pb-1">
+                {splitsAnalysis.splits.map((s) => {
+                  const maxDiff = Math.max(...splitsAnalysis.splits.map((x) => Math.abs(x.diffFromAvg)), 30);
+                  const heightPct = 30 + Math.round((1 - Math.abs(s.diffFromAvg) / maxDiff) * 70);
+                  const isFast = s.diffFromAvg < -5;
+                  const isSlow = s.diffFromAvg > 5;
+                  return (
+                    <div key={s.km} className="flex flex-col items-center gap-1 min-w-[2rem]">
+                      <span className="text-[9px] text-text-muted">{s.paceStr}</span>
+                      <div
+                        className={`w-6 rounded-t-lg transition-all ${
+                          isFast ? "bg-success/80" : isSlow ? "bg-warning/80" : "bg-primary/50"
+                        }`}
+                        style={{ height: `${heightPct}%` }}
+                        title={`km ${s.km}: ${s.paceStr}/km`}
+                      />
+                      <span className="text-[9px] text-text-muted">{s.km}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
         )}
