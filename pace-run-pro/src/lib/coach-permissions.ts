@@ -70,8 +70,7 @@ const coreNav: NavItem[] = [
   { href: "/treinador/calendario",   label: "Calendário", icon: CalendarDays   },
 
   // — Prescrição —
-  { href: "/treinador/calendario",              label: "Calendário",    icon: CalendarDays,  sectionStart: "Prescrição" },
-  { href: "/treinador/prescricao/periodizacao", label: "Periodização",  icon: BarChart3                                },
+  { href: "/treinador/prescricao/periodizacao", label: "Periodização",  icon: BarChart3,     sectionStart: "Prescrição" },
   { href: "/treinador/prescricao/avaliacoes",   label: "Avaliações",    icon: ClipboardList                            },
   { href: "/treinador/configuracoes/zonas",     label: "Zonas de treino", icon: Zap                                   },
 

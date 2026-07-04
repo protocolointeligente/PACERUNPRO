@@ -208,6 +208,16 @@ function getTypeColor(workoutType: string): string {
   return TYPE_COLORS[workoutType] ?? "#94a3b8";
 }
 
+const STRENGTH_DIVISIONS = [
+  { value: "Full Body",   label: "Full Body",   desc: "Corpo inteiro" },
+  { value: "AB",          label: "AB",          desc: "2 dias" },
+  { value: "ABC",         label: "ABC",         desc: "3 dias" },
+  { value: "ABCD",        label: "ABCD",        desc: "4 dias" },
+  { value: "ABCDE",       label: "ABCDE",       desc: "5 dias" },
+  { value: "Upper/Lower", label: "Upper/Lower", desc: "Superior/Inferior" },
+  { value: "Push/Pull",   label: "Push/Pull",   desc: "Empurrar/Puxar" },
+];
+
 // ── Intensity ─────────────────────────────────────────────────────
 
 type IntensityMethod = "VDOT" | "ZONES" | "FTP" | "CSS" | "RPE" | "1RM_PCT";
@@ -430,6 +440,8 @@ interface FormState {
   cssValue: string;
   targetZone: string;
   oneRmPct: string;
+  // Strength only
+  divisionType: string;
 }
 
 function defaultMethod(sport: SportKey): IntensityMethod {
@@ -462,7 +474,14 @@ function emptyForm(sport: SportKey): FormState {
     cssValue: "1:45",
     targetZone: "Z2",
     oneRmPct: "75",
+    divisionType: "Full Body",
   };
+}
+
+function parseDivisionFromObjective(obj: string): { divisionType: string; objective: string } {
+  const match = obj.match(/^\[([^\]]+)\]\s*([\s\S]*)/);
+  if (match) return { divisionType: match[1], objective: match[2] };
+  return { divisionType: "Full Body", objective: obj };
 }
 
 function workoutToForm(w: CalendarWorkout): FormState {
@@ -471,10 +490,11 @@ function workoutToForm(w: CalendarWorkout): FormState {
   const p100Min = w.targetPacePer100m != null ? Math.floor(w.targetPacePer100m / 60) : "";
   const p100Sec = w.targetPacePer100m != null ? w.targetPacePer100m % 60 : "";
   const sport = getSportForType(w.type);
+  const { divisionType, objective } = parseDivisionFromObjective(w.objective ?? "");
   return {
     title: w.title,
     workoutType: w.type,
-    objective: w.objective ?? "",
+    objective,
     warmup: w.warmup ?? "",
     mainSet: w.mainSet ?? "",
     cooldown: w.cooldown ?? "",
@@ -492,6 +512,7 @@ function workoutToForm(w: CalendarWorkout): FormState {
     cssValue: "1:45",
     targetZone: "Z2",
     oneRmPct: "75",
+    divisionType: sport === "STRENGTH" ? divisionType : "Full Body",
   };
 }
 
@@ -504,10 +525,15 @@ function formToPayload(form: FormState) {
     form.targetPacePer100mMin !== "" || form.targetPacePer100mSec !== ""
       ? Number(form.targetPacePer100mMin || 0) * 60 + Number(form.targetPacePer100mSec || 0)
       : undefined;
+  const sport = WORKOUT_SPORT_MAP[form.workoutType] ?? "RUN";
+  const objectiveWithDivision =
+    sport === "STRENGTH" && form.divisionType
+      ? `[${form.divisionType}]${form.objective ? " " + form.objective : ""}`
+      : form.objective || undefined;
   return {
     title: form.title.trim(),
     type: form.workoutType,
-    objective: form.objective || undefined,
+    objective: objectiveWithDivision || undefined,
     warmup: form.warmup || undefined,
     mainSet: form.mainSet || undefined,
     cooldown: form.cooldown || undefined,
@@ -1744,6 +1770,41 @@ function IntensitySection({
 
 // ── MuscleWiki exercise picker ─────────────────────────────────────
 
+const STATIC_EXERCISES: {
+  id: string; name: string; muscles: string[]; muscles_secondary?: string[];
+}[] = [
+  { id: "s01", name: "Supino Reto",              muscles: ["chest"],         muscles_secondary: ["triceps", "shoulders"] },
+  { id: "s02", name: "Supino Inclinado",          muscles: ["chest"],         muscles_secondary: ["triceps"] },
+  { id: "s03", name: "Supino Declinado",          muscles: ["chest"],         muscles_secondary: ["triceps"] },
+  { id: "s04", name: "Crucifixo",                 muscles: ["chest"] },
+  { id: "s05", name: "Crossover",                 muscles: ["chest"] },
+  { id: "s06", name: "Barra Fixa",                muscles: ["lats", "back"],  muscles_secondary: ["biceps"] },
+  { id: "s07", name: "Remada Curvada",            muscles: ["back"],          muscles_secondary: ["biceps"] },
+  { id: "s08", name: "Remada Unilateral",         muscles: ["back"],          muscles_secondary: ["biceps"] },
+  { id: "s09", name: "Puxada Alta",               muscles: ["lats"],          muscles_secondary: ["biceps"] },
+  { id: "s10", name: "Serrote",                   muscles: ["lats", "back"] },
+  { id: "s11", name: "Desenvolvimento Militar",   muscles: ["shoulders"],     muscles_secondary: ["triceps"] },
+  { id: "s12", name: "Elevação Lateral",          muscles: ["shoulders"] },
+  { id: "s13", name: "Elevação Frontal",          muscles: ["shoulders"] },
+  { id: "s14", name: "Rosca Direta",              muscles: ["biceps"] },
+  { id: "s15", name: "Rosca Alternada",           muscles: ["biceps"] },
+  { id: "s16", name: "Rosca Martelo",             muscles: ["biceps", "forearms"] },
+  { id: "s17", name: "Tríceps Testa",             muscles: ["triceps"] },
+  { id: "s18", name: "Mergulho (Dips)",           muscles: ["triceps", "chest"] },
+  { id: "s19", name: "Tríceps Corda",             muscles: ["triceps"] },
+  { id: "s20", name: "Agachamento Livre",         muscles: ["quadriceps", "glutes"], muscles_secondary: ["hamstrings"] },
+  { id: "s21", name: "Leg Press",                 muscles: ["quadriceps", "glutes"], muscles_secondary: ["hamstrings"] },
+  { id: "s22", name: "Cadeira Extensora",         muscles: ["quadriceps"] },
+  { id: "s23", name: "Mesa Flexora",              muscles: ["hamstrings"] },
+  { id: "s24", name: "Stiff (RDL)",              muscles: ["hamstrings", "glutes"] },
+  { id: "s25", name: "Afundo",                    muscles: ["quadriceps", "glutes"] },
+  { id: "s26", name: "Panturrilha em Pé",         muscles: ["calves"] },
+  { id: "s27", name: "Elevação de Quadril",       muscles: ["glutes", "hamstrings"] },
+  { id: "s28", name: "Prancha",                   muscles: ["core"] },
+  { id: "s29", name: "Abdominal",                 muscles: ["core"] },
+  { id: "s30", name: "Abdominal Bicicleta",       muscles: ["core"] },
+];
+
 interface MWExercise {
   id: string | number;
   name: string;
@@ -1794,7 +1855,18 @@ function ExercisePicker({
       try {
         const res = await fetch(`/api/musclewiki?q=${encodeURIComponent(query)}`);
         const data = await res.json();
-        setResults(data.exercises ?? []);
+        const apiResults: MWExercise[] = data.exercises ?? [];
+        if (apiResults.length > 0) {
+          setResults(apiResults);
+        } else {
+          // Fallback: filter static exercises by name
+          const q = query.toLowerCase();
+          const filtered = STATIC_EXERCISES.filter((e) =>
+            e.name.toLowerCase().includes(q) ||
+            e.muscles.some((m) => m.toLowerCase().includes(q))
+          );
+          setResults(filtered as MWExercise[]);
+        }
       } finally {
         setSearching(false);
       }
@@ -1929,7 +2001,32 @@ function ExercisePicker({
         </div>
       )}
       {exercises.length === 0 && query === "" && (
-        <p className="text-[11px] text-white/25 text-center py-1">Busque e adicione exercícios acima</p>
+        <div className="border border-white/10 rounded-xl overflow-hidden max-h-[200px] overflow-y-auto">
+          <div className="px-3 py-1.5 bg-white/3 border-b border-white/8">
+            <span className="text-[10px] text-white/35 font-medium uppercase tracking-wider">Exercícios sugeridos</span>
+          </div>
+          {STATIC_EXERCISES.map((ex) => {
+            const muscles = [...(ex.muscles ?? []), ...(ex.muscles_secondary ?? [])].slice(0, 2);
+            return (
+              <button
+                key={ex.id}
+                onClick={() => addExercise(ex as MWExercise)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/5 text-left border-b border-white/5 last:border-0 transition-colors"
+              >
+                <div className="w-8 h-7 rounded bg-white/5 flex items-center justify-center flex-shrink-0">
+                  <Dumbbell size={11} className="text-teal-400/60" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm text-white truncate">{ex.name}</div>
+                  {muscles.length > 0 && (
+                    <div className="text-[10px] text-white/40 truncate">{muscles.map(translateMuscle).join(" · ")}</div>
+                  )}
+                </div>
+                <Plus size={12} className="text-teal-400 flex-shrink-0" />
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );
@@ -2131,6 +2228,32 @@ function PrescriptionForm({
           onChange={(e) => set("warmup", e.target.value)}
         />
       </div>
+
+      {/* Division type selector — STRENGTH only */}
+      {sport === "STRENGTH" && (
+        <div>
+          <label className="block text-[11px] text-white/40 mb-1.5">Tipo de divisão</label>
+          <div className="flex flex-wrap gap-1.5">
+            {STRENGTH_DIVISIONS.map((d) => (
+              <button
+                key={d.value}
+                type="button"
+                onClick={() => set("divisionType", d.value)}
+                title={d.desc}
+                className={[
+                  "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all",
+                  form.divisionType === d.value
+                    ? "border-teal-500/60 bg-teal-500/20 text-teal-300"
+                    : "border-white/10 text-white/50 hover:text-white hover:border-white/30 bg-white/3",
+                ].join(" ")}
+              >
+                {d.label}
+                <span className="ml-1 text-[10px] opacity-50">{d.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Main set — exercise picker for strength, free text otherwise */}
       <div>
