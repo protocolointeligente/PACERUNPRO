@@ -127,6 +127,39 @@ const WORKOUT_SPORT_MAP: Record<string, SportKey> = Object.fromEntries(
   )
 );
 
+// hex + rgb for inline style (avoids Tailwind JIT purging dynamic classes)
+const SPORT_COLORS: Record<SportKey, { hex: string; rgb: string }> = {
+  RUN:       { hex: "#F97316", rgb: "249,115,22"   },
+  BIKE:      { hex: "#3B82F6", rgb: "59,130,246"   },
+  SWIM:      { hex: "#06B6D4", rgb: "6,182,212"    },
+  STRENGTH:  { hex: "#A855F7", rgb: "168,85,247"   },
+  TRIATHLON: { hex: "#10B981", rgb: "16,185,129"   },
+  BRICK:     { hex: "#F43F5E", rgb: "244,63,94"    },
+  MOBILITY:  { hex: "#22C55E", rgb: "34,197,94"    },
+  REST:      { hex: "#94A3B8", rgb: "148,163,184"  },
+};
+
+// Workout subtype → intensity level (1 = easy, 5 = max)
+const WORKOUT_INTENSITY: Record<string, number> = {
+  REGENERATIVO: 1, RECOVERY_BIKE: 1, RECUPERACAO_NATACAO: 1, RECUPERACAO: 1, MOBILIDADE: 1,
+  RODAGEM_LEVE: 2, TECNICA: 2, ENDURANCE_BIKE: 2, TECNICA_NATACAO: 2, ENDURANCE_NATACAO: 2, LONG_RIDE: 2,
+  FARTLEK: 3, PROGRESSIVO: 3, LONGAO: 3, SWEET_SPOT: 3, TEMPO_BIKE: 3, LIMIAR_NATACAO: 3, AGUAS_ABERTAS: 3,
+  TREINO_COMBINADO: 3, TRANSICAO: 3, SIMULADO_TRIATHLON: 3, FUNCIONAL: 3, FORCA: 3, BRICK_SWIM_BIKE: 3,
+  SUBIDA: 4, TEMPO_RUN: 4, INTERVALADO_LONGO: 4, THRESHOLD_BIKE: 4, INTERVALADO_NATACAO: 4, BRICK_BIKE_RUN: 4,
+  INTERVALADO_CURTO: 5, PROVA: 5, VO2MAX_BIKE: 5, ANAEROBIC_BIKE: 5, SPRINT_BIKE: 5, SPRINT_NATACAO: 5,
+};
+
+function getWorkoutStyle(sport: SportKey, workoutType: string, rpe?: number | null) {
+  const colors = SPORT_COLORS[sport];
+  const intensityLevel = rpe ? Math.ceil(rpe / 2) : (WORKOUT_INTENSITY[workoutType] ?? 2);
+  // bg opacity: 0.08 (easy) → 0.22 (max)
+  const bgOpacity = (0.06 + (intensityLevel / 5) * 0.16).toFixed(2);
+  return {
+    borderLeft: `3px solid ${colors.hex}`,
+    backgroundColor: `rgba(${colors.rgb},${bgOpacity})`,
+  };
+}
+
 const MONTH_NAMES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
@@ -502,12 +535,13 @@ export default function CalendarClient({
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10 flex-wrap">
         <select
+          style={{ colorScheme: "dark" }}
           className="bg-[#1e2130] border border-white/10 text-white text-sm px-3 py-1.5 rounded-lg focus:outline-none focus:border-orange-500"
           value={athleteId}
           onChange={(e) => router.push(`/treinador/calendario/${e.target.value}`)}
         >
           {athletes.map((a) => (
-            <option key={a.id} value={a.id}>{a.name}</option>
+            <option key={a.id} value={a.id} style={{ background: "#1e2130", color: "#fff" }}>{a.name}</option>
           ))}
         </select>
 
@@ -615,6 +649,8 @@ export default function CalendarClient({
                 {dayWorkouts.map((w) => {
                   const sport = getSportForType(w.type);
                   const sportCfg = getSport(sport);
+                  const chipStyle = getWorkoutStyle(sport, w.type, w.targetRpe);
+                  const borderColor = SPORT_COLORS[sport].hex;
                   const isCut = clipboard?.action === "cut" && clipboard.workout.id === w.id;
 
                   const meta: string[] = [];
@@ -635,18 +671,23 @@ export default function CalendarClient({
                         setCtxMenu({ x: e.clientX, y: e.clientY, workout: w });
                       }}
                       onClick={() => openEdit(w)}
+                      style={chipStyle}
                       className={[
-                        "flex items-start gap-1 px-1.5 py-1 rounded-md cursor-pointer group",
-                        "bg-white/5 hover:bg-white/10 transition-colors",
-                        isCut ? "opacity-40 ring-1 ring-orange-400 ring-offset-0" : "",
+                        "flex items-start gap-1 px-1.5 py-1 rounded-r-md cursor-pointer group transition-opacity",
+                        isCut ? "opacity-40 outline outline-1 outline-orange-400" : "hover:opacity-90",
                         dragId === w.id ? "opacity-50" : "",
                       ].join(" ")}
                     >
                       <span className="text-[11px] flex-shrink-0 mt-[1px]">{sportCfg.emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[11px] font-medium text-white/90 truncate">{w.title}</div>
+                        <div
+                          className="text-[11px] font-semibold truncate"
+                          style={{ color: borderColor }}
+                        >
+                          {w.title}
+                        </div>
                         {meta.length > 0 && (
-                          <div className="text-[10px] text-white/40 truncate">{meta.join(" · ")}</div>
+                          <div className="text-[10px] text-white/55 truncate">{meta.join(" · ")}</div>
                         )}
                       </div>
                       <button
@@ -859,12 +900,13 @@ function PrescriptionForm({
         <div className="w-44">
           <label className="block text-[11px] text-white/40 mb-1">Subtipo</label>
           <select
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
+            style={{ colorScheme: "dark" }}
+            className="w-full bg-[#0f1117] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
             value={form.workoutType}
             onChange={(e) => set("workoutType", e.target.value)}
           >
             {SPORT_WORKOUT_TYPES[sport].map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+              <option key={t.value} value={t.value} style={{ background: "#1a1d2e", color: "#fff" }}>{t.label}</option>
             ))}
           </select>
         </div>
