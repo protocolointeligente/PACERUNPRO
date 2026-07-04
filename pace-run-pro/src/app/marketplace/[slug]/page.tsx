@@ -131,9 +131,9 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-10">
-      <Link href="/loja" className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text">
+      <Link href="/marketplace" className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text">
         <ArrowLeft className="h-4 w-4" />
-        Voltar para a loja
+        Voltar ao marketplace
       </Link>
 
       {/* Hero */}
@@ -252,9 +252,9 @@ export default function MarketplaceProductPage({ params }: { params: Promise<{ s
                 )}
 
                 {success && (
-                  <Link href="/atleta/biblioteca">
+                  <Link href="/atleta/compras">
                     <Button variant="secondary" className="w-full">
-                      Ver minha biblioteca
+                      Ver minhas compras
                     </Button>
                   </Link>
                 )}

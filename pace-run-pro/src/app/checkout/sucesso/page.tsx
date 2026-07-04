@@ -37,16 +37,16 @@ function SucessoContent() {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link href="/atleta/biblioteca">
+          <Link href="/atleta/compras">
             <Button className="w-full sm:w-auto gap-1.5">
               <BookOpen className="h-4 w-4" />
-              Ver meu plano
+              Ver minhas compras
             </Button>
           </Link>
-          <Link href="/loja">
+          <Link href="/marketplace">
             <Button variant="outline" className="w-full sm:w-auto gap-1.5">
               <ShoppingBag className="h-4 w-4" />
-              Explorar mais planos
+              Explorar mais produtos
             </Button>
           </Link>
         </div>
