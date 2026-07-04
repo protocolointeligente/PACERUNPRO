@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Wand2,
@@ -268,6 +269,8 @@ const DRAFT_KEY = "periodizacao-draft-v1";
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PeriodizacaoPage() {
+  const router = useRouter();
+
   const [athletes, setAthletes] = useState<AthleteListItem[]>([]);
   useEffect(() => {
     fetch("/api/coach/athletes")
@@ -275,6 +278,10 @@ export default function PeriodizacaoPage() {
       .then((data: AthleteListItem[]) => setAthletes(data))
       .catch(() => null);
   }, []);
+
+  // Mode picker state
+  const [showModePicker, setShowModePicker] = useState(true);
+  const [pickerSport, setPickerSport] = useState<"RUN" | "BIKE" | "SWIM" | "TRIATHLON" | "STRENGTH">("RUN");
 
   // Macro state
   const [sportMode, setSportMode] = useState<SportMode>("RUN");
@@ -523,6 +530,80 @@ export default function PeriodizacaoPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      {/* ── Mode Picker Modal ── */}
+      {showModePicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-[480px] mx-4 rounded-2xl border border-border bg-[#1a1d2e] shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-semibold text-white">Nova Periodização</h2>
+              <button
+                type="button"
+                onClick={() => setShowModePicker(false)}
+                className="rounded-lg p-1 text-text-muted hover:text-white transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Sport grid */}
+            <p className="text-xs font-medium text-text-muted mb-2">Modalidade</p>
+            <div className="grid grid-cols-3 gap-2 mb-5">
+              {(
+                [
+                  { key: "RUN", label: "Corrida" },
+                  { key: "BIKE", label: "Ciclismo" },
+                  { key: "SWIM", label: "Natação" },
+                  { key: "TRIATHLON", label: "Triathlon" },
+                  { key: "STRENGTH", label: "Força" },
+                ] as { key: "RUN" | "BIKE" | "SWIM" | "TRIATHLON" | "STRENGTH"; label: string }[]
+              ).map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setPickerSport(key)}
+                  className={cn(
+                    "rounded-xl border py-3 text-sm font-medium transition-all",
+                    pickerSport === key
+                      ? "border-primary/60 bg-primary/20 text-primary"
+                      : "border-white/10 bg-white/5 text-text-muted hover:border-primary/30 hover:text-white"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Mode buttons */}
+            <p className="text-xs font-medium text-text-muted mb-2">Modo</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (pickerSport === "STRENGTH") {
+                    router.push("/treinador/prescricao/forca-periodizacao");
+                  } else {
+                    setSportMode(pickerSport as SportMode);
+                    setShowModePicker(false);
+                  }
+                }}
+                className="flex flex-col items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-4 text-sm font-medium text-white hover:border-primary/40 hover:bg-primary/10 transition-all"
+              >
+                <Pencil className="h-5 w-5 text-primary" />
+                Manual
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/treinador/prescricao/gerador")}
+                className="flex flex-col items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 py-4 text-sm font-medium text-primary hover:bg-primary/20 transition-all"
+              >
+                <Wand2 className="h-5 w-5" />
+                Automático (IA)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md print:hidden">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center gap-3 flex-wrap">

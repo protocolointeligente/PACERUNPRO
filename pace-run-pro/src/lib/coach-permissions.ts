@@ -70,19 +70,10 @@ const coreNav: NavItem[] = [
   { href: "/treinador/calendario",   label: "Calendário", icon: CalendarDays   },
 
   // — Prescrição —
-  { href: "/treinador/calendario",               label: "Calendário",        icon: CalendarDays,   sectionStart: "Prescrição" },
-  { href: "/treinador/prescricao/gerador",       label: "Gerador de planos", icon: Wand2                                     },
-  { href: "/treinador/prescricao/periodizacao",  label: "Periodização",      icon: BarChart3                                 },
-  { href: "/treinador/prescricao/avaliacoes",    label: "Avaliações",        icon: ClipboardList                             },
-  { href: "/treinador/configuracoes/zonas",      label: "Zonas de treino",   icon: Zap                                       },
-
-  // — Modalidades —
-  { href: "/treinador/calendario?addSport=RUN",      label: "Corrida",              icon: Activity,  sectionStart: "Modalidades" },
-  { href: "/treinador/calendario?addSport=BIKE",     label: "Ciclismo",             icon: Bike                                  },
-  { href: "/treinador/calendario?addSport=SWIM",     label: "Natação",              icon: Waves                                 },
-  { href: "/treinador/calendario?addSport=TRIATHLON",label: "Triathlon",            icon: Trophy                                },
-  { href: "/treinador/prescricao/forca",                label: "Força",                icon: Dumbbell                              },
-  { href: "/treinador/prescricao/forca-periodizacao",   label: "Força — Periodização", icon: BarChart3                             },
+  { href: "/treinador/calendario",              label: "Calendário",    icon: CalendarDays,  sectionStart: "Prescrição" },
+  { href: "/treinador/prescricao/periodizacao", label: "Periodização",  icon: BarChart3                                },
+  { href: "/treinador/prescricao/avaliacoes",   label: "Avaliações",    icon: ClipboardList                            },
+  { href: "/treinador/configuracoes/zonas",     label: "Zonas de treino", icon: Zap                                   },
 
   // — Equipe —
   { href: "/treinador/grupos",      label: "Grupos",     icon: Layers,      sectionStart: "Equipe" },

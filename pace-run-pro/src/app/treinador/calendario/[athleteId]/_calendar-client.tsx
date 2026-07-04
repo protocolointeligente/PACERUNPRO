@@ -22,6 +22,16 @@ import {
   EyeOff,
   Eye,
   Lock,
+  Activity,
+  Bike,
+  Waves,
+  Dumbbell,
+  Trophy,
+  Layers,
+  Leaf,
+  Moon,
+  Zap,
+  Search,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -89,15 +99,22 @@ interface Props {
 
 // ── Constants ─────────────────────────────────────────────────────
 
-const SPORT_TYPES: { key: SportKey; label: string; emoji: string; bgClass: string }[] = [
-  { key: "RUN",       label: "Corrida",    emoji: "🏃", bgClass: "bg-orange-500/20 hover:bg-orange-500/30" },
-  { key: "BIKE",      label: "Ciclismo",   emoji: "🚴", bgClass: "bg-yellow-500/20 hover:bg-yellow-500/30" },
-  { key: "SWIM",      label: "Natação",    emoji: "🏊", bgClass: "bg-blue-500/20 hover:bg-blue-500/30"     },
-  { key: "STRENGTH",  label: "Força",      emoji: "💪", bgClass: "bg-red-500/20 hover:bg-red-500/30"       },
-  { key: "TRIATHLON", label: "Triathlon",  emoji: "🏅", bgClass: "bg-purple-500/20 hover:bg-purple-500/30" },
-  { key: "BRICK",     label: "Brick",      emoji: "🧱", bgClass: "bg-rose-500/20 hover:bg-rose-500/30"     },
-  { key: "MOBILITY",  label: "Mobilidade", emoji: "🧘", bgClass: "bg-green-500/20 hover:bg-green-500/30"   },
-  { key: "REST",      label: "Folga",      emoji: "💤", bgClass: "bg-gray-500/20 hover:bg-gray-500/30"     },
+const SPORT_TYPES: {
+  key: SportKey;
+  label: string;
+  subtitle: string;
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+  color: string;
+  bgClass: string;
+}[] = [
+  { key: "RUN",       label: "Corrida",    subtitle: "VDOT · Zonas",  icon: Activity, color: "#f97316", bgClass: "hover:bg-orange-500/15" },
+  { key: "BIKE",      label: "Ciclismo",   subtitle: "FTP · Potência", icon: Bike,     color: "#eab308", bgClass: "hover:bg-yellow-500/15" },
+  { key: "SWIM",      label: "Natação",    subtitle: "CSS · Pace",     icon: Waves,    color: "#38bdf8", bgClass: "hover:bg-blue-500/15"   },
+  { key: "STRENGTH",  label: "Força",      subtitle: "1RM · RPE",      icon: Dumbbell, color: "#46E0C8", bgClass: "hover:bg-teal-500/15"   },
+  { key: "TRIATHLON", label: "Triathlon",  subtitle: "Multi-sport",    icon: Trophy,   color: "#a78bfa", bgClass: "hover:bg-purple-500/15" },
+  { key: "BRICK",     label: "Brick",      subtitle: "Bike + Run",     icon: Layers,   color: "#fb923c", bgClass: "hover:bg-rose-500/15"   },
+  { key: "MOBILITY",  label: "Mobilidade", subtitle: "Mobilidade",     icon: Leaf,     color: "#4ade80", bgClass: "hover:bg-green-500/15"  },
+  { key: "REST",      label: "Folga",      subtitle: "Recuperação",    icon: Moon,     color: "#94a3b8", bgClass: "hover:bg-slate-500/15"  },
 ];
 
 const SPORT_WORKOUT_TYPES: Record<SportKey, { value: string; label: string }[]> = {
@@ -1056,7 +1073,9 @@ export default function CalendarClient({
                       ].join(" ")}
                     >
                       <div className="flex items-start gap-1">
-                        <span className="text-[10px] flex-shrink-0 mt-[1px]">{sportCfg.emoji}</span>
+                        <span style={{ color, lineHeight: 0 }} className="flex-shrink-0 mt-[2px]">
+                          <sportCfg.icon size={10} strokeWidth={2} />
+                        </span>
                         <div className="flex-1 min-w-0">
                           <div
                             className="text-[11px] font-semibold truncate leading-tight"
@@ -1146,19 +1165,27 @@ export default function CalendarClient({
       {/* ── Sport picker modal ──────────────────────────────────────── */}
       {modal.kind === "sport-picker" && (
         <Overlay onClose={() => setModal({ kind: "closed" })}>
-          <ModalBox title="Escolha a modalidade" onClose={() => setModal({ kind: "closed" })}>
-            <div className="grid grid-cols-4 gap-3 p-4">
+          <ModalBox title="Nova prescrição" onClose={() => setModal({ kind: "closed" })}>
+            <div className="grid grid-cols-2 gap-2 p-4">
               {SPORT_TYPES.map((s) => (
                 <button
                   key={s.key}
                   onClick={() => pickSport(s.key)}
                   className={[
-                    "flex flex-col items-center gap-2 p-3 rounded-xl transition-colors",
+                    "flex items-center gap-3 p-3 rounded-xl border border-white/8 transition-all text-left",
                     s.bgClass,
                   ].join(" ")}
                 >
-                  <span className="text-3xl">{s.emoji}</span>
-                  <span className="text-xs text-white/70 font-medium">{s.label}</span>
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: `${s.color}18`, color: s.color }}
+                  >
+                    <s.icon size={18} strokeWidth={1.75} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-white leading-tight">{s.label}</div>
+                    <div className="text-[10px] text-white/40 leading-tight mt-0.5">{s.subtitle}</div>
+                  </div>
                 </button>
               ))}
             </div>
@@ -1173,7 +1200,7 @@ export default function CalendarClient({
             title={
               modal.workoutId
                 ? `Editar treino`
-                : `Novo treino — ${getSport(modal.sport).emoji} ${getSport(modal.sport).label}`
+                : `Novo treino — ${getSport(modal.sport).label}`
             }
             onClose={() => setModal({ kind: "closed" })}
             wide
@@ -1715,6 +1742,199 @@ function IntensitySection({
   );
 }
 
+// ── MuscleWiki exercise picker ─────────────────────────────────────
+
+interface MWExercise {
+  id: string | number;
+  name: string;
+  muscles?: string[];
+  muscles_secondary?: string[];
+  gif?: string;
+  gifUrl?: string;
+  category?: string | { name?: string };
+}
+
+interface PrescribedEx {
+  id: string;
+  name: string;
+  gif?: string;
+  muscles: string[];
+  sets: number;
+  reps: string;
+  rest: string;
+}
+
+function serializeExercises(exs: PrescribedEx[]): string {
+  return exs.map((e) => `${e.name}: ${e.sets}x${e.reps} descanso ${e.rest}`).join("\n");
+}
+
+function ExercisePicker({
+  onUpdate,
+}: {
+  onUpdate: (text: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<MWExercise[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [exercises, setExercises] = useState<PrescribedEx[]>([]);
+
+  const MUSCLES_PT: Record<string, string> = {
+    chest: "Peito", back: "Costas", shoulders: "Ombros", biceps: "Bíceps",
+    triceps: "Tríceps", legs: "Pernas", glutes: "Glúteos", core: "Core",
+    hamstrings: "Isquiotibiais", quadriceps: "Quadríceps", calves: "Panturrilhas",
+    forearms: "Antebraços", traps: "Trapézio", lats: "Latíssimo",
+  };
+
+  const translateMuscle = (m: string) => MUSCLES_PT[m.toLowerCase()] ?? m;
+
+  useEffect(() => {
+    if (!query.trim()) { setResults([]); return; }
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/musclewiki?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        setResults(data.exercises ?? []);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  function addExercise(ex: MWExercise) {
+    const muscles = [
+      ...(ex.muscles ?? []),
+      ...(ex.muscles_secondary ?? []),
+    ].slice(0, 2);
+    const newEx: PrescribedEx = {
+      id: `${ex.id}-${Date.now()}`,
+      name: ex.name,
+      gif: ex.gif ?? ex.gifUrl,
+      muscles,
+      sets: 3,
+      reps: "8-12",
+      rest: "60s",
+    };
+    const updated = [...exercises, newEx];
+    setExercises(updated);
+    onUpdate(serializeExercises(updated));
+    setQuery("");
+    setResults([]);
+  }
+
+  function removeExercise(id: string) {
+    const updated = exercises.filter((e) => e.id !== id);
+    setExercises(updated);
+    onUpdate(serializeExercises(updated));
+  }
+
+  function updateField(id: string, field: keyof Pick<PrescribedEx, "sets" | "reps" | "rest">, value: string) {
+    const updated = exercises.map((e) =>
+      e.id === id ? { ...e, [field]: field === "sets" ? Number(value) || 1 : value } : e
+    );
+    setExercises(updated);
+    onUpdate(serializeExercises(updated));
+  }
+
+  const INPUT_TINY =
+    "bg-white/5 border border-white/10 rounded px-1.5 py-1 text-xs text-white focus:outline-none focus:border-orange-500";
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Search */}
+      <div className="relative">
+        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+        <input
+          className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-orange-500 transition-colors"
+          placeholder="Buscar exercício (ex: Supino, Rosca…)"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {searching && <Loader2 size={12} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-white/40" />}
+      </div>
+
+      {/* Results */}
+      {results.length > 0 && (
+        <div className="border border-white/10 rounded-xl overflow-hidden max-h-[180px] overflow-y-auto">
+          {results.map((ex) => {
+            const muscles = [...(ex.muscles ?? []), ...(ex.muscles_secondary ?? [])].slice(0, 2);
+            return (
+              <button
+                key={ex.id}
+                onClick={() => addExercise(ex)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/5 text-left border-b border-white/5 last:border-0 transition-colors"
+              >
+                {(ex.gif ?? ex.gifUrl) ? (
+                  <img src={ex.gif ?? ex.gifUrl} alt={ex.name} className="w-10 h-8 object-cover rounded flex-shrink-0" />
+                ) : (
+                  <div className="w-10 h-8 rounded bg-white/5 flex items-center justify-center flex-shrink-0">
+                    <Dumbbell size={12} className="text-white/30" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm text-white truncate">{ex.name}</div>
+                  {muscles.length > 0 && (
+                    <div className="text-[10px] text-white/40 truncate">{muscles.map(translateMuscle).join(" · ")}</div>
+                  )}
+                </div>
+                <Plus size={12} className="text-orange-400 flex-shrink-0" />
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Selected exercises */}
+      {exercises.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {exercises.map((ex) => (
+            <div key={ex.id} className="bg-white/3 border border-white/8 rounded-xl p-2.5 flex gap-2.5 items-start">
+              {ex.gif && (
+                <img src={ex.gif} alt={ex.name} className="w-12 h-10 object-cover rounded flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium text-white mb-1.5 truncate">{ex.name}</div>
+                <div className="flex items-center gap-2">
+                  <label className="text-[10px] text-white/40">Séries</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    className={`w-12 ${INPUT_TINY}`}
+                    value={ex.sets}
+                    onChange={(e) => updateField(ex.id, "sets", e.target.value)}
+                  />
+                  <label className="text-[10px] text-white/40">Reps</label>
+                  <input
+                    className={`w-16 ${INPUT_TINY}`}
+                    value={ex.reps}
+                    onChange={(e) => updateField(ex.id, "reps", e.target.value)}
+                    placeholder="8-12"
+                  />
+                  <label className="text-[10px] text-white/40">Descanso</label>
+                  <input
+                    className={`w-14 ${INPUT_TINY}`}
+                    value={ex.rest}
+                    onChange={(e) => updateField(ex.id, "rest", e.target.value)}
+                    placeholder="60s"
+                  />
+                </div>
+              </div>
+              <button onClick={() => removeExercise(ex.id)} className="p-0.5 rounded hover:bg-white/10 text-white/30 hover:text-red-400">
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {exercises.length === 0 && query === "" && (
+        <p className="text-[11px] text-white/25 text-center py-1">Busque e adicione exercícios acima</p>
+      )}
+    </div>
+  );
+}
+
 function PrescriptionForm({
   sport,
   form,
@@ -1912,16 +2132,22 @@ function PrescriptionForm({
         />
       </div>
 
-      {/* Main set */}
+      {/* Main set — exercise picker for strength, free text otherwise */}
       <div>
-        <label className="block text-[11px] text-white/40 mb-1">Série principal</label>
-        <textarea
-          rows={3}
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-orange-500 transition-colors resize-none"
-          placeholder="Ex: 6x 1km em ritmo de limiar com 2 min de recuperação"
-          value={form.mainSet}
-          onChange={(e) => set("mainSet", e.target.value)}
-        />
+        <label className="block text-[11px] text-white/40 mb-1">
+          {sport === "STRENGTH" ? "Exercícios" : "Série principal"}
+        </label>
+        {sport === "STRENGTH" ? (
+          <ExercisePicker onUpdate={(text) => set("mainSet", text)} />
+        ) : (
+          <textarea
+            rows={3}
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-orange-500 transition-colors resize-none"
+            placeholder="Ex: 6x 1km em ritmo de limiar com 2 min de recuperação"
+            value={form.mainSet}
+            onChange={(e) => set("mainSet", e.target.value)}
+          />
+        )}
       </div>
 
       {/* Cooldown */}
