@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { MessageNotifier } from "@/components/messages/message-notifier";
@@ -18,14 +18,17 @@ export default function AtletaLayoutClient({
   avatarUrl?: string;
   children: React.ReactNode;
 }) {
-  // Apply coach white-label branding (primary color) if available
+  const [roleLabel, setRoleLabel] = useState("Atleta");
+
+  // Apply coach white-label branding (primary color + assessoria name) if available
   useEffect(() => {
     fetch("/api/atleta/coach-branding")
       .then((r) => r.ok ? r.json() : null)
       .then((d: { primaryColor?: string; assessoriaName?: string | null } | null) => {
-        if (!d?.primaryColor) return;
+        if (!d) return;
+        if (d.assessoriaName) setRoleLabel(d.assessoriaName);
+        if (!d.primaryColor) return;
         document.documentElement.style.setProperty("--color-primary", d.primaryColor);
-        // Also set the RGB variant for opacity utilities
         const hex = d.primaryColor.replace("#", "");
         const r = parseInt(hex.slice(0, 2), 16);
         const g = parseInt(hex.slice(2, 4), 16);
@@ -39,7 +42,7 @@ export default function AtletaLayoutClient({
     <AppShell
       nav={athleteNav}
       moreNav={athleteMoreNav}
-      roleLabel="Atleta"
+      roleLabel={roleLabel}
       userName={userName}
       userSubtitle={userSubtitle}
       avatarUrl={avatarUrl}

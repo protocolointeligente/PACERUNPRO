@@ -172,6 +172,8 @@ model Athlete {
   adherenceRate      Float           @default(0) // 0–1
   recoveryScore      Float           @default(0) // 0–1
 
+  cpf                String?         // CPF do atleta para emissão de cobranças (11 dígitos, sem pontuação)
+
   parqAccepted       Boolean         @default(false)
   parqAcceptedAt     DateTime?
 

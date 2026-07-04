@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
+  AlertTriangle,
   Bookmark,
   BookOpen,
   CheckCircle2,
@@ -596,6 +597,21 @@ export default function CorridaPage() {
   const [criarOk, setCriarOk] = useState(false);
   const [criarLastWorkout, setCriarLastWorkout] = useState<{ title: string; type: string; distKm: string; durMin: string } | null>(null);
   const [criarSavedLib, setCriarSavedLib] = useState(false);
+  const [criarContraWarnings, setCriarContraWarnings] = useState<{ zone: string; warning: string }[]>([]);
+
+  // Fetch contraindications whenever athlete changes in "Criar treino" tab
+  useEffect(() => {
+    if (!criarAthleteId) { setCriarContraWarnings([]); return; }
+    const params = new URLSearchParams({
+      exercises: "corrida,sprint,velocidade,corrida intensa,corrida longa,impacto,trail,trilha,corrida rápida,corrida descendente",
+    });
+    fetch(`/api/coach/atleta/${criarAthleteId}/contraindicacoes?${params}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { warnings?: { zone: string; warning: string }[] } | null) => {
+        setCriarContraWarnings(d?.warnings ?? []);
+      })
+      .catch(() => null);
+  }, [criarAthleteId]);
 
   async function handleCriarTreino() {
     if (!criarAthleteId || !criarDate || !criarTitle.trim() || criarSaving) return;
@@ -800,6 +816,21 @@ export default function CorridaPage() {
                   />
                 </label>
               </div>
+
+              {/* Contraindication warnings for running */}
+              {criarContraWarnings.length > 0 && (
+                <div className="rounded-xl border border-warning/40 bg-warning/5 p-3 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
+                    <p className="text-sm font-semibold text-warning">
+                      Contraindicações detectadas no histórico de lesões
+                    </p>
+                  </div>
+                  {criarContraWarnings.map((w) => (
+                    <p key={w.zone} className="text-xs text-text-muted pl-6 leading-relaxed">{w.warning}</p>
+                  ))}
+                </div>
+              )}
 
               {/* Title + type */}
               <div className="grid gap-4 sm:grid-cols-2">

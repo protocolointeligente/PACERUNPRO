@@ -13,7 +13,9 @@ import {
   CheckCheck,
   ChevronRight,
   Clock,
+  Flame,
   MessageSquare,
+  TrendingUp,
   Zap,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +38,15 @@ interface SmartAlert {
   read: boolean;
 }
 import { cn } from "@/lib/utils";
+
+interface AcwrAthlete {
+  id: string;
+  name: string;
+  acwr: number;
+  risk: string;
+  riskLabel: string;
+  recommendation: string;
+}
 
 interface ExpiringPlan {
   planId: string;
@@ -82,6 +93,7 @@ export default function AlertasPage() {
   const [alerts, setAlerts] = useState<SmartAlert[]>([]);
   const [filter, setFilter] = useState<AlertSeverity | "todos">("todos");
   const [expiringPlans, setExpiringPlans] = useState<ExpiringPlan[]>([]);
+  const [acwrAthletes, setAcwrAthletes] = useState<AcwrAthlete[]>([]);
 
   useEffect(() => {
     fetch("/api/treinador/alertas")
@@ -89,6 +101,15 @@ export default function AlertasPage() {
       .then((data) => {
         if (data?.expiringPlans) setExpiringPlans(data.expiringPlans);
         if (data?.alerts) setAlerts(data.alerts);
+      })
+      .catch(() => null);
+
+    fetch("/api/coach/atletas-risco")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.athletes) {
+          setAcwrAthletes(data.athletes.filter((a: AcwrAthlete) => a.risk === "danger" || a.risk === "caution"));
+        }
       })
       .catch(() => null);
   }, []);
@@ -213,9 +234,57 @@ export default function AlertasPage() {
         </motion.div>
       )}
 
+      {/* ACWR overtraining risk panel */}
+      {acwrAthletes.length > 0 && (
+        <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show">
+          <Card className="border-danger/40 bg-danger/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Flame className="h-4 w-4 text-danger" />
+                <h3 className="text-sm font-semibold text-text">
+                  Risco de overtraining — ACWR elevado
+                </h3>
+                <Badge variant="danger" className="ml-auto">{acwrAthletes.length}</Badge>
+              </div>
+              <div className="space-y-2">
+                {acwrAthletes.map((a) => (
+                  <div key={a.id} className="flex items-center justify-between gap-3 rounded-xl bg-card-hover px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={cn(
+                        "h-2 w-2 shrink-0 rounded-full",
+                        a.risk === "danger" ? "bg-danger" : "bg-warning"
+                      )} />
+                      <span className="text-sm font-medium text-text truncate">{a.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className={cn(
+                        "flex items-center gap-1 text-xs font-semibold",
+                        a.risk === "danger" ? "text-danger" : "text-warning"
+                      )}>
+                        <TrendingUp className="h-3.5 w-3.5" />
+                        ACWR {a.acwr.toFixed(2)} — {a.riskLabel}
+                      </span>
+                      <a
+                        href={`/treinador/atletas/${a.id}`}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Ver atleta →
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-text-muted">
+                ACWR &gt; 1.3 indica carga aguda muito superior à crônica — risco aumentado de lesão. Considere reduzir volume ou intensidade.
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Main layout */}
       <motion.div
-        custom={3}
+        custom={4}
         variants={fadeUp}
         initial="hidden"
         animate="show"

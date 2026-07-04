@@ -18,12 +18,16 @@ export async function GET() {
   const cutoff = new Date(Date.now() - 90 * 86400_000);
 
   // Best running effort in last 90 days: needs pace + distance (min 3 km)
+  // OR condition covers both explicitly-tagged RUN logs and training workouts where sport is set on the Workout
   const logs = await prisma.workoutLog.findMany({
     where: {
       athleteId: athlete.id,
       distanceKm: { gte: 3 },
       avgPaceSecPerKm: { not: null, gt: 0 },
-      workout: { date: { gte: cutoff } },
+      OR: [
+        { sport: "RUN" },
+        { workout: { date: { gte: cutoff }, sport: "RUN" } },
+      ],
     },
     select: { distanceKm: true, avgPaceSecPerKm: true },
     take: 100,

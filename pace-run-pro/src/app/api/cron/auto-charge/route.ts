@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
       where: { coachId: coach.id },
       select: {
         id: true,
+        cpf: true,
         user: {
           select: {
             id: true,
@@ -102,13 +103,27 @@ export async function GET(req: NextRequest) {
         const notificationUrl = `${origin}/api/webhooks/pagbank`;
         const referenceId = `${athlete.user.id}_${planSlug}_${Date.now()}`;
 
+        // Skip PIX if athlete has no CPF — notify to update profile and pay manually
+        if (!athlete.cpf || !/^\d{11}$/.test(athlete.cpf)) {
+          await prisma.notification.create({
+            data: {
+              userId: athlete.user.id,
+              title: "Renovação da assinatura",
+              body: `Seu plano ${planName} vence em breve. Acesse seu perfil, adicione seu CPF e renove para continuar treinando.`,
+              link: `/atleta/perfil`,
+            },
+          });
+          notified++;
+          continue;
+        }
+
         try {
           // Create PIX order — athlete will receive the code via notification
           const pix = await createPixOrder({
             referenceId,
             customerName: athlete.user.name,
             customerEmail: athlete.user.email,
-            customerCpf: "00000000000", // placeholder — athlete needs to update CPF in profile
+            customerCpf: athlete.cpf,
             amountCents: planPriceCents,
             planName,
             notificationUrl,
