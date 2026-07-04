@@ -57,31 +57,64 @@ export default async function CalendarioPage({
   const gridEnd = new Date(lastDay);
   gridEnd.setUTCDate(lastDay.getUTCDate() + remainingAfterLast);
 
-  const rawWorkouts = await prisma.workout.findMany({
-    where: {
-      week: { plan: { athleteId, coachId: coach.id } },
-      date: { gte: gridStart, lte: gridEnd },
-    },
-    select: {
-      id: true,
-      date: true,
-      type: true,
-      title: true,
-      status: true,
-      objective: true,
-      warmup: true,
-      mainSet: true,
-      cooldown: true,
-      notes: true,
-      targetDistanceKm: true,
-      targetDurationMin: true,
-      targetPaceSecPerKm: true,
-      targetPacePer100m: true,
-      targetPowerWatts: true,
-      targetRpe: true,
-    },
-    orderBy: { date: "asc" },
-  });
+  const [rawWorkouts, athleteDetail] = await Promise.all([
+    prisma.workout.findMany({
+      where: {
+        week: { plan: { athleteId, coachId: coach.id } },
+        date: { gte: gridStart, lte: gridEnd },
+      },
+      select: {
+        id: true,
+        date: true,
+        type: true,
+        title: true,
+        status: true,
+        objective: true,
+        warmup: true,
+        mainSet: true,
+        cooldown: true,
+        notes: true,
+        targetDistanceKm: true,
+        targetDurationMin: true,
+        targetPaceSecPerKm: true,
+        targetPacePer100m: true,
+        targetPowerWatts: true,
+        targetRpe: true,
+      },
+      orderBy: { date: "asc" },
+    }),
+    prisma.athlete.findUnique({
+      where: { id: athleteId },
+      select: {
+        adherenceRate: true,
+        status: true,
+        goal: true,
+        level: true,
+        raceDate: true,
+        user: { select: { name: true, avatarUrl: true } },
+      },
+    }),
+  ]);
+
+  const workoutIds = rawWorkouts.map((w) => w.id);
+  const rawLogs = workoutIds.length > 0
+    ? await prisma.workoutLog.findMany({
+        where: { workoutId: { in: workoutIds }, athleteId },
+        select: {
+          id: true,
+          workoutId: true,
+          distanceKm: true,
+          durationSec: true,
+          avgPaceSecPerKm: true,
+          avgWatts: true,
+          avgPacePer100m: true,
+          rpe: true,
+          actualLoad: true,
+          tss: true,
+          feeling: true,
+        },
+      })
+    : [];
 
   const workouts = rawWorkouts.map((w) => ({
     ...w,
@@ -95,8 +128,22 @@ export default async function CalendarioPage({
       athleteId={athleteId}
       athletes={athletes}
       initialWorkouts={workouts}
+      initialLogs={rawLogs}
       initialYear={year}
       initialMonth={month}
+      athleteDetail={
+        athleteDetail
+          ? {
+              name: athleteDetail.user.name,
+              avatarUrl: athleteDetail.user.avatarUrl,
+              adherenceRate: athleteDetail.adherenceRate,
+              status: athleteDetail.status,
+              goal: athleteDetail.goal,
+              level: athleteDetail.level,
+              raceDate: athleteDetail.raceDate?.toISOString() ?? null,
+            }
+          : null
+      }
     />
   );
 }

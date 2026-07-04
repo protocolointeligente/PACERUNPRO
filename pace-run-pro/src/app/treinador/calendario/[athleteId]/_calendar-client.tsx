@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChevronLeft,
@@ -15,6 +15,10 @@ import {
   Check,
   Loader2,
   Pencil,
+  PanelRight,
+  AlertTriangle,
+  TrendingUp,
+  CalendarDays,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -40,6 +44,30 @@ interface CalendarWorkout {
   targetRpe?: number | null;
 }
 
+interface CalendarWorkoutLog {
+  id: string;
+  workoutId: string | null;
+  distanceKm?: number | null;
+  durationSec?: number | null;
+  avgPaceSecPerKm?: number | null;
+  avgWatts?: number | null;
+  avgPacePer100m?: number | null;
+  rpe?: number | null;
+  actualLoad?: number | null;
+  tss?: number | null;
+  feeling?: string | null;
+}
+
+interface AthleteDetail {
+  name: string;
+  avatarUrl?: string | null;
+  adherenceRate?: number | null;
+  status?: string | null;
+  goal?: string | null;
+  level?: string | null;
+  raceDate?: string | null;
+}
+
 interface AthleteOption {
   id: string;
   name: string;
@@ -49,8 +77,10 @@ interface Props {
   athleteId: string;
   athletes: AthleteOption[];
   initialWorkouts: CalendarWorkout[];
+  initialLogs: CalendarWorkoutLog[];
   initialYear: number;
   initialMonth: number;
+  athleteDetail: AthleteDetail | null;
 }
 
 // ── Constants ─────────────────────────────────────────────────────
@@ -286,6 +316,75 @@ function getSport(key: SportKey) {
   return SPORT_TYPES.find((s) => s.key === key) ?? SPORT_TYPES[0];
 }
 
+function groupByWeeks(days: Date[]): Date[][] {
+  const weeks: Date[][] = [];
+  for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
+  return weeks;
+}
+
+const TYPE_DEFAULT_RPE: Record<string, number> = {
+  RECUPERACAO: 2, RECUPERACAO_NATACAO: 2, RECOVERY_BIKE: 2, MOBILIDADE: 2,
+  REGENERATIVO: 3, TECNICA: 3, TECNICA_NATACAO: 3, TRANSICAO: 3,
+  RODAGEM_LEVE: 5, ENDURANCE_BIKE: 5, ENDURANCE_NATACAO: 5,
+  PROGRESSIVO: 6, FARTLEK: 6, LONGAO: 6, SWEET_SPOT: 6, AGUAS_ABERTAS: 6, TREINO_COMBINADO: 6,
+  SUBIDA: 7, TEMPO_RUN: 7, INTERVALADO_LONGO: 7, THRESHOLD_BIKE: 7, LONG_RIDE: 7,
+  LIMIAR_NATACAO: 7, FUNCIONAL: 7, FORCA: 7, BRICK_SWIM_BIKE: 7, SIMULADO_TRIATHLON: 7,
+  INTERVALADO_CURTO: 8, VO2MAX_BIKE: 8, ANAEROBIC_BIKE: 8, SPRINT_BIKE: 8, SPRINT_NATACAO: 8, BRICK_BIKE_RUN: 8,
+  PROVA: 9, TEMPO_BIKE: 6,
+};
+
+interface WeekLoad {
+  sRpe: number;          // planned sRPE (durationMin × rpe)
+  actualSRpe: number;    // actual sRPE from logs
+  runKm: number;
+  bikeKm: number;
+  swimM: number;         // stored as targetDistanceKm but represents meters for swim
+  strengthMin: number;
+  count: number;         // number of planned workouts
+  countDone: number;
+}
+
+function computeWeekLoad(
+  weekDays: Date[],
+  workoutsByDay: Map<string, CalendarWorkout[]>,
+  logsByWorkout: Map<string, CalendarWorkoutLog>
+): WeekLoad {
+  let sRpe = 0, actualSRpe = 0, runKm = 0, bikeKm = 0, swimM = 0, strengthMin = 0, count = 0, countDone = 0;
+  for (const day of weekDays) {
+    const ws = workoutsByDay.get(dateKey(day)) ?? [];
+    for (const w of ws) {
+      count++;
+      if (w.status === "CONCLUIDO") countDone++;
+      const dur = w.targetDurationMin ?? 0;
+      const rpe = w.targetRpe ?? TYPE_DEFAULT_RPE[w.type] ?? 5;
+      sRpe += dur * rpe;
+      const sport = getSportForType(w.type);
+      if (sport === "RUN") runKm += w.targetDistanceKm ?? 0;
+      else if (sport === "BIKE") bikeKm += w.targetDistanceKm ?? 0;
+      else if (sport === "SWIM") swimM += w.targetDistanceKm ?? 0;
+      else if (sport === "STRENGTH") strengthMin += dur;
+      const log = logsByWorkout.get(w.id);
+      if (log?.actualLoad) actualSRpe += log.actualLoad;
+    }
+  }
+  return { sRpe: Math.round(sRpe), actualSRpe: Math.round(actualSRpe), runKm, bikeKm, swimM, strengthMin, count, countDone };
+}
+
+function fmtDurationMin(min: number): string {
+  if (min < 60) return `${Math.round(min)}min`;
+  const h = Math.floor(min / 60);
+  const m = Math.round(min % 60);
+  return m > 0 ? `${h}h${m}min` : `${h}h`;
+}
+
+function getISOWeekNumber(d: Date): number {
+  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
 // ── Form state type ───────────────────────────────────────────────
 
 interface FormState {
@@ -413,26 +512,32 @@ export default function CalendarClient({
   athleteId,
   athletes,
   initialWorkouts,
+  initialLogs,
   initialYear,
   initialMonth,
+  athleteDetail,
 }: Props) {
   const router = useRouter();
 
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
   const [workouts, setWorkouts] = useState<CalendarWorkout[]>(initialWorkouts);
+  const [logs, setLogs] = useState<CalendarWorkoutLog[]>(initialLogs);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [modal, setModal] = useState<ModalState>({ kind: "closed" });
   const [form, setForm] = useState<FormState>(emptyForm("RUN"));
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; workout: CalendarWorkout } | null>(null);
   const [clipboard, setClipboard] = useState<{ action: "cut" | "copy"; workout: CalendarWorkout } | null>(null);
+  const [weekClipboard, setWeekClipboard] = useState<{ sourceMondayKey: string; workouts: CalendarWorkout[] } | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
+  const [showSidebar, setShowSidebar] = useState(true);
 
   // ── Grid ────────────────────────────────────────────────────────
 
   const days = buildGridDays(year, month);
+  const weeks = groupByWeeks(days);
 
   const workoutsByDay = new Map<string, CalendarWorkout[]>();
   for (const w of workouts) {
@@ -440,6 +545,11 @@ export default function CalendarClient({
     const arr = workoutsByDay.get(k);
     if (arr) arr.push(w);
     else workoutsByDay.set(k, [w]);
+  }
+
+  const logsByWorkout = new Map<string, CalendarWorkoutLog>();
+  for (const l of logs) {
+    if (l.workoutId) logsByWorkout.set(l.workoutId, l);
   }
 
   const todayKey = dateKey(new Date());
@@ -453,7 +563,11 @@ export default function CalendarClient({
     const to = dateKey(gridDays[gridDays.length - 1]);
     try {
       const res = await fetch(`/api/coach/calendar/${aid}?from=${from}&to=${to}`);
-      if (res.ok) setWorkouts(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setWorkouts(data.workouts ?? data);
+        setLogs(data.logs ?? []);
+      }
     } finally {
       setLoading(false);
     }
@@ -594,6 +708,54 @@ export default function CalendarClient({
     }
   }
 
+  // ── Copy / Paste entire week ─────────────────────────────────────
+
+  function handleCopyWeek(weekDays: Date[]) {
+    const mondayKey = dateKey(weekDays[0]);
+    const weekWorkouts = weekDays.flatMap((d) => workoutsByDay.get(dateKey(d)) ?? []);
+    setWeekClipboard({ sourceMondayKey: mondayKey, workouts: weekWorkouts });
+  }
+
+  async function handlePasteWeek(targetMonday: Date) {
+    if (!weekClipboard || !weekClipboard.workouts.length) return;
+    const sourceMonday = new Date(weekClipboard.sourceMondayKey);
+    const offsetMs = targetMonday.getTime() - sourceMonday.getTime();
+    const offsetDays = Math.round(offsetMs / 86400000);
+    setSaving(true);
+    try {
+      for (const w of weekClipboard.workouts) {
+        const wDate = toUTCDate(w.date);
+        const newDate = new Date(Date.UTC(
+          wDate.getUTCFullYear(), wDate.getUTCMonth(), wDate.getUTCDate() + offsetDays
+        ));
+        await fetch("/api/coach/workouts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            athleteId,
+            date: dateKey(newDate),
+            title: w.title,
+            type: w.type,
+            objective: w.objective,
+            warmup: w.warmup,
+            mainSet: w.mainSet,
+            cooldown: w.cooldown,
+            targetRpe: w.targetRpe,
+            targetDurationMin: w.targetDurationMin,
+            targetDistanceKm: w.targetDistanceKm,
+            targetPaceSecPerKm: w.targetPaceSecPerKm,
+            targetPacePer100m: w.targetPacePer100m,
+            targetPowerWatts: w.targetPowerWatts,
+          }),
+        });
+      }
+      setWeekClipboard(null);
+      await refreshMonth(year, month, athleteId);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   // ── Drag and drop ────────────────────────────────────────────────
 
   function handleDragStart(e: React.DragEvent, workoutId: string) {
@@ -628,6 +790,26 @@ export default function CalendarClient({
   }, []);
 
   // ── Render ───────────────────────────────────────────────────────
+
+  // ── Monthly stats for sidebar ────────────────────────────────────
+
+  const monthStats = (() => {
+    let runKm = 0, bikeKm = 0, swimM = 0, strengthMin = 0, planned = 0, done = 0, missed = 0, sRpe = 0;
+    for (const w of workouts) {
+      planned++;
+      if (w.status === "CONCLUIDO") done++;
+      if (w.status === "PERDIDO") missed++;
+      const dur = w.targetDurationMin ?? 0;
+      const rpe = w.targetRpe ?? TYPE_DEFAULT_RPE[w.type] ?? 5;
+      sRpe += dur * rpe;
+      const sport = getSportForType(w.type);
+      if (sport === "RUN") runKm += w.targetDistanceKm ?? 0;
+      else if (sport === "BIKE") bikeKm += w.targetDistanceKm ?? 0;
+      else if (sport === "SWIM") swimM += w.targetDistanceKm ?? 0;
+      else if (sport === "STRENGTH") strengthMin += dur;
+    }
+    return { runKm, bikeKm, swimM, strengthMin, planned, done, missed, sRpe: Math.round(sRpe) };
+  })();
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0f1117] text-white select-none">
@@ -669,14 +851,27 @@ export default function CalendarClient({
             <ChevronRight size={18} />
           </button>
           {loading && <Loader2 size={14} className="animate-spin text-white/40" />}
+          <button
+            onClick={() => setShowSidebar((v) => !v)}
+            title="Painel do atleta"
+            className={[
+              "p-1.5 rounded-lg transition-colors",
+              showSidebar ? "bg-orange-500/20 text-orange-400" : "hover:bg-white/10 text-white/40",
+            ].join(" ")}
+          >
+            <PanelRight size={16} />
+          </button>
         </div>
       </div>
+
+      {/* Body: calendar + optional sidebar */}
+      <div className="flex flex-1 overflow-hidden">
 
       {/* Calendar */}
       <div className="flex-1 overflow-auto p-2">
 
         {/* Day header */}
-        <div className="grid grid-cols-7 mb-1">
+        <div className="grid grid-cols-7 mb-1 pl-[48px]">
           {DAY_LABELS.map((d) => (
             <div key={d} className="text-center text-[11px] font-semibold text-white/30 py-1.5 tracking-wider">
               {d}
@@ -684,66 +879,110 @@ export default function CalendarClient({
           ))}
         </div>
 
-        {/* Days grid */}
-        <div className="grid grid-cols-7 gap-1">
-          {days.map((day) => {
-            const key = dateKey(day);
-            const isCurrentMonth = day.getUTCMonth() === month;
-            const isToday = key === todayKey;
-            const dayWorkouts = workoutsByDay.get(key) ?? [];
-            const isDragTarget = dragOver === key;
-            const hasClipboard = !!clipboard && isCurrentMonth;
+        {/* Weeks grid */}
+        {weeks.map((week, wi) => {
+          const weekLoad = computeWeekLoad(week, workoutsByDay, logsByWorkout);
+          const mondayKey = dateKey(week[0]);
+          const isSourceWeek = weekClipboard?.sourceMondayKey === mondayKey;
+          const canPaste = !!weekClipboard && !isSourceWeek;
+          const weekNum = getISOWeekNumber(week[0]);
 
-            return (
-              <div
-                key={key}
-                className={[
-                  "min-h-[100px] rounded-lg p-1.5 flex flex-col gap-1 transition-all",
-                  isCurrentMonth ? "bg-[#1a1d2e]" : "bg-[#13151e]",
-                  isDragTarget ? "ring-2 ring-orange-400 bg-orange-500/5" : "",
-                  dragId ? "cursor-copy" : "",
-                ].join(" ")}
-                onDragOver={(e) => { e.preventDefault(); setDragOver(key); }}
-                onDragLeave={(e) => {
-                  // only clear if leaving to outside this cell
-                  if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(null);
-                }}
-                onDrop={(e) => handleDrop(e, key)}
-              >
-                {/* Date number row */}
-                <div className="flex items-center justify-between">
-                  <span
-                    className={[
-                      "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full leading-none",
-                      isToday
-                        ? "bg-orange-500 text-white"
-                        : isCurrentMonth
-                        ? "text-white/70"
-                        : "text-white/20",
-                    ].join(" ")}
-                  >
-                    {day.getUTCDate()}
-                  </span>
-                  <div className="flex items-center gap-0.5">
-                    {hasClipboard && (
-                      <button
-                        onClick={() => handlePaste(key)}
-                        title="Colar"
-                        className="p-0.5 rounded hover:bg-white/10 text-orange-400 opacity-60 hover:opacity-100"
-                      >
-                        <ClipboardPaste size={11} />
-                      </button>
-                    )}
-                    {isCurrentMonth && (
-                      <button
-                        onClick={() => openSportPicker(key)}
-                        className="p-0.5 rounded hover:bg-white/10 text-white/30 hover:text-white/80"
-                      >
-                        <Plus size={11} />
-                      </button>
-                    )}
-                  </div>
+          return (
+            <div key={wi} className="flex gap-1 mb-1">
+              {/* Week gutter */}
+              <div className="w-[44px] flex-shrink-0 flex flex-col items-center justify-between py-1 px-0.5 rounded-lg bg-white/2">
+                <span className="text-[9px] text-white/25 font-bold">{weekNum}</span>
+                <div className="flex flex-col gap-0.5 items-center">
+                  {weekLoad.count > 0 && (
+                    <span className="text-[9px] text-white/35 text-center">
+                      {weekLoad.sRpe > 0 ? (
+                        <span title="sRPE planificado" className="text-orange-400/70">{weekLoad.sRpe}</span>
+                      ) : null}
+                    </span>
+                  )}
+                  {canPaste && (
+                    <button
+                      onClick={() => handlePasteWeek(week[0])}
+                      title="Colar semana aqui"
+                      className="p-0.5 rounded hover:bg-white/10 text-orange-400 opacity-70 hover:opacity-100"
+                    >
+                      <ClipboardPaste size={10} />
+                    </button>
+                  )}
+                  {weekLoad.count > 0 && (
+                    <button
+                      onClick={() => handleCopyWeek(week)}
+                      title="Copiar semana"
+                      className={[
+                        "p-0.5 rounded hover:bg-white/10 transition-colors",
+                        isSourceWeek ? "text-orange-400" : "text-white/25 hover:text-white/60",
+                      ].join(" ")}
+                    >
+                      <Copy size={10} />
+                    </button>
+                  )}
                 </div>
+              </div>
+
+              {/* Day cells */}
+              <div className="grid grid-cols-7 gap-1 flex-1">
+                {week.map((day) => {
+                const key = dateKey(day);
+                const isCurrentMonth = day.getUTCMonth() === month;
+                const isToday = key === todayKey;
+                const dayWorkouts = workoutsByDay.get(key) ?? [];
+                const isDragTarget = dragOver === key;
+                const hasClipboard = !!clipboard && isCurrentMonth;
+
+                return (
+                  <div
+                    key={key}
+                    className={[
+                      "min-h-[100px] rounded-lg p-1.5 flex flex-col gap-1 transition-all",
+                      isCurrentMonth ? "bg-[#1a1d2e]" : "bg-[#13151e]",
+                      isDragTarget ? "ring-2 ring-orange-400 bg-orange-500/5" : "",
+                      dragId ? "cursor-copy" : "",
+                    ].join(" ")}
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(key); }}
+                    onDragLeave={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(null);
+                    }}
+                    onDrop={(e) => handleDrop(e, key)}
+                  >
+                    {/* Date number row */}
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={[
+                          "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full leading-none",
+                          isToday
+                            ? "bg-orange-500 text-white"
+                            : isCurrentMonth
+                            ? "text-white/70"
+                            : "text-white/20",
+                        ].join(" ")}
+                      >
+                        {day.getUTCDate()}
+                      </span>
+                      <div className="flex items-center gap-0.5">
+                        {hasClipboard && (
+                          <button
+                            onClick={() => handlePaste(key)}
+                            title="Colar"
+                            className="p-0.5 rounded hover:bg-white/10 text-orange-400 opacity-60 hover:opacity-100"
+                          >
+                            <ClipboardPaste size={11} />
+                          </button>
+                        )}
+                        {isCurrentMonth && (
+                          <button
+                            onClick={() => openSportPicker(key)}
+                            className="p-0.5 rounded hover:bg-white/10 text-white/30 hover:text-white/80"
+                          >
+                            <Plus size={11} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
 
                 {/* Workout chips */}
                 {dayWorkouts.map((w) => {
@@ -752,11 +991,20 @@ export default function CalendarClient({
                   const isCut = clipboard?.action === "cut" && clipboard.workout.id === w.id;
                   const statusInfo = STATUS_BADGE[w.status];
 
+                  const log = logsByWorkout.get(w.id);
                   const meta: string[] = [];
-                  if (w.targetDurationMin) meta.push(`${w.targetDurationMin}min`);
-                  if (w.targetDistanceKm) meta.push(`${w.targetDistanceKm}km`);
-                  if (w.targetPaceSecPerKm) meta.push(formatPacePerKm(w.targetPaceSecPerKm));
-                  if (w.targetPowerWatts) meta.push(`${w.targetPowerWatts}W`);
+                  if (log) {
+                    // Show actual data when log exists
+                    if (log.durationSec) meta.push(`${Math.round(log.durationSec / 60)}min ✓`);
+                    if (log.distanceKm) meta.push(`${log.distanceKm.toFixed(1)}km ✓`);
+                    if (log.avgPaceSecPerKm) meta.push(formatPacePerKm(log.avgPaceSecPerKm));
+                    if (log.avgWatts) meta.push(`${Math.round(log.avgWatts)}W`);
+                  } else {
+                    if (w.targetDurationMin) meta.push(`${w.targetDurationMin}min`);
+                    if (w.targetDistanceKm) meta.push(`${w.targetDistanceKm}km`);
+                    if (w.targetPaceSecPerKm) meta.push(formatPacePerKm(w.targetPaceSecPerKm));
+                    if (w.targetPowerWatts) meta.push(`${w.targetPowerWatts}W`);
+                  }
 
                   return (
                     <div
@@ -817,11 +1065,25 @@ export default function CalendarClient({
                     </div>
                   );
                 })}
+                  </div>
+                );
+              })}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
+
+      {/* ── Athlete sidebar ─────────────────────────────────────────── */}
+      {showSidebar && (
+        <AthleteSidebar
+          athleteDetail={athleteDetail}
+          monthStats={monthStats}
+          monthName={MONTH_NAMES[month]}
+        />
+      )}
+
+      </div>{/* end body flex */}
 
       {/* ── Context menu ───────────────────────────────────────────── */}
       {ctxMenu && (
@@ -897,6 +1159,180 @@ export default function CalendarClient({
           <button onClick={() => setClipboard(null)} className="text-white/30 hover:text-white ml-1">
             <X size={13} />
           </button>
+        </div>
+      )}
+      {weekClipboard && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-[#1e2130] border border-orange-500/30 rounded-full px-4 py-2 flex items-center gap-3 text-sm shadow-xl">
+          <span className="text-white/60">
+            📋{" "}
+            <span className="text-white font-medium">{weekClipboard.workouts.length} treinos copiados</span>
+            {" "}— clique no ícone de colar na semana destino
+          </span>
+          <button onClick={() => setWeekClipboard(null)} className="text-white/30 hover:text-white ml-1">
+            <X size={13} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Athlete Sidebar ───────────────────────────────────────────────
+
+interface MonthStats {
+  runKm: number; bikeKm: number; swimM: number; strengthMin: number;
+  planned: number; done: number; missed: number; sRpe: number;
+}
+
+const LEVEL_LABELS: Record<string, string> = {
+  BEGINNER: "Iniciante", INTERMEDIATE: "Intermediário",
+  ADVANCED: "Avançado", ELITE: "Elite",
+};
+
+function AthleteSidebar({
+  athleteDetail,
+  monthStats,
+  monthName,
+}: {
+  athleteDetail: AthleteDetail | null;
+  monthStats: MonthStats;
+  monthName: string;
+}) {
+  const adherence = athleteDetail?.adherenceRate != null
+    ? Math.round(athleteDetail.adherenceRate * 100)
+    : monthStats.planned > 0
+    ? Math.round((monthStats.done / monthStats.planned) * 100)
+    : null;
+
+  const alerts: { text: string; color: string }[] = [];
+  if (monthStats.missed > 0)
+    alerts.push({ text: `${monthStats.missed} treino${monthStats.missed > 1 ? "s" : ""} perdido${monthStats.missed > 1 ? "s" : ""}`, color: "#ef4444" });
+  if (adherence != null && adherence < 70)
+    alerts.push({ text: "Adesão abaixo de 70%", color: "#f59e0b" });
+
+  const initials = athleteDetail?.name?.split(" ").map((n) => n[0]).slice(0, 2).join("") ?? "?";
+
+  return (
+    <div className="w-[220px] flex-shrink-0 border-l border-white/10 bg-[#13151e] overflow-y-auto flex flex-col gap-0">
+
+      {/* Athlete identity */}
+      <div className="p-3 border-b border-white/8">
+        <div className="flex items-center gap-2 mb-2">
+          {athleteDetail?.avatarUrl ? (
+            <img src={athleteDetail.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400 text-xs font-bold flex-shrink-0">
+              {initials}
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="text-sm font-semibold truncate">{athleteDetail?.name ?? "—"}</div>
+            <div className="text-[10px] text-white/40 truncate">
+              {athleteDetail?.level ? LEVEL_LABELS[athleteDetail.level] ?? athleteDetail.level : ""}
+            </div>
+          </div>
+        </div>
+        {athleteDetail?.goal && (
+          <div className="text-[11px] text-white/50 truncate">🎯 {athleteDetail.goal}</div>
+        )}
+        {athleteDetail?.raceDate && (
+          <div className="text-[11px] text-white/50 mt-0.5">
+            🏁 {new Date(athleteDetail.raceDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+          </div>
+        )}
+      </div>
+
+      {/* Monthly volume */}
+      <div className="p-3 border-b border-white/8">
+        <div className="flex items-center gap-1.5 mb-2">
+          <TrendingUp size={11} className="text-white/40" />
+          <span className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">{monthName}</span>
+        </div>
+        <div className="flex flex-col gap-1">
+          {monthStats.runKm > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] text-white/60">🏃 Corrida</span>
+              <span className="text-[11px] font-semibold text-white">{monthStats.runKm.toFixed(1)} km</span>
+            </div>
+          )}
+          {monthStats.bikeKm > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] text-white/60">🚴 Bike</span>
+              <span className="text-[11px] font-semibold text-white">{monthStats.bikeKm.toFixed(1)} km</span>
+            </div>
+          )}
+          {monthStats.swimM > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] text-white/60">🏊 Natação</span>
+              <span className="text-[11px] font-semibold text-white">{monthStats.swimM.toFixed(1)} km</span>
+            </div>
+          )}
+          {monthStats.strengthMin > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] text-white/60">💪 Força</span>
+              <span className="text-[11px] font-semibold text-white">{fmtDurationMin(monthStats.strengthMin)}</span>
+            </div>
+          )}
+          {monthStats.runKm === 0 && monthStats.bikeKm === 0 && monthStats.swimM === 0 && monthStats.strengthMin === 0 && (
+            <span className="text-[11px] text-white/25 italic">Sem treinos planejados</span>
+          )}
+        </div>
+      </div>
+
+      {/* Load */}
+      {monthStats.sRpe > 0 && (
+        <div className="p-3 border-b border-white/8">
+          <div className="flex items-center gap-1.5 mb-1">
+            <CalendarDays size={11} className="text-white/40" />
+            <span className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">Carga Mensal</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[11px] text-white/60">sRPE planificado</span>
+            <span className="text-[11px] font-semibold text-orange-400">{monthStats.sRpe.toLocaleString("pt-BR")}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Adherence */}
+      {adherence != null && monthStats.planned > 0 && (
+        <div className="p-3 border-b border-white/8">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">Adesão</span>
+            <span
+              className="text-[11px] font-bold"
+              style={{ color: adherence >= 80 ? "#22c55e" : adherence >= 60 ? "#f59e0b" : "#ef4444" }}
+            >
+              {adherence}%
+            </span>
+          </div>
+          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{
+                width: `${Math.min(100, adherence)}%`,
+                backgroundColor: adherence >= 80 ? "#22c55e" : adherence >= 60 ? "#f59e0b" : "#ef4444",
+              }}
+            />
+          </div>
+          <div className="text-[10px] text-white/35 mt-1">{monthStats.done}/{monthStats.planned} treinos</div>
+        </div>
+      )}
+
+      {/* Alerts */}
+      {alerts.length > 0 && (
+        <div className="p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <AlertTriangle size={11} className="text-yellow-400" />
+            <span className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">Alertas</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            {alerts.map((a, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: a.color }} />
+                <span className="text-[11px]" style={{ color: a.color }}>{a.text}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

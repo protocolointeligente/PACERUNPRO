@@ -65,5 +65,25 @@ export async function GET(
     orderBy: { date: "asc" },
   });
 
-  return NextResponse.json(workouts);
+  const workoutIds = workouts.map((w) => w.id);
+  const logs = workoutIds.length > 0
+    ? await prisma.workoutLog.findMany({
+        where: { workoutId: { in: workoutIds }, athleteId },
+        select: {
+          id: true,
+          workoutId: true,
+          distanceKm: true,
+          durationSec: true,
+          avgPaceSecPerKm: true,
+          avgWatts: true,
+          avgPacePer100m: true,
+          rpe: true,
+          actualLoad: true,
+          tss: true,
+          feeling: true,
+        },
+      })
+    : [];
+
+  return NextResponse.json({ workouts, logs });
 }
