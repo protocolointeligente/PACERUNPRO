@@ -1,14 +1,16 @@
 import Image from "next/image";
 import { Award, Footprints, GraduationCap, HeartPulse, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { coachOverview } from "@/lib/mock-data";
+
+const COACH_NAME = process.env.FOUNDER_DISPLAY_NAME ?? "Ricardo Luiz Pace Júnior";
+const COACH_CREDENTIAL = process.env.FOUNDER_CREDENTIAL ?? "";
 
 const credentials = [
   { icon: GraduationCap, label: "Professor universitário" },
   { icon: Award, label: "Personal trainer desde 2006" },
   { icon: HeartPulse, label: "Especialista em fisiologia do exercício" },
   { icon: Footprints, label: "+15 anos dedicados à corrida de rua" },
-  { icon: ShieldCheck, label: `Responsável técnico — ${coachOverview.credential}` },
+  ...(COACH_CREDENTIAL ? [{ icon: ShieldCheck, label: `Responsável técnico — ${COACH_CREDENTIAL}` }] : []),
 ];
 
 export function AboutCoachSection() {
@@ -35,7 +37,7 @@ export function AboutCoachSection() {
                 Quem está por trás do{" "}
                 <span className="gradient-text">Pace Run Pro</span>
               </h2>
-              <p className="mt-2 text-lg font-semibold text-text">{coachOverview.name}</p>
+              <p className="mt-2 text-lg font-semibold text-text">{COACH_NAME}</p>
               <p className="mt-4 text-text-muted">
                 Mais de 15 anos dedicados à corrida de rua, unindo formação acadêmica e experiência
                 prática com centenas de atletas. O Pace Run Pro nasceu da metodologia que Ricardo

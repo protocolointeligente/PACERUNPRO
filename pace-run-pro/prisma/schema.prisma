@@ -1957,6 +1957,8 @@ enum ConsentType {
   PRIVACY_POLICY
   MARKETING_EMAILS
   DATA_PROCESSING
+  GPS_TRACKING
+  HEALTH_DATA
 }
 
 model DataConsentRecord {

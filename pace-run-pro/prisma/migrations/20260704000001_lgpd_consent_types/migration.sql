@@ -1,0 +1,3 @@
+-- Add GPS_TRACKING and HEALTH_DATA to ConsentType enum (LGPD explicit consent)
+ALTER TYPE "ConsentType" ADD VALUE IF NOT EXISTS 'GPS_TRACKING';
+ALTER TYPE "ConsentType" ADD VALUE IF NOT EXISTS 'HEALTH_DATA';

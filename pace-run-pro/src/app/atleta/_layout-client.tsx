@@ -3,6 +3,7 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { MessageNotifier } from "@/components/messages/message-notifier";
+import { LgpdConsentModal } from "@/components/shared/lgpd-consent-modal";
 import { athleteNav, athleteMoreNav } from "@/components/layout/nav-config";
 
 export default function AtletaLayoutClient({
@@ -28,6 +29,7 @@ export default function AtletaLayoutClient({
       {children}
       <BottomNav items={athleteNav} showMore />
       <MessageNotifier role="ATHLETE" />
+      <LgpdConsentModal />
     </AppShell>
   );
 }

@@ -964,11 +964,26 @@ export default function CalendarClient({
                 <span className="text-[9px] text-white/25 font-bold">{weekNum}</span>
                 <div className="flex flex-col gap-0.5 items-center">
                   {weekLoad.count > 0 && (
-                    <span className="text-[9px] text-white/35 text-center">
-                      {weekLoad.sRpe > 0 ? (
-                        <span title="sRPE planificado" className="text-orange-400/70">{weekLoad.sRpe}</span>
-                      ) : null}
-                    </span>
+                    <>
+                      <span className="text-[9px] text-white/35 text-center">
+                        {weekLoad.sRpe > 0 ? (
+                          <span title="sRPE planificado" className="text-orange-400/70">{weekLoad.sRpe}</span>
+                        ) : null}
+                      </span>
+                      {/* Conformidade bar: done / planned */}
+                      {(() => {
+                        const pct = Math.round((weekLoad.countDone / weekLoad.count) * 100);
+                        const color = pct >= 80 ? "#22c55e" : pct >= 50 ? "#f59e0b" : "#ef4444";
+                        return (
+                          <div title={`${weekLoad.countDone}/${weekLoad.count} treinos — ${pct}%`} className="flex flex-col items-center gap-0.5 w-full px-1">
+                            <span style={{ color }} className="text-[9px] font-bold">{pct}%</span>
+                            <div className="w-full h-1 rounded-full bg-white/10 overflow-hidden">
+                              <div style={{ width: `${pct}%`, backgroundColor: color }} className="h-full rounded-full transition-all" />
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </>
                   )}
                   {canPaste && (
                     <button

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { adminCoaches } from "@/lib/mock-data";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +10,19 @@ import { canAccess } from "@/lib/coach-permissions";
 import { AccessRestricted } from "@/components/shared/access-restricted";
 import { cn } from "@/lib/utils";
 
-const planFilters = ["Todos", "Starter", "Pro", "Assessoria"] as const;
+type CoachItem = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  credential: string;
+  plan: string;
+  athletes: number;
+  mrr: number;
+  status: string;
+  joinedAt: string;
+};
+
+const planFilters = ["Todos", "Starter", "Pro", "Assessoria", "Contratado"] as const;
 type PlanFilter = (typeof planFilters)[number];
 
 function getPlanVariant(plan: string): "outline" | "primary" | "warning" {
@@ -34,15 +45,33 @@ function getInitials(name: string): string {
 }
 
 export default function AdminTreinadoresPage() {
-  const { role } = useCoachRole();
+  const { role, planId } = useCoachRole();
+  const [coaches, setCoaches] = useState<CoachItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState<PlanFilter>("Todos");
 
-  if (!canAccess(role, "admin")) {
-    return <AccessRestricted feature="Admin — Treinadores" currentRole={role} requiredRoles={["owner"]} />;
+  useEffect(() => {
+    fetch("/api/coach/team-coaches")
+      .then((r) => r.json())
+      .then((json: CoachItem[]) => {
+        setCoaches(json);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (!canAccess(role, "admin", planId)) {
+    return (
+      <AccessRestricted
+        feature="Admin — Treinadores"
+        currentRole={role}
+        requiredRoles={["owner"]}
+      />
+    );
   }
 
-  const filtered = adminCoaches.filter((coach) => {
+  const filtered = coaches.filter((coach) => {
     const matchesSearch =
       search === "" ||
       coach.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -108,7 +137,11 @@ export default function AdminTreinadoresPage() {
 
           {/* Rows */}
           <div className="divide-y divide-border">
-            {filtered.length === 0 ? (
+            {loading ? (
+              <div className="px-6 py-12 text-center text-sm text-text-muted">
+                Carregando...
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="px-6 py-12 text-center text-sm text-text-muted">
                 Nenhum treinador encontrado.
               </div>
@@ -121,7 +154,7 @@ export default function AdminTreinadoresPage() {
                   {/* Treinador */}
                   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9 flex-shrink-0">
-                      <AvatarImage src={coach.avatarUrl} alt={coach.name} />
+                      <AvatarImage src={coach.avatarUrl ?? undefined} alt={coach.name} />
                       <AvatarFallback>{getInitials(coach.name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
@@ -180,7 +213,7 @@ export default function AdminTreinadoresPage() {
 
       {/* Summary */}
       <p className="text-xs text-text-muted">
-        Exibindo {filtered.length} de {adminCoaches.length} treinadores
+        Exibindo {filtered.length} de {coaches.length} treinadores
       </p>
     </div>
   );

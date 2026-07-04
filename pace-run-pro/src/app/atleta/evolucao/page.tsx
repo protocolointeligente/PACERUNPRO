@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { SectionHeader } from "@/components/shared/section-header";
 import { AreaTrend, BarTrend, LineTrend } from "@/components/charts/trend-chart";
+import { CtlAtlTsbChart, type LoadDaySport } from "@/components/charts/multisport-load-chart";
 import { formatPace } from "@/lib/utils";
 
 const BODY_PHOTO_LABELS = ["Jan 2026", "Mar 2026", "Jun 2026"];
@@ -39,6 +40,7 @@ export default function EvolutionPage() {
     trainingLoad: [], weightHistory: [], vo2History: [], races: [], hasData: false,
   });
   const [peakPace, setPeakPace] = useState<{ label: string; paceSec: number; paceStr: string }[]>([]);
+  const [loadSeries, setLoadSeries] = useState<LoadDaySport[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,6 +52,28 @@ export default function EvolutionPage() {
     fetch("/api/atleta/peak-pace")
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d?.data) setPeakPace(d.data); })
+      .catch(() => null);
+    fetch("/api/atleta/training-load")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { series?: { date: string; ctl: number; atl: number; tsb: number; tss: number }[] } | null) => {
+        if (!d?.series) return;
+        const converted: LoadDaySport[] = d.series.map((s) => {
+          const [, mm, dd] = s.date.split("-");
+          return {
+            date: s.date,
+            label: `${dd}/${mm}`,
+            ctl: Math.round(s.ctl * 10) / 10,
+            atl: Math.round(s.atl * 10) / 10,
+            tsb: Math.round(s.tsb * 10) / 10,
+            runTss: s.tss,
+            bikeTss: 0,
+            swimTss: 0,
+            strengthTss: 0,
+          };
+        });
+        // Keep one point every 3 days to reduce chart density
+        setLoadSeries(converted.filter((_, i) => i % 3 === 0 || i === converted.length - 1));
+      })
       .catch(() => null);
   }, []);
 
@@ -267,6 +291,14 @@ export default function EvolutionPage() {
           {evolucao.trainingLoad.length > 0
             ? <AreaTrend data={evolucao.trainingLoad} dataKey="load" color="#facc15" unit=" UA" />
             : <EmptyChart />}
+        </ChartCard>
+
+        <ChartCard
+          title="Fitness · Fadiga · Forma"
+          description="CTL (fitness), ATL (fadiga) e TSB (forma) dos últimos 90 dias"
+          tooltip="CTL (Chronic Training Load) = fitness acumulado nos últimos ~42 dias. ATL (Acute Training Load) = fadiga recente (~7 dias). TSB (Training Stress Balance) = CTL − ATL: positivo significa forma, negativo significa fadiga. Ideal para decidir quando competir ou intensificar."
+        >
+          <CtlAtlTsbChart data={loadSeries} />
         </ChartCard>
 
         <ChartCard
