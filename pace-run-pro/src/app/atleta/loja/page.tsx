@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
-  BookOpen, Clock, Filter, PartyPopper, Search, ShoppingCart, Star, Users, CheckCircle2,
+  BookOpen, Clock, Copy, Filter, PartyPopper, Search, ShoppingCart, Star, Users, CheckCircle2, X,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -143,6 +143,8 @@ function ProductCard({ p, onBuy, buying }: { p: Product; onBuy: (id: string) => 
   );
 }
 
+type PixData = { copyPaste: string; qrCodeUrl: string | null; expiresAt: string; orderId: string; productTitle: string };
+
 function AtletaLojaContent() {
   const searchParams = useSearchParams();
   const welcome = searchParams.get("welcome") === "1";
@@ -155,6 +157,17 @@ function AtletaLojaContent() {
   const [buying, setBuying] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pix, setPix] = useState<PixData | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [athleteCpf, setAthleteCpf] = useState<string | null>(null);
+
+  // Fetch athlete CPF on mount for checkout
+  useEffect(() => {
+    fetch("/api/atleta/perfil")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { cpf?: string | null } | null) => { if (d?.cpf) setAthleteCpf(d.cpf); })
+      .catch(() => null);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -188,11 +201,15 @@ function AtletaLojaContent() {
   async function handleBuy(productId: string) {
     setBuying(productId);
     setError(null);
+    const product = products.find((p) => p.id === productId);
     try {
       const res = await fetch("/api/marketplace/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId }),
+        body: JSON.stringify({
+          productId,
+          ...(athleteCpf ? { customerTaxId: athleteCpf } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -206,6 +223,8 @@ function AtletaLojaContent() {
         );
       } else if (data.url) {
         window.location.href = data.url;
+      } else if (data.pix) {
+        setPix({ ...data.pix, orderId: data.orderId, productTitle: product?.title ?? "Produto" });
       }
     } catch {
       setError("Erro de conexão. Tente novamente.");
@@ -217,8 +236,50 @@ function AtletaLojaContent() {
   const featured = filtered.filter((p) => p.featured);
   const rest = filtered.filter((p) => !p.featured);
 
+  async function copyPix() {
+    if (!pix?.copyPaste) return;
+    await navigator.clipboard.writeText(pix.copyPaste).catch(() => null);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   return (
     <div className="mx-auto max-w-5xl space-y-8">
+
+      {/* PIX Payment Modal */}
+      {pix && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => setPix(null)}>
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-bold text-text">Pagamento PIX</h2>
+              <button onClick={() => setPix(null)} className="text-text-muted hover:text-text"><X className="h-5 w-5" /></button>
+            </div>
+            <p className="mb-1 text-sm font-semibold text-text">{pix.productTitle}</p>
+            <p className="mb-4 text-xs text-text-muted">Escaneie o QR Code ou copie o código PIX para pagar.</p>
+
+            {pix.qrCodeUrl && (
+              <img src={pix.qrCodeUrl} alt="QR Code PIX" className="mx-auto mb-4 h-44 w-44 rounded-xl border border-border" />
+            )}
+
+            <div className="mb-3 flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
+              <span className="flex-1 truncate text-xs font-mono text-text-muted">{pix.copyPaste.slice(0, 40)}…</span>
+              <button onClick={copyPix} className="shrink-0 text-primary hover:text-primary/80">
+                {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </button>
+            </div>
+            <button onClick={copyPix} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-black hover:opacity-90">
+              <Copy className="h-4 w-4" />
+              {copied ? "Copiado!" : "Copiar código PIX"}
+            </button>
+
+            <p className="mt-3 text-center text-xs text-text-muted">
+              Válido até {new Date(pix.expiresAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+            </p>
+            <p className="mt-1 text-center text-[10px] text-text-muted/40">#{pix.orderId.slice(-8).toUpperCase()}</p>
+          </div>
+        </div>
+      )}
+
       {welcome && (
         <div className="flex items-start gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-5 py-4">
           <PartyPopper className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
