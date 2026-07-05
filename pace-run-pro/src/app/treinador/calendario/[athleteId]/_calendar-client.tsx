@@ -997,7 +997,7 @@ export default function CalendarClient({
           {saving && <Loader2 size={14} className="animate-spin text-primary" />}
           <button
             onClick={goToday}
-            className="text-sm px-3 py-1.5 rounded-lg bg-card-hover hover:bg-card-hover/200 transition-colors"
+            className="text-sm px-3 py-1.5 rounded-lg bg-card-hover hover:bg-card-hover transition-colors"
           >
             Hoje
           </button>
