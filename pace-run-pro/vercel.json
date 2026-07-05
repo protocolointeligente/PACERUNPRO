@@ -1,5 +1,5 @@
 {
-  "buildCommand": "prisma generate && (prisma migrate resolve --applied 20260615000000_add_vouchers || true) && (prisma migrate resolve --applied 20260704000001_lgpd_consent_types || true) && (prisma migrate resolve --applied 20260704000006_listing_status_audit_log || true) && (prisma migrate resolve --applied 20260704000007_coach_athlete_nm_stripe_idempotency || true) && (prisma migrate resolve --applied 20260704000008_coach_athlete_nm_stripe_idempotency_fix || true) && (prisma migrate resolve --applied 20260704000009_pagbank_seller_accounts || true) && (prisma migrate resolve --rolled-back 20260704000010_idempotent_catchall || true) && prisma migrate deploy && next build",
+  "buildCommand": "bash scripts/migrate-deploy.sh",
   "crons": [
     {
       "path": "/api/cron/workout-reminder",
