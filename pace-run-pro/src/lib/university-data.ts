@@ -1494,6 +1494,372 @@ Exporta CSV com todas as entradas, saídas e resultado líquido.`
       },
     ],
   },
+
+  // ── ADDITIONAL COACH COURSES ───────────────────────────────────────────────
+
+  {
+    id: "fundamentos-ciclismo",
+    title: "Treinamento de Ciclismo: FTP e Potência",
+    description: "Domine a prescrição por watts: FTP, zonas de potência, TSS e periodização para ciclistas.",
+    totalDuration: "27 min",
+    level: "intermediário",
+    category: "Metodologia",
+    color: "#38bdf8",
+    for: "coach",
+    lessons: [
+      {
+        id: "l1",
+        title: "O que é FTP e como calculá-lo",
+        duration: "10 min",
+        content: `## FTP — Functional Threshold Power
+
+FTP é a potência máxima sustentável por 60 minutos. É o equivalente ao limiar de lactato no ciclismo, expresso em watts.
+
+**Como calcular:**
+Teste de 20 minutos em esforço máximo. FTP = resultado × 0,95.
+
+**Referências por nível:**
+- 200W: categoria iniciante
+- 250W: intermediário
+- 300W+: avançado
+
+**Por que watts são superiores ao pace no ciclismo:**
+O terreno, o vento e o peso da bicicleta afetam diretamente o pace — mas a potência medida pelo medidor de potência reflete o esforço real independentemente dessas variáveis externas.
+
+**Zonas de potência (% FTP):**
+- Z1: < 55% — Recuperação ativa
+- Z2: 55–75% — Base aeróbica
+- Z3: 75–90% — Aeróbico moderado
+- Z4: 90–105% — Limiar (sweet spot superior)
+- Z5: 105–120% — VO₂máx
+- Z6: 120–150% — Anaeróbico
+- Z7: > 150% — Neuromuscular / sprint`,
+      },
+      {
+        id: "l2",
+        title: "Estruturando uma semana de treino por potência",
+        duration: "9 min",
+        content: `## Distribuição polarizada
+
+A distribuição polarizada é a mais eficaz para ciclistas: 80% do volume nas zonas Z1–Z2 e 20% em intensidade.
+
+**TSS semanal recomendado por nível:**
+- Iniciante: 200–350 TSS
+- Intermediário: 350–500 TSS
+- Avançado: 500–800+ TSS
+
+**Sweet spot (88–93% FTP):**
+O sweet spot é a principal ferramenta de desenvolvimento — oferece alto estímulo com recuperação mais rápida do que treinos em VO₂máx.
+
+**Exemplo de semana intermediária:**
+- Segunda: Fácil Z2, 60 min
+- Terça: Intervalado Z5 — 5×5 min com 5 min rec
+- Quarta: Base Z2, 90 min
+- Quinta: Sweet spot — 3×20 min a 90% FTP
+- Sexta: Fácil ou descanso
+- Sábado: Longo Z2, 3h
+- Domingo: Descanso ativo`,
+      },
+      {
+        id: "l3",
+        title: "Usando a periodização de potência no PACE RUN PRO",
+        duration: "8 min",
+        content: `## Periodização com modalidade Ciclismo
+
+**Configurando a modalidade:**
+Na seção Periodização, selecione "Ciclismo" como modalidade. O motor de prescrição usa o FTP ativo do atleta como referência para todas as zonas.
+
+**Leitura dos gráficos:**
+- CTL (azul): fitness acumulado ao longo das semanas
+- ATL (laranja): fadiga da última semana
+- TSB: equilíbrio entre fitness e fadiga — positivo = pronto para prova
+
+**Semanas de deload:**
+A cada 3–4 semanas, programe uma semana com 60% do TSS habitual. O atleta recupera sem perder adaptações.
+
+**Exportação:**
+Após configurar a periodização, exporte o plano para o calendário do atleta. Cada sessão aparece com zona e duração prescrita diretamente no app.`,
+      },
+    ],
+  },
+
+  {
+    id: "fundamentos-natacao",
+    title: "Natação: CSS e Zonas de Intensidade",
+    description: "Prescreva treinos de natação com base em velocidade crítica (CSS) e zonas de pace por 100m.",
+    totalDuration: "24 min",
+    level: "intermediário",
+    category: "Metodologia",
+    color: "#a78bfa",
+    for: "coach",
+    lessons: [
+      {
+        id: "l1",
+        title: "CSS: a FC Limiar da natação",
+        duration: "9 min",
+        content: `## CSS — Critical Swim Speed
+
+CSS é a velocidade crítica de nado — o pace sustentável indefinidamente em termos teóricos. É o equivalente natação do FTP no ciclismo ou do limiar de lactato na corrida.
+
+**Teste simples:**
+1. Nadar 400m no máximo
+2. Nadar 200m no máximo
+3. CSS = (400 − 200) ÷ (T400 − T200)
+
+**Exemplo prático:**
+- 400m em 6:40 (400 seg)
+- 200m em 3:04 (184 seg)
+- CSS = 200 ÷ (400 − 184) = 200 ÷ 216 ≈ **1:48/100m**
+
+*Nota: o resultado final é ajustado para min/100m.*
+
+**Zonas de natação (% CSS):**
+- Z1: > 115% CSS — Recuperação (pace bem acima do CSS)
+- Z2: 108–115% CSS — Aeróbico base
+- Z3: 103–108% CSS — Aeróbico moderado
+- Z4: 100–103% CSS — No CSS (limiar)
+- Z5: < 100% CSS — Acima do limiar, alta intensidade`,
+      },
+      {
+        id: "l2",
+        title: "Estrutura de uma semana de natação",
+        duration: "8 min",
+        content: `## Volume semanal por nível
+
+- Iniciante: 4–6 km/semana
+- Intermediário: 8–12 km/semana
+- Avançado: 15–20 km+/semana
+
+**As 4 sessões principais:**
+
+**Sessão de técnica:**
+Baixa intensidade, foco em drills — pullbuoy, pernas, respiração bilateral. Constrói eficiência no longo prazo.
+
+**Sessão de base Z2:**
+Nado contínuo ou com pequenas pausas. 60–80% do volume total deve estar aqui.
+
+**Sessão de CSS:**
+Tiros no pace de CSS — ex: 10×100m no pace-alvo com 20 seg de descanso.
+
+**Sessão de prova:**
+Simula o ritmo e a distância da prova. Útil para triatletas que precisam calibrar o esforço na água antes da bike.
+
+**Aquecimento progressivo:**
+Sempre comece com 200–400m progressivos. Entrar frio em intensidade alta aumenta risco de lesão e reduz eficiência.
+
+**Registro no PACE RUN PRO:**
+Cada sessão pode ser registrada manualmente ou importada via wearable compatível.`,
+      },
+      {
+        id: "l3",
+        title: "Progressão e monitoramento de performance",
+        duration: "7 min",
+        content: `## Atualizando o CSS
+
+Reavalie o CSS a cada 4–6 semanas. O teste é simples e pode ser feito em qualquer piscina de 25m ou 50m.
+
+**Indicadores de melhora:**
+- Tempo no 400m cai com o mesmo esforço percebido
+- RPE de nado mais baixo no mesmo pace
+- Menor número de braçadas por comprimento (eficiência técnica)
+
+**Como registrar no sistema:**
+Acesse Prescrição → Natação → Avaliação CSS. Insira os tempos do 400m e 200m — o sistema calcula o CSS automaticamente e atualiza as zonas.
+
+**Cálculo automático de zonas:**
+Após atualizar o CSS, todas as sessões prescritas são recalculadas com os novos paces por zona. Não há necessidade de ajuste manual.
+
+**Dica:**
+Combine a reavaliação de CSS com um pequeno teste de técnica (contagem de braçadas por comprimento). A redução de braçadas com o mesmo pace indica ganho real de economia de nado.`,
+      },
+    ],
+  },
+
+  {
+    id: "fundamentos-triathlon",
+    title: "Triathlon: Treinamento Integrado e Estratégia de Prova",
+    description: "Planejamento e execução de treinos e provas de triathlon: distribuição de modalidades, brick training e estratégia de corrida.",
+    totalDuration: "27 min",
+    level: "avançado",
+    category: "Estratégia",
+    color: "#fb923c",
+    for: "coach",
+    lessons: [
+      {
+        id: "l1",
+        title: "Distribuição de volume entre modalidades",
+        duration: "10 min",
+        content: `## A regra 50/30/20
+
+A distribuição clássica de volume entre modalidades no triathlon:
+- **Ciclismo:** 50% do volume total
+- **Corrida:** 30% do volume total
+- **Natação:** 20% do volume total
+
+Essa proporção reflete o tempo real de prova em cada modalidade.
+
+**Distâncias por formato:**
+| Formato | Natação | Ciclismo | Corrida |
+|---------|---------|---------|---------|
+| Sprint | 750m | 20km | 5km |
+| Olímpico | 1,5km | 40km | 10km |
+| Ironman 70.3 | 1,9km | 90km | 21km |
+| Ironman | 3,8km | 180km | 42km |
+
+**Registro no PACE RUN PRO:**
+Cada modalidade é registrada separadamente. O sistema calcula CTL individual por modalidade — importante porque um triatleta pode ter CTL alto no ciclismo e baixo na corrida.
+
+**A corrida como limitante final:**
+Independentemente do formato, a corrida determina o resultado final. Atletas com bike forte mas corrida fraca sempre terminam mal. Priorize a qualidade da corrida na distribuição de intensidade.`,
+      },
+      {
+        id: "l2",
+        title: "Brick training: por que e como",
+        duration: "9 min",
+        content: `## O que é um Brick
+
+Brick é qualquer treino que combina duas modalidades consecutivas — mais comumente bike seguida de corrida imediatamente após. O nome vem da sensação de "tijolos nas pernas" nos primeiros quilômetros do run.
+
+**Por que fazer:**
+O músculo precisa ser treinado para a transição neuromotora entre pedalar (movimento circular, quadríceps dominante) e correr (movimento linear, glúteos e isquiotibiais). Sem bricks, a transição em prova é sempre pior.
+
+**Os primeiros 2km do run sempre são mais lentos:**
+Normal e esperado. O objetivo é treinar o atleta a tolerar esse período e não entrar em pânico de pace.
+
+**Exemplo de brick olímpico:**
+- 40km de bike em Z3 (75–85% FTP)
+- Imediatamente: 10km de corrida progressivo (Z2 → Z3)
+
+**Semana típica de triatleta:**
+- Seg: Natação técnica
+- Ter: Bike intervalado + Corrida leve (brick curto)
+- Qua: Corrida longa Z2
+- Qui: Bike longo Z2
+- Sex: Natação CSS
+- Sáb: Brick principal (bike longo + corrida)
+- Dom: Descanso ativo
+
+**Registro no sistema:**
+Bricks são registrados como uma única sessão combinada no PACE RUN PRO, com duração total e RPE médio da sessão completa.`,
+      },
+      {
+        id: "l3",
+        title: "Estratégia de prova: T1, T2 e gestão de pace",
+        duration: "8 min",
+        content: `## As transições
+
+**T1 — Natação → Bike:**
+Touca, óculos → capacete (obrigatório antes de tocar a bike) → sapatilhas de ciclismo → partir. Treinar a rotina economiza 30–60 seg em prova.
+
+**T2 — Bike → Corrida:**
+Capacete → tênis de corrida → número de corrida (se exigido) → partir. Mais simples que T1.
+
+**Estratégia de bike:**
+A regra de ouro: **pedalar abaixo de 80% FTP para preservar a corrida**. Atletas que saem a 90%+ no bike chegam ao run sem pernas. A corrida paga o preço da arrogância no bike.
+
+**Negative split na corrida:**
+Sair conservador nos primeiros 2–3km e acelerar progressivamente. Triatletas que saem rápido no run raramente terminam fortes.
+
+**Hidratação e nutrição no bike:**
+- 500ml de líquido por hora (ajustar conforme temperatura)
+- Gel a cada 30 minutos de bike (para Ironman e 70.3)
+- Nada sólido nos últimos 20km antes de T2 — facilita a transição digestiva para o run
+
+**Gestão mental:**
+Divida a prova em blocos: "Só preciso chegar ao T1. Só preciso fechar o bike. Só preciso terminar os primeiros 5km do run." A segmentação mental reduz a percepção de dificuldade.`,
+      },
+    ],
+  },
+
+  {
+    id: "fundamentos-forca",
+    title: "Força para Atletas de Endurance",
+    description: "Integre força ao treino de corrida e ciclismo: periodização, RPE, exercícios essenciais e programação compatível com o volume aeróbico.",
+    totalDuration: "24 min",
+    level: "intermediário",
+    category: "Força",
+    color: "#f87171",
+    for: "coach",
+    lessons: [
+      {
+        id: "l1",
+        title: "Por que força melhora a performance de endurance",
+        duration: "8 min",
+        content: `## A ciência por trás da força no endurance
+
+**Evidências:**
+Dois treinos de força por semana melhoram a economia de corrida em 3–5% — o que representa ganhos reais de pace sem alterar o VO₂máx.
+
+**Menos lesões:**
+Glúteos fortes reduzem a sobrecarga no joelho e no quadril. Pesquisas mostram redução de 20–40% na incidência de lesões em corredores que fazem fortalecimento regular.
+
+**Para ciclistas:**
+Um core forte melhora a transferência de potência para o pedal. Joelho, quadril e coluna estabilizados = menos energia perdida em compensações.
+
+**Exercícios essenciais para atletas de endurance:**
+- Agachamento (variações: livre, goblet, búlgaro)
+- Afundo (estático e dinâmico)
+- Hip thrust (fortalecimento de glúteos)
+- Elevação de panturrilha (prevenção de Aquiles e fasceíte)
+- Core: prancha, dead bug, pallof press
+
+**RPE de força:**
+- RPE 6–7: hipertrofia (acúmulo de massa e base)
+- RPE 8–9: força máxima (potência e recrutamento neural)
+- RPE 10: não é recomendado para atletas de endurance (risco de lesão e recuperação lenta)`,
+      },
+      {
+        id: "l2",
+        title: "Periodização de força junto ao treino aeróbico",
+        duration: "9 min",
+        content: `## As 4 fases de força para atletas de endurance
+
+**Fase 1 — Adaptação (2–4 semanas):**
+Sem carga ou carga muito leve. Foco em ativação, técnica e estabilização. RPE 5–6. Compatível com qualquer volume aeróbico.
+
+**Fase 2 — Hipertrofia (4–6 semanas):**
+Cargas moderadas, RPE 7–8. 3–4 séries de 8–12 repetições. Construção de massa muscular funcional para proteger articulações.
+
+**Fase 3 — Força Máxima (4 semanas):**
+Cargas altas, RPE 8–9. 4–5 séries de 3–6 repetições. Aumento do recrutamento neural — mais força sem ganho de peso proporcional.
+
+**Fase 4 — Potência (3 semanas):**
+Movimentos explosivos: saltos, agachamento jump, kettlebell swing. Desenvolvimento de stiffness muscular — melhora economia de corrida.
+
+**Na temporada de competição:**
+Manutenção com 1 sessão por semana, RPE 7–8, volume reduzido. O objetivo é não perder os ganhos sem acumular fadiga adicional.
+
+**Como cadastrar no PACE RUN PRO:**
+Acesse Prescrição → Força → selecione o bloco correspondente à fase atual. Configure exercícios, séries e RPE. O sistema registra e monitora a carga de força separada da carga aeróbica.`,
+      },
+      {
+        id: "l3",
+        title: "Usando a Prescrição de Força no PACE RUN PRO",
+        duration: "7 min",
+        content: `## Tutorial: Prescrição de Força
+
+**Acessando o módulo:**
+Menu → Prescrição → Força.
+
+**Biblioteca de exercícios:**
+Escolha da lista com exercícios organizados por grupo muscular. Cada exercício tem descrição de execução e orientações de segurança.
+
+**Montando uma sessão:**
+- Selecione os exercícios
+- Configure: séries, repetições, carga (kg ou % do peso corporal) e tempo de descanso
+- Adicione RPE alvo para cada exercício
+
+**Prescrevendo via calendário:**
+A sessão de força pode ser vinculada a um dia específico no calendário do atleta — aparece como um bloco separado do treino aeróbico.
+
+**StrengthBlocks no app do atleta:**
+Cada exercício aparece no app com instruções completas. O atleta segue a sessão e registra o RPE após cada série ou ao final.
+
+**Monitoramento:**
+O sistema acumula a carga de força separadamente da carga aeróbica. O treinador pode ver a carga total (aeróbica + força) no dashboard do atleta para evitar sobrecarregar semanas de alta intensidade aeróbica.`,
+      },
+    ],
+  },
 ];
 
 export function getAthleteCoursesLength(): number {

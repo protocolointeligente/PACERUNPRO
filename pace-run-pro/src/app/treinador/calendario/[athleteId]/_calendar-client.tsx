@@ -108,7 +108,7 @@ const SPORT_TYPES: {
   color: string;
   bgClass: string;
 }[] = [
-  { key: "RUN",       label: "Corrida",    subtitle: "VDOT · Zonas",  icon: Activity, color: "#f97316", bgClass: "hover:bg-orange-500/15" },
+  { key: "RUN",       label: "Corrida",    subtitle: "VDOT · Zonas",  icon: Activity, color: "#f97316", bgClass: "hover:bg-primary/15" },
   { key: "BIKE",      label: "Ciclismo",   subtitle: "FTP · Potência", icon: Bike,     color: "#eab308", bgClass: "hover:bg-yellow-500/15" },
   { key: "SWIM",      label: "Natação",    subtitle: "CSS · Pace",     icon: Waves,    color: "#38bdf8", bgClass: "hover:bg-blue-500/15"   },
   { key: "STRENGTH",  label: "Força",      subtitle: "1RM · RPE",      icon: Dumbbell, color: "#46E0C8", bgClass: "hover:bg-teal-500/15"   },
@@ -943,18 +943,17 @@ export default function CalendarClient({
   })();
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0f1117] text-white select-none">
+    <div className="flex flex-col min-h-screen bg-background text-text select-none">
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10 flex-wrap">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border flex-wrap">
         <select
-          style={{ colorScheme: "dark" }}
-          className="bg-[#1e2130] border border-white/10 text-white text-sm px-3 py-1.5 rounded-lg focus:outline-none focus:border-orange-500"
+          className="bg-card border border-border text-text text-sm px-3 py-1.5 rounded-lg focus:outline-none focus:border-primary"
           value={athleteId}
           onChange={(e) => router.push(`/treinador/calendario/${e.target.value}`)}
         >
           {athletes.map((a) => (
-            <option key={a.id} value={a.id} style={{ background: "#1e2130", color: "#fff" }}>{a.name}</option>
+            <option key={a.id} value={a.id}>{a.name}</option>
           ))}
         </select>
 
@@ -962,7 +961,7 @@ export default function CalendarClient({
         <div className="relative">
           <button
             onClick={() => setReleaseDropdown((v) => !v)}
-            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition-colors font-semibold"
+            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors font-semibold"
           >
             <Unlock size={14} />
             Liberar
@@ -970,22 +969,22 @@ export default function CalendarClient({
           {releaseDropdown && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setReleaseDropdown(false)} />
-              <div className="absolute top-full left-0 mt-1 z-50 bg-[#1e2130] border border-white/15 rounded-xl shadow-xl overflow-hidden min-w-[160px]">
+              <div className="absolute top-full left-0 mt-1 z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden min-w-[160px]">
               <button
                 onClick={() => handleRelease("week")}
-                className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/10 transition-colors"
+                className="w-full text-left px-4 py-2.5 text-sm hover:bg-card-hover transition-colors"
               >
                 Próxima semana
               </button>
               <button
                 onClick={() => handleRelease("15d")}
-                className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/10 transition-colors border-t border-white/10"
+                className="w-full text-left px-4 py-2.5 text-sm hover:bg-card-hover transition-colors border-t border-border"
               >
                 Próximos 15 dias
               </button>
               <button
                 onClick={() => handleRelease("month")}
-                className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/10 transition-colors border-t border-white/10"
+                className="w-full text-left px-4 py-2.5 text-sm hover:bg-card-hover transition-colors border-t border-border"
               >
                 Próximo mês
               </button>
@@ -995,16 +994,16 @@ export default function CalendarClient({
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
-          {saving && <Loader2 size={14} className="animate-spin text-orange-400" />}
+          {saving && <Loader2 size={14} className="animate-spin text-primary" />}
           <button
             onClick={goToday}
-            className="text-sm px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+            className="text-sm px-3 py-1.5 rounded-lg bg-card-hover hover:bg-card-hover/200 transition-colors"
           >
             Hoje
           </button>
           <button
             onClick={() => changeMonth(-1)}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-card-hover transition-colors"
           >
             <ChevronLeft size={18} />
           </button>
@@ -1013,17 +1012,17 @@ export default function CalendarClient({
           </span>
           <button
             onClick={() => changeMonth(1)}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-card-hover transition-colors"
           >
             <ChevronRight size={18} />
           </button>
-          {loading && <Loader2 size={14} className="animate-spin text-white/40" />}
+          {loading && <Loader2 size={14} className="animate-spin text-text-muted" />}
           <button
             onClick={() => setShowSidebar((v) => !v)}
             title="Painel do atleta"
             className={[
               "p-1.5 rounded-lg transition-colors",
-              showSidebar ? "bg-orange-500/20 text-orange-400" : "hover:bg-white/10 text-white/40",
+              showSidebar ? "bg-primary/20 text-primary" : "hover:bg-card-hover text-text-muted",
             ].join(" ")}
           >
             <PanelRight size={16} />
@@ -1040,7 +1039,7 @@ export default function CalendarClient({
         {/* Day header */}
         <div className="grid grid-cols-7 mb-1 pl-[48px]">
           {DAY_LABELS.map((d) => (
-            <div key={d} className="text-center text-[11px] font-semibold text-white/30 py-1.5 tracking-wider">
+            <div key={d} className="text-center text-[11px] font-semibold text-text-muted/60 py-1.5 tracking-wider">
               {d}
             </div>
           ))}
@@ -1057,14 +1056,14 @@ export default function CalendarClient({
           return (
             <div key={wi} className="flex gap-1 mb-1">
               {/* Week gutter */}
-              <div className="w-[44px] flex-shrink-0 flex flex-col items-center justify-between py-1 px-0.5 rounded-lg bg-white/2">
-                <span className="text-[9px] text-white/25 font-bold">{weekNum}</span>
+              <div className="w-[44px] flex-shrink-0 flex flex-col items-center justify-between py-1 px-0.5 rounded-lg bg-card-hover/20">
+                <span className="text-[9px] text-text-muted/50 font-bold">{weekNum}</span>
                 <div className="flex flex-col gap-0.5 items-center">
                   {weekLoad.count > 0 && (
                     <>
-                      <span className="text-[9px] text-white/35 text-center">
+                      <span className="text-[9px] text-text-muted/70 text-center">
                         {weekLoad.sRpe > 0 ? (
-                          <span title="sRPE planificado" className="text-orange-400/70">{weekLoad.sRpe}</span>
+                          <span title="sRPE planificado" className="text-primary/70">{weekLoad.sRpe}</span>
                         ) : null}
                       </span>
                       {/* Conformidade bar: done / planned */}
@@ -1074,7 +1073,7 @@ export default function CalendarClient({
                         return (
                           <div title={`${weekLoad.countDone}/${weekLoad.count} treinos — ${pct}%`} className="flex flex-col items-center gap-0.5 w-full px-1">
                             <span style={{ color }} className="text-[9px] font-bold">{pct}%</span>
-                            <div className="w-full h-1 rounded-full bg-white/10 overflow-hidden">
+                            <div className="w-full h-1 rounded-full bg-card-hover overflow-hidden">
                               <div style={{ width: `${pct}%`, backgroundColor: color }} className="h-full rounded-full transition-all" />
                             </div>
                           </div>
@@ -1086,7 +1085,7 @@ export default function CalendarClient({
                     <button
                       onClick={() => handlePasteWeek(week[0])}
                       title="Colar semana aqui"
-                      className="p-0.5 rounded hover:bg-white/10 text-orange-400 opacity-70 hover:opacity-100"
+                      className="p-0.5 rounded hover:bg-card-hover text-primary opacity-70 hover:opacity-100"
                     >
                       <ClipboardPaste size={10} />
                     </button>
@@ -1096,8 +1095,8 @@ export default function CalendarClient({
                       onClick={() => handleCopyWeek(week)}
                       title="Copiar semana"
                       className={[
-                        "p-0.5 rounded hover:bg-white/10 transition-colors",
-                        isSourceWeek ? "text-orange-400" : "text-white/25 hover:text-white/60",
+                        "p-0.5 rounded hover:bg-card-hover transition-colors",
+                        isSourceWeek ? "text-primary" : "text-text-muted/50 hover:text-text-muted",
                       ].join(" ")}
                     >
                       <Copy size={10} />
@@ -1121,8 +1120,8 @@ export default function CalendarClient({
                     key={key}
                     className={[
                       "min-h-[100px] rounded-lg p-1.5 flex flex-col gap-1 transition-all",
-                      isCurrentMonth ? "bg-[#1a1d2e]" : "bg-[#13151e]",
-                      isDragTarget ? "ring-2 ring-orange-400 bg-orange-500/5" : "",
+                      isCurrentMonth ? "bg-card" : "bg-background",
+                      isDragTarget ? "ring-2 ring-primary bg-primary/5" : "",
                       dragId ? "cursor-copy" : "",
                     ].join(" ")}
                     onDragOver={(e) => { e.preventDefault(); setDragOver(key); }}
@@ -1137,10 +1136,10 @@ export default function CalendarClient({
                         className={[
                           "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full leading-none",
                           isToday
-                            ? "bg-orange-500 text-white"
+                            ? "bg-primary text-text"
                             : isCurrentMonth
-                            ? "text-white/70"
-                            : "text-white/20",
+                            ? "text-text"
+                            : "text-text-muted/40",
                         ].join(" ")}
                       >
                         {day.getUTCDate()}
@@ -1150,7 +1149,7 @@ export default function CalendarClient({
                           <button
                             onClick={() => handlePaste(key)}
                             title="Colar"
-                            className="p-0.5 rounded hover:bg-white/10 text-orange-400 opacity-60 hover:opacity-100"
+                            className="p-0.5 rounded hover:bg-card-hover text-primary opacity-60 hover:opacity-100"
                           >
                             <ClipboardPaste size={11} />
                           </button>
@@ -1158,7 +1157,7 @@ export default function CalendarClient({
                         {isCurrentMonth && (
                           <button
                             onClick={() => openSportPicker(key)}
-                            className="p-0.5 rounded hover:bg-white/10 text-white/30 hover:text-white/80"
+                            className="p-0.5 rounded hover:bg-card-hover text-text-muted/60 hover:text-text"
                           >
                             <Plus size={11} />
                           </button>
@@ -1206,7 +1205,7 @@ export default function CalendarClient({
                       }}
                       className={[
                         "rounded-xl p-1.5 border flex flex-col gap-0.5 cursor-pointer group transition-opacity",
-                        isCut ? "opacity-40 outline outline-1 outline-orange-400" : "hover:opacity-90",
+                        isCut ? "opacity-40 outline outline-1 outline-primary" : "hover:opacity-90",
                         dragId === w.id ? "opacity-50" : "",
                       ].join(" ")}
                     >
@@ -1222,7 +1221,7 @@ export default function CalendarClient({
                             {w.title}
                           </div>
                           {meta.length > 0 && (
-                            <div className="text-[10px] text-white/50 truncate">{meta.join(" · ")}</div>
+                            <div className="text-[10px] text-text-muted truncate">{meta.join(" · ")}</div>
                           )}
                         </div>
                         <button
@@ -1230,7 +1229,7 @@ export default function CalendarClient({
                             e.stopPropagation();
                             setCtxMenu({ x: e.clientX, y: e.clientY, workout: w });
                           }}
-                          className="opacity-0 group-hover:opacity-60 p-0.5 rounded hover:bg-white/10 flex-shrink-0"
+                          className="opacity-0 group-hover:opacity-60 p-0.5 rounded hover:bg-card-hover flex-shrink-0"
                         >
                           <MoreVertical size={10} />
                         </button>
@@ -1274,13 +1273,13 @@ export default function CalendarClient({
         <>
           <div className="fixed inset-0 z-40" onMouseDown={() => setCtxMenu(null)} />
           <div
-            className="fixed z-50 bg-[#1e2130] border border-white/10 rounded-xl shadow-2xl py-1 min-w-[172px]"
+            className="fixed z-50 bg-card border border-border rounded-xl shadow-2xl py-1 min-w-[172px]"
             style={{ left: Math.min(ctxMenu.x, window.innerWidth - 190), top: Math.min(ctxMenu.y, window.innerHeight - 240) }}
           >
             <CtxItem icon={<Pencil size={13} />}   label="Editar"  onClick={() => openEdit(ctxMenu.workout)} />
             <CtxItem icon={<Copy size={13} />}     label="Copiar"  onClick={() => handleCopy(ctxMenu.workout)} />
             <CtxItem icon={<Scissors size={13} />} label="Recortar" onClick={() => handleCut(ctxMenu.workout)} />
-            <div className="my-1 border-t border-white/10" />
+            <div className="my-1 border-t border-border" />
             <CtxItem
               icon={ctxMenu.workout.status === "AGENDADO" ? <Eye size={13} /> : <EyeOff size={13} />}
               label={ctxMenu.workout.status === "AGENDADO" ? "Mostrar" : "Ocultar"}
@@ -1294,7 +1293,7 @@ export default function CalendarClient({
               label="Bloquear"
               onClick={() => handleUpdateStatus(ctxMenu.workout.id, "AGENDADO")}
             />
-            <div className="my-1 border-t border-white/10" />
+            <div className="my-1 border-t border-border" />
             <CtxItem icon={<Trash2 size={13} />}   label="Excluir" onClick={() => deleteWorkout(ctxMenu.workout.id)} danger />
           </div>
         </>
@@ -1310,7 +1309,7 @@ export default function CalendarClient({
                   key={s.key}
                   onClick={() => pickSport(s.key)}
                   className={[
-                    "flex items-center gap-3 p-3 rounded-xl border border-white/8 transition-all text-left",
+                    "flex items-center gap-3 p-3 rounded-xl border border-border/60 transition-all text-left",
                     s.bgClass,
                   ].join(" ")}
                 >
@@ -1321,8 +1320,8 @@ export default function CalendarClient({
                     <s.icon size={18} strokeWidth={1.75} />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold text-white leading-tight">{s.label}</div>
-                    <div className="text-[10px] text-white/40 leading-tight mt-0.5">{s.subtitle}</div>
+                    <div className="text-sm font-semibold text-text leading-tight">{s.label}</div>
+                    <div className="text-[10px] text-text-muted leading-tight mt-0.5">{s.subtitle}</div>
                   </div>
                 </button>
               ))}
@@ -1358,25 +1357,25 @@ export default function CalendarClient({
 
       {/* ── Clipboard pill ──────────────────────────────────────────── */}
       {clipboard && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-[#1e2130] border border-orange-500/30 rounded-full px-4 py-2 flex items-center gap-3 text-sm shadow-xl">
-          <span className="text-white/60">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-card border border-primary/30 rounded-full px-4 py-2 flex items-center gap-3 text-sm shadow-xl">
+          <span className="text-text-muted">
             {clipboard.action === "cut" ? "✂️" : "📋"}{" "}
-            <span className="text-white font-medium">{clipboard.workout.title}</span>
+            <span className="text-text font-medium">{clipboard.workout.title}</span>
             {" "}— clique no dia para colar
           </span>
-          <button onClick={() => setClipboard(null)} className="text-white/30 hover:text-white ml-1">
+          <button onClick={() => setClipboard(null)} className="text-text-muted/60 hover:text-text ml-1">
             <X size={13} />
           </button>
         </div>
       )}
       {weekClipboard && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-[#1e2130] border border-orange-500/30 rounded-full px-4 py-2 flex items-center gap-3 text-sm shadow-xl">
-          <span className="text-white/60">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-card border border-primary/30 rounded-full px-4 py-2 flex items-center gap-3 text-sm shadow-xl">
+          <span className="text-text-muted">
             📋{" "}
-            <span className="text-white font-medium">{weekClipboard.workouts.length} treinos copiados</span>
+            <span className="text-text font-medium">{weekClipboard.workouts.length} treinos copiados</span>
             {" "}— clique no ícone de colar na semana destino
           </span>
-          <button onClick={() => setWeekClipboard(null)} className="text-white/30 hover:text-white ml-1">
+          <button onClick={() => setWeekClipboard(null)} className="text-text-muted/60 hover:text-text ml-1">
             <X size={13} />
           </button>
         </div>
@@ -1421,91 +1420,91 @@ function AthleteSidebar({
   const initials = athleteDetail?.name?.split(" ").map((n) => n[0]).slice(0, 2).join("") ?? "?";
 
   return (
-    <div className="w-[220px] flex-shrink-0 border-l border-white/10 bg-[#13151e] overflow-y-auto flex flex-col gap-0">
+    <div className="w-[220px] flex-shrink-0 border-l border-border bg-background overflow-y-auto flex flex-col gap-0">
 
       {/* Athlete identity */}
-      <div className="p-3 border-b border-white/8">
+      <div className="p-3 border-b border-border/60">
         <div className="flex items-center gap-2 mb-2">
           {athleteDetail?.avatarUrl ? (
             <img src={athleteDetail.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400 text-xs font-bold flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold flex-shrink-0">
               {initials}
             </div>
           )}
           <div className="min-w-0">
             <div className="text-sm font-semibold truncate">{athleteDetail?.name ?? "—"}</div>
-            <div className="text-[10px] text-white/40 truncate">
+            <div className="text-[10px] text-text-muted truncate">
               {athleteDetail?.level ? LEVEL_LABELS[athleteDetail.level] ?? athleteDetail.level : ""}
             </div>
           </div>
         </div>
         {athleteDetail?.goal && (
-          <div className="text-[11px] text-white/50 truncate">🎯 {athleteDetail.goal}</div>
+          <div className="text-[11px] text-text-muted truncate">🎯 {athleteDetail.goal}</div>
         )}
         {athleteDetail?.raceDate && (
-          <div className="text-[11px] text-white/50 mt-0.5">
+          <div className="text-[11px] text-text-muted mt-0.5">
             🏁 {new Date(athleteDetail.raceDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
           </div>
         )}
       </div>
 
       {/* Monthly volume */}
-      <div className="p-3 border-b border-white/8">
+      <div className="p-3 border-b border-border/60">
         <div className="flex items-center gap-1.5 mb-2">
-          <TrendingUp size={11} className="text-white/40" />
-          <span className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">{monthName}</span>
+          <TrendingUp size={11} className="text-text-muted" />
+          <span className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">{monthName}</span>
         </div>
         <div className="flex flex-col gap-1">
           {monthStats.runKm > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-[11px] text-white/60">🏃 Corrida</span>
-              <span className="text-[11px] font-semibold text-white">{monthStats.runKm.toFixed(1)} km</span>
+              <span className="text-[11px] text-text-muted">🏃 Corrida</span>
+              <span className="text-[11px] font-semibold text-text">{monthStats.runKm.toFixed(1)} km</span>
             </div>
           )}
           {monthStats.bikeKm > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-[11px] text-white/60">🚴 Bike</span>
-              <span className="text-[11px] font-semibold text-white">{monthStats.bikeKm.toFixed(1)} km</span>
+              <span className="text-[11px] text-text-muted">🚴 Bike</span>
+              <span className="text-[11px] font-semibold text-text">{monthStats.bikeKm.toFixed(1)} km</span>
             </div>
           )}
           {monthStats.swimM > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-[11px] text-white/60">🏊 Natação</span>
-              <span className="text-[11px] font-semibold text-white">{monthStats.swimM.toFixed(1)} km</span>
+              <span className="text-[11px] text-text-muted">🏊 Natação</span>
+              <span className="text-[11px] font-semibold text-text">{monthStats.swimM.toFixed(1)} km</span>
             </div>
           )}
           {monthStats.strengthMin > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-[11px] text-white/60">💪 Força</span>
-              <span className="text-[11px] font-semibold text-white">{fmtDurationMin(monthStats.strengthMin)}</span>
+              <span className="text-[11px] text-text-muted">💪 Força</span>
+              <span className="text-[11px] font-semibold text-text">{fmtDurationMin(monthStats.strengthMin)}</span>
             </div>
           )}
           {monthStats.runKm === 0 && monthStats.bikeKm === 0 && monthStats.swimM === 0 && monthStats.strengthMin === 0 && (
-            <span className="text-[11px] text-white/25 italic">Sem treinos planejados</span>
+            <span className="text-[11px] text-text-muted/50 italic">Sem treinos planejados</span>
           )}
         </div>
       </div>
 
       {/* Load */}
       {monthStats.sRpe > 0 && (
-        <div className="p-3 border-b border-white/8">
+        <div className="p-3 border-b border-border/60">
           <div className="flex items-center gap-1.5 mb-1">
-            <CalendarDays size={11} className="text-white/40" />
-            <span className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">Carga Mensal</span>
+            <CalendarDays size={11} className="text-text-muted" />
+            <span className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">Carga Mensal</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-[11px] text-white/60">sRPE planificado</span>
-            <span className="text-[11px] font-semibold text-orange-400">{monthStats.sRpe.toLocaleString("pt-BR")}</span>
+            <span className="text-[11px] text-text-muted">sRPE planificado</span>
+            <span className="text-[11px] font-semibold text-primary">{monthStats.sRpe.toLocaleString("pt-BR")}</span>
           </div>
         </div>
       )}
 
       {/* Adherence */}
       {adherence != null && monthStats.planned > 0 && (
-        <div className="p-3 border-b border-white/8">
+        <div className="p-3 border-b border-border/60">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">Adesão</span>
+            <span className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">Adesão</span>
             <span
               className="text-[11px] font-bold"
               style={{ color: adherence >= 80 ? "#22c55e" : adherence >= 60 ? "#f59e0b" : "#ef4444" }}
@@ -1513,7 +1512,7 @@ function AthleteSidebar({
               {adherence}%
             </span>
           </div>
-          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-card-hover rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all"
               style={{
@@ -1522,7 +1521,7 @@ function AthleteSidebar({
               }}
             />
           </div>
-          <div className="text-[10px] text-white/35 mt-1">{monthStats.done}/{monthStats.planned} treinos</div>
+          <div className="text-[10px] text-text-muted/70 mt-1">{monthStats.done}/{monthStats.planned} treinos</div>
         </div>
       )}
 
@@ -1531,7 +1530,7 @@ function AthleteSidebar({
         <div className="p-3">
           <div className="flex items-center gap-1.5 mb-2">
             <AlertTriangle size={11} className="text-yellow-400" />
-            <span className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">Alertas</span>
+            <span className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">Alertas</span>
           </div>
           <div className="flex flex-col gap-1">
             {alerts.map((a, i) => (
@@ -1574,14 +1573,14 @@ function ModalBox({
   return (
     <div
       className={[
-        "bg-[#1a1d2e] rounded-2xl shadow-2xl border border-white/10 flex flex-col w-full",
+        "bg-card rounded-2xl shadow-2xl border border-border flex flex-col w-full",
         wide ? "max-w-2xl" : "max-w-sm",
       ].join(" ")}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <span className="font-semibold text-sm">{title}</span>
-        <button onClick={onClose} className="p-1 rounded hover:bg-white/10 text-white/40 hover:text-white">
+        <button onClick={onClose} className="p-1 rounded hover:bg-card-hover text-text-muted hover:text-text">
           <X size={15} />
         </button>
       </div>
@@ -1606,7 +1605,7 @@ function CtxItem({
       onClick={onClick}
       className={[
         "w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors",
-        danger ? "text-red-400 hover:bg-red-500/10" : "text-white/75 hover:bg-white/5",
+        danger ? "text-red-400 hover:bg-red-500/10" : "text-text/75 hover:bg-card-hover/50",
       ].join(" ")}
     >
       {icon}
@@ -1631,12 +1630,12 @@ function IntensitySection({
   const vdotPaces = lookupVdot(Math.max(30, Math.min(75, vdotNum)));
 
   const INPUT_CLS =
-    "bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors";
+    "bg-card-hover/30 border border-border rounded-lg px-3 py-1.5 text-sm text-text focus:outline-none focus:border-primary transition-colors";
 
   return (
-    <div className="rounded-xl border border-white/8 bg-white/3 p-3 flex flex-col gap-3">
+    <div className="rounded-xl border border-border/60 bg-card-hover/20 p-3 flex flex-col gap-3">
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[11px] text-white/40 font-medium mr-1">Intensidade</span>
+        <span className="text-[11px] text-text-muted font-medium mr-1">Intensidade</span>
         {methods.map((m) => (
           <button
             key={m.id}
@@ -1645,8 +1644,8 @@ function IntensitySection({
             className={[
               "px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors border",
               method === m.id
-                ? "bg-orange-500 border-orange-500 text-white"
-                : "border-white/10 text-white/50 hover:text-white hover:border-white/30",
+                ? "bg-primary border-primary text-text"
+                : "border-border text-text-muted hover:text-text hover:border-border",
             ].join(" ")}
           >
             {m.label}
@@ -1658,7 +1657,7 @@ function IntensitySection({
       {method === "VDOT" && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <label className="text-[11px] text-white/40 w-12 flex-shrink-0">VDOT</label>
+            <label className="text-[11px] text-text-muted w-12 flex-shrink-0">VDOT</label>
             <input
               type="number"
               min="30"
@@ -1671,7 +1670,7 @@ function IntensitySection({
               type="range"
               min="30"
               max="75"
-              className="flex-1 accent-orange-500"
+              className="flex-1 accent-primary"
               value={form.vdotValue}
               onChange={(e) => set("vdotValue", e.target.value)}
             />
@@ -1679,9 +1678,9 @@ function IntensitySection({
           {vdotPaces && (
             <div className="grid grid-cols-5 gap-1">
               {(["E", "M", "T", "I", "R"] as const).map((zone) => (
-                <div key={zone} className="flex flex-col items-center gap-0.5 bg-white/5 rounded-lg p-1.5">
-                  <span className="text-[9px] text-white/40 font-bold">{zone}</span>
-                  <span className="text-[11px] text-white font-mono">{vdotPaces[zone]}</span>
+                <div key={zone} className="flex flex-col items-center gap-0.5 bg-card-hover/30 rounded-lg p-1.5">
+                  <span className="text-[9px] text-text-muted font-bold">{zone}</span>
+                  <span className="text-[11px] text-text font-mono">{vdotPaces[zone]}</span>
                 </div>
               ))}
             </div>
@@ -1701,7 +1700,7 @@ function IntensitySection({
                 "flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition-colors",
                 form.targetZone === z.zone
                   ? "border-opacity-60 bg-opacity-20"
-                  : "border-white/8 bg-transparent hover:bg-white/5",
+                  : "border-border/60 bg-transparent hover:bg-card-hover/50",
               ].join(" ")}
               style={
                 form.targetZone === z.zone
@@ -1714,9 +1713,9 @@ function IntensitySection({
                 style={{ backgroundColor: z.color }}
               />
               <span className="text-[11px] font-semibold w-5" style={{ color: z.color }}>{z.zone}</span>
-              <span className="text-[11px] text-white/70 flex-1">{z.label}</span>
-              <span className="text-[10px] text-white/35">{z.fcPct}</span>
-              <span className="text-[10px] text-white/35 ml-1">RPE {z.rpe}</span>
+              <span className="text-[11px] text-text flex-1">{z.label}</span>
+              <span className="text-[10px] text-text-muted/70">{z.fcPct}</span>
+              <span className="text-[10px] text-text-muted/70 ml-1">RPE {z.rpe}</span>
             </button>
           ))}
         </div>
@@ -1726,7 +1725,7 @@ function IntensitySection({
       {method === "FTP" && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <label className="text-[11px] text-white/40 w-20 flex-shrink-0">FTP (W)</label>
+            <label className="text-[11px] text-text-muted w-20 flex-shrink-0">FTP (W)</label>
             <input
               type="number"
               min="0"
@@ -1743,7 +1742,7 @@ function IntensitySection({
                 onClick={() => set("targetZone", z.zone)}
                 className={[
                   "flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition-colors",
-                  form.targetZone === z.zone ? "" : "border-white/8 bg-transparent hover:bg-white/5",
+                  form.targetZone === z.zone ? "" : "border-border/60 bg-transparent hover:bg-card-hover/50",
                 ].join(" ")}
                 style={
                   form.targetZone === z.zone
@@ -1753,10 +1752,10 @@ function IntensitySection({
               >
                 <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: z.color }} />
                 <span className="text-[11px] font-semibold w-5" style={{ color: z.color }}>{z.zone}</span>
-                <span className="text-[11px] text-white/70 flex-1">{z.label}</span>
-                <span className="text-[10px] text-white/35">{z.ftpPct}</span>
+                <span className="text-[11px] text-text flex-1">{z.label}</span>
+                <span className="text-[10px] text-text-muted/70">{z.ftpPct}</span>
                 {form.ftpValue && (
-                  <span className="text-[10px] text-white/50 ml-1 font-mono">
+                  <span className="text-[10px] text-text-muted ml-1 font-mono">
                     {
                       (() => {
                         const ftp = Number(form.ftpValue);
@@ -1779,7 +1778,7 @@ function IntensitySection({
       {method === "CSS" && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <label className="text-[11px] text-white/40 w-24 flex-shrink-0">CSS /100m</label>
+            <label className="text-[11px] text-text-muted w-24 flex-shrink-0">CSS /100m</label>
             <input
               type="text"
               className={`w-24 ${INPUT_CLS}`}
@@ -1796,7 +1795,7 @@ function IntensitySection({
                 onClick={() => set("targetZone", z.zone)}
                 className={[
                   "flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition-colors",
-                  form.targetZone === z.zone ? "" : "border-white/8 bg-transparent hover:bg-white/5",
+                  form.targetZone === z.zone ? "" : "border-border/60 bg-transparent hover:bg-card-hover/50",
                 ].join(" ")}
                 style={
                   form.targetZone === z.zone
@@ -1806,8 +1805,8 @@ function IntensitySection({
               >
                 <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: z.color }} />
                 <span className="text-[11px] font-semibold w-5" style={{ color: z.color }}>{z.zone}</span>
-                <span className="text-[11px] text-white/70 flex-1">{z.label}</span>
-                <span className="text-[10px] text-white/35">{z.cssOffset}</span>
+                <span className="text-[11px] text-text flex-1">{z.label}</span>
+                <span className="text-[10px] text-text-muted/70">{z.cssOffset}</span>
               </button>
             ))}
           </div>
@@ -1817,7 +1816,7 @@ function IntensitySection({
       {/* RPE */}
       {method === "RPE" && (
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] text-white/40">RPE alvo (1–10)</label>
+          <label className="text-[11px] text-text-muted">RPE alvo (1–10)</label>
           <div className="flex gap-1 flex-wrap">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((r) => {
               const rpeColor =
@@ -1847,7 +1846,7 @@ function IntensitySection({
       {method === "1RM_PCT" && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <label className="text-[11px] text-white/40 w-16 flex-shrink-0">% de 1RM</label>
+            <label className="text-[11px] text-text-muted w-16 flex-shrink-0">% de 1RM</label>
             <input
               type="number"
               min="0"
@@ -1861,13 +1860,13 @@ function IntensitySection({
               type="range"
               min="0"
               max="100"
-              className="flex-1 accent-orange-500"
+              className="flex-1 accent-primary"
               value={form.oneRmPct}
               onChange={(e) => set("oneRmPct", e.target.value)}
             />
-            <span className="text-sm font-semibold text-white/70 w-10">{form.oneRmPct}%</span>
+            <span className="text-sm font-semibold text-text w-10">{form.oneRmPct}%</span>
           </div>
-          <div className="text-[11px] text-white/40 mt-1">
+          <div className="text-[11px] text-text-muted mt-1">
             {Number(form.oneRmPct) < 60 && "Resistência / Volume (baixa carga)"}
             {Number(form.oneRmPct) >= 60 && Number(form.oneRmPct) < 70 && "Hipertrofia — fase volume"}
             {Number(form.oneRmPct) >= 70 && Number(form.oneRmPct) < 80 && "Hipertrofia — intensidade moderada"}
@@ -2029,47 +2028,47 @@ function ExercisePicker({
   }
 
   const INPUT_TINY =
-    "bg-white/5 border border-white/10 rounded px-1.5 py-1 text-xs text-white focus:outline-none focus:border-orange-500";
+    "bg-card-hover/30 border border-border rounded px-1.5 py-1 text-xs text-text focus:outline-none focus:border-primary";
 
   return (
     <div className="flex flex-col gap-3">
       {/* Search */}
       <div className="relative">
-        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted/60" />
         <input
-          className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-orange-500 transition-colors"
+          className="w-full bg-card-hover/30 border border-border rounded-lg pl-8 pr-3 py-2 text-sm text-text placeholder-text-muted/50 focus:outline-none focus:border-primary transition-colors"
           placeholder="Buscar exercício (ex: Supino, Rosca…)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        {searching && <Loader2 size={12} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-white/40" />}
+        {searching && <Loader2 size={12} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-text-muted" />}
       </div>
 
       {/* Results */}
       {results.length > 0 && (
-        <div className="border border-white/10 rounded-xl overflow-hidden max-h-[180px] overflow-y-auto">
+        <div className="border border-border rounded-xl overflow-hidden max-h-[180px] overflow-y-auto">
           {results.map((ex) => {
             const muscles = [...(ex.muscles ?? []), ...(ex.muscles_secondary ?? [])].slice(0, 2);
             return (
               <button
                 key={ex.id}
                 onClick={() => addExercise(ex)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/5 text-left border-b border-white/5 last:border-0 transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-card-hover/50 text-left border-b border-border/30 last:border-0 transition-colors"
               >
                 {(ex.gif ?? ex.gifUrl) ? (
                   <img src={ex.gif ?? ex.gifUrl} alt={ex.name} className="w-10 h-8 object-cover rounded flex-shrink-0" />
                 ) : (
-                  <div className="w-10 h-8 rounded bg-white/5 flex items-center justify-center flex-shrink-0">
-                    <Dumbbell size={12} className="text-white/30" />
+                  <div className="w-10 h-8 rounded bg-card-hover/30 flex items-center justify-center flex-shrink-0">
+                    <Dumbbell size={12} className="text-text-muted/60" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm text-white truncate">{ex.name}</div>
+                  <div className="text-sm text-text truncate">{ex.name}</div>
                   {muscles.length > 0 && (
-                    <div className="text-[10px] text-white/40 truncate">{muscles.map(translateMuscle).join(" · ")}</div>
+                    <div className="text-[10px] text-text-muted truncate">{muscles.map(translateMuscle).join(" · ")}</div>
                   )}
                 </div>
-                <Plus size={12} className="text-orange-400 flex-shrink-0" />
+                <Plus size={12} className="text-primary flex-shrink-0" />
               </button>
             );
           })}
@@ -2080,14 +2079,14 @@ function ExercisePicker({
       {exercises.length > 0 && (
         <div className="flex flex-col gap-2">
           {exercises.map((ex) => (
-            <div key={ex.id} className="bg-white/3 border border-white/8 rounded-xl p-2.5 flex gap-2.5 items-start">
+            <div key={ex.id} className="bg-card-hover/20 border border-border/60 rounded-xl p-2.5 flex gap-2.5 items-start">
               {ex.gif && (
                 <img src={ex.gif} alt={ex.name} className="w-12 h-10 object-cover rounded flex-shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium text-white mb-1.5 truncate">{ex.name}</div>
+                <div className="text-xs font-medium text-text mb-1.5 truncate">{ex.name}</div>
                 <div className="flex items-center gap-2">
-                  <label className="text-[10px] text-white/40">Séries</label>
+                  <label className="text-[10px] text-text-muted">Séries</label>
                   <input
                     type="number"
                     min="1"
@@ -2096,14 +2095,14 @@ function ExercisePicker({
                     value={ex.sets}
                     onChange={(e) => updateField(ex.id, "sets", e.target.value)}
                   />
-                  <label className="text-[10px] text-white/40">Reps</label>
+                  <label className="text-[10px] text-text-muted">Reps</label>
                   <input
                     className={`w-16 ${INPUT_TINY}`}
                     value={ex.reps}
                     onChange={(e) => updateField(ex.id, "reps", e.target.value)}
                     placeholder="8-12"
                   />
-                  <label className="text-[10px] text-white/40">Descanso</label>
+                  <label className="text-[10px] text-text-muted">Descanso</label>
                   <input
                     className={`w-14 ${INPUT_TINY}`}
                     value={ex.rest}
@@ -2112,7 +2111,7 @@ function ExercisePicker({
                   />
                 </div>
               </div>
-              <button onClick={() => removeExercise(ex.id)} className="p-0.5 rounded hover:bg-white/10 text-white/30 hover:text-red-400">
+              <button onClick={() => removeExercise(ex.id)} className="p-0.5 rounded hover:bg-card-hover text-text-muted/60 hover:text-red-400">
                 <X size={12} />
               </button>
             </div>
@@ -2120,9 +2119,9 @@ function ExercisePicker({
         </div>
       )}
       {exercises.length === 0 && query === "" && (
-        <div className="border border-white/10 rounded-xl overflow-hidden max-h-[200px] overflow-y-auto">
-          <div className="px-3 py-1.5 bg-white/3 border-b border-white/8">
-            <span className="text-[10px] text-white/35 font-medium uppercase tracking-wider">Exercícios sugeridos</span>
+        <div className="border border-border rounded-xl overflow-hidden max-h-[200px] overflow-y-auto">
+          <div className="px-3 py-1.5 bg-card-hover/20 border-b border-border/60">
+            <span className="text-[10px] text-text-muted/70 font-medium uppercase tracking-wider">Exercícios sugeridos</span>
           </div>
           {STATIC_EXERCISES.map((ex) => {
             const muscles = [...(ex.muscles ?? []), ...(ex.muscles_secondary ?? [])].slice(0, 2);
@@ -2130,15 +2129,15 @@ function ExercisePicker({
               <button
                 key={ex.id}
                 onClick={() => addExercise(ex as MWExercise)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/5 text-left border-b border-white/5 last:border-0 transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-card-hover/50 text-left border-b border-border/30 last:border-0 transition-colors"
               >
-                <div className="w-8 h-7 rounded bg-white/5 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-7 rounded bg-card-hover/30 flex items-center justify-center flex-shrink-0">
                   <Dumbbell size={11} className="text-teal-400/60" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm text-white truncate">{ex.name}</div>
+                  <div className="text-sm text-text truncate">{ex.name}</div>
                   {muscles.length > 0 && (
-                    <div className="text-[10px] text-white/40 truncate">{muscles.map(translateMuscle).join(" · ")}</div>
+                    <div className="text-[10px] text-text-muted truncate">{muscles.map(translateMuscle).join(" · ")}</div>
                   )}
                 </div>
                 <Plus size={12} className="text-teal-400 flex-shrink-0" />
@@ -2182,10 +2181,10 @@ function PrescriptionForm({
       {/* Title + subtype */}
       <div className="flex gap-3">
         <div className="flex-1">
-          <label className="block text-[11px] text-white/40 mb-1">Título *</label>
+          <label className="block text-[11px] text-text-muted mb-1">Título *</label>
           <input
             autoFocus
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-orange-500 transition-colors"
+            className="w-full bg-card-hover/30 border border-border rounded-lg px-3 py-2 text-sm text-text placeholder-text-muted/50 focus:outline-none focus:border-primary transition-colors"
             placeholder="Ex: Rodagem aeróbica"
             value={form.title}
             onChange={(e) => set("title", e.target.value)}
@@ -2193,15 +2192,14 @@ function PrescriptionForm({
           />
         </div>
         <div className="w-44">
-          <label className="block text-[11px] text-white/40 mb-1">Subtipo</label>
+          <label className="block text-[11px] text-text-muted mb-1">Subtipo</label>
           <select
-            style={{ colorScheme: "dark" }}
-            className="w-full bg-[#0f1117] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
+            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-primary transition-colors"
             value={form.workoutType}
             onChange={(e) => set("workoutType", e.target.value)}
           >
             {SPORT_WORKOUT_TYPES[sport].map((t) => (
-              <option key={t.value} value={t.value} style={{ background: "#1a1d2e", color: "#fff" }}>{t.label}</option>
+              <option key={t.value} value={t.value}>{t.label}</option>
             ))}
           </select>
         </div>
@@ -2210,11 +2208,11 @@ function PrescriptionForm({
       {/* Metrics row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
-          <label className="block text-[11px] text-white/40 mb-1">Duração (min)</label>
+          <label className="block text-[11px] text-text-muted mb-1">Duração (min)</label>
           <input
             type="number"
             min="1"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
+            className="w-full bg-card-hover/30 border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-primary transition-colors"
             placeholder="60"
             value={form.targetDurationMin}
             onChange={(e) => set("targetDurationMin", e.target.value)}
@@ -2223,14 +2221,14 @@ function PrescriptionForm({
 
         {showDistance && (
           <div>
-            <label className="block text-[11px] text-white/40 mb-1">
+            <label className="block text-[11px] text-text-muted mb-1">
               Distância ({sport === "SWIM" ? "m" : "km"})
             </label>
             <input
               type="number"
               step="0.1"
               min="0"
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
+              className="w-full bg-card-hover/30 border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-primary transition-colors"
               placeholder={sport === "SWIM" ? "2000" : "10"}
               value={form.targetDistanceKm}
               onChange={(e) => set("targetDistanceKm", e.target.value)}
@@ -2240,23 +2238,23 @@ function PrescriptionForm({
 
         {showPaceKm && (
           <div>
-            <label className="block text-[11px] text-white/40 mb-1">Pace alvo /km</label>
+            <label className="block text-[11px] text-text-muted mb-1">Pace alvo /km</label>
             <div className="flex items-center gap-1">
               <input
                 type="number"
                 min="0"
                 max="20"
-                className="w-12 bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-12 bg-card-hover/30 border border-border rounded-lg px-2 py-2 text-sm text-text focus:outline-none focus:border-primary transition-colors"
                 placeholder="5"
                 value={form.targetPaceMin}
                 onChange={(e) => set("targetPaceMin", e.target.value)}
               />
-              <span className="text-white/30 text-sm">:</span>
+              <span className="text-text-muted/60 text-sm">:</span>
               <input
                 type="number"
                 min="0"
                 max="59"
-                className="w-12 bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-12 bg-card-hover/30 border border-border rounded-lg px-2 py-2 text-sm text-text focus:outline-none focus:border-primary transition-colors"
                 placeholder="00"
                 value={form.targetPaceSec}
                 onChange={(e) => set("targetPaceSec", e.target.value)}
@@ -2267,23 +2265,23 @@ function PrescriptionForm({
 
         {showPace100m && (
           <div>
-            <label className="block text-[11px] text-white/40 mb-1">Pace alvo /100m</label>
+            <label className="block text-[11px] text-text-muted mb-1">Pace alvo /100m</label>
             <div className="flex items-center gap-1">
               <input
                 type="number"
                 min="0"
                 max="10"
-                className="w-12 bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-12 bg-card-hover/30 border border-border rounded-lg px-2 py-2 text-sm text-text focus:outline-none focus:border-primary transition-colors"
                 placeholder="2"
                 value={form.targetPacePer100mMin}
                 onChange={(e) => set("targetPacePer100mMin", e.target.value)}
               />
-              <span className="text-white/30 text-sm">:</span>
+              <span className="text-text-muted/60 text-sm">:</span>
               <input
                 type="number"
                 min="0"
                 max="59"
-                className="w-12 bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-12 bg-card-hover/30 border border-border rounded-lg px-2 py-2 text-sm text-text focus:outline-none focus:border-primary transition-colors"
                 placeholder="00"
                 value={form.targetPacePer100mSec}
                 onChange={(e) => set("targetPacePer100mSec", e.target.value)}
@@ -2294,11 +2292,11 @@ function PrescriptionForm({
 
         {showPower && (
           <div>
-            <label className="block text-[11px] text-white/40 mb-1">Potência (W)</label>
+            <label className="block text-[11px] text-text-muted mb-1">Potência (W)</label>
             <input
               type="number"
               min="0"
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
+              className="w-full bg-card-hover/30 border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-primary transition-colors"
               placeholder="220"
               value={form.targetPowerWatts}
               onChange={(e) => set("targetPowerWatts", e.target.value)}
@@ -2307,12 +2305,12 @@ function PrescriptionForm({
         )}
 
         <div>
-          <label className="block text-[11px] text-white/40 mb-1">RPE alvo (1-10)</label>
+          <label className="block text-[11px] text-text-muted mb-1">RPE alvo (1-10)</label>
           <input
             type="number"
             min="1"
             max="10"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition-colors"
+            className="w-full bg-card-hover/30 border border-border rounded-lg px-3 py-2 text-sm text-text focus:outline-none focus:border-primary transition-colors"
             placeholder="7"
             value={form.targetRpe}
             onChange={(e) => set("targetRpe", e.target.value)}
@@ -2327,9 +2325,9 @@ function PrescriptionForm({
 
       {/* Objective */}
       <div>
-        <label className="block text-[11px] text-white/40 mb-1">Objetivo</label>
+        <label className="block text-[11px] text-text-muted mb-1">Objetivo</label>
         <input
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-orange-500 transition-colors"
+          className="w-full bg-card-hover/30 border border-border rounded-lg px-3 py-2 text-sm text-text placeholder-text-muted/50 focus:outline-none focus:border-primary transition-colors"
           placeholder="Ex: Desenvolver base aeróbica"
           value={form.objective}
           onChange={(e) => set("objective", e.target.value)}
@@ -2338,10 +2336,10 @@ function PrescriptionForm({
 
       {/* Warmup */}
       <div>
-        <label className="block text-[11px] text-white/40 mb-1">Aquecimento</label>
+        <label className="block text-[11px] text-text-muted mb-1">Aquecimento</label>
         <textarea
           rows={2}
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-orange-500 transition-colors resize-none"
+          className="w-full bg-card-hover/30 border border-border rounded-lg px-3 py-2 text-sm text-text placeholder-text-muted/50 focus:outline-none focus:border-primary transition-colors resize-none"
           placeholder="Ex: 10 min rodagem leve + 4x strides de 20s"
           value={form.warmup}
           onChange={(e) => set("warmup", e.target.value)}
@@ -2351,7 +2349,7 @@ function PrescriptionForm({
       {/* Division type selector — STRENGTH only */}
       {sport === "STRENGTH" && (
         <div>
-          <label className="block text-[11px] text-white/40 mb-1.5">Tipo de divisão</label>
+          <label className="block text-[11px] text-text-muted mb-1.5">Tipo de divisão</label>
           <div className="flex flex-wrap gap-1.5">
             {STRENGTH_DIVISIONS.map((d) => (
               <button
@@ -2363,7 +2361,7 @@ function PrescriptionForm({
                   "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all",
                   form.divisionType === d.value
                     ? "border-teal-500/60 bg-teal-500/20 text-teal-300"
-                    : "border-white/10 text-white/50 hover:text-white hover:border-white/30 bg-white/3",
+                    : "border-border text-text-muted hover:text-text hover:border-border bg-card-hover/20",
                 ].join(" ")}
               >
                 {d.label}
@@ -2376,7 +2374,7 @@ function PrescriptionForm({
 
       {/* Main set — exercise picker for strength, free text otherwise */}
       <div>
-        <label className="block text-[11px] text-white/40 mb-1">
+        <label className="block text-[11px] text-text-muted mb-1">
           {sport === "STRENGTH" ? "Exercícios" : "Série principal"}
         </label>
         {sport === "STRENGTH" ? (
@@ -2387,7 +2385,7 @@ function PrescriptionForm({
         ) : (
           <textarea
             rows={3}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-orange-500 transition-colors resize-none"
+            className="w-full bg-card-hover/30 border border-border rounded-lg px-3 py-2 text-sm text-text placeholder-text-muted/50 focus:outline-none focus:border-primary transition-colors resize-none"
             placeholder="Ex: 6x 1km em ritmo de limiar com 2 min de recuperação"
             value={form.mainSet}
             onChange={(e) => set("mainSet", e.target.value)}
@@ -2397,10 +2395,10 @@ function PrescriptionForm({
 
       {/* Cooldown */}
       <div>
-        <label className="block text-[11px] text-white/40 mb-1">Volta à calma</label>
+        <label className="block text-[11px] text-text-muted mb-1">Volta à calma</label>
         <textarea
           rows={2}
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-orange-500 transition-colors resize-none"
+          className="w-full bg-card-hover/30 border border-border rounded-lg px-3 py-2 text-sm text-text placeholder-text-muted/50 focus:outline-none focus:border-primary transition-colors resize-none"
           placeholder="Ex: 10 min regenerativo + alongamento"
           value={form.cooldown}
           onChange={(e) => set("cooldown", e.target.value)}
@@ -2411,14 +2409,14 @@ function PrescriptionForm({
       <div className="flex gap-2 pt-1">
         <button
           onClick={onCancel}
-          className="flex-1 py-2.5 rounded-xl bg-white/8 hover:bg-white/12 text-sm font-medium transition-colors"
+          className="flex-1 py-2.5 rounded-xl bg-card-hover/50 hover:bg-card-hover text-sm font-medium transition-colors"
         >
           Cancelar
         </button>
         <button
           onClick={onSave}
           disabled={!form.title.trim() || saving}
-          className="flex-1 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
           {isEdit ? "Salvar" : "Criar treino"}

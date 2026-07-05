@@ -37,6 +37,120 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { calculateVDOT, getTrainingPaces, parseRaceTime, TRAINING_ZONES } from "@/lib/vdot";
 import { formatPace } from "@/lib/utils";
 
+const TUTORIALS: { id: string; title: string; steps: string[] }[] = [
+  {
+    id: "cadastrar-atleta",
+    title: "Como cadastrar um novo atleta",
+    steps: [
+      "Vá até Atletas no menu lateral.",
+      "Clique no botão \"+ Novo atleta\".",
+      "Preencha nome, email e escolha o plano de assinatura.",
+      "O atleta recebe um e-mail de convite automaticamente.",
+      "Assim que ele aceitar, aparece na sua lista vinculado à sua conta.",
+    ],
+  },
+  {
+    id: "prescrever-corrida",
+    title: "Como prescrever um treino de corrida",
+    steps: [
+      "Acesse Calendário e selecione o atleta desejado.",
+      "Clique em uma data para abrir o formulário de prescrição.",
+      "Selecione a modalidade Corrida.",
+      "Configure duração, zonas de treino e observações para o atleta.",
+      "Salve — o treino aparece no app do atleta instantaneamente.",
+    ],
+  },
+  {
+    id: "calcular-vdot",
+    title: "Como calcular o VDOT de um atleta",
+    steps: [
+      "Vá até Prescrição e clique em Referência VDOT.",
+      "Insira o tempo de prova recente e a distância (ex: 42:30 em 10km).",
+      "O sistema calcula automaticamente o VDOT e os paces por zona.",
+      "Salve como referência do atleta.",
+      "Os paces calculados são usados em todas as prescrições futuras.",
+    ],
+  },
+  {
+    id: "gerar-periodizacao",
+    title: "Como gerar uma periodização",
+    steps: [
+      "Acesse Prescrição e clique em Periodização.",
+      "Clique em \"Nova periodização\".",
+      "Selecione a modalidade (Corrida, Ciclismo, etc.).",
+      "Defina objetivo (prova, base, manutenção), nível e duração em semanas.",
+      "Clique em \"Gerar periodização\" — o sistema cria automaticamente macrociclos, mesociclos e semanas de deload.",
+      "Revise e ajuste cada semana individualmente se necessário.",
+    ],
+  },
+  {
+    id: "configurar-zonas",
+    title: "Como configurar zonas de treino",
+    steps: [
+      "Vá até Prescrição e clique em Zonas de treino.",
+      "Clique em \"+ Novo modelo\" ou importe um modelo pronto.",
+      "Selecione a modalidade (Corrida, Ciclismo, Natação) e o método (FC Máxima, FTP, Pace Limiar).",
+      "Ajuste as faixas de cada zona conforme o perfil do atleta.",
+      "Clique em \"Aplicar ao motor\" para ativar o modelo na prescrição.",
+    ],
+  },
+  {
+    id: "monitorar-carga",
+    title: "Como monitorar a carga do atleta",
+    steps: [
+      "No Dashboard ou no perfil do atleta, visualize CTL, ATL e TSB.",
+      "CTL (azul) representa o fitness de longo prazo; ATL (laranja) indica a fadiga recente; TSB é a diferença CTL−ATL.",
+      "TSB entre +5 e +25 significa atleta em boa forma e pronto para prova.",
+      "TSB abaixo de −30 indica possível overtraining — reduza o volume da semana.",
+      "O sistema gera alertas automáticos quando o ACWR ultrapassa 1,5.",
+    ],
+  },
+  {
+    id: "criar-plano",
+    title: "Como criar e vender um plano",
+    steps: [
+      "Acesse Gestão & vendas e clique em Meus planos.",
+      "Clique em \"+ Novo plano\".",
+      "Defina nome, preço mensal, descrição e lista de benefícios incluídos.",
+      "Ative o plano para que ele apareça na sua página pública.",
+      "Compartilhe o link da sua página (Minha página pública) nas redes sociais para atrair novos atletas.",
+    ],
+  },
+  {
+    id: "publicar-marketplace",
+    title: "Como publicar produto no Marketplace",
+    steps: [
+      "Vá até Marketplace e clique em Produtos.",
+      "Clique em \"+ Novo produto\".",
+      "Escolha o tipo de produto (planilha de treino, curso, programa).",
+      "Preencha título, descrição, preço e faça upload do arquivo ou insira o link.",
+      "Publique — o produto fica disponível para compra no Marketplace da plataforma.",
+    ],
+  },
+  {
+    id: "registrar-avaliacao",
+    title: "Como registrar uma avaliação física",
+    steps: [
+      "Acesse Atletas e selecione o atleta desejado.",
+      "Clique em \"Avaliações\" no menu do atleta.",
+      "Preencha os dados: peso, percentual de gordura, VO₂máx estimado, FC de repouso e resultado do teste de campo.",
+      "Salve — o histórico de avaliações é registrado com data automática.",
+      "O gráfico de evolução é atualizado a cada nova avaliação registrada.",
+    ],
+  },
+  {
+    id: "configurar-alertas",
+    title: "Como configurar alertas automáticos",
+    steps: [
+      "Vá até Alertas no menu lateral.",
+      "Configure os limiares: ACWR máximo permitido, queda mínima de adesão em percentual, e TSB mínimo de alerta.",
+      "Defina como deseja receber as notificações: push, e-mail ou painel interno.",
+      "O sistema monitora todos os atletas continuamente em segundo plano.",
+      "Quando um limiar é atingido, o alerta é disparado automaticamente para o canal configurado.",
+    ],
+  },
+];
+
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   show: (i: number = 0) => ({
@@ -111,6 +225,7 @@ export default function ConhecaOSistemaClient({ planId = "b2b-free" }: { planId?
             <TabsTrigger value="carga">Carga &amp; check-in</TabsTrigger>
             <TabsTrigger value="gestao">Gestão, vendas &amp; força</TabsTrigger>
             <TabsTrigger value="metricas">Glossário de métricas</TabsTrigger>
+            <TabsTrigger value="tutoriais">Tutoriais</TabsTrigger>
           </TabsList>
 
           {/* Primeiros passos */}
@@ -640,6 +755,29 @@ export default function ConhecaOSistemaClient({ planId = "b2b-free" }: { planId?
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Tutoriais */}
+          <TabsContent value="tutoriais" className="space-y-4">
+            <p className="text-sm text-text-muted">
+              Passo a passo de cada ação principal da plataforma — tudo em modo demonstração.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {TUTORIALS.map((tutorial) => (
+                <Card key={tutorial.id}>
+                  <CardContent className="p-5">
+                    <h2 className="mb-4 font-display text-sm font-semibold text-text">
+                      {tutorial.title}
+                    </h2>
+                    <div className="space-y-3">
+                      {tutorial.steps.map((step, idx) => (
+                        <TutorialStep key={idx} number={idx + 1} text={step} />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
         </Tabs>
       </motion.div>
     </div>
@@ -781,6 +919,17 @@ function AlertRow({
   );
 }
 
+
+function TutorialStep({ number, text }: { number: number; text: string }) {
+  return (
+    <div className="flex gap-3">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-card-hover/30 border border-border text-xs font-bold text-text-muted">
+        {number}
+      </span>
+      <p className="text-sm text-text-muted leading-relaxed">{text}</p>
+    </div>
+  );
+}
 
 function MetricRow({
   abbr,
