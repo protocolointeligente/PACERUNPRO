@@ -169,8 +169,6 @@ export function getCoachNavGroups(role: CoachRole, planId: string = "b2b-free"):
   ];
 
   const gestaoItems: NavItem[] = [
-    { href: "/treinador/alertas",     label: "Alertas",     icon: Bell            },
-    { href: "/treinador/mensagens",   label: "Mensagens",   icon: MessageSquare   },
     ...(tier >= 1 ? [
       { href: "/treinador/gestao",        label: "Gestão & vendas",    icon: DollarSign  } as NavItem,
       { href: "/treinador/planos-venda",  label: "Meus planos",        icon: PackagePlus } as NavItem,

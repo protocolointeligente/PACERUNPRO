@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, LayoutDashboard } from "lucide-react";
+import { Plus, LayoutDashboard, Bell, MessageSquare } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { MessageNotifier } from "@/components/messages/message-notifier";
@@ -69,7 +69,11 @@ function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUr
     <AppShell
       nav={main}
       navGroups={navGroups}
-      topNav={[{ href: "/treinador/dashboard", label: "Dashboard", icon: LayoutDashboard }]}
+      topNav={[
+        { href: "/treinador/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/treinador/alertas",   label: "Alertas",   icon: Bell            },
+        { href: "/treinador/mensagens", label: "Mensagens", icon: MessageSquare   },
+      ]}
       logoHref="/treinador/dashboard"
       roleLabel={ROLE_LABELS[role]}
       userName={userName}

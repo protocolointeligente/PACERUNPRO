@@ -387,6 +387,9 @@ export default function StrengthPrescriptionPage() {
 
   const [exerciseDb, setExerciseDb] = useState<ExerciseLibraryItem[]>([]);
   const [exerciseCategories, setExerciseCategories] = useState<string[]>([]);
+  // Map of lowercased exercise name → Google Drive file ID
+  const [driveVideos, setDriveVideos] = useState<Map<string, string>>(new Map());
+
   useEffect(() => {
     fetch("/exercises.json")
       .then((r) => r.ok ? r.json() : [])
@@ -409,6 +412,16 @@ export default function StrengthPrescriptionPage() {
         setExerciseDb(items);
         const cats = Array.from(new Set(items.map((e) => e.category))).sort();
         setExerciseCategories(cats);
+      })
+      .catch(() => null);
+  }, []);
+
+  // Fetch Google Drive videos and build name → fileId map
+  useEffect(() => {
+    fetch("/api/coach/exercises/drive-videos")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: Array<{ name: string; fileId: string }>) => {
+        setDriveVideos(new Map(data.map((v) => [v.name, v.fileId])));
       })
       .catch(() => null);
   }, []);
@@ -1208,13 +1221,31 @@ export default function StrengthPrescriptionPage() {
                 <div className="max-h-[24rem] space-y-2.5 overflow-y-auto pr-1 sm:max-h-[34rem]">
                   {filteredLibrary.map((ex) => {
                     const isExpanded = expandedExId === ex.id;
+                    // Drive video lookup: try exact name, then without parentheses/accents variants
+                    const driveFileId =
+                      driveVideos.get(ex.name.toLowerCase()) ??
+                      driveVideos.get(ex.name.toLowerCase().replace(/\s*\(.*?\)/g, "").trim()) ??
+                      null;
+                    const hasVideo = !!driveFileId || !!ex.gifUrl;
                     return (
                       <div
                         key={ex.id}
                         className="rounded-xl border border-border bg-card-hover/30 p-3"
                       >
-                        {/* GIF preview when expanded */}
-                        {isExpanded && ex.gifUrl && (
+                        {/* Drive video embed when expanded */}
+                        {isExpanded && driveFileId && (
+                          <div className="mb-2.5 overflow-hidden rounded-lg bg-black aspect-video">
+                            <iframe
+                              src={`https://drive.google.com/file/d/${driveFileId}/preview`}
+                              allow="autoplay"
+                              className="h-full w-full"
+                              title={ex.name}
+                            />
+                          </div>
+                        )}
+
+                        {/* GIF preview when expanded and no Drive video */}
+                        {isExpanded && !driveFileId && ex.gifUrl && (
                           <div className="mb-2.5 overflow-hidden rounded-lg bg-black/5">
                             <img
                               src={ex.gifUrl}
@@ -1226,19 +1257,23 @@ export default function StrengthPrescriptionPage() {
                         )}
 
                         <div className="flex items-start gap-2">
-                          {/* Thumbnail — click to toggle GIF */}
-                          {ex.imageUrl && !isExpanded && (
+                          {/* Thumbnail — click to expand video/GIF */}
+                          {hasVideo && !isExpanded && (
                             <button
                               title="Ver demonstração"
                               onClick={() => setExpandedExId(ex.id)}
-                              className="mt-0.5 h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-border bg-card"
+                              className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-card"
                             >
-                              <img
-                                src={ex.imageUrl}
-                                alt=""
-                                className="h-full w-full object-cover"
-                                onError={(e) => { (e.currentTarget as HTMLImageElement).parentElement!.style.display = "none"; }}
-                              />
+                              {ex.imageUrl ? (
+                                <img
+                                  src={ex.imageUrl}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                                />
+                              ) : (
+                                <Video className="h-4 w-4 text-primary/60" />
+                              )}
                             </button>
                           )}
                           {isExpanded && (
@@ -1252,7 +1287,14 @@ export default function StrengthPrescriptionPage() {
                           )}
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-semibold text-text">{ex.name}</p>
-                            <p className="truncate text-[11px] text-text-muted">{ex.category}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="truncate text-[11px] text-text-muted">{ex.category}</p>
+                              {driveFileId && (
+                                <span className="inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary">
+                                  <Video className="h-2.5 w-2.5" /> vídeo
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <Button
                             size="sm"
