@@ -54,17 +54,18 @@ CREATE TABLE IF NOT EXISTS "coach_athletes" (
     CONSTRAINT "coach_athletes_pkey" PRIMARY KEY ("id")
 );
 
+-- Indexes must exist BEFORE INSERT so ON CONFLICT clause is valid
+CREATE UNIQUE INDEX IF NOT EXISTS "coach_athletes_coach_id_athlete_id_key"
+  ON "coach_athletes"("coach_id", "athlete_id");
+CREATE INDEX IF NOT EXISTS "coach_athletes_coach_id_idx"   ON "coach_athletes"("coach_id");
+CREATE INDEX IF NOT EXISTS "coach_athletes_athlete_id_idx" ON "coach_athletes"("athlete_id");
+
 -- Populate from athletes.coachId (camelCase — no @map annotation)
 INSERT INTO "coach_athletes" ("id", "coach_id", "athlete_id", "is_primary", "role", "assigned_at")
 SELECT gen_random_uuid()::text, "coachId", "id", true, 'coach', NOW()
 FROM "athletes"
 WHERE "coachId" IS NOT NULL
 ON CONFLICT ("coach_id", "athlete_id") DO NOTHING;
-
-CREATE UNIQUE INDEX IF NOT EXISTS "coach_athletes_coach_id_athlete_id_key"
-  ON "coach_athletes"("coach_id", "athlete_id");
-CREATE INDEX IF NOT EXISTS "coach_athletes_coach_id_idx"   ON "coach_athletes"("coach_id");
-CREATE INDEX IF NOT EXISTS "coach_athletes_athlete_id_idx" ON "coach_athletes"("athlete_id");
 
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'coach_athletes_coach_id_fkey') THEN
