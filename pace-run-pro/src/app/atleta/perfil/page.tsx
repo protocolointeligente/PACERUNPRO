@@ -10,14 +10,17 @@ import {
   Globe,
   Loader2,
   LogOut,
+  PackagePlus,
   Pencil,
   RefreshCw,
   Shield,
   Smartphone,
   Target,
   User,
+  X,
   XCircle,
 } from "lucide-react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -63,6 +66,8 @@ export default function ProfilePage() {
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [comingSoonId, setComingSoonId] = useState<string | null>(null);
   const [settingsMsg, setSettingsMsg] = useState<string | null>(null);
+  const [sub, setSub] = useState<{ plan: string; status: string; renewsAt?: string } | null>(null);
+  const [subLoading, setSubLoading] = useState(true);
 
   // Avatar & banner upload
   const [avatarSrc, setAvatarSrc] = useState("");
@@ -254,6 +259,14 @@ export default function ProfilePage() {
       .then((r) => r.ok ? r.json() : [])
       .then((data: Array<{ id: string; title: string; description?: string | null; icon?: string | null; earnedAt: string }>) => setAchievements(data))
       .catch(() => null);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/atleta/subscription")
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setSub)
+      .catch(() => null)
+      .finally(() => setSubLoading(false));
   }, []);
 
   async function handleStravaSync() {
@@ -636,16 +649,76 @@ export default function ProfilePage() {
             </Card>
 
             <Card>
-              <CardContent className="space-y-3 p-5">
+              <CardContent className="space-y-4 p-5">
                 <h3 className="flex items-center gap-2 font-display text-sm font-semibold text-text">
                   <CreditCard className="h-4 w-4 text-primary" /> Plano contratado
                 </h3>
-                <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-semibold text-text">Plano Ativo</p>
-                    <p className="text-xs text-text-muted">Renovação automática · próxima cobrança em 12/07/2026</p>
+                <div className="rounded-xl border border-border bg-card-hover/30 px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-text">
+                        {subLoading ? "Carregando…" : planLabel(sub?.plan ?? "")}
+                      </p>
+                      {sub?.renewsAt && (
+                        <p className="mt-0.5 text-xs text-text-muted">
+                          Renovação em{" "}
+                          {new Date(sub.renewsAt).toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
+                      )}
+                    </div>
+                    {sub?.status && (() => {
+                      const b = subBadge(sub.status);
+                      return (
+                        <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", b.color)}>
+                          {b.label}
+                        </span>
+                      );
+                    })()}
                   </div>
-                  <Button size="sm" variant="secondary">Gerenciar</Button>
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <Link href="/atleta/planos-upgrade">
+                    <Button variant="secondary" size="sm" className="w-full gap-2">
+                      <PackagePlus className="h-4 w-4" />
+                      Atualizar plano
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full gap-2"
+                    onClick={() => alert("Funcionalidade em breve")}
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    Adicionar cartão
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full gap-2"
+                    onClick={() => alert("Funcionalidade em breve")}
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Alterar forma de pagamento
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 text-danger hover:border-danger/40 hover:text-danger"
+                    onClick={async () => {
+                      if (confirm("Tem certeza? Isso cancelará sua assinatura.")) {
+                        await fetch("/api/atleta/subscription/cancel", { method: "POST" });
+                        alert("Solicitação enviada. Nossa equipe entrará em contato.");
+                      }
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                    Cancelar assinatura
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -743,6 +816,20 @@ export default function ProfilePage() {
       )}
     </div>
   );
+}
+
+function planLabel(plan: string) {
+  if (plan === "TEAM") return "Plano Assessoria";
+  if (plan === "COACH") return "Plano Pro";
+  if (plan === "ATHLETE") return "Plano Starter";
+  return "Plano Gratuito";
+}
+
+function subBadge(status: string): { label: string; color: string } {
+  if (status === "ACTIVE") return { label: "Ativo", color: "bg-success/15 text-success" };
+  if (status === "TRIAL") return { label: "Período de teste", color: "bg-primary/15 text-primary" };
+  if (status === "CANCELLED") return { label: "Cancelado", color: "bg-danger/15 text-danger" };
+  return { label: "Inativo", color: "bg-card-hover text-text-muted" };
 }
 
 function InfoField({ label, value }: { label: string; value: string }) {

@@ -86,6 +86,7 @@ export const athleteMoreNav: NavItem[] = [
   { href: "/atleta/cursos",       label: "Meus cursos",           icon: BookOpen,      sectionStart: "Aprender" },
   { href: "/atleta/desafios",     label: "Desafios",              icon: Trophy                                  },
   { href: "/atleta/universidade", label: "PACE University",       icon: GraduationCap                          },
+  { href: "/atleta/glossario",    label: "Glossário",             icon: ScrollText                              },
   { href: "/atleta/perfil",       label: "Minha conta",           icon: CreditCard,    sectionStart: "Conta"    },
   { href: "/atleta/dados",        label: "Meus dados & privacidade", icon: Shield                               },
 ];

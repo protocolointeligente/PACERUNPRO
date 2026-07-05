@@ -3,11 +3,21 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, X, UserPlus, CalendarPlus, CreditCard } from "lucide-react";
+import { CheckCircle2, X, UserPlus, CalendarPlus, CreditCard, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
+  {
+    id: "profile",
+    icon: UserPlus,
+    title: "Complete seu perfil de treinador",
+    description: "Adicione sua foto, CREF e bio para que seus atletas conheçam você.",
+    href: "/treinador/perfil",
+    cta: "Completar perfil",
+    accent: "text-sky-400",
+    bg: "bg-sky-400/10",
+  },
   {
     id: "invite",
     icon: UserPlus,
@@ -19,12 +29,32 @@ const STEPS = [
     bg: "bg-primary/10",
   },
   {
+    id: "zones",
+    icon: Zap,
+    title: "Configure suas zonas de treino",
+    description: "Defina o modelo de zonas de intensidade que será usado na prescrição de todos os atletas.",
+    href: "/treinador/configuracoes/zonas",
+    cta: "Configurar zonas",
+    accent: "text-yellow-400",
+    bg: "bg-yellow-400/10",
+  },
+  {
     id: "workout",
     icon: CalendarPlus,
     title: "Crie a primeira semana de treinos",
     description: "Use a periodização para montar uma semana completa e liberar para o atleta.",
     href: "/treinador/prescricao/periodizacao",
-    cta: "Criar semana",
+    cta: "Prescrever treino",
+    accent: "text-success",
+    bg: "bg-success/10",
+  },
+  {
+    id: "period",
+    icon: CalendarPlus,
+    title: "Monte a primeira periodização",
+    description: "Gere um macrociclo completo com mesociclos e semanas de deload para um atleta.",
+    href: "/treinador/prescricao/periodizacao",
+    cta: "Criar periodização",
     accent: "text-success",
     bg: "bg-success/10",
   },
@@ -123,7 +153,7 @@ export function CoachOnboardingSteps({ athleteCount }: CoachOnboardingStepsProps
               Bem-vindo ao PACE RUN PRO! 🎉
             </h2>
             <p className="mt-0.5 text-xs text-text-muted">
-              Complete os 3 passos abaixo para começar a treinar seus atletas.
+              Complete os 6 passos abaixo para tirar o máximo da plataforma.
             </p>
           </div>
           <button
@@ -152,7 +182,7 @@ export function CoachOnboardingSteps({ athleteCount }: CoachOnboardingStepsProps
         </div>
 
         {/* Steps */}
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {STEPS.map((step) => {
             const Icon = step.icon;
             const isDone = done.has(step.id);

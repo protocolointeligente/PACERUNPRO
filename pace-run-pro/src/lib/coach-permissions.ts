@@ -31,6 +31,7 @@ import {
   Store,
   Package,
   ShoppingCart,
+  CreditCard,
 } from "lucide-react";
 import type { NavItem, NavGroup } from "@/components/layout/nav-config";
 
@@ -140,8 +141,10 @@ export function getCoachNavGroups(role: CoachRole, planId: string = "b2b-free"):
   const tier = planTier(planId);
 
   const contaItems: NavItem[] = [
-    { href: "/treinador/perfil",      label: "Minha conta",       icon: User   },
-    { href: "/treinador/financeiro",  label: "Dados financeiros",  icon: Wallet },
+    { href: "/treinador/perfil",                 label: "Minha conta",         icon: User        },
+    { href: "/treinador/financeiro",             label: "Dados financeiros",   icon: Wallet      },
+    { href: "/treinador/loja-planos",            label: "Atualizar plano",     icon: PackagePlus },
+    { href: "/treinador/marketplace/conectar",   label: "Forma de pagamento",  icon: CreditCard  },
     ...(tier >= 3 ? [{ href: "/treinador/admin", label: "Minha assessoria", icon: Settings } as NavItem] : []),
     ...(tier >= 4 ? [{ href: "/treinador/white-label", label: "White-label", icon: Palette } as NavItem] : []),
   ];
@@ -166,7 +169,6 @@ export function getCoachNavGroups(role: CoachRole, planId: string = "b2b-free"):
   ];
 
   const gestaoItems: NavItem[] = [
-    { href: "/treinador/dashboard",   label: "Dashboard",   icon: LayoutDashboard },
     { href: "/treinador/alertas",     label: "Alertas",     icon: Bell            },
     { href: "/treinador/mensagens",   label: "Mensagens",   icon: MessageSquare   },
     ...(tier >= 1 ? [
@@ -185,11 +187,11 @@ export function getCoachNavGroups(role: CoachRole, planId: string = "b2b-free"):
   ];
 
   return [
-    { id: "conta",       label: "Conta",        icon: User,            items: contaItems        },
     { id: "prescricao",  label: "Prescrição",   icon: ClipboardList,   items: prescricaoItems   },
     { id: "marketplace", label: "Marketplace",  icon: Store,           items: marketplaceItems  },
     { id: "gestao",      label: "Gestão",       icon: LayoutDashboard, items: gestaoItems       },
     { id: "aprender",    label: "Aprender",     icon: GraduationCap,   items: aprenderItems     },
+    { id: "conta",       label: "Conta",        icon: User,            items: contaItems        },
   ];
 }
 

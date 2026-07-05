@@ -23,6 +23,8 @@ interface AppShellProps {
   nav: NavItem[];
   moreNav?: NavItem[];
   navGroups?: NavGroup[];
+  /** Items rendered before groups (or nav) — always visible, never inside a collapsible group */
+  topNav?: NavItem[];
   roleLabel: string;
   userName: string;
   userSubtitle: string;
@@ -39,6 +41,7 @@ export function AppShell({
   nav,
   moreNav = [],
   navGroups,
+  topNav = [],
   roleLabel,
   userName,
   userSubtitle,
@@ -220,6 +223,7 @@ export function AppShell({
         )}
 
         <nav className="flex-1 overflow-y-auto space-y-0.5 px-3 pb-2 pt-1">
+          {topNav.length > 0 && topNav.map((item) => renderNavItem(item))}
           {navGroups ? renderNavGroups(navGroups) : (
             <>
               {nav.map((item) => renderNavItem(item))}
@@ -293,6 +297,7 @@ export function AppShell({
 
               {/* Nav — scrollável */}
               <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
+                {topNav.length > 0 && topNav.map((item) => renderNavItem(item, () => setMobileOpen(false), true))}
                 {navGroups ? renderNavGroups(navGroups, () => setMobileOpen(false), true) : (
                   <>
                     {nav.map((item) => renderNavItem(item, () => setMobileOpen(false), true))}
