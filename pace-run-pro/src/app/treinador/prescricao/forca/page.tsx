@@ -387,8 +387,8 @@ export default function StrengthPrescriptionPage() {
 
   const [exerciseDb, setExerciseDb] = useState<ExerciseLibraryItem[]>([]);
   const [exerciseCategories, setExerciseCategories] = useState<string[]>([]);
-  // Map of lowercased exercise name → Google Drive file ID
-  const [driveVideos, setDriveVideos] = useState<Map<string, string>>(new Map());
+  // Map of lowercased exercise name → Vimeo embed URL (from Google Sheets)
+  const [vimeoVideos, setVimeoVideos] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     fetch("/exercises.json")
@@ -416,12 +416,12 @@ export default function StrengthPrescriptionPage() {
       .catch(() => null);
   }, []);
 
-  // Fetch Google Drive videos and build name → fileId map
+  // Fetch Vimeo videos from Google Sheets and build name → embed URL map
   useEffect(() => {
     fetch("/api/coach/exercises/drive-videos")
       .then((r) => r.ok ? r.json() : [])
-      .then((data: Array<{ name: string; fileId: string }>) => {
-        setDriveVideos(new Map(data.map((v) => [v.name, v.fileId])));
+      .then((data: Array<{ name: string; vimeoUrl: string }>) => {
+        setVimeoVideos(new Map(data.map((v) => [v.name, v.vimeoUrl])));
       })
       .catch(() => null);
   }, []);
@@ -1221,31 +1221,32 @@ export default function StrengthPrescriptionPage() {
                 <div className="max-h-[24rem] space-y-2.5 overflow-y-auto pr-1 sm:max-h-[34rem]">
                   {filteredLibrary.map((ex) => {
                     const isExpanded = expandedExId === ex.id;
-                    // Drive video lookup: try exact name, then without parentheses/accents variants
-                    const driveFileId =
-                      driveVideos.get(ex.name.toLowerCase()) ??
-                      driveVideos.get(ex.name.toLowerCase().replace(/\s*\(.*?\)/g, "").trim()) ??
+                    // Vimeo video lookup: try exact name, then without parenthetical suffix
+                    const vimeoUrl =
+                      vimeoVideos.get(ex.name.toLowerCase()) ??
+                      vimeoVideos.get(ex.name.toLowerCase().replace(/\s*\(.*?\)/g, "").trim()) ??
                       null;
-                    const hasVideo = !!driveFileId || !!ex.gifUrl;
+                    const hasVideo = !!vimeoUrl || !!ex.gifUrl;
                     return (
                       <div
                         key={ex.id}
                         className="rounded-xl border border-border bg-card-hover/30 p-3"
                       >
-                        {/* Drive video embed when expanded */}
-                        {isExpanded && driveFileId && (
-                          <div className="mb-2.5 overflow-hidden rounded-lg bg-black aspect-video">
+                        {/* Vimeo embed when expanded */}
+                        {isExpanded && vimeoUrl && (
+                          <div className="mb-2.5 aspect-video overflow-hidden rounded-lg bg-black">
                             <iframe
-                              src={`https://drive.google.com/file/d/${driveFileId}/preview`}
-                              allow="autoplay"
+                              src={vimeoUrl}
+                              allow="autoplay; fullscreen; picture-in-picture"
+                              allowFullScreen
                               className="h-full w-full"
                               title={ex.name}
                             />
                           </div>
                         )}
 
-                        {/* GIF preview when expanded and no Drive video */}
-                        {isExpanded && !driveFileId && ex.gifUrl && (
+                        {/* GIF preview when expanded and no Vimeo video */}
+                        {isExpanded && !vimeoUrl && ex.gifUrl && (
                           <div className="mb-2.5 overflow-hidden rounded-lg bg-black/5">
                             <img
                               src={ex.gifUrl}
@@ -1289,7 +1290,7 @@ export default function StrengthPrescriptionPage() {
                             <p className="truncate text-sm font-semibold text-text">{ex.name}</p>
                             <div className="flex items-center gap-1.5">
                               <p className="truncate text-[11px] text-text-muted">{ex.category}</p>
-                              {driveFileId && (
+                              {vimeoUrl && (
                                 <span className="inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary">
                                   <Video className="h-2.5 w-2.5" /> vídeo
                                 </span>

@@ -5,7 +5,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, UserCheck, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, UserCheck, Loader2, AlertCircle, CheckCircle2, ShoppingBag } from "lucide-react";
 import { Logo } from "@/components/logo";
 
 const inputClass =
@@ -13,6 +13,7 @@ const inputClass =
 
 interface CoachInfo {
   coachId: string;
+  coachSlug: string | null;
   coachName: string | null;
   coachAvatar: string | null;
   coachCity: string | null;
@@ -20,7 +21,7 @@ interface CoachInfo {
   coachSpecialties: string[];
 }
 
-type Step = "loading" | "invalid" | "expired" | "coach-info" | "register" | "login" | "linking" | "done";
+type Step = "loading" | "invalid" | "expired" | "coach-info" | "register" | "login" | "linking" | "plans" | "done";
 
 export default function ConvitePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
@@ -75,8 +76,9 @@ export default function ConvitePage({ params }: { params: Promise<{ token: strin
     setStep("linking");
     const res = await fetch(`/api/invites/${token}`, { method: "POST" });
     if (res.ok) {
-      setStep("done");
-      setTimeout(() => router.replace("/atleta/dashboard"), 2000);
+      // Redirect athlete to the marketplace to choose and pay for the coach's plan
+      const coachParam = coach?.coachSlug ? `&coach=${coach.coachSlug}` : "";
+      router.replace(`/atleta/loja?welcome=1${coachParam}`);
     } else {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Erro ao vincular");
@@ -134,6 +136,28 @@ export default function ConvitePage({ params }: { params: Promise<{ token: strin
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
       <Loader2 className="h-10 w-10 animate-spin text-primary" />
       <p className="text-text-muted text-sm">Vinculando você ao seu treinador…</p>
+    </div>
+  );
+
+  if (step === "plans") return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-6 text-center">
+      <CheckCircle2 className="h-12 w-12 text-primary" />
+      <div>
+        <h1 className="text-xl font-bold text-text">Você está na assessoria de {coach?.coachName ?? "seu treinador"}!</h1>
+        <p className="mt-2 max-w-sm text-sm text-text-muted">Próximo passo: escolha um plano de treinamento e finalize o pagamento para liberar acesso ao conteúdo.</p>
+      </div>
+      <div className="flex flex-col gap-3 w-full max-w-xs">
+        <a
+          href="/atleta/dashboard"
+          className="flex items-center justify-center gap-2 rounded-xl gradient-primary px-4 py-3 text-sm font-bold text-white shadow-lg shadow-primary/30"
+        >
+          <ShoppingBag className="h-4 w-4" />
+          Ver planos disponíveis
+        </a>
+        <a href="/atleta/dashboard" className="text-sm text-text-muted hover:text-text">
+          Ir para o painel primeiro →
+        </a>
+      </div>
     </div>
   );
 

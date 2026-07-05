@@ -17,6 +17,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
       coach: {
         select: {
           id: true,
+          slug: true,
           user: { select: { name: true, avatarUrl: true, city: true } },
           specialties: true,
           bio: true,
@@ -31,6 +32,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
   return NextResponse.json({
     coachId: invite.coach.id,
+    coachSlug: invite.coach.slug,
     coachName: invite.coach.user.name,
     coachAvatar: invite.coach.user.avatarUrl,
     coachCity: invite.coach.user.city,

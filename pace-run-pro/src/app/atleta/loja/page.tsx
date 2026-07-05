@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
-  BookOpen, Clock, Filter, Search, ShoppingCart, Star, Trophy, Users, CheckCircle2,
+  BookOpen, Clock, Filter, PartyPopper, Search, ShoppingCart, Star, Users, CheckCircle2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -142,7 +143,11 @@ function ProductCard({ p, onBuy, buying }: { p: Product; onBuy: (id: string) => 
   );
 }
 
-export default function AtletaLojaPage() {
+function AtletaLojaContent() {
+  const searchParams = useSearchParams();
+  const welcome = searchParams.get("welcome") === "1";
+  const coachSlug = searchParams.get("coach") ?? "";
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [type, setType] = useState("");
@@ -154,13 +159,14 @@ export default function AtletaLojaPage() {
   useEffect(() => {
     const params = new URLSearchParams();
     if (type) params.set("type", type);
+    if (coachSlug) params.set("coach", coachSlug);
     setLoading(true);
     fetch(`/api/marketplace/products?${params}`)
       .then((r) => r.ok ? r.json() : [])
       .then(setProducts)
       .catch(() => null)
       .finally(() => setLoading(false));
-  }, [type]);
+  }, [type, coachSlug]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return products;
@@ -173,6 +179,11 @@ export default function AtletaLojaPage() {
         (p.store.name ?? "").toLowerCase().includes(q)
     );
   }, [products, search]);
+
+  const welcomeCoachName = useMemo(() => {
+    if (!coachSlug || products.length === 0) return null;
+    return products.find((p) => p.coach.slug === coachSlug)?.coach.user.name ?? null;
+  }, [products, coachSlug]);
 
   async function handleBuy(productId: string) {
     setBuying(productId);
@@ -208,11 +219,31 @@ export default function AtletaLojaPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
+      {welcome && (
+        <div className="flex items-start gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-5 py-4">
+          <PartyPopper className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <div>
+            <p className="text-sm font-bold text-text">
+              {welcomeCoachName
+                ? `Você agora faz parte da assessoria de ${welcomeCoachName}!`
+                : "Bem-vindo à sua nova assessoria!"}
+            </p>
+            <p className="mt-0.5 text-xs text-text-muted">
+              Escolha um plano de treinamento abaixo para começar.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div>
         <Badge variant="primary" className="mb-2">Loja de treinos</Badge>
-        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Marketplace</h1>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
+          {coachSlug && welcomeCoachName ? `Planos de ${welcomeCoachName}` : "Marketplace"}
+        </h1>
         <p className="mt-1.5 text-sm text-text-muted">
-          Compre planilhas, e-books, cursos e muito mais dos melhores treinadores.
+          {coachSlug
+            ? "Produtos disponíveis para assinantes desta assessoria."
+            : "Compre planilhas, e-books, cursos e muito mais dos melhores treinadores."}
         </p>
       </div>
 
@@ -299,15 +330,33 @@ export default function AtletaLojaPage() {
             </section>
           )}
 
-          <div className="pt-4 text-center">
-            <p className="text-xs text-text-muted">
-              Quer ver mais? Acesse a{" "}
-              <Link href="/loja" className="text-primary hover:underline">loja pública</Link>{" "}
-              para descobrir todos os treinadores.
-            </p>
-          </div>
+          {!coachSlug && (
+            <div className="pt-4 text-center">
+              <p className="text-xs text-text-muted">
+                Quer ver mais? Acesse a{" "}
+                <Link href="/loja" className="text-primary hover:underline">loja pública</Link>{" "}
+                para descobrir todos os treinadores.
+              </p>
+            </div>
+          )}
         </>
       )}
     </div>
+  );
+}
+
+export default function AtletaLojaPage() {
+  return (
+    <Suspense fallback={
+      <div className="mx-auto max-w-5xl">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} className="h-64" />
+          ))}
+        </div>
+      </div>
+    }>
+      <AtletaLojaContent />
+    </Suspense>
   );
 }

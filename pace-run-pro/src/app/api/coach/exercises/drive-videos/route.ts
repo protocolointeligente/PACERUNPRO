@@ -1,111 +1,54 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 
-const ROOT_FOLDER_ID =
-  process.env.GOOGLE_DRIVE_EXERCISE_FOLDER_ID ?? "1DqREjf34Sex1xszcSN3XA7rFST0l4oMO";
+// Public Google Sheet — exercise library. Override via env vars if the sheet layout changes.
+const SHEET_ID =
+  process.env.EXERCISE_SHEET_ID ?? "1PXAUaNzflNINwj2RLnIdnmszq2TE2Vp7GITtIvRlxj4";
+const SHEET_GID =
+  process.env.EXERCISE_SHEET_GID ?? "1335246098";
 
-const VIDEO_EXTENSIONS = new Set([
-  "mp4", "mov", "avi", "webm", "mkv", "m4v", "mpeg", "mpg",
-]);
+// Column indices (0-based). Column A = 0, Column G = 6.
+const NAME_COL = Number(process.env.EXERCISE_NAME_COL ?? "0");  // exercise name (column A)
+const VIDEO_COL = Number(process.env.EXERCISE_VIDEO_COL ?? "6"); // Vimeo URL  (column G)
 
-interface ParsedFolder {
-  files: Array<{ id: string; name: string }>;
-  subfolderIds: string[];
+// Build Vimeo player embed URL from any Vimeo share/watch URL.
+// Handles: vimeo.com/{id}, vimeo.com/{id}/{hash}, player.vimeo.com/video/{id}, ?h= param.
+function toVimeoEmbed(raw: string): string | null {
+  if (!raw?.includes("vimeo")) return null;
+  const m = raw.match(/vimeo\.com\/(?:video\/)?(\d+)(?:\/([a-f0-9]+))?/);
+  if (!m) return null;
+  const id = m[1];
+  const pathHash = m[2];
+  if (pathHash) return `https://player.vimeo.com/video/${id}?h=${pathHash}`;
+  const qHash = new URLSearchParams(raw.split("?")[1] ?? "").get("h");
+  if (qHash) return `https://player.vimeo.com/video/${id}?h=${qHash}`;
+  return `https://player.vimeo.com/video/${id}`;
 }
 
-// Scrapes the Google Drive embedded folder view — works for publicly shared folders without an API key.
-// Falls back to [] on any parsing or network error.
-async function scrapePublicFolder(folderId: string): Promise<ParsedFolder> {
-  let html: string;
-  try {
-    const res = await fetch(
-      `https://drive.google.com/embeddedfolderview?id=${folderId}&hl=en`,
-      {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-          Accept: "text/html",
-        },
-        next: { revalidate: 3600 },
-      }
-    );
-    if (!res.ok) return { files: [], subfolderIds: [] };
-    html = await res.text();
-  } catch {
-    return { files: [], subfolderIds: [] };
-  }
-
-  const files: Array<{ id: string; name: string }> = [];
-  const subfolderIds: string[] = [];
-  const seenFiles = new Set<string>();
-  const seenFolders = new Set<string>();
-
-  // ── Subfolder IDs ────────────────────────────────────────────────────────────
-  // Pick up links to subfolders in the folder listing
-  const folderRe = /https:\/\/drive\.google\.com\/drive\/folders\/([A-Za-z0-9_-]{20,})/g;
-  let m: RegExpExecArray | null;
-  while ((m = folderRe.exec(html)) !== null) {
-    const id = m[1];
-    if (id !== folderId && !seenFolders.has(id)) {
-      seenFolders.add(id);
-      subfolderIds.push(id);
+// Minimal RFC 4180 CSV line parser (handles quoted fields with embedded commas/newlines).
+function parseCSVLine(line: string): string[] {
+  const cells: string[] = [];
+  let cur = "";
+  let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === "," && !inQ) {
+      cells.push(cur.trim());
+      cur = "";
+    } else {
+      cur += ch;
     }
   }
-
-  // ── Strategy 1: anchor tags with href (file ID) + aria-label (name) ─────────
-  // Modern embedded view: <a href=".../file/d/{id}/view..." aria-label="{name}">
-  const anchorRe =
-    /<a[^>]*href="https:\/\/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]{20,})\/view[^"]*"[^>]*aria-label="([^"]+)"[^>]*>|<a[^>]*aria-label="([^"]+)"[^>]*href="https:\/\/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]{20,})\/view[^"]*"[^>]*>/g;
-
-  while ((m = anchorRe.exec(html)) !== null) {
-    const id = m[1] ?? m[4];
-    const name = (m[2] ?? m[3] ?? "").trim();
-    if (!id || !name || seenFiles.has(id)) continue;
-    const ext = name.split(".").pop()?.toLowerCase() ?? "";
-    if (VIDEO_EXTENSIONS.has(ext)) {
-      seenFiles.add(id);
-      files.push({ id, name });
-    }
-  }
-
-  // ── Strategy 2: file hrefs + nearby flip-entry-title / title / aria-label ───
-  if (files.length === 0) {
-    const hrefRe =
-      /href="https:\/\/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]{20,})\/view/g;
-    const candidates: Array<{ id: string; pos: number }> = [];
-    while ((m = hrefRe.exec(html)) !== null) {
-      if (!seenFiles.has(m[1])) candidates.push({ id: m[1], pos: m.index });
-    }
-
-    const namePatterns = [
-      /class="[^"]*flip-entry-title[^"]*"[^>]*>([^<]+)</,
-      /aria-label="([^"]+\.[a-z0-9]{2,4})"/,
-      /title="([^"]+\.[a-z0-9]{2,4})"/,
-    ];
-
-    for (const { id, pos } of candidates) {
-      if (seenFiles.has(id)) continue;
-      const ctx = html.slice(Math.max(0, pos - 800), pos + 300);
-      for (const pattern of namePatterns) {
-        const nm = ctx.match(pattern);
-        if (!nm) continue;
-        const name = nm[1].trim();
-        const ext = name.split(".").pop()?.toLowerCase() ?? "";
-        if (VIDEO_EXTENSIONS.has(ext)) {
-          seenFiles.add(id);
-          files.push({ id, name });
-        }
-        break;
-      }
-    }
-  }
-
-  return { files, subfolderIds };
+  cells.push(cur.trim());
+  return cells;
 }
 
 // GET /api/coach/exercises/drive-videos
-// Returns flat list: { name: string; fileId: string }[]
-// name = filename without extension, lowercased — for fuzzy matching against exercise names.
+// Returns: { name: string; vimeoUrl: string }[]
+// name = exercise name lowercased for fuzzy matching on the strength page.
 export async function GET() {
   const session = await getSession();
   if (!session?.user?.id)
@@ -114,23 +57,24 @@ export async function GET() {
     return NextResponse.json({ error: "Apenas treinadores" }, { status: 403 });
 
   try {
-    const { files: rootFiles, subfolderIds } = await scrapePublicFolder(ROOT_FOLDER_ID);
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+    const res = await fetch(csvUrl, { next: { revalidate: 3600 } });
+    if (!res.ok) return NextResponse.json([]);
 
-    const videos: Array<{ name: string; fileId: string }> = rootFiles.map((f) => ({
-      name: f.name.replace(/\.[^.]+$/, "").toLowerCase(),
-      fileId: f.id,
-    }));
+    const text = await res.text();
+    const lines = text.split(/\r?\n/);
 
-    const subResults = await Promise.all(
-      subfolderIds.map((id) => scrapePublicFolder(id))
-    );
-    for (const { files } of subResults) {
-      for (const f of files) {
-        videos.push({
-          name: f.name.replace(/\.[^.]+$/, "").toLowerCase(),
-          fileId: f.id,
-        });
-      }
+    const videos: Array<{ name: string; vimeoUrl: string }> = [];
+
+    // Row 0 is the header — skip it
+    for (let i = 1; i < lines.length; i++) {
+      const cells = parseCSVLine(lines[i]);
+      const name = cells[NAME_COL]?.trim();
+      const rawUrl = cells[VIDEO_COL]?.trim();
+      if (!name || !rawUrl) continue;
+      const vimeoUrl = toVimeoEmbed(rawUrl);
+      if (!vimeoUrl) continue;
+      videos.push({ name: name.toLowerCase(), vimeoUrl });
     }
 
     return NextResponse.json(videos);

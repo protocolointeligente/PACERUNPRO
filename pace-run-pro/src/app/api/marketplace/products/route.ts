@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
   const sport   = searchParams.get("sport");
   const level   = searchParams.get("level");
   const storeSlug = searchParams.get("store");
+  const coachSlug = searchParams.get("coach");
 
   const where: Record<string, unknown> = { published: true };
   if (type)  where.type  = type;
@@ -15,6 +16,10 @@ export async function GET(req: NextRequest) {
   if (storeSlug) {
     const store = await prisma.marketplaceStore.findUnique({ where: { slug: storeSlug }, select: { id: true } });
     if (store) where.storeId = store.id;
+  }
+  if (coachSlug) {
+    const coach = await prisma.coach.findUnique({ where: { slug: coachSlug }, select: { id: true } });
+    if (coach) where.coachId = coach.id;
   }
 
   const products = await prisma.marketplaceProduct.findMany({
