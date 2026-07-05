@@ -1438,6 +1438,7 @@ model CoachZoneModel {
   method    String   @default("FC_MAXIMA") // FC_MAXIMA | LIMIAR | FTP | PACE | RPE
   zoneCount Int      @default(5)
   zones     Json     @default("[]")      // ZoneDef[] — ver lib/zone-models.ts
+  isActive  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

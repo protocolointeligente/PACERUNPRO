@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LogOut, Menu, Search, X } from "lucide-react";
+import { ChevronRight, LogOut, Menu, Search, X } from "lucide-react";
 import { createContext, useContext } from "react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
-import type { NavItem } from "./nav-config";
+import type { NavItem, NavGroup } from "./nav-config";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -22,6 +22,7 @@ export function useAppShellDrawer() { return useContext(AppShellDrawerContext); 
 interface AppShellProps {
   nav: NavItem[];
   moreNav?: NavItem[];
+  navGroups?: NavGroup[];
   roleLabel: string;
   userName: string;
   userSubtitle: string;
@@ -37,6 +38,7 @@ interface AppShellProps {
 export function AppShell({
   nav,
   moreNav = [],
+  navGroups,
   roleLabel,
   userName,
   userSubtitle,
@@ -49,6 +51,26 @@ export function AppShell({
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
+    if (!navGroups) return new Set();
+    const active = navGroups.find(g => g.items.some(i => pathname?.startsWith(i.href)));
+    return active ? new Set([active.id]) : new Set(["prescricao"]);
+  });
+
+  function toggleGroup(id: string) {
+    setOpenGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  useEffect(() => {
+    if (!navGroups) return;
+    const active = navGroups.find(g => g.items.some(i => pathname?.startsWith(i.href)));
+    if (active) setOpenGroups(prev => prev.has(active.id) ? prev : new Set([...prev, active.id]));
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     try {
@@ -118,6 +140,69 @@ export function AppShell({
     );
   }
 
+  function renderNavGroups(groups: NavGroup[], onClick?: () => void, forceExpanded = false) {
+    const isCollapsedSidebar = collapsed && !forceExpanded;
+
+    return groups.map((group) => {
+      const isGroupOpen = openGroups.has(group.id);
+      const isGroupActive = group.items.some(item => pathname?.startsWith(item.href));
+
+      if (isCollapsedSidebar) {
+        return (
+          <button
+            key={group.id}
+            title={group.label}
+            onClick={() => { setCollapsed(false); setOpenGroups(new Set([group.id])); }}
+            className={cn(
+              "flex w-full items-center justify-center rounded-xl py-2.5 px-2.5 transition-colors",
+              isGroupActive ? "bg-primary/15 text-primary" : "text-text-muted hover:bg-card-hover hover:text-text"
+            )}
+          >
+            <group.icon className="h-[18px] w-[18px] shrink-0" />
+          </button>
+        );
+      }
+
+      return (
+        <div key={group.id}>
+          <button
+            onClick={() => toggleGroup(group.id)}
+            className={cn(
+              "group flex w-full items-center gap-2 rounded-xl px-3.5 py-2 transition-colors",
+              isGroupActive ? "text-primary" : "text-text-muted hover:bg-card-hover hover:text-text"
+            )}
+          >
+            <group.icon className={cn("h-4 w-4 shrink-0", isGroupActive ? "text-primary" : "")} />
+            <span className="flex-1 text-left text-xs font-semibold uppercase tracking-[0.12em]">{group.label}</span>
+            <ChevronRight className={cn("h-3.5 w-3.5 shrink-0 transition-transform duration-200", isGroupOpen ? "rotate-90" : "")} />
+          </button>
+          {isGroupOpen && (
+            <div className="ml-2 mt-0.5 mb-1 space-y-0.5 border-l border-border/40 pl-3">
+              {group.items.map(item => {
+                const active = pathname?.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onClick}
+                    className={cn(
+                      "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors",
+                      active ? "bg-primary/15 text-primary" : "text-text-muted hover:bg-card-hover hover:text-text"
+                    )}
+                  >
+                    <item.icon className={cn("h-4 w-4 shrink-0", active ? "text-primary" : "text-text-muted/70")} />
+                    {item.label}
+                    {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    });
+  }
+
   return (
     <div className="flex min-h-dvh w-full">
       {/* Sidebar — desktop */}
@@ -135,8 +220,12 @@ export function AppShell({
         )}
 
         <nav className="flex-1 overflow-y-auto space-y-0.5 px-3 pb-2 pt-1">
-          {nav.map((item) => renderNavItem(item))}
-          {moreNav.length > 0 && moreNav.map((item) => renderNavItem(item))}
+          {navGroups ? renderNavGroups(navGroups) : (
+            <>
+              {nav.map((item) => renderNavItem(item))}
+              {moreNav.length > 0 && moreNav.map((item) => renderNavItem(item))}
+            </>
+          )}
         </nav>
 
         <div className="border-t border-border p-4">
@@ -204,8 +293,12 @@ export function AppShell({
 
               {/* Nav — scrollável */}
               <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
-                {nav.map((item) => renderNavItem(item, () => setMobileOpen(false), true))}
-                {moreNav.length > 0 && moreNav.map((item) => renderNavItem(item, () => setMobileOpen(false), true))}
+                {navGroups ? renderNavGroups(navGroups, () => setMobileOpen(false), true) : (
+                  <>
+                    {nav.map((item) => renderNavItem(item, () => setMobileOpen(false), true))}
+                    {moreNav.length > 0 && moreNav.map((item) => renderNavItem(item, () => setMobileOpen(false), true))}
+                  </>
+                )}
               </nav>
 
               {/* Footer — fixo */}

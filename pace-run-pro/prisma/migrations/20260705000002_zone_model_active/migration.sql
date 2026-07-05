@@ -1,0 +1,1 @@
+ALTER TABLE "coach_zone_models" ADD COLUMN IF NOT EXISTS "isActive" BOOLEAN NOT NULL DEFAULT false;

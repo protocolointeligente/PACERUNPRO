@@ -11,6 +11,7 @@ prisma migrate resolve --applied 20260704000006_listing_status_audit_log        
 prisma migrate resolve --applied 20260704000007_coach_athlete_nm_stripe_idempotency || true
 prisma migrate resolve --applied 20260704000008_coach_athlete_nm_stripe_idempotency_fix || true
 prisma migrate resolve --applied 20260704000009_pagbank_seller_accounts           || true
+prisma migrate resolve --applied 20260705000002_zone_model_active                  2>/dev/null || true
 
 # Migration 010 went FAILED (INSERT before unique index); SQL is now fixed —
 # mark as rolled-back so migrate deploy re-runs it.

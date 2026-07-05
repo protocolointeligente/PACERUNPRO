@@ -51,6 +51,13 @@ export interface NavItem {
   sectionStart?: string;
 }
 
+export interface NavGroup {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  items: NavItem[];
+}
+
 // Bottom nav (4 primary items — daily athlete flow)
 export const athleteNav: NavItem[] = [
   { href: "/atleta/dashboard", label: "Hoje", icon: LayoutDashboard },

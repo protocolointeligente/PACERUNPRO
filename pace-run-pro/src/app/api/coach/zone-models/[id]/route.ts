@@ -22,6 +22,18 @@ export async function PATCH(
   if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
 
   const body = await req.json();
+
+  // When activating a model, first deactivate all others for this coach
+  if (body.isActive === true) {
+    const coach = await prisma.coach.findUnique({ where: { userId: session.user.id }, select: { id: true } });
+    if (coach) {
+      await prisma.coachZoneModel.updateMany({
+        where: { coachId: coach.id, id: { not: id } },
+        data: { isActive: false },
+      });
+    }
+  }
+
   const updated = await prisma.coachZoneModel.update({
     where: { id },
     data: {
@@ -30,6 +42,7 @@ export async function PATCH(
       method: body.method ?? existing.method,
       zoneCount: body.zoneCount ?? existing.zoneCount,
       zones: body.zones ?? existing.zones,
+      ...(body.isActive !== undefined ? { isActive: body.isActive } : {}),
     },
   });
   return NextResponse.json(updated);

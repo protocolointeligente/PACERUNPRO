@@ -6,7 +6,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { MessageNotifier } from "@/components/messages/message-notifier";
 import { CoachRoleProvider, useCoachRole } from "@/context/coach-role-context";
-import { getCoachNav, ROLE_LABELS, ROLE_DESCRIPTIONS, type CoachRole } from "@/lib/coach-permissions";
+import { getCoachNav, getCoachNavGroups, ROLE_LABELS, ROLE_DESCRIPTIONS, type CoachRole } from "@/lib/coach-permissions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -62,12 +62,13 @@ interface TreinadorLayoutClientProps {
 
 function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUrl, planId }: TreinadorLayoutClientProps) {
   const { role } = useCoachRole();
-  const { main, more } = getCoachNav(role, planId ?? "b2b-free");
+  const { main } = getCoachNav(role, planId ?? "b2b-free");
+  const navGroups = getCoachNavGroups(role, planId ?? "b2b-free");
 
   return (
     <AppShell
       nav={main}
-      moreNav={more}
+      navGroups={navGroups}
       roleLabel={ROLE_LABELS[role]}
       userName={userName}
       userSubtitle={userCredential || "Treinador"}

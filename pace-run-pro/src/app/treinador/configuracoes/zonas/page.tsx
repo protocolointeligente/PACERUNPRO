@@ -23,6 +23,7 @@ interface ZoneModel {
   method: string;
   zoneCount: number;
   zones: ZoneDef[];
+  isActive?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -313,10 +314,14 @@ function ZoneModelCard({
   model,
   onEdit,
   onDelete,
+  onApply,
+  isActive,
 }: {
   model: ZoneModel;
   onEdit: () => void;
   onDelete: () => void;
+  onApply: () => void;
+  isActive: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -347,6 +352,20 @@ function ZoneModelCard({
               title="Ver zonas"
             >
               {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={onApply}
+              disabled={isActive}
+              title={isActive ? "Ativo no motor de prescrição" : "Aplicar ao motor de prescrição"}
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-colors",
+                isActive
+                  ? "bg-success/15 text-success cursor-default"
+                  : "border border-primary/40 text-primary hover:bg-primary/10"
+              )}
+            >
+              <Zap className="h-3 w-3" />
+              {isActive ? "Ativo no motor" : "Aplicar ao motor"}
             </button>
             <button
               onClick={onEdit}
@@ -441,6 +460,15 @@ export default function ZoneModelsPage() {
     await loadModels();
   }
 
+  async function handleApplyToEngine(id: string) {
+    await fetch(`/api/coach/zone-models/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive: true }),
+    });
+    await loadModels();
+  }
+
   async function importPreset(preset: ZoneModelPreset) {
     await fetch("/api/coach/zone-models", {
       method: "POST",
@@ -478,10 +506,16 @@ export default function ZoneModelsPage() {
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="flex items-start gap-3 p-4">
           <Zap className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          <p className="text-sm text-text-muted">
-            Os modelos de zona definem como a intensidade dos treinos é categorizada — por FC Máxima, FC Limiar, FTP (ciclismo), Pace Limiar (corrida) ou RPE.
-            O sistema usa o método configurado ao calcular TSS, sugerir zonas na prescrição e exibir dados de carga no painel do atleta.
-          </p>
+          <div className="space-y-1">
+            <p className="text-sm text-text-muted">
+              Os modelos de zona definem como a intensidade dos treinos é categorizada — por FC Máxima, FC Limiar, FTP (ciclismo), Pace Limiar (corrida) ou RPE.
+              O sistema usa o método configurado ao calcular TSS, sugerir zonas na prescrição e exibir dados de carga no painel do atleta.
+            </p>
+            <p className="text-sm font-medium text-text-muted">
+              <span className="font-semibold text-text">Motor de prescrição:</span>{" "}
+              modelos ativos são usados como referência ao prescrever treinos — zonas sugeridas, cálculo de carga e prescrição por FC/Pace/FTP usam o modelo ativo para cada modalidade. Clique em <strong>Aplicar ao motor</strong> no modelo que deseja ativar.
+            </p>
+          </div>
         </CardContent>
       </Card>
 
@@ -514,10 +548,12 @@ export default function ZoneModelsPage() {
             <ZoneModelCard
               key={m.id}
               model={m}
+              isActive={m.isActive ?? false}
               onEdit={() => { setEditingModel(m); setShowModal(true); }}
               onDelete={() => {
                 if (confirm(`Excluir o modelo "${m.name}"?`)) handleDelete(m.id);
               }}
+              onApply={() => handleApplyToEngine(m.id)}
             />
           ))}
         </div>

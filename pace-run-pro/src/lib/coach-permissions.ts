@@ -32,7 +32,7 @@ import {
   Package,
   ShoppingCart,
 } from "lucide-react";
-import type { NavItem } from "@/components/layout/nav-config";
+import type { NavItem, NavGroup } from "@/components/layout/nav-config";
 
 export type CoachRole = "autonomo" | "owner" | "hired";
 
@@ -134,6 +134,63 @@ export function getCoachNav(
   ];
 
   return { main: coreNav, more };
+}
+
+export function getCoachNavGroups(role: CoachRole, planId: string = "b2b-free"): NavGroup[] {
+  const tier = planTier(planId);
+
+  const contaItems: NavItem[] = [
+    { href: "/treinador/perfil",      label: "Minha conta",       icon: User   },
+    { href: "/treinador/financeiro",  label: "Dados financeiros",  icon: Wallet },
+    ...(tier >= 3 ? [{ href: "/treinador/admin", label: "Minha assessoria", icon: Settings } as NavItem] : []),
+    ...(tier >= 4 ? [{ href: "/treinador/white-label", label: "White-label", icon: Palette } as NavItem] : []),
+  ];
+
+  const prescricaoItems: NavItem[] = [
+    { href: "/treinador/atletas",                      label: "Atletas",         icon: Users        },
+    { href: "/treinador/calendario",                   label: "Calendário",       icon: CalendarDays },
+    { href: "/treinador/prescricao/periodizacao",      label: "Periodização",     icon: BarChart3    },
+    { href: "/treinador/prescricao/avaliacoes",        label: "Avaliações",       icon: ClipboardList },
+    { href: "/treinador/configuracoes/zonas",          label: "Zonas de treino",  icon: Zap          },
+    { href: "/treinador/grupos",                       label: "Grupos",           icon: Layers       },
+    { href: "/treinador/relatorios",                   label: "Relatórios",       icon: FileBarChart },
+    { href: "/treinador/biblioteca",                   label: "Biblioteca",       icon: BookOpen     },
+  ];
+
+  const marketplaceItems: NavItem[] = [
+    { href: "/treinador/marketplace",            label: "Visão geral",   icon: Store        },
+    { href: "/treinador/marketplace/produtos",   label: "Produtos",      icon: Package      },
+    { href: "/treinador/marketplace/pedidos",    label: "Pedidos",       icon: ShoppingCart },
+    { href: "/treinador/marketplace/financeiro", label: "Financeiro",    icon: Wallet       },
+    { href: "/treinador/minha-loja",             label: "Minha loja",    icon: ShoppingBag  },
+  ];
+
+  const gestaoItems: NavItem[] = [
+    { href: "/treinador/dashboard",   label: "Dashboard",   icon: LayoutDashboard },
+    { href: "/treinador/alertas",     label: "Alertas",     icon: Bell            },
+    { href: "/treinador/mensagens",   label: "Mensagens",   icon: MessageSquare   },
+    ...(tier >= 1 ? [
+      { href: "/treinador/gestao",        label: "Gestão & vendas",    icon: DollarSign  } as NavItem,
+      { href: "/treinador/planos-venda",  label: "Meus planos",        icon: PackagePlus } as NavItem,
+      { href: "/treinador/minha-pagina",  label: "Minha página pública", icon: Globe     } as NavItem,
+      { href: "/treinador/crm",           label: "CRM de leads",       icon: Kanban      } as NavItem,
+    ] : []),
+    ...(tier >= 2 ? [{ href: "/treinador/vouchers", label: "Vouchers", icon: Ticket } as NavItem] : []),
+  ];
+
+  const aprenderItems: NavItem[] = [
+    { href: "/treinador/universidade",      label: "PACE University",   icon: GraduationCap },
+    { href: "/treinador/conheca-o-sistema", label: "Conheça o sistema", icon: BookOpen      },
+    { href: "/treinador/glossario",         label: "Glossário",         icon: BarChart2     },
+  ];
+
+  return [
+    { id: "conta",       label: "Conta",        icon: User,            items: contaItems        },
+    { id: "prescricao",  label: "Prescrição",   icon: ClipboardList,   items: prescricaoItems   },
+    { id: "marketplace", label: "Marketplace",  icon: Store,           items: marketplaceItems  },
+    { id: "gestao",      label: "Gestão",       icon: LayoutDashboard, items: gestaoItems       },
+    { id: "aprender",    label: "Aprender",     icon: GraduationCap,   items: aprenderItems     },
+  ];
 }
 
 export type CoachFeature =
