@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { createNotificationAndPush } from "@/lib/push-notify";
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -91,13 +92,11 @@ export async function POST(req: NextRequest, { params }: Params) {
     select: { userId: true },
   });
   if (coachUser) {
-    await prisma.notification.create({
-      data: {
-        userId: coachUser.userId,
-        title: "Novo atleta no seu grupo!",
-        body: `${session.user.name ?? "Um atleta"} aceitou seu convite e está vinculado a você.`,
-        link: `/treinador/atletas`,
-      },
+    await createNotificationAndPush(prisma, {
+      userId: coachUser.userId,
+      title: "Novo atleta no seu grupo!",
+      body: `${session.user.name ?? "Um atleta"} aceitou seu convite e está vinculado a você.`,
+      link: `/treinador/atletas`,
     });
   }
 

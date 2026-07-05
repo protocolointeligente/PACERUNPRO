@@ -52,19 +52,23 @@ async function seed() {
   console.log("🌱 Criando usuários de teste...");
 
   // ── 1. Super Admin ─────────────────────────────────────────────────────────
-  const adminHash = await bcrypt.hash("Mlm042119@", 12);
+  // Password read from env var — never hardcode credentials in source.
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (!adminPassword) throw new Error("SEED_ADMIN_PASSWORD env var required (ex: openssl rand -base64 16)");
+  const adminHash = await bcrypt.hash(adminPassword, 12);
   const adminUser = await prisma.user.create({
     data: {
-      email: "admin@pacerunpro.com.br",
+      email: process.env.SEED_ADMIN_EMAIL ?? "admin@pacerunpro.com.br",
       name: "Super Admin",
       passwordHash: adminHash,
       role: "ADMIN",
     },
   });
-  console.log("✅ Admin:", adminUser.email, "/ Mlm042119@");
+  console.log("✅ Admin:", adminUser.email, "/ (senha definida via SEED_ADMIN_PASSWORD)");
 
-  // ── 2. Treinador — Ricardo Pace ────────────────────────────────────────────
-  const coachHash = await bcrypt.hash("PaceRunPro@2026", 12);
+  // ── 2. Treinador — teste ────────────────────────────────────────────────────
+  const coachPassword = process.env.SEED_COACH_PASSWORD ?? adminPassword;
+  const coachHash = await bcrypt.hash(coachPassword, 12);
   const coachUser = await prisma.user.create({
     data: {
       email: "ricardo@pacerunpro.com.br",
@@ -90,10 +94,11 @@ async function seed() {
       },
     },
   });
-  console.log("✅ Coach:", coachUser.email, "/ PaceRunPro@2026");
+  console.log("✅ Coach:", coachUser.email, "/ (senha via SEED_COACH_PASSWORD ou SEED_ADMIN_PASSWORD)");
 
-  // ── 3. Atleta — Camila Andrade (vinculada ao Ricardo) ─────────────────────
-  const athleteHash = await bcrypt.hash("Atleta@2026", 12);
+  // ── 3. Atleta — teste ──────────────────────────────────────────────────────
+  const athletePassword = process.env.SEED_ATHLETE_PASSWORD ?? adminPassword;
+  const athleteHash = await bcrypt.hash(athletePassword, 12);
   const coachRecord = await prisma.coach.findUnique({ where: { userId: coachUser.id } });
 
   const athleteUser = await prisma.user.create({
@@ -118,7 +123,7 @@ async function seed() {
       },
     },
   });
-  console.log("✅ Atleta:", athleteUser.email, "/ Atleta@2026");
+  console.log("✅ Atleta:", athleteUser.email, "/ (senha via SEED_ATHLETE_PASSWORD ou SEED_ADMIN_PASSWORD)");
 
   console.log("\n🎉 Seed concluído. Sistema pronto para testes.");
 }

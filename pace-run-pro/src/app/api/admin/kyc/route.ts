@@ -3,12 +3,6 @@ import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean);
-
-function isAdmin(email: string | null | undefined) {
-  return email && ADMIN_EMAILS.includes(email);
-}
-
 const ReviewSchema = z.object({
   coachId: z.string().min(1),
   decision: z.enum(["APPROVED", "REJECTED"]),
@@ -18,7 +12,7 @@ const ReviewSchema = z.object({
 // GET /api/admin/kyc — list coaches pending KYC review
 export async function GET() {
   const session = await getSession();
-  if (!isAdmin(session?.user?.email)) {
+  if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
@@ -41,7 +35,7 @@ export async function GET() {
 // POST /api/admin/kyc — approve or reject a coach's KYC submission
 export async function POST(req: NextRequest) {
   const session = await getSession();
-  if (!isAdmin(session?.user?.email)) {
+  if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 

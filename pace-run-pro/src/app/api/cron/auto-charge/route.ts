@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createPixOrder } from "@/lib/pagbank";
+import { sendPushToUser } from "@/lib/push-notify";
 
 // Called by Vercel Cron daily at 08:00 BRT.
 // Finds coaches with autoChargeEnabled and processes renewals for their athletes.
@@ -105,14 +106,9 @@ export async function GET(req: NextRequest) {
 
         // Skip PIX if athlete has no CPF — notify to update profile and pay manually
         if (!athlete.cpf || !/^\d{11}$/.test(athlete.cpf)) {
-          await prisma.notification.create({
-            data: {
-              userId: athlete.user.id,
-              title: "Renovação da assinatura",
-              body: `Seu plano ${planName} vence em breve. Acesse seu perfil, adicione seu CPF e renove para continuar treinando.`,
-              link: `/atleta/perfil`,
-            },
-          });
+          const msgCpf = { title: "Renovação da assinatura", body: `Seu plano ${planName} vence em breve. Acesse seu perfil, adicione seu CPF e renove para continuar treinando.`, link: `/atleta/perfil` };
+          await prisma.notification.create({ data: { userId: athlete.user.id, ...msgCpf } });
+          await sendPushToUser(prisma, athlete.user.id, { title: msgCpf.title, body: msgCpf.body, url: msgCpf.link });
           notified++;
           continue;
         }
@@ -130,14 +126,9 @@ export async function GET(req: NextRequest) {
           });
 
           // Notify athlete with payment link
-          await prisma.notification.create({
-            data: {
-              userId: athlete.user.id,
-              title: "Renovação da assinatura",
-              body: `Renove seu plano ${planName} para continuar treinando. Copie o código PIX para pagar.`,
-              link: `/atleta/assinar?orderId=${pix.orderId}`,
-            },
-          });
+          const pixMsg = { title: "Renovação da assinatura", body: `Renove seu plano ${planName} para continuar treinando. Toque para pagar via PIX.`, link: `/atleta/assinar?orderId=${pix.orderId}` };
+          await prisma.notification.create({ data: { userId: athlete.user.id, ...pixMsg } });
+          await sendPushToUser(prisma, athlete.user.id, { title: pixMsg.title, body: pixMsg.body, url: pixMsg.link });
 
           charged++;
         } catch (err) {
@@ -175,6 +166,7 @@ async function notifyAthlete(userId: string, name: string, daysLeft: number, blo
     await prisma.notification.create({
       data: { userId, title, body, link: "/atleta/assinar" },
     });
+    await sendPushToUser(prisma, userId, { title, body, url: "/atleta/assinar" });
   }
 }
 
