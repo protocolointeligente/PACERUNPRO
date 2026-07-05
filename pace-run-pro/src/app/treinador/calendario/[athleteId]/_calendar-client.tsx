@@ -686,18 +686,24 @@ export default function CalendarClient({
     setSaving(true);
     try {
       const payload = formToPayload(form);
+      let res: Response;
       if (modal.workoutId) {
-        await fetch(`/api/coach/workouts/${modal.workoutId}`, {
+        res = await fetch(`/api/coach/workouts/${modal.workoutId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
-        await fetch("/api/coach/workouts", {
+        res = await fetch("/api/coach/workouts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ athleteId, date: modal.date, ...payload }),
         });
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        alert(body?.error ?? "Erro ao salvar treino. Tente novamente.");
+        return;
       }
       setModal({ kind: "closed" });
       await refreshMonth(year, month, athleteId);
