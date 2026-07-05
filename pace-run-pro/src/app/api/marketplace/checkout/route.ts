@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { createPixOrderWithSplit, getMarketplaceAccountId, MARKETPLACE_COMMISSION_RATE } from "@/lib/pagbank";
+import { createPixOrder, createPixOrderWithSplit, getMarketplaceAccountId, MARKETPLACE_COMMISSION_RATE } from "@/lib/pagbank";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -107,20 +107,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ free: true, orderId: order.id });
   }
 
-  // Coach must have PagBank connected for paid products
+  // Platform products (no coachId) → direct PIX to platform account (no split)
+  // Coach products → require coach PagBank + split payment
+  const isPlatformProduct = !product.coachId;
   const coachPagBank = product.coach?.pagbankAccount;
-  if (!coachPagBank || coachPagBank.authorizationStatus !== "authorized") {
+
+  if (!isPlatformProduct && (!coachPagBank || coachPagBank.authorizationStatus !== "authorized")) {
     return NextResponse.json(
       { error: "Este produto ainda não está disponível para pagamento. O treinador precisa conectar o PagBank." },
       { status: 422 }
     );
   }
 
-  // Calculate split amounts (must sum exactly to totalCents)
-  const marketplaceCents = Math.round(finalPriceCents * commissionPct);
-  const coachCents = finalPriceCents - marketplaceCents;
+  // For coach products: 90% coach / 10% platform. For platform products: 100% platform.
+  const marketplaceCents = isPlatformProduct ? finalPriceCents : Math.round(finalPriceCents * commissionPct);
+  const coachCents = isPlatformProduct ? 0 : finalPriceCents - marketplaceCents;
 
-  // Create internal order record first
+  // Create internal order record
   const order = await prisma.marketplaceOrder.create({
     data: {
       athleteId: athlete.id,
@@ -134,7 +137,7 @@ export async function POST(req: NextRequest) {
         create: [{
           coachId: product.coachId ?? null,
           grossCents: finalPriceCents,
-          commissionPct,
+          commissionPct: isPlatformProduct ? 1 : commissionPct,
           commissionCents: marketplaceCents,
           netCents: coachCents,
         }],
@@ -154,42 +157,62 @@ export async function POST(req: NextRequest) {
     await prisma.marketplaceCoupon.update({ where: { id: appliedCouponId }, data: { usedCount: { increment: 1 } } });
   }
 
-  // Create PagBank PIX order with split
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://pacerunpro.com.br";
 
   try {
-    const pix = await createPixOrderWithSplit({
-      internalOrderId: order.id,
-      totalCents: finalPriceCents,
-      productName: product.title,
-      customer: {
-        name: session.user.name ?? "Atleta",
-        email: session.user.email ?? "",
-        taxId: customerTaxId ?? "00000000000", // CPF from athlete profile ideally
-      },
-      receivers: [
-        { accountId: coachPagBank.pagbankAccountId, amountCents: coachCents },
-        { accountId: getMarketplaceAccountId(), amountCents: marketplaceCents },
-      ],
-      notificationUrl: `${appUrl}/api/webhooks/pagbank`,
-    });
+    let pagbankOrderId: string;
+    let pixCopyPaste: string;
+    let pixQrCodeUrl: string | null;
+    let expiresAt: string;
 
-    // Store PagBank order ID
+    if (isPlatformProduct) {
+      // Direct PIX to platform account — no split needed
+      const pix = await createPixOrder({
+        referenceId: order.id,
+        customerName: session.user.name ?? "Atleta",
+        customerEmail: session.user.email ?? "",
+        customerCpf: customerTaxId ?? "00000000000",
+        amountCents: finalPriceCents,
+        planName: product.title,
+        notificationUrl: `${appUrl}/api/webhooks/pagbank`,
+      });
+      pagbankOrderId = pix.orderId;
+      pixCopyPaste = pix.pixText;
+      pixQrCodeUrl = pix.pixQrCodeUrl;
+      expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 min
+    } else {
+      // Split PIX: coach receives net, platform receives commission
+      const pix = await createPixOrderWithSplit({
+        internalOrderId: order.id,
+        totalCents: finalPriceCents,
+        productName: product.title,
+        customer: {
+          name: session.user.name ?? "Atleta",
+          email: session.user.email ?? "",
+          taxId: customerTaxId ?? "00000000000",
+        },
+        receivers: [
+          { accountId: coachPagBank!.pagbankAccountId, amountCents: coachCents },
+          { accountId: getMarketplaceAccountId(), amountCents: marketplaceCents },
+        ],
+        notificationUrl: `${appUrl}/api/webhooks/pagbank`,
+      });
+      pagbankOrderId = pix.pagbankOrderId;
+      pixCopyPaste = pix.pixCopyPaste;
+      pixQrCodeUrl = pix.pixQrCodeUrl;
+      expiresAt = pix.expiresAt;
+    }
+
     await prisma.marketplaceOrder.update({
       where: { id: order.id },
-      data: { pagbankOrderId: pix.pagbankOrderId },
+      data: { pagbankOrderId },
     });
 
     return NextResponse.json({
       orderId: order.id,
-      pix: {
-        copyPaste: pix.pixCopyPaste,
-        qrCodeUrl: pix.pixQrCodeUrl,
-        expiresAt: pix.expiresAt,
-      },
+      pix: { copyPaste: pixCopyPaste, qrCodeUrl: pixQrCodeUrl, expiresAt },
     });
   } catch {
-    // Roll back order status to CANCELLED if PagBank call fails
     await prisma.marketplaceOrder.update({ where: { id: order.id }, data: { status: "CANCELLED" } }).catch(() => null);
     return NextResponse.json({ error: "Erro ao gerar cobrança PIX. Tente novamente." }, { status: 502 });
   }

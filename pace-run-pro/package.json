@@ -12,6 +12,7 @@
     "test:coverage": "vitest run --coverage",
     "postinstall": "prisma generate",
     "seed:platform": "tsx prisma/seed-platform.ts",
+    "seed:marketplace-plans": "tsx prisma/seed-marketplace-plans.ts",
     "mobile:build": "next build && npx cap sync",
     "mobile:android": "npx cap open android",
     "mobile:ios": "npx cap open ios",
