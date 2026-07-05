@@ -20,15 +20,16 @@ interface DriveFile {
   mimeType: string;
 }
 
-async function listFolder(folderId: string, apiKey: string): Promise<DriveFile[]> {
+// apiKey is optional — public folders work without one; set GOOGLE_DRIVE_API_KEY for higher quota
+async function listFolder(folderId: string, apiKey?: string): Promise<DriveFile[]> {
   const params = new URLSearchParams({
     q: `'${folderId}' in parents and trashed = false`,
-    key: apiKey,
     fields: "files(id,name,mimeType)",
     pageSize: "1000",
     supportsAllDrives: "true",
     includeItemsFromAllDrives: "true",
   });
+  if (apiKey) params.set("key", apiKey);
   const res = await fetch(
     `https://www.googleapis.com/drive/v3/files?${params}`,
     { next: { revalidate: 3600 } }
@@ -46,11 +47,7 @@ export async function GET() {
   if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   if (session.user.role !== "COACH") return NextResponse.json({ error: "Apenas treinadores" }, { status: 403 });
 
-  const apiKey = process.env.GOOGLE_DRIVE_API_KEY;
-  if (!apiKey) {
-    // Return empty list rather than error — page degrades gracefully without videos
-    return NextResponse.json([]);
-  }
+  const apiKey = process.env.GOOGLE_DRIVE_API_KEY; // optional; omit for public folders
 
   try {
     // Level 1: root folder contents
