@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Activity, BookOpen, Gauge, HeartPulse, Zap } from "lucide-react";
+import { Activity, Bike, BookOpen, Dumbbell, Gauge, HeartPulse, Waves, Zap } from "lucide-react";
 
 function MetricRow({ abbr, name, formula, description }: {
   abbr: string; name: string; formula: string; description: string;
@@ -178,6 +178,123 @@ export default function GlossarioPage() {
             name="Semana de descarga"
             formula="Volume = 40–60% da semana anterior"
             description="Redução intencional de volume a cada 3–4 semanas para permitir supercompensação. O ATL cai, o TSB sobe, e o atleta chega à semana seguinte mais adaptado. O sistema marca automaticamente semanas de deload na periodização."
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-5 space-y-1">
+          <h2 className="flex items-center gap-2 font-display text-base font-semibold text-text mb-4">
+            <Bike className="h-4 w-4 text-primary" />
+            Ciclismo: potência e zonas de FTP
+          </h2>
+          <MetricRow
+            abbr="FTP"
+            name="Functional Threshold Power — Potência no Limiar"
+            formula="Média de potência sustentável em 60 min (estimada via teste de 20 min × 0,95)"
+            description="A potência máxima que um ciclista consegue sustentar por aproximadamente uma hora. Base de todas as zonas de potência. Teste padrão: 20 minutos de esforço máximo; o FTP estimado é 95% da média. FTP 200W = iniciante, 280W = intermediário, 350W+ = avançado recreativo."
+          />
+          <MetricRow
+            abbr="W/kg"
+            name="Watts por quilograma — relação potência-peso"
+            formula="FTP ÷ peso corporal (kg)"
+            description="A métrica mais importante para comparar ciclistas entre si e avaliar performance em subidas. W/kg 2,5 = iniciante, 3,5 = esportista, 4,5 = cat. III/II, 5,5+ = elite. Melhora tanto aumentando FTP quanto reduzindo peso (com cautela)."
+          />
+          <MetricRow
+            abbr="TSS"
+            name="Training Stress Score"
+            formula="(duração em seg × NP × IF) ÷ (FTP × 3600) × 100"
+            description="Quantifica o estresse de um treino de ciclismo em pontos. 100 TSS = 1 hora no FTP exato. Semana base: 300-400 TSS. Semana intensa: 500-700 TSS. Semana de deload: 200-250 TSS. Acumula em CTL e ATL da mesma forma que UA na corrida."
+          />
+          <MetricRow
+            abbr="IF"
+            name="Intensity Factor — Fator de Intensidade"
+            formula="Normalized Power ÷ FTP"
+            description="Razão entre a intensidade real do treino e o FTP. IF 0,65 = pedalada leve Z2. IF 0,85 = sweet spot. IF 1,0 = esforço no FTP. IF >1,05 = acima do limiar. Fundamental para calcular TSS e planejar a recuperação pós-treino."
+          />
+          <MetricRow
+            abbr="NP"
+            name="Normalized Power — Potência Normalizada"
+            formula="Média quadrática elevada da potência instantânea (algoritmo de 30s)"
+            description="Potência 'equivalente' levando em conta as variações de intensidade. Em terreno acidentado, NP é sempre maior que a potência média simples — reflete melhor o custo fisiológico real do esforço. Usado para calcular TSS e IF."
+          />
+          <MetricRow
+            abbr="Sweet Spot"
+            name="Sweet Spot — zona de máxima eficiência"
+            formula="88–93% do FTP"
+            description="A zona mais eficiente para ganho de FTP: suficientemente intensa para promover adaptação, mas sustentável por 20–60 minutos. Principal ferramenta de treinamento de ciclismo baseado em potência. Formato: 2–3 intervalos de 20 minutos com 5 minutos de recuperação."
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-5 space-y-1">
+          <h2 className="flex items-center gap-2 font-display text-base font-semibold text-text mb-4">
+            <Waves className="h-4 w-4 text-primary" />
+            Natação: pace e velocidade crítica
+          </h2>
+          <MetricRow
+            abbr="CSS"
+            name="Critical Swim Speed — Velocidade Crítica de Natação"
+            formula="(400m – 200m) ÷ (T400 – T200)"
+            description="Equivale ao limiar de lactato na natação. Calculado a partir de dois testes máximos: 400m e 200m. Exemplo: 400m em 6:40 e 200m em 3:04 → CSS = 200 ÷ (400-184) = 0,93m/s = 1:47/100m. É a base para todas as zonas de intensidade de natação no PACE RUN PRO."
+          />
+          <MetricRow
+            abbr="Pace/100m"
+            name="Pace de natação por 100 metros"
+            formula="Tempo total ÷ (distância ÷ 100)"
+            description="Unidade padrão de velocidade em natação. Equivalente ao pace/km na corrida. Um pace de 1:30/100m é muito rápido (competidor experiente). 2:00/100m = nadador recreativo treinado. As zonas de treino são expressas em faixas de pace por 100m relativas ao CSS do atleta."
+          />
+          <MetricRow
+            abbr="Z1–Z5 Nat."
+            name="Zonas de natação por CSS"
+            formula="Z1: >115% CSS · Z2: 108–115% · Z3: 103–108% · Z4: 100–103% · Z5: <100%"
+            description="Sistema de 5 zonas baseado no CSS. Z1 (recuperação/técnica) = pace bem mais lento que o CSS. Z4 (limiar/CSS) = pace igual ou levemente mais rápido que o CSS — intensidade de séries de 400–600m. Z5 (sprint/prova) = pace de prova e tiros curtos. O sistema calcula e exibe essas zonas após registrar o CSS do atleta."
+          />
+          <MetricRow
+            abbr="DPS"
+            name="Distance Per Stroke — Distância por braçada"
+            formula="Comprimento da piscina ÷ número de braçadas por comprimento"
+            description="Indicador de eficiência técnica. Nadadores eficientes cobrem mais distância por braçada com menos esforço. Melhora com drills técnicos e força de tração. Correlaciona-se com velocidade média — aumentar DPS sem perder cadência é o objetivo de longo prazo do treinamento de natação."
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-5 space-y-1">
+          <h2 className="flex items-center gap-2 font-display text-base font-semibold text-text mb-4">
+            <Dumbbell className="h-4 w-4 text-primary" />
+            Força: terminologia e periodização
+          </h2>
+          <MetricRow
+            abbr="1RM"
+            name="1 Repetition Maximum — Repetição Máxima"
+            formula="Carga máxima para 1 repetição com técnica correta"
+            description="A carga máxima que o atleta consegue levantar uma única vez. Base para prescrição de intensidade em força: hipertrofia usa 65–80% 1RM, força máxima usa 85–95% 1RM, potência usa 30–60% 1RM com alta velocidade. No sistema, a estimativa de 1RM pode ser feita via fórmula de Brzycki a partir de repetições submáximas."
+          />
+          <MetricRow
+            abbr="RPE Força"
+            name="RPE de Força (Escala de Esforço Percebido)"
+            formula="Escala Borg CR-10: 0 a 10 (ou RIR: repetições na reserva)"
+            description="Em força, RPE 7 = 3 repetições na reserva (poderia fazer mais 3 reps). RPE 8 = 2 reps na reserva. RPE 9 = 1 rep na reserva. RPE 10 = falha total. Hipertrofia: treinar entre RPE 7–8. Força máxima: RPE 8–9. Potência/explosão: RPE 6–7 (foco em velocidade, não em carga máxima)."
+          />
+          <MetricRow
+            abbr="Volume"
+            name="Volume de força (séries × reps)"
+            formula="Séries × Repetições × Carga (kg)"
+            description="O volume total de trabalho em uma sessão ou semana de treino de força. Para hipertrofia: 10–20 séries por grupo muscular por semana. Para força máxima: 5–10 séries de 1–5 reps com cargas altas. Volume excessivo sem recuperação adequada leva à overreaching e queda de performance."
+          />
+          <MetricRow
+            abbr="Brick"
+            name="Brick Training — Treino combinado (Triathlon)"
+            formula="Bike + Run (ou Swim + Bike) em sequência imediata"
+            description="Treino que combina duas modalidades do triathlon sem descanso entre elas, simulando a transição de prova. O mais comum é bike + run. Os primeiros 2–3 km do run após o bike sempre serão mais lentos — o corpo precisa adaptar o recrutamento muscular. Fundamental para treinamento de triatletas em todas as distâncias."
+          />
+          <MetricRow
+            abbr="T1/T2"
+            name="Transições do Triathlon"
+            formula="T1: Natação → Bike · T2: Bike → Run"
+            description="As transições são a 'quarta disciplina' do triathlon. T1 (transition 1): troca da roupa de natação para o equipamento de ciclismo (capacete, óculos, sapatilhas). T2 (transition 2): troca do ciclismo para a corrida (número de atleta, tênis). Tempo de transição conta no tempo oficial — treinamento de transição é uma vantagem competitiva."
           />
         </CardContent>
       </Card>

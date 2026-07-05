@@ -28,6 +28,7 @@ interface PagBankStatus {
 }
 
 function brl(cents: number) {
+  if (typeof cents !== "number" || isNaN(cents)) return "—";
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
@@ -91,27 +92,27 @@ export default function FinanceiroPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Financeiro</h1>
-        <p className="text-sm text-muted-foreground mt-1">Receitas do marketplace e repasses PagBank</p>
+        <p className="text-sm text-text-muted mt-1">Receitas do marketplace e repasses PagBank</p>
       </div>
 
       {/* PagBank connection status */}
-      <div className={`border rounded-2xl px-5 py-4 flex items-start justify-between gap-4 ${isConnected ? "bg-green-50 dark:bg-green-900/15 border-green-200 dark:border-green-800" : "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/15"}`}>
+      <div className={`border rounded-2xl px-5 py-4 flex items-start justify-between gap-4 ${isConnected ? "bg-green-500/10 border-green-500/30" : "bg-amber-500/10 border-amber-500/30"}`}>
         <div className="flex items-start gap-3">
           {isConnected ? (
-            <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
           ) : (
-            <XCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+            <XCircle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
           )}
           <div>
             <p className="font-semibold text-sm">
               {isConnected ? "PagBank conectado" : "PagBank não conectado"}
             </p>
             {isConnected ? (
-              <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+              <p className="text-xs text-text-muted mt-0.5 font-mono">
                 {pagBankStatus?.pagbankAccountId}
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-text-muted mt-0.5">
                 Conecte sua conta PagBank para receber repasses automáticos das suas vendas
               </p>
             )}
@@ -149,10 +150,10 @@ export default function FinanceiroPage() {
       {/* Last 30 days summary */}
       {stats && (
         <div className="border rounded-2xl px-5 py-4 flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Últimos 30 dias</span>
+          <span className="text-text-muted">Últimos 30 dias</span>
           <div className="flex items-center gap-4 font-medium">
             <span>{brl(stats.last30GrossCents)} faturados</span>
-            <span className="text-muted-foreground">·</span>
+            <span className="text-text-muted">·</span>
             <span>{stats.totalOrders} pedidos</span>
           </div>
         </div>
@@ -166,15 +167,15 @@ export default function FinanceiroPage() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-primary/5 rounded-xl p-3">
-            <p className="text-xs text-muted-foreground">Próximo repasse</p>
+            <p className="text-xs text-text-muted">Próximo repasse</p>
             <p className="font-semibold text-sm mt-1">{formatDate(next)}</p>
           </div>
           <div className="bg-muted/50 rounded-xl p-3">
-            <p className="text-xs text-muted-foreground">Repasse seguinte</p>
+            <p className="text-xs text-text-muted">Repasse seguinte</p>
             <p className="font-medium text-sm mt-1">{formatDate(following)}</p>
           </div>
         </div>
-        <div className="rounded-xl bg-muted/50 px-4 py-3 space-y-1 text-xs text-muted-foreground">
+        <div className="rounded-xl bg-muted/50 px-4 py-3 space-y-1 text-xs text-text-muted">
           <div className="flex items-start gap-2">
             <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
             <p>
@@ -189,19 +190,19 @@ export default function FinanceiroPage() {
         <p className="font-semibold text-sm">Estrutura de comissão</p>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between items-center py-1.5 border-b border-border/50">
-            <span className="text-muted-foreground">Valor da venda</span>
+            <span className="text-text-muted">Valor da venda</span>
             <span className="font-medium">100%</span>
           </div>
-          <div className="flex justify-between items-center py-1.5 border-b border-border/50 text-green-700 dark:text-green-400">
+          <div className="flex justify-between items-center py-1.5 border-b border-border/50 text-green-500">
             <span>Você recebe (split direto)</span>
             <span className="font-bold">90%</span>
           </div>
-          <div className="flex justify-between items-center py-1.5 text-muted-foreground">
+          <div className="flex justify-between items-center py-1.5 text-text-muted">
             <span>Taxa da plataforma PACE RUN PRO</span>
             <span>10%</span>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-text-muted">
           Cupons de desconto são absorvidos pelo valor bruto do produto — a taxa de 10% incide sobre o valor final após desconto.
         </p>
       </div>
@@ -221,9 +222,9 @@ function StatCard({
   highlight?: boolean;
 }) {
   return (
-    <div className={`border rounded-2xl p-4 space-y-2 ${highlight ? "border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/10" : ""}`}>
+    <div className={`border rounded-2xl p-4 space-y-2 ${highlight ? "border-amber-500/30 bg-amber-500/10" : ""}`}>
       <div className="text-primary/70">{icon}</div>
-      <p className="text-xs text-muted-foreground leading-tight">{label}</p>
+      <p className="text-xs text-text-muted leading-tight">{label}</p>
       <p className="text-lg font-bold">{value}</p>
     </div>
   );
