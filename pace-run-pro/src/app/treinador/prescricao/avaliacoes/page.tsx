@@ -46,14 +46,14 @@ const HUBS = [
     badge: "Histórico · Comparativo · PDF",
   },
   {
-    href: "/treinador/prescricao/corrida",
+    href: "/treinador/prescricao/avaliacoes/zonas",
     icon: HeartPulse,
     color: "#ef4444",
     bg: "#ef444415",
     border: "#ef444430",
     title: "Zonas de Intensidade",
-    desc: "Calcule e ajuste zonas de FC, pace e potência por atleta e modalidade.",
-    badge: "VDOT · FTP · CSS · 1RM",
+    desc: "Defina zonas de FC, pace e potência por atleta e modalidade — manualmente ou via testes.",
+    badge: "FC · Pace · FTP · CSS · RPE",
   },
   {
     href: "/treinador/relatorios",

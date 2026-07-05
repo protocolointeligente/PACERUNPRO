@@ -256,8 +256,9 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Link href="/treinador/prescricao/corrida"><Button variant="secondary">Prescrever treino</Button></Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/treinador/atletas/${athlete.id}/avaliacao`}><Button variant="secondary"><ClipboardList className="h-3.5 w-3.5 mr-1" />Avaliação</Button></Link>
+            <Link href={`/treinador/atletas/${athlete.id}/zonas`}><Button variant="secondary"><HeartPulse className="h-3.5 w-3.5 mr-1" />Zonas</Button></Link>
             <WeeklyReleaseDialog athleteName={athlete.name} athleteId={athlete.id} />
           </div>
         </CardContent>

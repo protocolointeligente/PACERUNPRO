@@ -110,6 +110,14 @@ function calcGuedes(sex: Sex, age: number, a: number, b: number, c: number): num
   return Math.round((4.95 / D - 4.5) * 1000) / 10;
 }
 
+// Índice de Conicidade (IC) — Valdez 1991
+// IC = Cintura(m) / (0.109 × √(Peso(kg) / Estatura(m)))
+function calcIC(waistCm: number, weightKg: number, heightCm: number): number | null {
+  if (!waistCm || !weightKg || !heightCm) return null;
+  const heightM = heightCm / 100;
+  return Math.round((waistCm / 100 / (0.109 * Math.sqrt(weightKg / heightM))) * 100) / 100;
+}
+
 // ── Input style ──────────────────────────────────────────────────────────────
 
 const INP = "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-colors";
@@ -172,10 +180,20 @@ export default function AvaliacaoFisicaPage({ params }: { params: Promise<{ id: 
 
   // Extra circumferences (not in DB — go into notes)
   const [shoulderCm, setShoulderCm] = useState("");
-  const [armContractedCm, setArmContractedCm] = useState("");
   const [abdomenCm, setAbdomenCm] = useState("");
-  const [thighMidCm, setThighMidCm] = useState("");
-  const [ankleCm, setAnkleCm] = useState("");
+  // Bilateral measurements (stored in notes JSON)
+  const [bilateral, setBilateral] = useState({
+    bracoRelaxadoDir: "", bracoRelaxadoEsq: "",
+    bracoContraidoDir: "", bracoContraidoEsq: "",
+    antebracoDir: "", antebracoEsq: "",
+    coxaProxDir: "", coxaProxEsq: "",
+    coxaMedDir: "", coxaMedEsq: "",
+    coxaDisDir: "", coxaDisEsq: "",
+    panturrilhaDir: "", panturrilhaEsq: "",
+  });
+  function setB(key: keyof typeof bilateral, val: string) {
+    setBilateral((p) => ({ ...p, [key]: val }));
+  }
 
   // ── DB-backed fields ────────────────────────────────────────────────────────
   const [form, setForm] = useState({
@@ -215,6 +233,7 @@ export default function AvaliacaoFisicaPage({ params }: { params: Promise<{ id: 
   const autoWHR = n(form.waistCm) && n(form.hipCm) ? Math.round((Number(form.waistCm) / Number(form.hipCm)) * 100) / 100 : null;
   const autoWHtR = n(form.waistCm) && hCm ? Math.round((Number(form.waistCm) / hCm) * 100) / 100 : null;
   const autoFFMI = w && n(form.bodyFatPct) && hCm ? Math.round(((w * (1 - Number(form.bodyFatPct) / 100)) / ((hCm / 100) * (hCm / 100))) * 10) / 10 : null;
+  const autoIC = n(form.waistCm) && w && hCm ? calcIC(Number(form.waistCm), w, hCm) : null;
 
   // Skinfold body fat calculation
   const sf7 = [sfPeitoral, sfAxilar, sfTriceps, sfSubescapular, sfAbdominal, sfSuprailica, sfCoxa].map(Number);
@@ -260,11 +279,11 @@ export default function AvaliacaoFisicaPage({ params }: { params: Promise<{ id: 
       if (heightCm) extra.altura_cm = Number(heightCm);
       if (age)      extra.idade = Number(age);
       extra.sexo = sex;
-      if (shoulderCm)      extra.ombros_cm = Number(shoulderCm);
-      if (armContractedCm) extra.braco_contraido_cm = Number(armContractedCm);
-      if (abdomenCm)       extra.abdomen_cm = Number(abdomenCm);
-      if (thighMidCm)      extra.coxa_media_cm = Number(thighMidCm);
-      if (ankleCm)         extra.tornozelo_cm = Number(ankleCm);
+      if (shoulderCm) extra.ombros_cm = Number(shoulderCm);
+      if (abdomenCm)  extra.abdomen_cm = Number(abdomenCm);
+      (Object.entries(bilateral) as [string, string][]).forEach(([key, val]) => {
+        if (val) extra[`perim_${key}_cm`] = Number(val);
+      });
       if (sfTriceps)        extra.dobra_triceps = Number(sfTriceps);
       if (sfSubescapular)  extra.dobra_subescapular = Number(sfSubescapular);
       if (sfPeitoral)      extra.dobra_peitoral = Number(sfPeitoral);
@@ -295,10 +314,11 @@ export default function AvaliacaoFisicaPage({ params }: { params: Promise<{ id: 
         chestCm:          n(form.chestCm),
         waistCm:          n(form.waistCm),
         hipCm:            n(form.hipCm),
-        thighCm:          n(form.thighCm),
-        calfCm:           n(form.calfCm),
-        armCm:            n(form.armCm),
-        forearmCm:        n(form.forearmCm),
+        // Derive DB fields from bilateral inputs (use right side, fallback to left)
+        thighCm:          bilateral.coxaProxDir ? Number(bilateral.coxaProxDir) : bilateral.coxaProxEsq ? Number(bilateral.coxaProxEsq) : null,
+        calfCm:           bilateral.panturrilhaDir ? Number(bilateral.panturrilhaDir) : bilateral.panturrilhaEsq ? Number(bilateral.panturrilhaEsq) : null,
+        armCm:            bilateral.bracoRelaxadoDir ? Number(bilateral.bracoRelaxadoDir) : bilateral.bracoRelaxadoEsq ? Number(bilateral.bracoRelaxadoEsq) : null,
+        forearmCm:        bilateral.antebracoDir ? Number(bilateral.antebracoDir) : bilateral.antebracoEsq ? Number(bilateral.antebracoEsq) : null,
         vo2max:           n(form.vo2max),
         restingHr:        n(form.restingHr),
         hrv:              n(form.hrv),
@@ -485,41 +505,88 @@ export default function AvaliacaoFisicaPage({ params }: { params: Promise<{ id: 
             {activeTab === "circunferencias" && (
               <>
                 <Sect title="Perimetria (cm)" />
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+
+                {/* Medidas gerais */}
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Medidas gerais</p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 mb-4">
                   {([
-                    { key: "neckCm",   label: "Pescoço",         state: null },
-                    { key: "shoulder", label: "Ombros",          state: [shoulderCm, setShoulderCm] },
-                    { key: "chestCm",  label: "Peitoral",        state: null },
-                    { key: "armCm",    label: "Braço Relaxado",  state: null },
-                    { key: "armC",     label: "Braço Contraído", state: [armContractedCm, setArmContractedCm] },
-                    { key: "forearmCm",label: "Antebraço",       state: null },
-                    { key: "waistCm",  label: "Cintura",         state: null },
-                    { key: "abdomen",  label: "Abdômen",         state: [abdomenCm, setAbdomenCm] },
-                    { key: "hipCm",    label: "Quadril",         state: null },
-                    { key: "thighCm",  label: "Coxa Proximal",   state: null },
-                    { key: "thighMid", label: "Coxa Média",      state: [thighMidCm, setThighMidCm] },
-                    { key: "calfCm",   label: "Panturrilha",     state: null },
-                    { key: "ankle",    label: "Tornozelo",       state: [ankleCm, setAnkleCm] },
-                  ] as const).map((f) => {
-                    const isExtra = f.state !== null;
-                    return (
-                      <label key={f.key} className="block">
-                        <Lbl>{f.label}{isExtra ? <span className="ml-1 text-[9px] text-text-muted/60 uppercase">extra</span> : null}</Lbl>
-                        <input
-                          type="number" step="0.1" placeholder="—"
-                          value={isExtra ? (f.state as [string, (v: string) => void])[0] : (form[f.key as keyof typeof form] as string)}
-                          onChange={(e) => isExtra
-                            ? (f.state as [string, (v: string) => void])[1](e.target.value)
-                            : setField(f.key, e.target.value)}
-                          className={INP}
-                        />
-                      </label>
-                    );
-                  })}
+                    { key: "neckCm",  label: "Pescoço", isForm: true },
+                    { key: "shoulder",label: "Ombros",  isForm: false },
+                    { key: "chestCm", label: "Peitoral",isForm: true },
+                    { key: "waistCm", label: "Cintura", isForm: true },
+                    { key: "abdomen", label: "Abdômen", isForm: false },
+                    { key: "hipCm",   label: "Quadril", isForm: true },
+                  ] as const).map((f) => (
+                    <label key={f.key} className="block">
+                      <Lbl>{f.label}</Lbl>
+                      <input
+                        type="number" step="0.1" placeholder="—" className={INP}
+                        value={f.isForm ? (form[f.key as keyof typeof form] as string) : (f.key === "shoulder" ? shoulderCm : abdomenCm)}
+                        onChange={(e) => f.isForm
+                          ? setField(f.key as keyof typeof form, e.target.value)
+                          : f.key === "shoulder" ? setShoulderCm(e.target.value) : setAbdomenCm(e.target.value)}
+                      />
+                    </label>
+                  ))}
                 </div>
-                <div className="mt-2 rounded-xl border border-border bg-background/40 p-4 space-y-3">
+
+                {/* Membros superiores — bilateral */}
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Membros superiores</p>
+                <div className="space-y-3 mb-4">
+                  {([
+                    ["Braço Relaxado",  "bracoRelaxadoDir",  "bracoRelaxadoEsq"],
+                    ["Braço Contraído", "bracoContraidoDir", "bracoContraidoEsq"],
+                    ["Antebraço",       "antebracoDir",      "antebracoEsq"],
+                  ] as const).map(([label, dk, ek]) => (
+                    <div key={label}>
+                      <Lbl>{label}</Lbl>
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="block">
+                          <span className="mb-1 block text-[10px] font-medium text-text-muted/70">Direito</span>
+                          <input type="number" step="0.1" placeholder="—" className={INP}
+                            value={bilateral[dk]} onChange={(e) => setB(dk, e.target.value)} />
+                        </label>
+                        <label className="block">
+                          <span className="mb-1 block text-[10px] font-medium text-text-muted/70">Esquerdo</span>
+                          <input type="number" step="0.1" placeholder="—" className={INP}
+                            value={bilateral[ek]} onChange={(e) => setB(ek, e.target.value)} />
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Membros inferiores — bilateral */}
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Membros inferiores</p>
+                <div className="space-y-3">
+                  {([
+                    ["Coxa Proximal", "coxaProxDir", "coxaProxEsq"],
+                    ["Coxa Medial",   "coxaMedDir",  "coxaMedEsq"],
+                    ["Coxa Distal",   "coxaDisDir",  "coxaDisEsq"],
+                    ["Panturrilha",   "panturrilhaDir", "panturrilhaEsq"],
+                  ] as const).map(([label, dk, ek]) => (
+                    <div key={label}>
+                      <Lbl>{label}</Lbl>
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="block">
+                          <span className="mb-1 block text-[10px] font-medium text-text-muted/70">Direito</span>
+                          <input type="number" step="0.1" placeholder="—" className={INP}
+                            value={bilateral[dk]} onChange={(e) => setB(dk, e.target.value)} />
+                        </label>
+                        <label className="block">
+                          <span className="mb-1 block text-[10px] font-medium text-text-muted/70">Esquerdo</span>
+                          <input type="number" step="0.1" placeholder="—" className={INP}
+                            value={bilateral[ek]} onChange={(e) => setB(ek, e.target.value)} />
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Índices */}
+                <div className="mt-4 rounded-xl border border-border bg-background/40 p-4 space-y-3">
                   <p className="text-xs font-semibold text-text-muted">Índices calculados</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <div>
                       <AutoField label="RCQ (Cintura / Quadril)" value={autoWHR} />
                       {autoWHR && (
@@ -538,7 +605,18 @@ export default function AvaliacaoFisicaPage({ params }: { params: Promise<{ id: 
                         </p>
                       )}
                     </div>
+                    <div>
+                      <AutoField label="IC (Índice de Conicidade)" value={autoIC} />
+                      {autoIC && (
+                        <p className="mt-0.5 text-[10px] text-text-muted">
+                          {sex === "M"
+                            ? autoIC < 1.10 ? "✓ Ideal" : autoIC < 1.25 ? "Risco moderado" : "Risco elevado"
+                            : autoIC < 1.07 ? "✓ Ideal" : autoIC < 1.18 ? "Risco moderado" : "Risco elevado"}
+                        </p>
+                      )}
+                    </div>
                   </div>
+                  {!hCm && autoWHtR === null && <p className="text-[10px] text-text-muted/60">Informe a altura em Dados Gerais para calcular RCEst e IC.</p>}
                 </div>
               </>
             )}
@@ -582,27 +660,39 @@ export default function AvaliacaoFisicaPage({ params }: { params: Promise<{ id: 
                   ))}
                 </div>
 
-                {sfBodyFat !== null && (
-                  <div className="mt-2 flex items-center gap-4 rounded-xl border border-success/30 bg-success/5 p-4">
-                    <div>
-                      <p className="text-xs text-text-muted">Gordura % calculada</p>
-                      <p className="text-2xl font-display font-bold text-success">{sfBodyFat}%</p>
-                    </div>
-                    <div className="text-xs text-text-muted">
-                      <p>Protocolo: <strong className="text-text">{sfProtocol.toUpperCase()}</strong></p>
-                      {w && sfBodyFat && (
-                        <>
-                          <p>Massa gorda: <strong className="text-text">{Math.round(w * sfBodyFat / 100 * 10) / 10} kg</strong></p>
-                          <p>Massa magra: <strong className="text-text">{Math.round(w * (1 - sfBodyFat / 100) * 10) / 10} kg</strong></p>
-                        </>
+                {sfBodyFat !== null ? (
+                  <div className="mt-2 rounded-xl border border-success/30 bg-success/5 p-4">
+                    <div className="flex items-start gap-4">
+                      <div>
+                        <p className="text-xs text-text-muted">Gordura % calculada</p>
+                        <p className="text-2xl font-display font-bold text-success">{sfBodyFat}%</p>
+                        <p className="text-[10px] text-text-muted">Protocolo: {sfProtocol.toUpperCase()}</p>
+                      </div>
+                      {w ? (
+                        <div className="flex gap-3">
+                          <div className="rounded-xl border border-border/50 bg-background/40 px-3 py-2">
+                            <p className="text-[10px] text-text-muted">Massa gorda</p>
+                            <p className="text-sm font-bold text-text">{Math.round(w * sfBodyFat / 100 * 10) / 10} kg</p>
+                          </div>
+                          <div className="rounded-xl border border-border/50 bg-background/40 px-3 py-2">
+                            <p className="text-[10px] text-text-muted">Massa magra</p>
+                            <p className="text-sm font-bold text-text">{Math.round(w * (1 - sfBodyFat / 100) * 10) / 10} kg</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-[10px] text-text-muted/60 self-center">Informe o peso em Composição para ver massa gorda/magra.</p>
                       )}
+                      <div className="ml-auto">
+                        <button type="button" onClick={() => { setField("bodyFatPct", String(sfBodyFat)); setActiveTab("composicao"); }}
+                          className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20">
+                          Usar em Composição
+                        </button>
+                      </div>
                     </div>
-                    <div className="ml-auto">
-                      <button type="button" onClick={() => { setField("bodyFatPct", String(sfBodyFat)); setActiveTab("composicao"); }}
-                        className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20">
-                        Usar em Composição
-                      </button>
-                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-2 rounded-xl border border-border bg-background/40 px-4 py-3 text-[11px] text-text-muted">
+                    Preencha as dobras necessárias para o protocolo <strong>{sfProtocol.toUpperCase()}</strong> e o resultado aparecerá automaticamente.
                   </div>
                 )}
               </>
