@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import UpgradeCTABanner from "@/components/coach/upgrade-cta-banner";
 
 // ── Workout type visual config ───────────────────────────────────────────────
 
@@ -969,6 +970,7 @@ export default function AthleteListClient({ athletes: staticAthletes, currentPla
   return (
     <div className="mx-auto max-w-6xl space-y-4">
       <Header total={staticAthletes.length} />
+      <UpgradeCTABanner />
 
       {actionCenter && <ActionBanner data={actionCenter} />}
 

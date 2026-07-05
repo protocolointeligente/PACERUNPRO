@@ -25,6 +25,8 @@ interface AppShellProps {
   navGroups?: NavGroup[];
   /** Items rendered before groups (or nav) — always visible, never inside a collapsible group */
   topNav?: NavItem[];
+  /** Where the header logo links to — typically the role dashboard */
+  logoHref?: string;
   roleLabel: string;
   userName: string;
   userSubtitle: string;
@@ -42,6 +44,7 @@ export function AppShell({
   moreNav = [],
   navGroups,
   topNav = [],
+  logoHref = "/",
   roleLabel,
   userName,
   userSubtitle,
@@ -216,7 +219,7 @@ export function AppShell({
         )}
       >
         <div className={cn("flex items-center py-4 border-b border-border/40", collapsed ? "justify-center px-3" : "px-4")}>
-          {!collapsed && <Logo size={32} />}
+          {!collapsed && <Link href={logoHref}><Logo size={32} /></Link>}
         </div>
         {!collapsed && (
           <p className="px-5 pt-3 pb-1 text-[10px] uppercase tracking-[0.16em] text-text-muted/70">{roleLabel}</p>
@@ -282,7 +285,7 @@ export function AppShell({
             >
               {/* Header — fixo */}
               <div className="flex shrink-0 items-center justify-between px-6 py-4 border-b border-border/40">
-                <Logo size={30} />
+                <Link href={logoHref} onClick={() => setMobileOpen(false)}><Logo size={30} /></Link>
                 <div className="flex items-center gap-2">
                   <ThemeToggle inline />
                   <button

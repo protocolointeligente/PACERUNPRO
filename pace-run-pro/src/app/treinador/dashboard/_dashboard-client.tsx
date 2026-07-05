@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CoachOnboardingSteps } from "@/components/coach/onboarding-steps";
+import UpgradeCTABanner from "@/components/coach/upgrade-cta-banner";
 
 export interface AthleteRow {
   id: string;
@@ -100,6 +101,7 @@ export default function CoachDashboard({ firstName, credential, athleteCount, at
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
+      <UpgradeCTABanner />
       <CoachOnboardingSteps athleteCount={athleteCount} />
 
       {/* Greeting */}

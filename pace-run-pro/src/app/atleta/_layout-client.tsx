@@ -42,6 +42,7 @@ export default function AtletaLayoutClient({
     <AppShell
       nav={athleteNav}
       moreNav={athleteMoreNav}
+      logoHref="/atleta/dashboard"
       roleLabel={roleLabel}
       userName={userName}
       userSubtitle={userSubtitle}

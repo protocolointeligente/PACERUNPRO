@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import UpgradeCTABanner from "@/components/coach/upgrade-cta-banner";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -576,6 +577,9 @@ export default function PeriodizacaoPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <div className="mx-auto max-w-7xl px-4 pt-4">
+        <UpgradeCTABanner />
+      </div>
       {/* ── Mode Picker Modal ── */}
       {showModePicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">

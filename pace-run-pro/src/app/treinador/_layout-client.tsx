@@ -70,6 +70,7 @@ function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUr
       nav={main}
       navGroups={navGroups}
       topNav={[{ href: "/treinador/dashboard", label: "Dashboard", icon: LayoutDashboard }]}
+      logoHref="/treinador/dashboard"
       roleLabel={ROLE_LABELS[role]}
       userName={userName}
       userSubtitle={userCredential || "Treinador"}
