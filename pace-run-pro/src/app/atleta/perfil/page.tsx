@@ -49,7 +49,7 @@ export default function ProfilePage() {
     avatarUrl?: string | null; bannerUrl?: string | null;
     weightKg?: number | null; heightCm?: number | null;
     raceDate?: string | null; goal?: string | null;
-    level?: string | null; coachName?: string | null;
+    level?: string | null; coachName?: string | null; cpf?: string | null;
   }>({});
 
   const [notifs, setNotifsRaw] = useState({ workouts: true, community: false, coach: true });
@@ -148,6 +148,7 @@ export default function ProfilePage() {
   const [editWeightKg, setEditWeightKg] = useState("");
   const [editHeightCm, setEditHeightCm] = useState("");
   const [editRaceDate, setEditRaceDate] = useState("");
+  const [editCpf, setEditCpf] = useState("");
 
   async function handleEditSave() {
     setEditSaving(true);
@@ -163,6 +164,7 @@ export default function ProfilePage() {
           weightKg: editWeightKg ? parseFloat(editWeightKg) : null,
           heightCm: editHeightCm ? parseFloat(editHeightCm) : null,
           raceDate: editRaceDate || null,
+          cpf: editCpf || null,
         }),
       });
       if (res.ok) {
@@ -175,6 +177,7 @@ export default function ProfilePage() {
           weightKg: editWeightKg ? parseFloat(editWeightKg) : null,
           heightCm: editHeightCm ? parseFloat(editHeightCm) : null,
           raceDate: editRaceDate || null,
+          cpf: editCpf || null,
         }));
         setEditOpen(false);
         setBanner({ type: "success", text: "Perfil atualizado com sucesso!" });
@@ -211,6 +214,7 @@ export default function ProfilePage() {
         setEditWeightKg(String(data.weightKg ?? ""));
         setEditHeightCm(String(data.heightCm ?? ""));
         setEditRaceDate(data.raceDate ?? "");
+        setEditCpf(data.cpf ?? "");
       })
       .catch(() => {});
   }, []);
@@ -373,6 +377,9 @@ export default function ProfilePage() {
               <InfoField label="Altura" value={profile.heightCm ? `${profile.heightCm} cm` : "—"} />
               <InfoField label="Treinador" value={profile.coachName ?? "—"} />
               <InfoField label="Nível" value={profile.level ?? "—"} />
+              {profile.cpf && (
+                <InfoField label="CPF" value={profile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")} />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -784,6 +791,10 @@ export default function ProfilePage() {
               <label className="block">
                 <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">WhatsApp</span>
                 <input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className={inputClass} placeholder="(11) 99999-9999" type="tel" />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">CPF <span className="normal-case font-normal text-text-muted/60">(para pagamentos PIX no marketplace)</span></span>
+                <input value={editCpf} onChange={(e) => setEditCpf(e.target.value.replace(/\D/g, "").slice(0, 11))} className={inputClass} placeholder="00000000000" inputMode="numeric" maxLength={11} />
               </label>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block">

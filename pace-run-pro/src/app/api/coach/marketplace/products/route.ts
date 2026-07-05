@@ -79,9 +79,8 @@ export async function POST(req: NextRequest) {
       included: included ?? [],
       content: content ?? null,
       fileUrl: fileUrl ?? null,
-      // Coaches always start in DRAFT — only admins can approve/publish
-      published: false,
-      listingStatus: "DRAFT",
+      published: true,
+      listingStatus: "APPROVED",
     },
   });
 

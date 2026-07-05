@@ -2,8 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
-const VALID_PLANS = ["FREE", "ATHLETE", "COACH", "TEAM"] as const;
-type Plan = (typeof VALID_PLANS)[number];
+type Plan = "FREE" | "ATHLETE" | "COACH" | "TEAM";
+
+// Maps B2B plan slug → Prisma SubscriptionPlan enum + planSlug string
+const SLUG_MAP: Record<string, { plan: Plan; slug: string }> = {
+  "b2b-free":        { plan: "FREE",    slug: "b2b-free"        },
+  "b2b-starter":     { plan: "ATHLETE", slug: "b2b-starter"     },
+  "b2b-pro":         { plan: "COACH",   slug: "b2b-pro"         },
+  "b2b-assessoria":  { plan: "TEAM",    slug: "b2b-assessoria"  },
+  "b2b-unlimited":   { plan: "TEAM",    slug: "b2b-unlimited"   },
+};
+
+// Legacy enum → slug (for backwards compat with old callers sending enum values)
+const ENUM_TO_SLUG: Record<Plan, string> = {
+  FREE:    "b2b-free",
+  ATHLETE: "b2b-starter",
+  COACH:   "b2b-pro",
+  TEAM:    "b2b-unlimited",
+};
 
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
@@ -11,10 +27,25 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
   }
 
-  const { coachId, plan } = (await req.json()) as { coachId: string; plan: string };
+  const { coachId, planSlug, plan: planEnum } = (await req.json()) as {
+    coachId: string;
+    planSlug?: string;
+    plan?: string;
+  };
 
-  if (!coachId || !VALID_PLANS.includes(plan as Plan)) {
-    return NextResponse.json({ error: "Parâmetros inválidos" }, { status: 400 });
+  if (!coachId) return NextResponse.json({ error: "coachId obrigatório" }, { status: 400 });
+
+  // Resolve the plan from either planSlug (preferred) or legacy plan enum
+  let resolved: { plan: Plan; slug: string } | undefined;
+  if (planSlug && SLUG_MAP[planSlug]) {
+    resolved = SLUG_MAP[planSlug];
+  } else if (planEnum && ENUM_TO_SLUG[planEnum as Plan]) {
+    const slug = ENUM_TO_SLUG[planEnum as Plan];
+    resolved = SLUG_MAP[slug];
+  }
+
+  if (!resolved) {
+    return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
   }
 
   const coach = await prisma.coach.findUnique({
@@ -22,6 +53,8 @@ export async function PATCH(req: NextRequest) {
     select: { userId: true },
   });
   if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
+
+  const renewsAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
   const existingSub = await prisma.subscription.findFirst({
     where: { userId: coach.userId },
@@ -33,21 +66,23 @@ export async function PATCH(req: NextRequest) {
     sub = await prisma.subscription.update({
       where: { id: existingSub.id },
       data: {
-        plan: plan as Plan,
+        plan: resolved.plan,
+        planSlug: resolved.slug,
         status: "ACTIVE",
-        renewsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        renewsAt,
       },
     });
   } else {
     sub = await prisma.subscription.create({
       data: {
         userId: coach.userId,
-        plan: plan as Plan,
+        plan: resolved.plan,
+        planSlug: resolved.slug,
         status: "ACTIVE",
-        renewsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        renewsAt,
       },
     });
   }
 
-  return NextResponse.json({ ok: true, plan: sub.plan, status: sub.status });
+  return NextResponse.json({ ok: true, plan: sub.plan, planSlug: sub.planSlug, status: sub.status });
 }

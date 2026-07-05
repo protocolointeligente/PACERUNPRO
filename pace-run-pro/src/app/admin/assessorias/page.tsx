@@ -78,15 +78,16 @@ const statusFilters = [
 ];
 
 const PLAN_OPTIONS: { value: string; label: string }[] = [
-  { value: "FREE",    label: "Free (b2b-free)"         },
-  { value: "ATHLETE", label: "Starter (b2b-starter)"   },
-  { value: "COACH",   label: "Pro (b2b-pro)"           },
-  { value: "TEAM",    label: "Unlimited (b2b-unlimited)" },
+  { value: "b2b-free",       label: "Free"        },
+  { value: "b2b-starter",    label: "Starter"     },
+  { value: "b2b-pro",        label: "Pro"         },
+  { value: "b2b-assessoria", label: "Assessoria"  },
+  { value: "b2b-unlimited",  label: "Unlimited"   },
 ];
 
 function EditPlanButton({ coachId, currentPlan }: { coachId: string; currentPlan: string }) {
   const [open, setOpen] = useState(false);
-  const [plan, setPlan] = useState("TEAM");
+  const [plan, setPlan] = useState(currentPlan ?? "b2b-free");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -96,7 +97,7 @@ function EditPlanButton({ coachId, currentPlan }: { coachId: string; currentPlan
       const res = await fetch("/api/admin/set-plan", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coachId, plan }),
+        body: JSON.stringify({ coachId, planSlug: plan }),
       });
       if (res.ok) {
         setSaved(true);

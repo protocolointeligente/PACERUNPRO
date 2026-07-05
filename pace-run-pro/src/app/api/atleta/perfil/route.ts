@@ -41,6 +41,7 @@ export async function GET() {
           birthDate: true,
           goal: true,
           level: true,
+          cpf: true,
           coach: { select: { user: { select: { name: true } } } },
         },
       },
@@ -63,6 +64,7 @@ export async function GET() {
     goal: user.athlete?.goal ? (GOAL_LABELS[user.athlete.goal] ?? user.athlete.goal) : null,
     level: user.athlete?.level ? (LEVEL_LABELS[user.athlete.level] ?? user.athlete.level) : null,
     coachName: user.athlete?.coach?.user?.name ?? null,
+    cpf: user.athlete?.cpf ?? null,
   });
 }
 
@@ -87,6 +89,7 @@ export async function PATCH(req: NextRequest) {
     availableMinutes?: number | null;
     raceDate?: string | null;
     recentBestTime?: string | null;
+    cpf?: string | null;
   };
 
   const userUpdate: Record<string, unknown> = {};
@@ -106,6 +109,7 @@ export async function PATCH(req: NextRequest) {
   if (body.availableMinutes !== undefined) athleteUpdate.availableMinutes = body.availableMinutes;
   if (body.raceDate !== undefined) athleteUpdate.raceDate = body.raceDate ? new Date(body.raceDate) : null;
   if (body.recentBestTime !== undefined) athleteUpdate.recentBestTime = body.recentBestTime;
+  if (body.cpf !== undefined) athleteUpdate.cpf = body.cpf ? body.cpf.replace(/\D/g, "") : null;
 
   try {
     if (Object.keys(userUpdate).length > 0) {
