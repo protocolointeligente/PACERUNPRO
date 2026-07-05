@@ -356,8 +356,8 @@ export default function LojaPlanos() {
       {products.length > 0 && (
         <p className="text-xs text-text-muted">
           <Globe className="mr-1 inline h-3 w-3" />
-          Planos publicados aparecem em <span className="font-semibold text-text">/loja</span> para atletas independentes.
-          Pagamentos via Stripe (configure em <span className="font-semibold text-text">Config. financeiras</span>).
+          Planos publicados aparecem em <span className="font-semibold text-text">/marketplace</span> para atletas independentes.
+          Pagamentos via PIX/PagBank (configure em <span className="font-semibold text-text">Config. financeiras</span>).
         </p>
       )}
     </div>

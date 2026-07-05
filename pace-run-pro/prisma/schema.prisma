@@ -1196,7 +1196,6 @@ enum ReceivingMethod {
   PIX
   PAGBANK
   MERCADOPAGO
-  STRIPE
 }
 
 model BillingSettings {
@@ -1220,7 +1219,6 @@ model BillingSettings {
   // Status de conexão com gateways externos
   pagbankConnected      Boolean @default(false)
   mercadopagoConnected  Boolean @default(false)
-  stripeConnected       Boolean @default(false)
 
   // Módulo de cobrança automática de atletas (plano Assessoria+)
   autoChargeEnabled     Boolean @default(false)
@@ -1499,7 +1497,6 @@ model PlanPurchase {
   pricePaidCents  Int               @default(0)
   currency        String            @default("BRL")
   status          PlanPurchaseStatus @default(PENDING)
-  stripeSessionId String?
   deletedAt       DateTime?
 
   createdAt       DateTime          @default(now())
@@ -1622,7 +1619,6 @@ model MarketplaceStore {
 
   commissionPct Float    @default(0.10)
   isActive      Boolean  @default(true)
-  stripeAccountId String?  // Stripe Connect account
 
   products      MarketplaceProduct[]
   coupons       MarketplaceCoupon[]
@@ -1723,7 +1719,6 @@ model MarketplaceOrder {
   currency        String   @default("BRL")
   status          MarketplaceOrderStatus @default(PENDING)
 
-  stripeSessionId String?
   pagbankOrderId  String?
   notes           String?
 
@@ -2090,16 +2085,6 @@ model MarketplaceReferral {
 
   @@index([affiliateId])
   @@map("marketplace_referrals")
-}
-
-// Stripe webhook idempotency guard
-model ProcessedStripeEvent {
-  id        String   @id  // Stripe event ID (evt_xxx) — natural unique key
-  type      String
-  createdAt DateTime @default(now())
-
-  @@index([createdAt])
-  @@map("processed_stripe_events")
 }
 
 // ────────────────────────────────────────────────────────────────────────────

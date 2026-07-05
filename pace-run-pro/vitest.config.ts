@@ -14,7 +14,6 @@ export default defineConfig({
         "src/lib/mock-data.ts",
         "src/lib/email.ts",
         "src/lib/pagbank.ts",
-        "src/lib/stripe.ts",
         "src/lib/geo.ts",
         "src/lib/lazy.tsx",
         "src/lib/auth-guard.ts",

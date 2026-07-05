@@ -86,30 +86,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
   async function handleBuy() {
     if (!product) return;
-    setBuying(true);
-    setError("");
-    try {
-      const res = await fetch("/api/stripe/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Erro ao iniciar compra");
-        setBuying(false);
-        return;
-      }
-      if (data.free) {
-        router.push(data.redirectUrl);
-        return;
-      }
-      // Redirect to Stripe Checkout
-      window.location.href = data.url;
-    } catch {
-      setError("Erro de conexão. Tente novamente.");
-      setBuying(false);
+    if (product.priceCents === 0) {
+      setBuying(true);
+      try {
+        const res = await fetch("/api/marketplace/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId: product.id }),
+        });
+        const data = await res.json();
+        if (data.free) { router.push(data.redirectUrl ?? "/atleta/dashboard"); return; }
+      } catch { /* fall through to marketplace */ }
     }
+    router.push("/marketplace");
   }
 
   if (loading) {
@@ -213,11 +202,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 <>
                   <Button className="w-full gap-2" size="lg" onClick={handleBuy} disabled={buying}>
                     {buying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
-                    {buying ? "Redirecionando…" : product.priceCents === 0 ? "Acessar grátis" : "Comprar agora"}
+                    {buying ? "Redirecionando…" : product.priceCents === 0 ? "Acessar grátis" : "Ver no marketplace"}
                   </Button>
                   {error && <p className="text-xs text-destructive text-center">{error}</p>}
                   {product.priceCents > 0 && (
-                    <p className="text-center text-[11px] text-text-muted">Pagamento seguro via Stripe</p>
+                    <p className="text-center text-[11px] text-text-muted">Pagamento seguro via PIX · PagBank</p>
                   )}
                 </>
               )}

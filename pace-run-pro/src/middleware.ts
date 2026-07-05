@@ -33,7 +33,6 @@ function buildCsp(nonce: string): string {
       `'nonce-${nonce}'`,
       isDev ? "'unsafe-eval'" : "",
       "'unsafe-inline'", // Required for Next.js hydration scripts
-      "https://js.stripe.com",
       "https://sdk.pagseguro.com",
       "https://www.googletagmanager.com",
       "https://*.sentry.io",
@@ -41,8 +40,8 @@ function buildCsp(nonce: string): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' blob: data: https://images.unsplash.com https://lh3.googleusercontent.com https://*.googleusercontent.com https://sandbox.api.pagseguro.com https://api.pagseguro.com https://res.cloudinary.com https://*.amazonaws.com https://avatars.githubusercontent.com https://*.pacerunpro.com.br",
     "font-src 'self'",
-    "connect-src 'self' https://api.pagseguro.com https://sandbox.api.pagseguro.com https://api.stripe.com https://api.anthropic.com https://*.sentry.io https://www.strava.com wss:",
-    "frame-src https://js.stripe.com https://hooks.stripe.com",
+    "connect-src 'self' https://api.pagseguro.com https://sandbox.api.pagseguro.com https://*.sentry.io https://www.strava.com wss:",
+    "frame-src 'none'",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

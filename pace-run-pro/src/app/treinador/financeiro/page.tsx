@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { BadgeCheck, Building2, CheckCircle2, CreditCard, ExternalLink, Landmark, Loader2, Wallet, Zap } from "lucide-react";
+import { BadgeCheck, Building2, CheckCircle2, CreditCard, ExternalLink, Loader2, Wallet, Zap } from "lucide-react";
 import { useCoachRole } from "@/context/coach-role-context";
 import { canAccess } from "@/lib/coach-permissions";
 import { AccessRestricted } from "@/components/shared/access-restricted";
@@ -21,7 +21,7 @@ const inputClass =
 
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted";
 
-type ReceivingMethod = "pix" | "pagbank" | "mercadopago" | "stripe";
+type ReceivingMethod = "pix" | "pagbank" | "mercadopago";
 
 const METHODS: { id: ReceivingMethod; label: string; description: string; icon: React.ElementType; badge?: string }[] = [
   {
@@ -43,12 +43,6 @@ const METHODS: { id: ReceivingMethod; label: string; description: string; icon: 
     description: "Conta Mercado Pago. Em breve — integração em desenvolvimento.",
     icon: Wallet,
     badge: "Em breve",
-  },
-  {
-    id: "stripe",
-    label: "Stripe",
-    description: "Para assessorias com atletas internacionais ou necessidade de moeda estrangeira.",
-    icon: Landmark,
   },
 ];
 
@@ -307,12 +301,12 @@ function FinanceiroContent() {
             )}
 
             {/* Gateway connect placeholder */}
-            {(method === "pagbank" || method === "mercadopago" || method === "stripe") && (
+            {(method === "pagbank" || method === "mercadopago") && (
               <div className="rounded-xl border border-border/60 bg-card-hover/30 p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-semibold text-text">
-                      Conectar conta {method === "pagbank" ? "PagBank" : method === "mercadopago" ? "Mercado Pago" : "Stripe"}
+                      Conectar conta {method === "pagbank" ? "PagBank" : "Mercado Pago"}
                     </p>
                     <p className="mt-0.5 text-xs text-text-muted">
                       Você será redirecionado para autorizar a conexão via OAuth. Em desenvolvimento.
