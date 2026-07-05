@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight, Clock, Loader2, MapPin, Plus, Trophy, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 import type { WorkoutSummary } from "@/lib/types";
 
 interface CalendarEvent {
+  id?: string; // workout id (absent for race events)
   date: string; // YYYY-MM-DD
   type: string;
   title: string;
@@ -143,6 +145,7 @@ export default function CalendarPage() {
 
   const workoutEvents = useMemo((): CalendarEvent[] =>
     workouts.map((w) => ({
+      id: w.id,
       date: w.date.slice(0, 10),
       type: w.type,
       title: w.title,
@@ -361,7 +364,7 @@ export default function CalendarPage() {
         </div>
       )}
 
-      <Tabs defaultValue="semana">
+      <Tabs defaultValue="mes">
         <TabsList>
           <TabsTrigger value="mes">Mensal</TabsTrigger>
           <TabsTrigger value="semana">Semanal</TabsTrigger>
@@ -400,14 +403,25 @@ export default function CalendarPage() {
                             {dayEvents.slice(0, 2).map((e, idx) => {
                               const isRace = e.type === "prova" && e.title.startsWith("🏅");
                               const color = isRace ? "#FFB020" : getSubtypeColor(e.type, e.subtype);
-                              return (
+                              const href = e.id
+                                ? e.type === "forca"
+                                  ? `/atleta/forca/treino/${e.id}`
+                                  : `/atleta/treino/${e.id}`
+                                : undefined;
+                              const chip = (
                                 <span
-                                  key={idx}
-                                  className="truncate rounded-md px-1.5 py-0.5 text-[10px] font-medium leading-tight"
+                                  className="truncate rounded-md px-1.5 py-0.5 text-[10px] font-medium leading-tight block"
                                   style={{ backgroundColor: `${color}22`, color }}
                                 >
                                   {e.title}
                                 </span>
+                              );
+                              return href ? (
+                                <Link key={idx} href={href} className="truncate hover:opacity-80 transition-opacity">
+                                  {chip}
+                                </Link>
+                              ) : (
+                                <span key={idx}>{chip}</span>
                               );
                             })}
                             {dayEvents.length > 2 && (
@@ -464,25 +478,36 @@ export default function CalendarPage() {
                       {items.map((e, idx) => {
                         const isRace = e.type === "prova" && e.title.startsWith("🏅");
                         const color = isRace ? "#FFB020" : getSubtypeColor(e.type, e.subtype);
-                        return (
-                          <Card key={idx}>
-                            <CardContent className="flex items-center gap-3 p-3.5">
-                              <span className="h-9 w-9 shrink-0 rounded-lg" style={{ backgroundColor: `${color}22` }}>
-                                <span className="flex h-full w-full items-center justify-center">
-                                  {isRace ? <Trophy className="h-4 w-4" style={{ color }} /> : <MapPin className="h-4 w-4" style={{ color }} />}
-                                </span>
+                        const href = e.id
+                          ? e.type === "forca"
+                            ? `/atleta/forca/treino/${e.id}`
+                            : `/atleta/treino/${e.id}`
+                          : undefined;
+                        const inner = (
+                          <CardContent className="flex items-center gap-3 p-3.5">
+                            <span className="h-9 w-9 shrink-0 rounded-lg" style={{ backgroundColor: `${color}22` }}>
+                              <span className="flex h-full w-full items-center justify-center">
+                                {isRace ? <Trophy className="h-4 w-4" style={{ color }} /> : <MapPin className="h-4 w-4" style={{ color }} />}
                               </span>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-text">{e.title.replace("🏅 ", "")}</p>
-                                <span className="flex items-center gap-1 text-xs text-text-muted">
-                                  <Clock className="h-3 w-3" /> {isRace ? "Prova" : TYPE_LABELS[e.type]}
-                                </span>
-                              </div>
-                              <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="border">
-                                {e.subtype ?? (isRace ? "Prova" : TYPE_LABELS[e.type])}
-                              </Badge>
-                            </CardContent>
-                          </Card>
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-text">{e.title.replace("🏅 ", "")}</p>
+                              <span className="flex items-center gap-1 text-xs text-text-muted">
+                                <Clock className="h-3 w-3" /> {isRace ? "Prova" : TYPE_LABELS[e.type]}
+                              </span>
+                            </div>
+                            <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="border">
+                              {e.subtype ?? (isRace ? "Prova" : TYPE_LABELS[e.type])}
+                            </Badge>
+                            {href && <ChevronRight className="h-4 w-4 shrink-0 text-text-muted/50" />}
+                          </CardContent>
+                        );
+                        return href ? (
+                          <Link key={idx} href={href} className="block hover:opacity-90 transition-opacity">
+                            <Card>{inner}</Card>
+                          </Link>
+                        ) : (
+                          <Card key={idx}>{inner}</Card>
                         );
                       })}
                     </div>

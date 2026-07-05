@@ -4,6 +4,22 @@ import { prisma } from "@/lib/prisma";
 import { WorkoutType } from "@prisma/client";
 import { computeWeekBounds, findOrCreateActivePlan, findOrCreateWeek } from "@/lib/prescription-service";
 
+interface StrengthExerciseInput {
+  sourceId?: string;
+  name: string;
+  imageUrl?: string;
+  sets: number;
+  reps: string;
+  rest: string;
+}
+
+function parseRestSec(rest: string): number {
+  if (!rest) return 60;
+  const colonMatch = rest.match(/^(\d+):(\d+)$/);
+  if (colonMatch) return parseInt(colonMatch[1]) * 60 + parseInt(colonMatch[2]);
+  return parseInt(rest.replace(/[^\d]/g, "")) || 60;
+}
+
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "COACH") {
@@ -35,6 +51,7 @@ export async function POST(req: NextRequest) {
     mainSet,
     cooldown,
     notes,
+    strengthExercises,
   } = body as {
     athleteId: string;
     date: string;
@@ -53,6 +70,7 @@ export async function POST(req: NextRequest) {
     mainSet?: string;
     cooldown?: string;
     notes?: string;
+    strengthExercises?: StrengthExerciseInput[];
   };
 
   if (!athleteId || !date || !title || !type) {
@@ -76,6 +94,36 @@ export async function POST(req: NextRequest) {
     const { weekStart, weekEnd } = computeWeekBounds(workoutDate);
     const week = await findOrCreateWeek(plan.id, plan.phase, weekStart, weekEnd);
 
+    // Build strength workout data if exercises provided
+    let strengthWorkoutCreate: Record<string, unknown> | undefined;
+    if (workoutType === "FORCA" && Array.isArray(strengthExercises) && strengthExercises.length > 0) {
+      const exerciseRecords = await Promise.all(
+        strengthExercises.map(async (ex) => {
+          const dbId = ex.sourceId ?? `cal-${ex.name.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
+          const dbEx = await prisma.exercise.upsert({
+            where: { id: dbId },
+            update: { name: ex.name, ...(ex.imageUrl ? { imageUrl: ex.imageUrl } : {}) },
+            create: { id: dbId, name: ex.name, category: "FORCA", coachId: null, imageUrl: ex.imageUrl ?? null },
+          });
+          return { id: dbEx.id, sets: ex.sets, reps: ex.reps, restSec: parseRestSec(ex.rest) };
+        })
+      );
+      strengthWorkoutCreate = {
+        create: {
+          split: "PERSONALIZADA",
+          blocks: {
+            create: exerciseRecords.map((e, idx) => ({
+              exerciseId: e.id,
+              order: idx + 1,
+              sets: e.sets,
+              reps: e.reps,
+              restSec: e.restSec,
+            })),
+          },
+        },
+      };
+    }
+
     const workout = await prisma.workout.create({
       data: {
         weekId: week.id,
@@ -96,6 +144,7 @@ export async function POST(req: NextRequest) {
         ...(targetPacePer100m != null ? { targetPacePer100m } : {}),
         ...(targetPowerWatts != null ? { targetPowerWatts } : {}),
         ...(targetRpe != null ? { targetRpe } : {}),
+        ...(strengthWorkoutCreate ? { strengthWorkout: strengthWorkoutCreate } : {}),
       },
       select: { id: true, date: true, title: true, type: true, status: true, structured: true },
     });

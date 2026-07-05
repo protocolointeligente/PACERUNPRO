@@ -54,7 +54,7 @@ export interface NavItem {
 // Bottom nav (4 primary items — daily athlete flow)
 export const athleteNav: NavItem[] = [
   { href: "/atleta/dashboard", label: "Hoje", icon: LayoutDashboard },
-  { href: "/atleta/calendario", label: "Plano", icon: CalendarDays },
+  { href: "/atleta/calendario", label: "Calendário", icon: CalendarDays },
   { href: "/atleta/evolucao", label: "Evolução", icon: TrendingUp },
   { href: "/atleta/treinador", label: "Treinador", icon: MessageSquare },
 ];

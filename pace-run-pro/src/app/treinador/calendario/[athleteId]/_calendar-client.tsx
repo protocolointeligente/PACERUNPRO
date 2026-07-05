@@ -443,6 +443,7 @@ interface FormState {
   oneRmPct: string;
   // Strength only
   divisionType: string;
+  strengthExercises: PrescribedEx[];
 }
 
 function defaultMethod(sport: SportKey): IntensityMethod {
@@ -476,6 +477,7 @@ function emptyForm(sport: SportKey): FormState {
     targetZone: "Z2",
     oneRmPct: "75",
     divisionType: "Full Body",
+    strengthExercises: [],
   };
 }
 
@@ -514,6 +516,7 @@ function workoutToForm(w: CalendarWorkout): FormState {
     targetZone: "Z2",
     oneRmPct: "75",
     divisionType: sport === "STRENGTH" ? divisionType : "Full Body",
+    strengthExercises: [],
   };
 }
 
@@ -544,6 +547,16 @@ function formToPayload(form: FormState) {
     targetPaceSecPerKm: paceSecPerKm && paceSecPerKm > 0 ? paceSecPerKm : undefined,
     targetPacePer100m: pacePer100m && pacePer100m > 0 ? pacePer100m : undefined,
     targetPowerWatts: form.targetPowerWatts !== "" ? Number(form.targetPowerWatts) : undefined,
+    ...(sport === "STRENGTH" && form.strengthExercises.length > 0 ? {
+      strengthExercises: form.strengthExercises.map((e) => ({
+        sourceId: e.sourceId,
+        name: e.name,
+        imageUrl: e.gif,
+        sets: e.sets,
+        reps: e.reps,
+        rest: e.rest,
+      })),
+    } : {}),
   };
 }
 
@@ -1916,6 +1929,7 @@ interface MWExercise {
 
 interface PrescribedEx {
   id: string;
+  sourceId?: string; // original MuscleWiki exercise id
   name: string;
   gif?: string;
   muscles: string[];
@@ -1930,8 +1944,10 @@ function serializeExercises(exs: PrescribedEx[]): string {
 
 function ExercisePicker({
   onUpdate,
+  onExercisesUpdate,
 }: {
   onUpdate: (text: string) => void;
+  onExercisesUpdate?: (exs: PrescribedEx[]) => void;
 }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MWExercise[]>([]);
@@ -1980,6 +1996,7 @@ function ExercisePicker({
     ].slice(0, 2);
     const newEx: PrescribedEx = {
       id: `${ex.id}-${Date.now()}`,
+      sourceId: String(ex.id),
       name: ex.name,
       gif: ex.gif ?? ex.gifUrl,
       muscles,
@@ -1990,6 +2007,7 @@ function ExercisePicker({
     const updated = [...exercises, newEx];
     setExercises(updated);
     onUpdate(serializeExercises(updated));
+    onExercisesUpdate?.(updated);
     setQuery("");
     setResults([]);
   }
@@ -1998,6 +2016,7 @@ function ExercisePicker({
     const updated = exercises.filter((e) => e.id !== id);
     setExercises(updated);
     onUpdate(serializeExercises(updated));
+    onExercisesUpdate?.(updated);
   }
 
   function updateField(id: string, field: keyof Pick<PrescribedEx, "sets" | "reps" | "rest">, value: string) {
@@ -2006,6 +2025,7 @@ function ExercisePicker({
     );
     setExercises(updated);
     onUpdate(serializeExercises(updated));
+    onExercisesUpdate?.(updated);
   }
 
   const INPUT_TINY =
@@ -2360,7 +2380,10 @@ function PrescriptionForm({
           {sport === "STRENGTH" ? "Exercícios" : "Série principal"}
         </label>
         {sport === "STRENGTH" ? (
-          <ExercisePicker onUpdate={(text) => set("mainSet", text)} />
+          <ExercisePicker
+            onUpdate={(text) => set("mainSet", text)}
+            onExercisesUpdate={(exs) => setForm((f) => ({ ...f, strengthExercises: exs }))}
+          />
         ) : (
           <textarea
             rows={3}

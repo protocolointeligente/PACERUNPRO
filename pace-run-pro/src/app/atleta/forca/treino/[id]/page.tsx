@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Dumbbell, Flame, ListChecks, Loader2, Repeat, Timer } from "lucide-react";
+import { ArrowLeft, Dumbbell, Flame, ListChecks, Loader2, Play, Repeat, Timer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +21,7 @@ interface StrengthBlock {
     name: string;
     category: string;
     imageUrl?: string | null;
+    videos?: { url: string; title?: string | null }[];
   };
 }
 
@@ -187,6 +188,22 @@ export default function StrengthTreinoPreviewPage() {
                       </div>
                       {block.notes && (
                         <p className="mt-1.5 text-xs text-text-muted/70">{block.notes}</p>
+                      )}
+                      {block.exercise.videos && block.exercise.videos.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {block.exercise.videos.map((v, vi) => (
+                            <a
+                              key={vi}
+                              href={v.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary hover:bg-primary/20 transition-colors"
+                            >
+                              <Play className="h-2.5 w-2.5" />
+                              {v.title ?? `Vídeo ${vi + 1}`}
+                            </a>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>

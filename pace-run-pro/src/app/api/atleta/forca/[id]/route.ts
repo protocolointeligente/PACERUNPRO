@@ -52,6 +52,10 @@ export async function GET(
                   category: true,
                   description: true,
                   imageUrl: true,
+                  videos: {
+                    select: { url: true, title: true },
+                    take: 3,
+                  },
                 },
               },
             },
