@@ -56,7 +56,9 @@ export class N1Detector {
       // Verificar se estão muito próximas (indicativo de N+1)
       let clustered = 0;
       for (let i = 1; i < queries.length; i++) {
-        const timeDiff = Math.abs(queries[i].timestamp - queries[i - 1].timestamp);
+        const timeDiff = Math.abs(
+          queries[i].timestamp.getTime() - queries[i - 1].timestamp.getTime()
+        );
         if (timeDiff <= timeWindowMs) clustered++;
       }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { WorkoutType } from "@prisma/client";
+import { CyclePhase, Goal, WorkoutType } from "@prisma/client";
 
 const DAY_MAP: Record<string, number> = {
   Dom: 0,
@@ -74,19 +74,19 @@ export async function POST(req: NextRequest) {
   // ✅ P1.7 Optimization: Batch fetch plans instead of N queries
   const existingPlans = await prisma.trainingPlan.findMany({
     where: { athleteId: { in: athleteIds }, coachId: coach.id, endDate: { gte: new Date() } },
-    select: { id: true, athleteId: true },
+    select: { id: true, athleteId: true, phase: true },
   });
   const plansByAthleteId = new Map(existingPlans.map(p => [p.athleteId, p]));
 
   // Batch fetch athletes for plan creation
   const atheletesToCreatePlans = athleteIds.filter(id => !plansByAthleteId.has(id));
-  const athleteGoals = new Map<string, string>();
+  const athleteGoals = new Map<string, Goal>();
   if (atheletesToCreatePlans.length > 0) {
     const athletes = await prisma.athlete.findMany({
       where: { id: { in: atheletesToCreatePlans } },
       select: { id: true, goal: true },
     });
-    athletes.forEach(a => athleteGoals.set(a.id, a.goal ?? "PERFORMANCE"));
+    athletes.forEach((a) => athleteGoals.set(a.id, a.goal ?? Goal.PERFORMANCE));
   }
 
   // Create plans for athletes that don't have them
@@ -96,8 +96,8 @@ export async function POST(req: NextRequest) {
         athleteId,
         coachId: coach.id,
         name: "Plano de Treinamento",
-        goal: athleteGoals.get(athleteId) ?? "PERFORMANCE",
-        phase: "BASE",
+        goal: athleteGoals.get(athleteId) ?? Goal.PERFORMANCE,
+        phase: CyclePhase.BASE,
         startDate: new Date(startDate),
         endDate: new Date(new Date(startDate).getTime() + 90 * 24 * 60 * 60 * 1000),
       },

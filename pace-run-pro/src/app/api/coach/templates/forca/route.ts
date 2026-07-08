@@ -9,7 +9,7 @@ export async function GET() {
   const coach = await prisma.coach.findUnique({ where: { userId: session.user.id }, select: { id: true } });
   if (!coach) return NextResponse.json([]);
 
-  const templates = await prisma.coachForceTemplate.findMany({
+  const templates = await prisma.coachStrengthTemplate.findMany({
     where: { coachId: coach.id },
     orderBy: { createdAt: "desc" },
   });

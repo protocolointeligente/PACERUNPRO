@@ -83,7 +83,7 @@ const queryPerformanceMiddleware: PrismaMiddleware = async (params, next) => {
               level,
               tags: {
                 source: "database-monitoring",
-                model: params.model,
+                model: params.model ?? "unknown",
                 action: params.action,
               },
               extra: {
@@ -120,7 +120,7 @@ const encryptionMiddleware: PrismaMiddleware = async (params, next) => {
     ConnectedDevice: ["accessToken", "refreshToken"],
   };
 
-  const fieldsToEncrypt = encryptedFields[params.model] || [];
+  const fieldsToEncrypt = params.model ? (encryptedFields[params.model] || []) : [];
   const data = params.args.data;
   const createData = params.args.create;
   const updateData = params.args.update;

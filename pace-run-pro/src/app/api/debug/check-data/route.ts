@@ -49,7 +49,11 @@ export async function GET() {
           select: {
             id: true,
             credential: true,
-            athletesCount: true,
+            _count: {
+              select: {
+                athletes: true,
+              },
+            },
             athletes: {
               select: {
                 id: true,
