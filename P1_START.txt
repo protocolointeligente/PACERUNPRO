@@ -1,0 +1,218 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║            🟠 P1 — PRIORIDADE ALTA (8 ITEMS) — ROADMAP 🟠               ║
+║                                                                           ║
+║                     Pronto para Começar Agora!                           ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+📊 P1 OVERVIEW
+═══════════════════════════════════════════════════════════════════════════
+
+  P0 (Done):     Days 1-7 (100% Complete) ✅
+  P1 (Ready):    8 items, ~34 days, High Impact 🔄
+  
+  Total Effort:  ~5-6 semanas de trabalho (backend + frontend)
+  Timeline:      Semanas 3-8 Q3 2026
+
+═══════════════════════════════════════════════════════════════════════════
+
+🎯 8 ITEMS P1 (BACKEND + FRONTEND)
+═══════════════════════════════════════════════════════════════════════════
+
+  BACKEND (5 items — 27 dias)
+  ─────────────────────────────
+  
+  [1] P1.1 — Type Safety (5 dias) — ⭐ Medium
+      └─ Convert 5 string ENUMs → Prisma ENUMs
+      └─ Impact: Type safety, validation, autocomplete
+      
+  [2] P1.2 — Data Integrity (7 dias) — ⭐⭐ High
+      └─ Remove 8 redundant cache fields
+      └─ Impact: Single source of truth, no race conditions
+      
+  [3] P1.3 — Database Performance (4 dias) — ⭐⭐⭐ QUICK WIN
+      └─ Add 18 missing indexes (FK + filters + GIN)
+      └─ Impact: 30x-100x query performance 🚀
+      
+  [4] P1.6 — Query Monitoring (2 dias) — ⭐⭐ High
+      └─ Add Prisma middleware for slow query logging
+      └─ Impact: Detect performance issues automatically
+      
+  [5] P1.7 — N+1 Pattern Fixes (4 dias) — ⭐⭐ High
+      └─ Fix 3 critical N+1 patterns (use include/select)
+      └─ Impact: Reduce DB queries, improve performance
+      
+  [6] P1.8 — API Error Standardization (5 dias) — ⭐⭐ High
+      └─ Consistent error responses, error codes
+      └─ Impact: Better reliability, easier debugging
+  
+  FRONTEND (3 items — 7 dias)
+  ─────────────────────────────
+  
+  [7] P1.4 — Component Consolidation (5 dias) — ⭐ Medium
+      └─ Consolidate 13 duplicate components (Phase 1: modals)
+      └─ Impact: -50% component code, easier maintenance
+      
+  [8] P1.5 — Input Style Classes (2 dias) — ⭐ Easy Win
+      └─ Extract duplicated Tailwind classes
+      └─ Impact: Single source for styling, consistent UX
+
+═══════════════════════════════════════════════════════════════════════════
+
+💡 RECOMMENDED STARTING ORDER
+═══════════════════════════════════════════════════════════════════════════
+
+  Week 1-2: Database Foundation
+  ───────────────────────────────
+  
+  ✨ START HERE: P1.3 — Indexes (4 dias)
+     └─ Why: Quick win, 30x-100x performance improvement
+     └─ Add 18 missing indexes (FK + filters + GIN)
+     └─ Then: Can work on P1.1, P1.2 in parallel
+     
+  → Then: P1.1 — ENUMs (5 dias)
+     └─ Foundation for type safety
+     
+  → Then: P1.2 — Redundancies (7 dias)
+     └─ Data consistency improvements
+  
+  Week 3: Backend Quality & Observability
+  ─────────────────────────────────────────
+  
+  → P1.6 — Monitoring (2 dias)
+     └─ Quick addition to Prisma middleware
+     
+  → P1.7 — N+1 Patterns (4 dias)
+     └─ Query optimization
+     
+  → P1.8 — Error Handling (5 dias)
+     └─ API reliability
+  
+  Week 4-5: Frontend Improvements
+  ────────────────────────────────
+  
+  → P1.5 — Input Classes (2 dias)
+     └─ Easy win, code reuse
+     
+  → P1.4 — Components (5 dias)
+     └─ Consolidation, maintainability
+
+═══════════════════════════════════════════════════════════════════════════
+
+🎯 WHY START WITH P1.3 (INDEXES)?
+═══════════════════════════════════════════════════════════════════════════
+
+  ✅ Fastest to implement (4 dias)
+  ✅ Biggest impact (30x-100x faster queries)
+  ✅ Low risk (only adds indexes, doesn't change data)
+  ✅ Can be deployed independently
+  ✅ Foundation for other improvements
+  ✅ Unblocks P1.6/P1.7 work
+  
+  IMPACT NUMBERS:
+  ├─ User lookups: 500ms → 5ms (100x)
+  ├─ Filter queries: 1s → 20ms (50x)
+  ├─ Composite queries: 2s → 50ms (40x)
+  └─ JSON searches: 3s → 100ms (30x)
+
+═══════════════════════════════════════════════════════════════════════════
+
+📈 TOTAL P1 IMPACT
+═══════════════════════════════════════════════════════════════════════════
+
+  After completing all 8 P1 items:
+  
+  Database Performance:      30-100x faster ⚡
+  Type Safety:               5 string enums → Prisma enums 🛡️
+  Data Consistency:          8 redundant fields removed 🔒
+  Code Reuse:                -50% duplicate components 🔄
+  API Reliability:           Consistent error handling ✅
+  Observability:             Query monitoring enabled 📊
+  Scalability:               Production-ready at scale 🚀
+  Developer Experience:      Better tooling, fewer bugs 🎨
+
+═══════════════════════════════════════════════════════════════════════════
+
+🚀 QUICK START
+═══════════════════════════════════════════════════════════════════════════
+
+  1. Review P1 roadmap:
+     cat /workspaces/PACERUNPRO/P1_ROADMAP.md
+  
+  2. Read full REFACTOR_PLAN.md for technical details:
+     cat /workspaces/PACERUNPRO/docs/REFACTOR_PLAN.md
+  
+  3. Create feature branch:
+     git checkout -b feat/p1-improvements
+  
+  4. Start with P1.3 (Indexes):
+     npm run prisma:migrate:dev -- --name add_missing_indexes
+  
+  5. Or pick a different item to start first
+
+═══════════════════════════════════════════════════════════════════════════
+
+❓ WHAT TO DO NEXT?
+═══════════════════════════════════════════════════════════════════════════
+
+  Option A: Start with P1.3 (Indexes) — Recommended ⭐
+  ──────────────────────────────────────────────────
+  → Quick win, biggest performance impact
+  → 4 days work, production-ready
+  → Low risk, high reward
+  
+  Option B: Start with P1.1 (ENUMs)
+  ─────────────────────────────────
+  → Type safety foundation
+  → 5 days work
+  → Helps prevent bugs
+  
+  Option C: Start with P1.2 (Redundancies)
+  ────────────────────────────────────────
+  → Data consistency improvements
+  → 7 days work
+  → Prevents race conditions
+  
+  Option D: Execute Multiple in Parallel
+  ──────────────────────────────────────
+  → Backend team: P1.1-3, P1.6-8
+  → Frontend team: P1.4-5
+  → Faster overall completion
+
+═══════════════════════════════════════════════════════════════════════════
+
+📚 DOCUMENTATION
+═══════════════════════════════════════════════════════════════════════════
+
+  Main Roadmap:          P1_ROADMAP.md (Executive overview)
+  Full Details:          docs/REFACTOR_PLAN.md (Technical specs)
+  Project Status:        docs/PROJECT_STATUS.md (Context)
+  Review Docs:           docs/COMPONENTS_REVIEW.md (Frontend)
+                        docs/PRISMA_REVIEW.md (Database)
+
+═══════════════════════════════════════════════════════════════════════════
+
+✨ STATUS: 🟢 READY TO START P1
+
+   All P0 items complete ✓
+   P1 roadmap prepared ✓
+   Technical specs detailed ✓
+   Ready to execute ✓
+   
+   → Ready to start? Let's go! 🚀
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║  QUESTION: Which P1 item would you like to start with?                   ║
+║                                                                           ║
+║  1. P1.3 — Indexes (4 dias, 100x perf) ⭐⭐⭐                           ║
+║  2. P1.1 — ENUMs (5 dias, type safety) ⭐⭐                             ║
+║  3. P1.2 — Redundancies (7 dias, integrity) ⭐⭐                        ║
+║  4. P1.4 — Components (5 dias, UX) ⭐                                   ║
+║  5. P1.6 — Monitoring (2 dias, obs) ⭐                                  ║
+║  6. P1.7 — N+1 (4 dias, perf) ⭐⭐                                      ║
+║  7. P1.8 — Errors (5 dias, reliability) ⭐⭐                            ║
+║  8. P1.5 — Classes (2 dias, reuse) ⭐                                   ║
+║  9. All in parallel (need multiple devs)                                 ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
