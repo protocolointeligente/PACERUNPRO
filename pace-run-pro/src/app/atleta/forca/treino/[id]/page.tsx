@@ -7,6 +7,7 @@ import { ArrowLeft, Dumbbell, Flame, ListChecks, Loader2, Repeat, Timer } from "
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { resolveExerciseMedia } from "@/lib/exercise-media";
 
 interface StrengthBlock {
   id: string;
@@ -21,6 +22,7 @@ interface StrengthBlock {
     name: string;
     category: string;
     imageUrl?: string | null;
+    videos?: Array<{ url?: string | null; title?: string | null }> | null;
   };
 }
 
@@ -36,12 +38,6 @@ interface WorkoutData {
   } | null;
 }
 
-interface ExerciseJsonEntry {
-  name: string;
-  gifUrl?: string;
-  imageUrl?: string;
-}
-
 function normName(n: string) {
   return n.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
@@ -49,7 +45,6 @@ function normName(n: string) {
 export default function StrengthTreinoPreviewPage() {
   const { id } = useParams<{ id: string }>();
   const [workout, setWorkout] = useState<WorkoutData | null | undefined>(undefined);
-  const [gifMap, setGifMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch(`/api/atleta/forca/${id}`)
@@ -58,19 +53,6 @@ export default function StrengthTreinoPreviewPage() {
       .catch(() => setWorkout(null));
   }, [id]);
 
-  useEffect(() => {
-    fetch("/exercises.json")
-      .then((r) => r.ok ? r.json() : [])
-      .then((data: ExerciseJsonEntry[]) => {
-        const map: Record<string, string> = {};
-        for (const e of data) {
-          const key = normName(e.name);
-          map[key] = e.gifUrl ?? e.imageUrl ?? "";
-        }
-        setGifMap(map);
-      })
-      .catch(() => null);
-  }, []);
 
   if (workout === undefined) {
     return (
@@ -139,18 +121,32 @@ export default function StrengthTreinoPreviewPage() {
           </Card>
         ) : (
           blocks.map((block, i) => {
-            const gif = gifMap[normName(block.exercise.name)];
+            const media = resolveExerciseMedia({
+              imageUrl: block.exercise.imageUrl,
+              videos: block.exercise.videos,
+            });
             return (
               <Card key={block.id} className="overflow-hidden">
                 <CardContent className="p-0">
                   <div className="flex items-stretch">
                     <div className="h-28 w-36 shrink-0 bg-card-hover">
-                      {gif ? (
-                        <img
-                          src={gif}
-                          alt={block.exercise.name}
-                          className="h-full w-full object-cover"
-                        />
+                      {media.kind !== "none" ? (
+                        media.kind === "video" ? (
+                          <video
+                            src={media.url}
+                            className="h-full w-full object-cover"
+                            muted
+                            playsInline
+                            autoPlay
+                            loop
+                          />
+                        ) : (
+                          <img
+                            src={media.url}
+                            alt={block.exercise.name}
+                            className="h-full w-full object-cover"
+                          />
+                        )
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
                           <Dumbbell className="h-6 w-6 text-text-muted/20" />

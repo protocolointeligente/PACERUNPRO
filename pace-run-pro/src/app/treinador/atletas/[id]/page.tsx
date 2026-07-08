@@ -38,6 +38,13 @@ const LEVEL_LABELS: Record<string, string> = {
 const statusVariants = { ativo: "success", risco: "danger", inativo: "default" } as const;
 const statusLabels = { ativo: "Ativo", risco: "Em risco", inativo: "Inativo" } as const;
 
+function deriveAthleteStatus(adherenceRate?: number | null): "ativo" | "risco" | "inativo" {
+  if (adherenceRate == null) return "ativo";
+  if (adherenceRate >= 0.8) return "ativo";
+  if (adherenceRate >= 0.5) return "risco";
+  return "inativo";
+}
+
 export default async function AthleteFullViewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -56,7 +63,6 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
     where: { id, coachId: coach.id },
     select: {
       id: true,
-      status: true,
       adherenceRate: true,
       goal: true,
       level: true,
@@ -215,9 +221,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
     }))
   ) ?? [];
 
-  const rawStatus = dbAthlete.status ?? "ativo";
-  const status = (rawStatus === "ativo" || rawStatus === "risco" || rawStatus === "inativo"
-    ? rawStatus : "ativo") as "ativo" | "risco" | "inativo";
+  const status = deriveAthleteStatus(dbAthlete.adherenceRate);
 
   const athlete = {
     id: dbAthlete.id,

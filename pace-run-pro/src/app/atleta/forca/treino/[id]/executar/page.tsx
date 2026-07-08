@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { WorkoutShareModal } from "@/components/workout-share-modal";
 import { cn } from "@/lib/utils";
+import { resolveExerciseMedia } from "@/lib/exercise-media";
 
 type Phase = "working" | "resting" | "rpe" | "between" | "done";
 
@@ -51,15 +52,10 @@ interface WorkoutData {
         name: string;
         category: string;
         imageUrl?: string | null;
+        videos?: Array<{ url?: string | null; title?: string | null }> | null;
       };
     }[];
   } | null;
-}
-
-interface ExerciseJsonEntry {
-  name: string;
-  gifUrl?: string;
-  imageUrl?: string;
 }
 
 function normName(n: string) {
@@ -126,17 +122,8 @@ export default function StrengthExecPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [wRes, exRes] = await Promise.all([
-          fetch(`/api/atleta/forca/${id}`),
-          fetch("/exercises.json"),
-        ]);
+        const wRes = await fetch(`/api/atleta/forca/${id}`);
         const wData: WorkoutData = wRes.ok ? await wRes.json() : null;
-        const exJson: ExerciseJsonEntry[] = exRes.ok ? await exRes.json() : [];
-
-        const gifMap: Record<string, string> = {};
-        for (const e of exJson) {
-          gifMap[normName(e.name)] = e.gifUrl ?? e.imageUrl ?? "";
-        }
 
         if (wData?.strengthWorkout?.blocks) {
           setSessionLabel(wData.strengthWorkout.label ?? wData.title);
@@ -149,10 +136,15 @@ export default function StrengthExecPage() {
               reps: b.reps,
               restSec: b.restSec ?? 60,
               targetRpe: b.rpe ?? null,
-              gifUrl:
-                gifMap[normName(b.exercise.name)] ||
-                b.exercise.imageUrl ||
-                undefined,
+              gifUrl: resolveExerciseMedia({
+                imageUrl: b.exercise.imageUrl,
+                videos: b.exercise.videos,
+              }).kind === "none"
+                ? undefined
+                : resolveExerciseMedia({
+                    imageUrl: b.exercise.imageUrl,
+                    videos: b.exercise.videos,
+                  }).url ?? undefined,
             }))
           );
         }

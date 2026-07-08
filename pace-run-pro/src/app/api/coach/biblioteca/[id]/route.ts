@@ -9,11 +9,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id }, select: { id: true } });
-  if (!coach) return NextResponse.json({ error: "Treinador não encontrado" }, { status: 404 });
+  // ✅ 2 queries em 1: buscar template com validação de coach
+  const existing = await prisma.sharedWorkoutTemplate.findUnique({
+    where: { id },
+    include: { coach: { select: { userId: true } } },
+  });
 
-  const existing = await prisma.sharedWorkoutTemplate.findUnique({ where: { id } });
-  if (!existing || existing.coachId !== coach.id) {
+  if (!existing || existing.coach.userId !== session.user.id) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 
@@ -52,11 +54,13 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id }, select: { id: true } });
-  if (!coach) return NextResponse.json({ error: "Treinador não encontrado" }, { status: 404 });
+  // ✅ 2 queries em 1: buscar template com validação de coach
+  const existing = await prisma.sharedWorkoutTemplate.findUnique({
+    where: { id },
+    include: { coach: { select: { userId: true } } },
+  });
 
-  const existing = await prisma.sharedWorkoutTemplate.findUnique({ where: { id } });
-  if (!existing || existing.coachId !== coach.id) {
+  if (!existing || existing.coach.userId !== session.user.id) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 

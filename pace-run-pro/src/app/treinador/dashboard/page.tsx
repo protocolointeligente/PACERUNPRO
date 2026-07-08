@@ -31,6 +31,13 @@ function formatLastCheckIn(date?: Date | null): string {
   return `${days} dias atrás`;
 }
 
+function deriveAthleteStatus(adherenceRate?: number | null): "ativo" | "risco" | "inativo" {
+  if (adherenceRate == null) return "ativo";
+  if (adherenceRate >= 0.8) return "ativo";
+  if (adherenceRate >= 0.5) return "risco";
+  return "inativo";
+}
+
 export default async function CoachDashboardPage() {
   const session = await getSession();
   if (!session?.user?.id) redirect("/login");
@@ -45,7 +52,6 @@ export default async function CoachDashboardPage() {
           athletes: {
             select: {
               id: true,
-              status: true,
               adherenceRate: true,
               goal: true,
               level: true,
@@ -64,7 +70,7 @@ export default async function CoachDashboardPage() {
     name: a.user.name,
     goal: GOAL_LABELS[a.goal ?? ""] ?? "—",
     level: LEVEL_LABELS[a.level] ?? "Iniciante",
-    status: (a.status ?? "ativo") as "ativo" | "risco" | "inativo",
+    status: deriveAthleteStatus(a.adherenceRate),
     adherence: a.adherenceRate ?? 0,
     weeklyLoad: 0,
     lastCheckIn: formatLastCheckIn(a.checkins[0]?.date),

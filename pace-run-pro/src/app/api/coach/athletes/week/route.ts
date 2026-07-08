@@ -12,6 +12,13 @@ function getMondayOf(dateStr?: string | null): Date {
   return d;
 }
 
+function deriveAthleteStatus(adherenceRate?: number | null): "ativo" | "risco" | "inativo" {
+  if (adherenceRate == null) return "ativo";
+  if (adherenceRate >= 0.8) return "ativo";
+  if (adherenceRate >= 0.5) return "risco";
+  return "inativo";
+}
+
 export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "COACH") {
@@ -32,7 +39,6 @@ export async function GET(req: NextRequest) {
         orderBy: [{ user: { name: "asc" } }],
         select: {
           id: true,
-          status: true,
           goal: true,
           level: true,
           adherenceRate: true,
@@ -86,7 +92,7 @@ export async function GET(req: NextRequest) {
       id: athlete.id,
       name: athlete.user.name,
       avatarUrl: athlete.user.avatarUrl,
-      status: athlete.status,
+      status: deriveAthleteStatus(athlete.adherenceRate),
       goal: athlete.goal,
       level: athlete.level,
       adherence: athlete.adherenceRate,

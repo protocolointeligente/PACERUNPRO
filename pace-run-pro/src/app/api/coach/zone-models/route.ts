@@ -7,8 +7,9 @@ export async function GET() {
   if (!session?.user?.id || session.user.role !== "COACH") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
+
   const coach = await prisma.coach.findUnique({ where: { userId: session.user.id }, select: { id: true } });
-  if (!coach) return NextResponse.json([], { status: 200 });
+  if (!coach) return NextResponse.json([]);
 
   const models = await prisma.coachZoneModel.findMany({
     where: { coachId: coach.id },
@@ -22,10 +23,12 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id || session.user.role !== "COACH") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
+
+  const body = await req.json();
+  
   const coach = await prisma.coach.findUnique({ where: { userId: session.user.id }, select: { id: true } });
   if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
 
-  const body = await req.json();
   const model = await prisma.coachZoneModel.create({
     data: {
       coachId: coach.id,

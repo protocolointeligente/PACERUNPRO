@@ -37,6 +37,13 @@ function formatRaceDate(date?: Date | null): string {
   return date.toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function deriveAthleteStatus(adherenceRate?: number | null): "ativo" | "risco" | "inativo" {
+  if (adherenceRate == null) return "ativo";
+  if (adherenceRate >= 0.8) return "ativo";
+  if (adherenceRate >= 0.5) return "risco";
+  return "inativo";
+}
+
 export default async function AthleteListPage() {
   const session = await getSession();
   if (!session?.user?.id) redirect("/login");
@@ -47,7 +54,6 @@ export default async function AthleteListPage() {
       athletes: {
         select: {
           id: true,
-          status: true,
           adherenceRate: true,
           goal: true,
           level: true,
@@ -70,7 +76,7 @@ export default async function AthleteListPage() {
     avatarUrl: a.user.avatarUrl,
     goal: GOAL_LABELS[a.goal ?? ""] ?? "—",
     level: LEVEL_LABELS[a.level] ?? "Iniciante",
-    status: (a.status as "ativo" | "risco" | "inativo") ?? "ativo",
+    status: deriveAthleteStatus(a.adherenceRate),
     adherence: a.adherenceRate ?? 0,
     weeklyLoad: 0,
     lastCheckIn: formatLastCheckIn(a.checkins[0]?.date),

@@ -20,6 +20,13 @@ const LEVEL_LABELS: Record<string, string> = {
   PRO: "Pro",
 };
 
+function deriveAthleteStatus(adherenceRate?: number | null): "ativo" | "risco" | "inativo" {
+  if (adherenceRate == null) return "ativo";
+  if (adherenceRate >= 0.8) return "ativo";
+  if (adherenceRate >= 0.5) return "risco";
+  return "inativo";
+}
+
 export async function GET() {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "COACH") {
@@ -32,7 +39,6 @@ export async function GET() {
       athletes: {
         select: {
           id: true,
-          status: true,
           adherenceRate: true,
           goal: true,
           level: true,
@@ -52,9 +58,7 @@ export async function GET() {
     avatarUrl: a.user.avatarUrl ?? undefined,
     goal: a.goal ? (GOAL_LABELS[a.goal] ?? a.goal) : "—",
     level: LEVEL_LABELS[a.level] ?? a.level,
-    status: (a.status === "ativo" || a.status === "risco" || a.status === "inativo"
-      ? a.status
-      : "ativo") as "ativo" | "risco" | "inativo",
+    status: deriveAthleteStatus(a.adherenceRate),
     adherence: a.adherenceRate,
     vdot: null,
   }));

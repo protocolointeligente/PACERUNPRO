@@ -58,11 +58,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } });
-  if (!coach) {
-    return NextResponse.json({ error: "Treinador não encontrado" }, { status: 403 });
-  }
-
   const body = await req.json() as {
     athleteId: string;
     goal: string;
@@ -98,6 +93,11 @@ export async function POST(req: NextRequest) {
   };
 
   const { athleteId, goal, liberar, weeks, workoutsMap } = body;
+
+  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } });
+  if (!coach) {
+    return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
+  }
 
   const athlete = await prisma.athlete.findFirst({
     where: { id: athleteId, coachId: coach.id },

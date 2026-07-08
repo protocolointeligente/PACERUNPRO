@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "COACH") return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } });
+  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id }, select: { id: true } });
   if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
 
   const { name, email, phone, source, stage, notes, monthlyFeeCents } = (await req.json()) as {
@@ -56,7 +56,7 @@ export async function PATCH(req: NextRequest) {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "COACH") return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } });
+  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id }, select: { id: true } });
   if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
 
   const { id, stage, notes } = (await req.json()) as { id: string; stage?: string; notes?: string };

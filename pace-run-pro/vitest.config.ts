@@ -10,7 +10,7 @@ export default defineConfig({
       include: ["src/lib/**/*.ts"],
       exclude: ["src/lib/prisma.ts", "src/lib/mock-data.ts"],
     },
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
   },
   resolve: {
     alias: {

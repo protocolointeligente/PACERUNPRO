@@ -38,16 +38,12 @@ export async function GET() {
       createdAt: true,
       user: {
         select: {
+          id: true,
           name: true,
           email: true,
           city: true,
           state: true,
           updatedAt: true,
-          subscriptions: {
-            orderBy: { startedAt: "desc" },
-            take: 1,
-            select: { plan: true, status: true },
-          },
         },
       },
       athletes: {
@@ -65,8 +61,30 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
+  // ✅ Fetch subscriptions com batch query ao invés de N queries
+  const subscriptionsByUserId = new Map<
+    string,
+    { plan: string; status: string } | undefined
+  >();
+
+  if (coaches.length > 0) {
+    const userIds = coaches.map((c) => c.user.id);
+    const userSubscriptions = await prisma.subscription.findMany({
+      where: {
+        userId: { in: userIds },
+      },
+      orderBy: { startedAt: "desc" },
+      distinct: ["userId"],
+      select: { userId: true, plan: true, status: true },
+    });
+
+    for (const sub of userSubscriptions) {
+      subscriptionsByUserId.set(sub.userId, { plan: sub.plan, status: sub.status });
+    }
+  }
+
   const result = coaches.map((coach) => {
-    const sub = coach.user.subscriptions[0];
+    const sub = subscriptionsByUserId.get(coach.user.id);
     const plan = sub ? (PLAN_MAP[sub.plan] ?? "starter") : "starter";
     const status = sub ? (STATUS_MAP[sub.status] ?? "pendente") : "pendente";
 

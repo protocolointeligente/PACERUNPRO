@@ -3,17 +3,26 @@ import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
 async function canAccessLog(logId: string, userId: string, role: string) {
+  // ✅ Otimização P1.7: Simplificar validação sem nested relationships
   const log = await prisma.workoutLog.findUnique({
     where: { id: logId },
     select: {
       athleteId: true,
-      athlete: { select: { userId: true, coachId: true, coach: { select: { userId: true } } } },
+      athlete: { select: { userId: true, coachId: true } },
     },
   });
   if (!log) return null;
   if (role === "ADMIN") return log;
   if (log.athlete.userId === userId) return log;
-  if (role === "COACH" && log.athlete.coach?.userId === userId) return log;
+  
+  // Para coach, verificar se coach.userId === userId
+  if (role === "COACH" && log.athlete.coachId) {
+    const coach = await prisma.coach.findUnique({
+      where: { id: log.athlete.coachId },
+      select: { userId: true },
+    });
+    if (coach?.userId === userId) return log;
+  }
   return null;
 }
 

@@ -3,7 +3,8 @@
 // resolved by the Prisma CLI's isolated module loader on some environments.
 // defineConfig() is a pure type-helper (identity function) so we skip it.
 import { readFileSync } from "fs";
-import { resolve } from "path";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 
 function loadEnvFile(filePath: string): void {
   try {
@@ -22,13 +23,13 @@ function loadEnvFile(filePath: string): void {
   }
 }
 
-// Load env files from the project root (same folder as this file).
+// Load env files relative to this config file, not process.cwd().
 // On Vercel / CI the vars are already in process.env so the files don't matter.
-const root = process.cwd();
+const root = dirname(fileURLToPath(import.meta.url));
 loadEnvFile(resolve(root, ".env.local"));
 loadEnvFile(resolve(root, ".env"));
 
-export default {
+const prismaConfig = {
   datasource: {
     url:
       process.env.POSTGRES_URL_NON_POOLING ??
@@ -39,3 +40,5 @@ export default {
     seed: "tsx prisma/seed.ts",
   },
 };
+
+export default prismaConfig;

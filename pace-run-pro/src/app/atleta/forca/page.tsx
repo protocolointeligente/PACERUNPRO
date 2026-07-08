@@ -137,7 +137,7 @@ export default function StrengthPage() {
               {blocks.map((block, i) => {
                 const gif = exerciseGifs[block.exercise.id];
                 return (
-                  <Link key={block.id} href={`/atleta/forca/${block.exercise.id}`}>
+                  <Link key={block.id} href={`/atleta/forca/${block.id}`}>
                     <div className="flex items-center gap-3 rounded-xl border border-border bg-card-hover/40 p-3 transition-colors hover:border-primary/40">
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-card text-sm font-bold text-text-muted">
                         {i + 1}

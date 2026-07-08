@@ -36,13 +36,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id }, select: { id: true } });
-  if (!coach) return NextResponse.json({ error: "Treinador não encontrado" }, { status: 404 });
-
   const body = await req.json();
   const { name, description, category, workoutType, scope, tags, objective, warmup, mainSet, cooldown, notes, targetPaceSecPerKm, targetHrZone, targetRpe, targetDistanceKm, targetDurationMin } = body;
 
   if (!name?.trim()) return NextResponse.json({ error: "Nome obrigatório" }, { status: 400 });
+
+  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id }, select: { id: true } });
+  if (!coach) return NextResponse.json({ error: "Treinador não encontrado" }, { status: 404 });
 
   const template = await prisma.sharedWorkoutTemplate.create({
     data: {

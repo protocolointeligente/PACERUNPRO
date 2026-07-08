@@ -22,9 +22,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } });
-  if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
-
   const body = (await req.json()) as {
     name: string;
     description?: string;
@@ -35,6 +32,9 @@ export async function POST(req: NextRequest) {
     maxSlots?: number | null;
     sortOrder?: number;
   };
+
+  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id }, select: { id: true } });
+  if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
 
   const plan = await prisma.coachPlan.create({
     data: {

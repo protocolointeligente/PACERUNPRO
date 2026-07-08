@@ -71,29 +71,42 @@ export async function POST(req: NextRequest) {
 
   let totalWorkoutsCreated = 0;
 
-  for (const athleteId of athleteIds) {
-    // Find or create training plan
-    let plan = await prisma.trainingPlan.findFirst({
-      where: { athleteId, coachId: coach.id, endDate: { gte: new Date() } },
-    });
+  // ✅ P1.7 Optimization: Batch fetch plans instead of N queries
+  const existingPlans = await prisma.trainingPlan.findMany({
+    where: { athleteId: { in: athleteIds }, coachId: coach.id, endDate: { gte: new Date() } },
+    select: { id: true, athleteId: true },
+  });
+  const plansByAthleteId = new Map(existingPlans.map(p => [p.athleteId, p]));
 
-    if (!plan) {
-      const athlete = await prisma.athlete.findUnique({
-        where: { id: athleteId },
-        select: { goal: true },
-      });
-      plan = await prisma.trainingPlan.create({
-        data: {
-          athleteId,
-          coachId: coach.id,
-          name: "Plano de Treinamento",
-          goal: athlete?.goal ?? "PERFORMANCE",
-          phase: "BASE",
-          startDate: new Date(startDate),
-          endDate: new Date(new Date(startDate).getTime() + 90 * 24 * 60 * 60 * 1000),
-        },
-      });
-    }
+  // Batch fetch athletes for plan creation
+  const atheletesToCreatePlans = athleteIds.filter(id => !plansByAthleteId.has(id));
+  const athleteGoals = new Map<string, string>();
+  if (atheletesToCreatePlans.length > 0) {
+    const athletes = await prisma.athlete.findMany({
+      where: { id: { in: atheletesToCreatePlans } },
+      select: { id: true, goal: true },
+    });
+    athletes.forEach(a => athleteGoals.set(a.id, a.goal ?? "PERFORMANCE"));
+  }
+
+  // Create plans for athletes that don't have them
+  for (const athleteId of atheletesToCreatePlans) {
+    const plan = await prisma.trainingPlan.create({
+      data: {
+        athleteId,
+        coachId: coach.id,
+        name: "Plano de Treinamento",
+        goal: athleteGoals.get(athleteId) ?? "PERFORMANCE",
+        phase: "BASE",
+        startDate: new Date(startDate),
+        endDate: new Date(new Date(startDate).getTime() + 90 * 24 * 60 * 60 * 1000),
+      },
+    });
+    plansByAthleteId.set(athleteId, plan);
+  }
+
+  for (const athleteId of athleteIds) {
+    const plan = plansByAthleteId.get(athleteId)!;
 
     // Find or create training week
     let week = await prisma.trainingWeek.findFirst({

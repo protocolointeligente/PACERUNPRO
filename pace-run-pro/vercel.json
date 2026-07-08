@@ -1,3 +1,9 @@
 {
-  "buildCommand": "prisma generate && (prisma migrate resolve --rolled-back 20260615000000_add_vouchers || true) && prisma migrate deploy && next build"
+  "buildCommand": "prisma generate && (prisma migrate resolve --rolled-back 20260615000000_add_vouchers || true) && prisma migrate deploy && next build",
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-soft-deletes",
+      "schedule": "0 2 * * *"
+    }
+  ]
 }
