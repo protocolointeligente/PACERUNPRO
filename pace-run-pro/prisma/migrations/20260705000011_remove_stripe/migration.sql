@@ -1,8 +1,7 @@
 -- Removes all Stripe-related columns, tables and enum values.
--- Fully idempotent: every destructive operation uses IF EXISTS or
--- a PL/pgSQL guard so it is safe to re-run on any state of the DB.
+-- Fully idempotent — safe to re-run on any state of the DB.
 
--- 1. Drop stripe columns (IF EXISTS — safe even if columns were never created)
+-- 1. Drop stripe columns (IF EXISTS — safe even if never created)
 ALTER TABLE "marketplace_stores"  DROP COLUMN IF EXISTS "stripe_account_id";
 ALTER TABLE "plan_purchases"      DROP COLUMN IF EXISTS "stripe_session_id";
 ALTER TABLE "marketplace_orders"  DROP COLUMN IF EXISTS "stripe_session_id";
@@ -11,30 +10,26 @@ ALTER TABLE "billing_settings"    DROP COLUMN IF EXISTS "stripe_connected";
 -- 2. Drop Stripe webhook idempotency guard table
 DROP TABLE IF EXISTS "processed_stripe_events";
 
--- 3. Remove STRIPE from ReceivingMethod enum (fully guarded PL/pgSQL block)
---    Handles all cases:
---      a) enum does not exist at all
---      b) STRIPE already removed from enum
---      c) receiving_method column does not exist in billing_settings
---      d) normal case: column + enum both exist, STRIPE present
+-- 3. Remove STRIPE from ReceivingMethod enum.
+--    Discovers the actual column name from pg_catalog (handles camelCase
+--    or snake_case regardless of how the migration created it).
 DO $$
 DECLARE
-  v_col_exists     boolean;
-  v_enum_exists    boolean;
-  v_stripe_exists  boolean;
+  v_col_name      text    := NULL;
+  v_enum_exists   boolean;
+  v_stripe_exists boolean;
 BEGIN
-  -- Does the enum type exist?
+  -- (a) Does the enum type exist at all?
   SELECT EXISTS (
     SELECT 1 FROM pg_type WHERE typname = 'ReceivingMethod'
   ) INTO v_enum_exists;
 
   IF NOT v_enum_exists THEN
-    -- Enum was never created; create it fresh without STRIPE.
-    EXECUTE $q$CREATE TYPE "ReceivingMethod" AS ENUM ('PIX', 'PAGBANK', 'MERCADOPAGO')$q$;
+    CREATE TYPE "ReceivingMethod" AS ENUM ('PIX', 'PAGBANK', 'MERCADOPAGO');
     RETURN;
   END IF;
 
-  -- Is STRIPE still a member of the enum?
+  -- (b) Is STRIPE still a member of the enum?
   SELECT EXISTS (
     SELECT 1
     FROM   pg_enum  e
@@ -44,40 +39,45 @@ BEGIN
   ) INTO v_stripe_exists;
 
   IF NOT v_stripe_exists THEN
-    -- STRIPE already gone; nothing to do.
-    RETURN;
+    RETURN;  -- already clean
   END IF;
 
-  -- Does the column that uses the enum exist?
-  SELECT EXISTS (
-    SELECT 1
-    FROM   information_schema.columns
-    WHERE  table_schema = 'public'
-      AND  table_name   = 'billing_settings'
-      AND  column_name  = 'receiving_method'
-  ) INTO v_col_exists;
+  -- (c) Find the actual column name in billing_settings that uses this enum
+  --     (handles both "receivingMethod" camelCase and "receiving_method" snake_case)
+  SELECT a.attname INTO v_col_name
+  FROM   pg_attribute a
+  JOIN   pg_class     c ON c.oid = a.attrelid
+  JOIN   pg_type      t ON t.oid = a.atttypid
+  JOIN   pg_namespace n ON n.oid = c.relnamespace
+  WHERE  c.relname  = 'billing_settings'
+    AND  t.typname  = 'ReceivingMethod'
+    AND  n.nspname  = 'public'
+    AND  a.attnum   > 0
+    AND  NOT a.attisdropped;
 
-  IF v_col_exists THEN
-    -- Step 1: decouple column from enum so we can drop & recreate the type.
-    EXECUTE $q$ALTER TABLE "billing_settings" ALTER COLUMN "receiving_method" TYPE text$q$;
+  IF v_col_name IS NOT NULL THEN
+    -- Convert the column to plain text so the enum type has no dependents
+    EXECUTE format(
+      'ALTER TABLE "billing_settings" ALTER COLUMN %I TYPE text',
+      v_col_name
+    );
   END IF;
 
-  -- Step 2: drop old enum (no dependents remain because column is now text).
+  -- Drop the old enum (no dependents remain)
   DROP TYPE "ReceivingMethod";
 
-  -- Step 3: create the enum without STRIPE.
-  EXECUTE $q$CREATE TYPE "ReceivingMethod" AS ENUM ('PIX', 'PAGBANK', 'MERCADOPAGO')$q$;
+  -- Recreate without STRIPE
+  CREATE TYPE "ReceivingMethod" AS ENUM ('PIX', 'PAGBANK', 'MERCADOPAGO');
 
-  IF v_col_exists THEN
-    -- Step 4: restore the column with the new enum type.
-    --         Any row that somehow had STRIPE is silently nullified.
-    EXECUTE $q$
-      ALTER TABLE "billing_settings"
-        ALTER COLUMN "receiving_method" TYPE "ReceivingMethod"
-        USING CASE
-                WHEN "receiving_method" = 'STRIPE' THEN NULL
-                ELSE "receiving_method"::"ReceivingMethod"
-              END
-    $q$;
+  IF v_col_name IS NOT NULL THEN
+    -- Restore column with the new enum; nullify any STRIPE rows
+    EXECUTE format(
+      $q$ALTER TABLE "billing_settings"
+           ALTER COLUMN %I TYPE "ReceivingMethod"
+           USING CASE WHEN %I = 'STRIPE' THEN NULL
+                      ELSE %I::"ReceivingMethod"
+                 END$q$,
+      v_col_name, v_col_name, v_col_name
+    );
   END IF;
 END $$;
