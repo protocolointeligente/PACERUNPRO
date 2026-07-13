@@ -25,11 +25,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const fromParam = req.nextUrl.searchParams.get("from");
+  const toParam = req.nextUrl.searchParams.get("to");
   const weekStartParam = req.nextUrl.searchParams.get("weekStart");
-  const weekStart = getMondayOf(weekStartParam);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
-  weekEnd.setUTCHours(23, 59, 59, 999);
+  const weekStart = fromParam ? new Date(fromParam + "T00:00:00Z") : getMondayOf(weekStartParam);
+  const weekEnd = toParam ? new Date(toParam + "T23:59:59Z") : new Date(weekStart);
+  if (!toParam) {
+    weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+    weekEnd.setUTCHours(23, 59, 59, 999);
+  }
 
   const coach = await prisma.coach.findUnique({
     where: { userId: session.user.id },

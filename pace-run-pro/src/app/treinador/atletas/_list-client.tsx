@@ -8,6 +8,7 @@ import {
   Flame, ShieldAlert, CalendarCheck,
   BookmarkPlus, Copy, CopyPlus, Plus, Loader2, Check,
   Clipboard, ClipboardPaste, Trash2, GripVertical,
+  Bike, Waves, Dumbbell, Footprints,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,20 @@ const WO_DEFAULT = { label: "Treino", short: "?", bg: "bg-gray-400", text: "text
 
 function woCfg(type: string) {
   return WO_CONFIG[type] ?? WO_DEFAULT;
+}
+
+function WorkoutIcon({ type, className }: { type: string; className?: string }) {
+  const key = type.toUpperCase();
+  if (key.includes("FORCA") || key.includes("FUNCIONAL") || key.includes("MOBILIDADE")) {
+    return <Dumbbell className={className} />;
+  }
+  if (key.includes("BIKE") || key.includes("CICL")) {
+    return <Bike className={className} />;
+  }
+  if (key.includes("NAT") || key.includes("SWIM")) {
+    return <Waves className={className} />;
+  }
+  return <Footprints className={className} />;
 }
 
 // ── Status config ────────────────────────────────────────────────────────────
@@ -135,6 +150,31 @@ function toISODate(d: Date): string {
 }
 
 const DAYS_PT = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+function getMonthStart(d: Date): Date {
+  const copy = new Date(d);
+  copy.setHours(0, 0, 0, 0);
+  copy.setDate(1);
+  return copy;
+}
+
+function getCalendarMonthDays(monthStart: Date) {
+  const gridStart = getMondayOf(monthStart);
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = addDays(gridStart, index);
+    return {
+      date,
+      iso: toISODate(date),
+      dayNum: date.getDate(),
+      inMonth: date.getMonth() === monthStart.getMonth(),
+      isToday: toISODate(date) === toISODate(new Date()),
+    };
+  });
+}
+
+function formatMonthLabel(monthStart: Date): string {
+  return monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+}
 
 function formatWeekRange(monday: Date): string {
   const sunday = addDays(monday, 6);
@@ -509,6 +549,7 @@ interface QuickPrescribePayload {
   athleteId: string;
   athleteName: string;
   date: string;
+  workout?: WorkoutEntry;
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -670,20 +711,38 @@ function IntervalsPrescribeModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const editingWorkout = payload.workout;
   const [category, setCategory] = useState("Treino");
-  const [sport, setSport] = useState("Corrida");
-  const [type, setType] = useState("RODAGEM_LEVE");
-  const [title, setTitle] = useState("Rodagem leve");
-  const [durationMin, setDurationMin] = useState("");
-  const [distanceKm, setDistanceKm] = useState("");
+  const [sport, setSport] = useState(
+    editingWorkout?.type === "FORCA" ? "Forca" : "Corrida"
+  );
+  const [type, setType] = useState(editingWorkout?.type ?? "RODAGEM_LEVE");
+  const [title, setTitle] = useState(editingWorkout?.title ?? "Rodagem leve");
+  const [durationMin, setDurationMin] = useState(editingWorkout?.targetDurationMin ? String(editingWorkout.targetDurationMin) : "");
+  const [distanceKm, setDistanceKm] = useState(editingWorkout?.targetDistanceKm ? String(editingWorkout.targetDistanceKm) : "");
   const [load, setLoad] = useState("");
-  const [rpe, setRpe] = useState("");
+  const [rpe, setRpe] = useState(editingWorkout?.targetRpe ? String(editingWorkout.targetRpe) : "");
+  const [ftp, setFtp] = useState("");
+  const [heartRate, setHeartRate] = useState("");
+  const [pace, setPace] = useState("");
+  const [poolDistance, setPoolDistance] = useState("25");
+  const [strengthExercise, setStrengthExercise] = useState("Agachamento");
+  const [sets, setSets] = useState("3");
+  const [reps, setReps] = useState("10");
+  const [loadKg, setLoadKg] = useState("");
+  const [rir, setRir] = useState("");
+  const [restSec, setRestSec] = useState("90");
   const [description, setDescription] = useState("");
-  const [steps, setSteps] = useState("Aquecimento 10min Z1\nPrincipal 30min Z2\nVolta a calma 5min");
+  const [steps, setSteps] = useState(
+    editingWorkout?.type === "FORCA"
+      ? "Agachamento 3x10 carga moderada RPE 7 descanso 90s\nRemada 3x12 RIR 2 descanso 75s"
+      : "Aquecimento 10min Z1\nPrincipal 30min Z2\nVolta a calma 5min"
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const inputClass = "w-full border-0 border-b border-border bg-transparent px-0 py-1.5 text-sm text-text outline-none focus:border-info";
+  const inputClass = "w-full rounded-md border border-border bg-[#0b1511] px-2.5 py-2 text-sm text-text outline-none focus:border-info";
+  const optionClass = "bg-[#0b1511] text-text";
   const dateLabel = new Date(payload.date + "T12:00:00").toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "short",
@@ -696,6 +755,20 @@ function IntervalsPrescribeModal({
     if (selected) setTitle(selected.label);
   }
 
+  function handleSportChange(value: string) {
+    setSport(value);
+    if (value === "Forca") {
+      setType("FORCA");
+      setTitle("Treino de forca");
+    } else if (value === "Ciclismo") {
+      setType("RODAGEM_LEVE");
+      setTitle("Bike endurance");
+    } else if (value === "Natacao") {
+      setType("TECNICA");
+      setTitle("Natacao tecnica");
+    }
+  }
+
   async function handleSave() {
     if (!title.trim()) {
       setError("Informe o nome do treino.");
@@ -704,18 +777,27 @@ function IntervalsPrescribeModal({
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/coach/workouts", {
-        method: "POST",
+      const structuredSteps = sport === "Forca"
+        ? `${strengthExercise} ${sets}x${reps}${loadKg ? ` ${loadKg}kg` : ""}${rpe ? ` RPE ${rpe}` : ""}${rir ? ` RIR ${rir}` : ""} descanso ${restSec}s\n${steps}`
+        : steps;
+      const res = await fetch(editingWorkout ? `/api/coach/workouts/${editingWorkout.id}` : "/api/coach/workouts", {
+        method: editingWorkout ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           athleteId: payload.athleteId,
           date: payload.date,
           title: title.trim(),
           type,
-          objective: description || steps,
-          structured: Boolean(steps.trim()),
-          blocks: steps.trim()
-            ? steps.split("\n").filter(Boolean).map((line, index) => ({ order: index + 1, text: line }))
+          objective: [
+            description,
+            sport === "Corrida" && (pace || heartRate || load) ? `Pace ${pace || "-"} / FC ${heartRate || "-"}${load ? ` / carga ${load}` : ""}` : "",
+            sport === "Ciclismo" && (ftp || heartRate) ? `FTP ${ftp || "-"} / FC ${heartRate || "-"}` : "",
+            sport === "Natacao" ? `Piscina ${poolDistance}m${pace ? ` / ritmo ${pace}` : ""}` : "",
+            sport === "Forca" ? `${strengthExercise}: ${sets}x${reps}${loadKg ? ` x ${loadKg}kg` : ""}${rpe ? ` RPE ${rpe}` : ""}${rir ? ` RIR ${rir}` : ""} / descanso ${restSec}s` : "",
+          ].filter(Boolean).join("\n"),
+          structured: Boolean(structuredSteps.trim()),
+          blocks: structuredSteps.trim()
+            ? structuredSteps.split("\n").filter(Boolean).map((line, index) => ({ order: index + 1, text: line }))
             : undefined,
           ...(durationMin ? { targetDurationMin: parseInt(durationMin, 10) } : {}),
           ...(distanceKm ? { targetDistanceKm: parseFloat(distanceKm) } : {}),
@@ -744,7 +826,7 @@ function IntervalsPrescribeModal({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between bg-info px-4 py-2.5 text-white">
-          <p className="text-sm font-semibold">Adicionar Entrada no Calendario</p>
+          <p className="text-sm font-semibold">{editingWorkout ? "Editar Entrada no Calendario" : "Adicionar Entrada no Calendario"}</p>
           <button onClick={onClose} className="rounded p-1 text-white/80 hover:bg-white/15 hover:text-white">
             <X className="h-4 w-4" />
           </button>
@@ -756,7 +838,7 @@ function IntervalsPrescribeModal({
               <span className="text-[11px] font-medium text-text-muted">Categoria</span>
               <select value={category} onChange={(event) => setCategory(event.target.value)} className={inputClass}>
                 {["Treino", "Atividade Manual", "Nota", "Temporada", "Lesionado", "Definir FTP"].map((item) => (
-                  <option key={item} value={item}>{item}</option>
+                  <option key={item} value={item} className={optionClass}>{item}</option>
                 ))}
               </select>
             </label>
@@ -766,16 +848,16 @@ function IntervalsPrescribeModal({
             </label>
             <label className="block space-y-1">
               <span className="text-[11px] font-medium text-text-muted">Esporte</span>
-              <select value={sport} onChange={(event) => setSport(event.target.value)} className={inputClass}>
-                {["Corrida", "Ciclismo", "Natacao", "Trilha", "Treino de Peso"].map((item) => (
-                  <option key={item} value={item}>{item}</option>
+              <select value={sport} onChange={(event) => handleSportChange(event.target.value)} className={inputClass}>
+                {["Corrida", "Ciclismo", "Natacao", "Forca", "Trilha"].map((item) => (
+                  <option key={item} value={item} className={optionClass}>{item}</option>
                 ))}
               </select>
             </label>
             <label className="block space-y-1">
               <span className="text-[11px] font-medium text-text-muted">Tipo de treino</span>
               <select value={type} onChange={(event) => handleTypeChange(event.target.value)} className={inputClass}>
-                {QUICK_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+                {QUICK_TYPES.map((item) => <option key={item.value} value={item.value} className={optionClass}>{item.label}</option>)}
               </select>
             </label>
             <label className="block space-y-1">
@@ -810,6 +892,92 @@ function IntervalsPrescribeModal({
               <input type="number" min={1} max={10} placeholder="-" value={rpe} onChange={(event) => setRpe(event.target.value)} className={inputClass} />
             </label>
           </div>
+
+          {sport === "Corrida" && (
+            <div className="mt-4 grid grid-cols-1 gap-3 rounded-md border border-border bg-[#07100d] p-3 sm:grid-cols-3">
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">Pace alvo</span>
+                <input placeholder="5:20/km" value={pace} onChange={(event) => setPace(event.target.value)} className={inputClass} />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">FC alvo</span>
+                <input placeholder="Z2 / 145-155" value={heartRate} onChange={(event) => setHeartRate(event.target.value)} className={inputClass} />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">Controle</span>
+                <input value="Pace + FC + RPE" readOnly className={cn(inputClass, "text-text-muted")} />
+              </label>
+            </div>
+          )}
+
+          {sport === "Ciclismo" && (
+            <div className="mt-4 grid grid-cols-1 gap-3 rounded-md border border-border bg-[#07100d] p-3 sm:grid-cols-3">
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">FTP / watts</span>
+                <input placeholder="FTP 240 / 180-210w" value={ftp} onChange={(event) => setFtp(event.target.value)} className={inputClass} />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">FC alvo</span>
+                <input placeholder="Z3 / 150-165" value={heartRate} onChange={(event) => setHeartRate(event.target.value)} className={inputClass} />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">Cadencia</span>
+                <input placeholder="85-95 rpm" className={inputClass} />
+              </label>
+            </div>
+          )}
+
+          {sport === "Natacao" && (
+            <div className="mt-4 grid grid-cols-1 gap-3 rounded-md border border-border bg-[#07100d] p-3 sm:grid-cols-3">
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">Piscina</span>
+                <select value={poolDistance} onChange={(event) => setPoolDistance(event.target.value)} className={inputClass}>
+                  {["25", "50"].map((item) => <option key={item} value={item} className={optionClass}>{item} m</option>)}
+                </select>
+              </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">Ritmo alvo</span>
+                <input placeholder="1:55/100m" value={pace} onChange={(event) => setPace(event.target.value)} className={inputClass} />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">Intervalo</span>
+                <input placeholder="20s entre tiros" value={restSec} onChange={(event) => setRestSec(event.target.value)} className={inputClass} />
+              </label>
+            </div>
+          )}
+
+          {sport === "Forca" && (
+            <div className="mt-4 grid grid-cols-2 gap-3 rounded-md border border-border bg-[#07100d] p-3 lg:grid-cols-7">
+              <label className="col-span-2 block space-y-1 lg:col-span-2">
+                <span className="text-[11px] font-medium text-text-muted">Exercicio da biblioteca</span>
+                <select value={strengthExercise} onChange={(event) => setStrengthExercise(event.target.value)} className={inputClass}>
+                  {["Agachamento", "Levantamento terra", "Supino", "Remada", "Avanco", "Prancha", "Panturrilha"].map((item) => (
+                    <option key={item} value={item} className={optionClass}>{item}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">Series</span>
+                <input value={sets} onChange={(event) => setSets(event.target.value)} className={inputClass} />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">Reps</span>
+                <input value={reps} onChange={(event) => setReps(event.target.value)} className={inputClass} />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">Carga</span>
+                <input placeholder="kg" value={loadKg} onChange={(event) => setLoadKg(event.target.value)} className={inputClass} />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">RPE/RIR</span>
+                <input placeholder="RPE 7 ou RIR 2" value={rir || rpe} onChange={(event) => { setRir(event.target.value); setRpe(event.target.value.replace(/\D/g, "")); }} className={inputClass} />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">Descanso</span>
+                <input placeholder="90s" value={restSec} onChange={(event) => setRestSec(event.target.value)} className={inputClass} />
+              </label>
+            </div>
+          )}
 
           <label className="mt-4 block space-y-1">
             <span className="text-[11px] font-medium text-text-muted">Descricao</span>
@@ -1119,11 +1287,12 @@ const TABS = ["Todos", "Com treino", "Sem plano", "Em risco"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function AthleteListClient({ athletes: staticAthletes }: Props) {
-  const [weekStart, setWeekStart] = useState<Date>(() => getMondayOf(new Date()));
+  const [monthStart, setMonthStart] = useState<Date>(() => getMonthStart(new Date()));
   const [weeklyData, setWeeklyData] = useState<WeeklyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<Tab>("Todos");
+  const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(staticAthletes[0]?.id ?? null);
   const [modal, setModal] = useState<ModalPayload | null>(null);
   const [actionCenter, setActionCenter] = useState<ActionCenterData | null>(null);
   const [quickPrescribe, setQuickPrescribe] = useState<QuickPrescribePayload | null>(null);
@@ -1173,7 +1342,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
     try {
       const res = await fetch(`/api/coach/workouts/${workout.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Nao foi possivel excluir o treino.");
-      fetchWeek(weekStart);
+      fetchWeek(monthStart);
       setModal(null);
     } catch (error) {
       alert(error instanceof Error ? error.message : "Nao foi possivel excluir o treino.");
@@ -1194,7 +1363,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? "Nao foi possivel mover o treino.");
       }
-      fetchWeek(weekStart);
+      fetchWeek(monthStart);
     } catch (error) {
       alert(error instanceof Error ? error.message : "Nao foi possivel mover o treino.");
     } finally {
@@ -1226,7 +1395,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? "Nao foi possivel colar o treino.");
       }
-      fetchWeek(weekStart);
+      fetchWeek(monthStart);
     } catch (error) {
       alert(error instanceof Error ? error.message : "Nao foi possivel colar o treino.");
     } finally {
@@ -1251,7 +1420,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? "Nao foi possivel colar a semana.");
       }
-      fetchWeek(weekStart);
+      fetchWeek(monthStart);
     } catch (error) {
       alert(error instanceof Error ? error.message : "Nao foi possivel colar a semana.");
     } finally {
@@ -1259,25 +1428,41 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
     }
   }
 
-  const fetchWeek = useCallback((monday: Date) => {
+  const fetchWeek = useCallback((month: Date) => {
     setLoading(true);
-    fetch(`/api/coach/athletes/week?weekStart=${toISODate(monday)}`)
+    const calendarDays = getCalendarMonthDays(month);
+    const from = calendarDays[0].iso;
+    const to = calendarDays[calendarDays.length - 1].iso;
+    fetch(`/api/coach/athletes/week?from=${from}&to=${to}`)
       .then((r) => r.ok ? r.json() : null)
       .then((d: WeeklyData | null) => setWeeklyData(d))
       .catch(() => null)
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { fetchWeek(weekStart); }, [weekStart, fetchWeek]);
+  useEffect(() => { fetchWeek(monthStart); }, [monthStart, fetchWeek]);
 
-  const prevWeek = () => setWeekStart((d) => addDays(d, -7));
-  const nextWeek = () => setWeekStart((d) => addDays(d, 7));
+  useEffect(() => {
+    if (!selectedAthleteId && staticAthletes[0]) setSelectedAthleteId(staticAthletes[0].id);
+  }, [selectedAthleteId, staticAthletes]);
+
+  const prevWeek = () => setMonthStart((d) => {
+    const next = new Date(d);
+    next.setMonth(next.getMonth() - 1);
+    return getMonthStart(next);
+  });
+  const nextWeek = () => setMonthStart((d) => {
+    const next = new Date(d);
+    next.setMonth(next.getMonth() + 1);
+    return getMonthStart(next);
+  });
 
   // Days in the current week (Mon → Sun)
   const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const d = addDays(weekStart, i);
+    const d = addDays(getMondayOf(new Date()), i);
     return { date: toISODate(d), dayLabel: DAYS_PT[i], dayNum: d.getDate() };
   });
+  const monthDays = getCalendarMonthDays(monthStart);
 
   // Use weekly API data if loaded, fall back to static athletes for empty state
   const athletes: AthleteWeekly[] = weeklyData?.athletes ?? staticAthletes.map((a) => ({
@@ -1294,14 +1479,16 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
     if (tab === "Sem plano") return a.workouts.length === 0;
     return true;
   });
-  const visibleWorkouts = filtered.flatMap((athlete) => athlete.workouts);
+  const selectedAthlete = athletes.find((athlete) => athlete.id === selectedAthleteId) ?? filtered[0] ?? athletes[0] ?? null;
+  const selectedWorkouts = selectedAthlete?.workouts ?? [];
+  const visibleWorkouts = selectedWorkouts;
   const visibleTss = visibleWorkouts.reduce((sum, workout) => sum + workout.tss, 0);
   const visibleDistance = visibleWorkouts.reduce((sum, workout) => sum + (workout.targetDistanceKm ?? 0), 0);
   const completedWorkouts = visibleWorkouts.filter((workout) => workout.status === "CONCLUIDO").length;
   const plannedWorkouts = visibleWorkouts.filter((workout) => workout.status !== "CONCLUIDO").length;
   const libraryTemplates = QUICK_TYPES.slice(0, 8);
 
-  const isThisWeek = toISODate(weekStart) === toISODate(getMondayOf(new Date()));
+  const isThisWeek = toISODate(monthStart) === toISODate(getMonthStart(new Date()));
 
   // Empty state
   if (staticAthletes.length === 0) {
@@ -1340,7 +1527,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
             <ChevronLeft className="h-4 w-4" />
           </button>
           <span className="min-w-[190px] text-center text-sm font-semibold text-text">
-            {formatWeekRange(weekStart)}
+            {formatMonthLabel(monthStart)}
           </span>
           <button
             onClick={nextWeek}
@@ -1351,7 +1538,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           </button>
           {!isThisWeek && (
             <button
-              onClick={() => setWeekStart(getMondayOf(new Date()))}
+              onClick={() => setMonthStart(getMonthStart(new Date()))}
               className="ml-1 rounded-lg px-2 py-0.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/10"
             >
               Hoje
@@ -1436,7 +1623,196 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
         </div>
       )}
 
-      <div className="grid gap-3 xl:grid-cols-[230px_minmax(0,1fr)_190px]">
+      <div className="grid gap-3 xl:grid-cols-[280px_minmax(0,1fr)_220px]">
+        <aside className="rounded-md border border-border bg-card">
+          <div className="border-b border-border px-3 py-2">
+            <p className="text-xs font-semibold text-text">Atletas</p>
+            <p className="text-[11px] text-text-muted">Selecione um atleta para abrir o mes</p>
+          </div>
+          <div className="max-h-[460px] space-y-1 overflow-y-auto p-2">
+            {filtered.map((athlete) => {
+              const selected = athlete.id === selectedAthlete?.id;
+              const statusCfg = STATUS_BADGE[athlete.status] ?? STATUS_BADGE.ativo;
+              return (
+                <button
+                  key={athlete.id}
+                  onClick={() => setSelectedAthleteId(athlete.id)}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left transition-colors",
+                    selected ? "border-primary/50 bg-primary/10" : "border-transparent hover:bg-card-hover"
+                  )}
+                >
+                  <Avatar className="h-8 w-8 shrink-0">
+                    <AvatarFallback className="text-xs">
+                      {athlete.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                    </AvatarFallback>
+                    {athlete.avatarUrl && <AvatarImage src={athlete.avatarUrl} alt="" />}
+                  </Avatar>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-text">{athlete.name}</span>
+                    <span className="flex items-center gap-1 text-[10px] text-text-muted">
+                      <Badge variant={statusCfg.variant} className="px-1.5 py-0 text-[9px]">{statusCfg.label}</Badge>
+                      {athlete.workouts.length} treinos
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="border-t border-border px-3 py-2">
+            <p className="mb-2 text-xs font-semibold text-text">Biblioteca</p>
+            <div className="space-y-1">
+              {libraryTemplates.map((template) => {
+                const cfg = woCfg(template.value);
+                return (
+                  <button
+                    key={template.value}
+                    type="button"
+                    onClick={() => setWorkoutClipboard({
+                      workout: {
+                        id: `template-${template.value}`,
+                        date: toISODate(monthStart),
+                        type: template.value,
+                        title: template.label,
+                        status: "PLANEJADO",
+                        targetDistanceKm: null,
+                        targetDurationMin: null,
+                        targetPaceSecPerKm: null,
+                        targetRpe: null,
+                        tss: 0,
+                        released: false,
+                      },
+                    })}
+                    className="flex w-full items-center gap-2 rounded-md border border-border bg-background/40 px-2 py-2 text-left text-xs transition-colors hover:border-primary/50 hover:bg-primary/5"
+                  >
+                    <span className={cn("flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold", cfg.bg, cfg.text)}>{cfg.short}</span>
+                    <span className="truncate font-semibold text-text">{template.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </aside>
+
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold capitalize text-text">{formatMonthLabel(monthStart)}</p>
+              <p className="text-xs text-text-muted">{selectedAthlete?.name ?? "Selecione um atleta"}</p>
+            </div>
+            {selectedAthlete && (
+              <Button
+                size="sm"
+                onClick={() => setQuickPrescribe({
+                  athleteId: selectedAthlete.id,
+                  athleteName: selectedAthlete.name,
+                  date: toISODate(new Date()),
+                })}
+              >
+                <Plus className="h-4 w-4" />
+                Novo treino
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-7 border-b border-border bg-card-hover/40">
+            {DAYS_PT.map((day) => (
+              <div key={day} className="px-2 py-2 text-center text-[11px] font-semibold uppercase text-text-muted">
+                {day}
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7">
+            {loading ? (
+              <div className="col-span-7 flex items-center justify-center py-16">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              </div>
+            ) : !selectedAthlete ? (
+              <div className="col-span-7 py-16 text-center text-sm text-text-muted">Selecione um atleta.</div>
+            ) : (
+              monthDays.map((day) => {
+                const dayWorkouts = selectedWorkouts.filter((workout) => workout.date === day.iso);
+                const isBusy = busyCell === `${selectedAthlete.id}:${day.iso}`;
+                return (
+                  <div
+                    key={day.iso}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={() => {
+                      if (draggingWorkout) handleMoveWorkout(draggingWorkout.workoutId, selectedAthlete.id, day.iso);
+                    }}
+                    className={cn(
+                      "min-h-[132px] border-b border-r border-border/70 p-1.5 transition-colors",
+                      !day.inMonth && "bg-background/35 opacity-55",
+                      day.isToday && "bg-primary/5",
+                      draggingWorkout && "bg-primary/8"
+                    )}
+                  >
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className={cn("text-xs font-bold", day.isToday ? "text-primary" : "text-text-muted")}>{day.dayNum}</span>
+                      <button
+                        onClick={() => setQuickPrescribe({ athleteId: selectedAthlete.id, athleteName: selectedAthlete.name, date: day.iso })}
+                        className="rounded p-0.5 text-text-muted transition-colors hover:bg-card-hover hover:text-primary"
+                        title="Prescrever"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <div className="space-y-1">
+                      {isBusy && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+                      {dayWorkouts.map((workout) => {
+                        const cfg = woCfg(workout.type);
+                        return (
+                          <button
+                            key={workout.id}
+                            draggable
+                            onDragStart={() => setDraggingWorkout({ workoutId: workout.id })}
+                            onDragEnd={() => setDraggingWorkout(null)}
+                            onClick={() => setQuickPrescribe({
+                              athleteId: selectedAthlete.id,
+                              athleteName: selectedAthlete.name,
+                              date: day.iso,
+                              workout,
+                            })}
+                            className={cn("flex w-full items-center gap-1 rounded px-1.5 py-1 text-left text-[10px] font-semibold shadow-sm", cfg.bg, cfg.text)}
+                          >
+                            <WorkoutIcon type={`${workout.type} ${workout.title}`} className="h-3 w-3 shrink-0" />
+                            <span className="min-w-0 flex-1 truncate">{workout.title}</span>
+                            {workout.targetDurationMin && <span className="shrink-0 opacity-80">{workout.targetDurationMin}m</span>}
+                          </button>
+                        );
+                      })}
+                      {dayWorkouts.length === 0 && workoutClipboard && (
+                        <button
+                          onClick={() => handlePasteWorkout(selectedAthlete, day.iso)}
+                          className="flex w-full items-center justify-center gap-1 rounded border border-dashed border-success/40 px-2 py-4 text-[11px] font-semibold text-success hover:bg-success/10"
+                        >
+                          <ClipboardPaste className="h-3 w-3" />
+                          Colar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </Card>
+
+        <aside className="rounded-md border border-border bg-card">
+          <div className="border-b border-border px-3 py-2">
+            <p className="text-xs font-semibold text-text">Resumo</p>
+            <p className="text-[11px] text-text-muted">{selectedAthlete?.name ?? "Atleta"}</p>
+          </div>
+          <div className="space-y-3 p-3">
+            <SummaryMetric label="Treinos" value={String(visibleWorkouts.length)} />
+            <SummaryMetric label="Planejados" value={String(plannedWorkouts)} />
+            <SummaryMetric label="Concluidos" value={String(completedWorkouts)} />
+            <SummaryMetric label="TSS" value={String(Math.round(visibleTss))} />
+            <SummaryMetric label="Distancia" value={`${visibleDistance.toFixed(1)} km`} />
+          </div>
+        </aside>
+      </div>
+
+      <div className="hidden" aria-label={formatWeekRange(getMondayOf(monthStart))}>
         <aside className="hidden rounded-md border border-border bg-card xl:block">
           <div className="border-b border-border px-3 py-2">
             <p className="text-xs font-semibold text-text">Biblioteca de Treinos</p>
@@ -1453,7 +1829,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                     setWorkoutClipboard({
                       workout: {
                         id: `template-${template.value}`,
-                        date: toISODate(weekStart),
+                        date: toISODate(monthStart),
                         type: template.value,
                         title: template.label,
                         status: "PLANEJADO",
@@ -1552,7 +1928,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                         <button
                           onClick={() => setWeekClipboard({
                             athlete,
-                            weekStart: toISODate(weekStart),
+                            weekStart: toISODate(getMondayOf(monthStart)),
                             workoutCount: athlete.workouts.length,
                           })}
                           title="Copiar semana"
@@ -1563,7 +1939,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                         <button
                           onClick={() => setCopyWeek({
                             athlete,
-                            weekStart: toISODate(weekStart),
+                            weekStart: toISODate(getMondayOf(monthStart)),
                             workoutCount: athlete.workouts.length,
                           })}
                           title="Copiar semana para varios atletas"
@@ -1728,7 +2104,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
         <IntervalsPrescribeModal
           payload={quickPrescribe}
           onClose={() => setQuickPrescribe(null)}
-          onSaved={() => fetchWeek(weekStart)}
+          onSaved={() => fetchWeek(monthStart)}
         />
       )}
 
@@ -1738,7 +2114,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           payload={copyWorkout}
           allAthletes={staticAthletes}
           onClose={() => setCopyWorkout(null)}
-          onCopied={() => fetchWeek(weekStart)}
+          onCopied={() => fetchWeek(monthStart)}
         />
       )}
 
@@ -1748,7 +2124,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           payload={copyWeek}
           allAthletes={staticAthletes}
           onClose={() => setCopyWeek(null)}
-          onCopied={() => fetchWeek(weekStart)}
+          onCopied={() => fetchWeek(monthStart)}
         />
       )}
     </div>

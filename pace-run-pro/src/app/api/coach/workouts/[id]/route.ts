@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { WorkoutType } from "@prisma/client";
 
 async function resolveCoachWorkout(userId: string, workoutId: string) {
   const coach = await prisma.coach.findUnique({
@@ -96,9 +97,33 @@ export async function PATCH(
   const resolved = await resolveCoachWorkout(session.user.id, id);
   if (!resolved) return NextResponse.json({ error: "Treino não encontrado" }, { status: 404 });
 
-  const body = (await req.json()) as { athleteId?: string; date?: string; title?: string };
+  const body = (await req.json()) as {
+    athleteId?: string;
+    date?: string;
+    title?: string;
+    type?: string;
+    structured?: boolean;
+    blocks?: unknown;
+    targetDistanceKm?: number | null;
+    targetDurationMin?: number | null;
+    targetPaceSecPerKm?: number | null;
+    targetRpe?: number | null;
+    objective?: string | null;
+  };
 
-  const data: { date?: Date; title?: string; weekId?: string } = {};
+  const data: {
+    date?: Date;
+    title?: string;
+    weekId?: string;
+    type?: WorkoutType;
+    structured?: boolean;
+    blocks?: unknown;
+    targetDistanceKm?: number | null;
+    targetDurationMin?: number | null;
+    targetPaceSecPerKm?: number | null;
+    targetRpe?: number | null;
+    objective?: string;
+  } = {};
   let targetDate: Date | null = null;
   if (body.date) {
     const d = new Date(body.date);
@@ -111,6 +136,14 @@ export async function PATCH(
   if (typeof body.title === "string" && body.title.trim()) {
     data.title = body.title.trim();
   }
+  if (body.type) data.type = body.type as WorkoutType;
+  if (typeof body.structured === "boolean") data.structured = body.structured;
+  if (body.blocks !== undefined) data.blocks = body.blocks;
+  if (body.objective !== undefined) data.objective = body.objective ?? "";
+  if (body.targetDistanceKm !== undefined) data.targetDistanceKm = body.targetDistanceKm;
+  if (body.targetDurationMin !== undefined) data.targetDurationMin = body.targetDurationMin;
+  if (body.targetPaceSecPerKm !== undefined) data.targetPaceSecPerKm = body.targetPaceSecPerKm;
+  if (body.targetRpe !== undefined) data.targetRpe = body.targetRpe;
   const targetAthleteId = body.athleteId ?? resolved.athleteId;
   if (body.athleteId || body.date) {
     if (!resolved.athleteIds.includes(targetAthleteId)) {
