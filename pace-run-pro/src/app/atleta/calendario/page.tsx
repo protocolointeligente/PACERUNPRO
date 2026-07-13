@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Clock, Loader2, MapPin, Plus, Trophy, X } from "lucide-react";
+import { Bike, ChevronLeft, ChevronRight, Clock, Dumbbell, Footprints, Loader2, Plus, Trophy, Waves, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,8 @@ const TYPE_COLORS: Record<string, string> = {
   mobilidade: "#84cc16",
   recuperacao: "#94a3b8",
   prova: "#facc15",
+  ciclismo: "#65a30d",
+  natacao: "#0ea5e9",
 };
 
 const RUN_SUBTYPE_COLORS: Record<string, string> = {
@@ -83,6 +85,15 @@ const RUN_SUBTYPE_COLORS: Record<string, string> = {
 function getSubtypeColor(type: string, subtype?: string): string {
   if (subtype && RUN_SUBTYPE_COLORS[subtype]) return RUN_SUBTYPE_COLORS[subtype];
   return TYPE_COLORS[type] ?? TYPE_COLORS.corrida;
+}
+
+function EventIcon({ type, title, className, style }: { type: string; title?: string; className?: string; style?: { color?: string } }) {
+  const key = `${type} ${title ?? ""}`.toUpperCase();
+  if (type === "prova") return <Trophy className={className} style={style} />;
+  if (key.includes("BIKE") || key.includes("CICL")) return <Bike className={className} style={style} />;
+  if (key.includes("NAT") || key.includes("SWIM")) return <Waves className={className} style={style} />;
+  if (key.includes("FORCA") || key.includes("FUNCIONAL")) return <Dumbbell className={className} style={style} />;
+  return <Footprints className={className} style={style} />;
 }
 
 const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -362,7 +373,7 @@ export default function CalendarPage() {
         </TabsList>
 
         <TabsContent value="mes">
-          <Card>
+          <Card className="border-white/10 bg-card/75 shadow-xl shadow-black/10 backdrop-blur-xl">
             <CardContent className="p-3 sm:p-5">
               <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] uppercase tracking-wider text-text-muted">
                 {WEEKDAYS.map((d) => (
@@ -378,9 +389,9 @@ export default function CalendarPage() {
                     <div
                       key={i}
                       className={cn(
-                        "flex min-h-[78px] flex-col gap-1 rounded-xl border p-1.5 sm:min-h-[96px] sm:p-2",
-                        day ? "border-border bg-card-hover/30" : "border-transparent",
-                        isToday && "border-primary/60 bg-primary/10"
+                        "flex min-h-[78px] flex-col gap-1 rounded-xl border p-1.5 backdrop-blur-sm sm:min-h-[96px] sm:p-2",
+                        day ? "border-white/10 bg-white/[0.04]" : "border-transparent",
+                        isToday && "border-primary/60 bg-primary/10 ring-1 ring-primary/30"
                       )}
                     >
                       {day && (
@@ -395,10 +406,11 @@ export default function CalendarPage() {
                               return (
                                 <span
                                   key={idx}
-                                  className="truncate rounded-md px-1.5 py-0.5 text-[10px] font-medium leading-tight"
+                                  className="flex items-center gap-1 truncate rounded-md border px-1.5 py-0.5 text-[10px] font-medium leading-tight"
                                   style={{ backgroundColor: `${color}22`, color }}
                                 >
-                                  {e.title}
+                                  <EventIcon type={e.type} title={e.title} className="h-3 w-3 shrink-0" />
+                                  <span className="truncate">{e.title}</span>
                                 </span>
                               );
                             })}
@@ -459,7 +471,7 @@ export default function CalendarPage() {
                             <CardContent className="flex items-center gap-3 p-3.5">
                               <span className="h-9 w-9 shrink-0 rounded-lg" style={{ backgroundColor: `${color}22` }}>
                                 <span className="flex h-full w-full items-center justify-center">
-                                  {isRace ? <Trophy className="h-4 w-4" style={{ color }} /> : <MapPin className="h-4 w-4" style={{ color }} />}
+                                  <EventIcon type={e.type} title={e.title} className="h-4 w-4" style={{ color }} />
                                 </span>
                               </span>
                               <div className="min-w-0 flex-1">

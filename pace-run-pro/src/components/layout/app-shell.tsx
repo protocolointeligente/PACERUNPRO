@@ -221,9 +221,9 @@ export function AppShell({
 
       {/* Main column */}
       <div className="flex min-h-dvh flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-xl sm:px-6 print:hidden">
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border/70 bg-background/80 px-3 py-2.5 backdrop-blur-xl sm:px-6 sm:py-3 print:hidden">
           <button
-            className="rounded-lg p-2 text-text-muted hover:bg-card hover:text-text lg:hidden"
+            className="rounded-lg p-1.5 text-text-muted hover:bg-card hover:text-text lg:hidden"
             onClick={() => setMobileOpen(true)}
             aria-label="Abrir menu"
           >
@@ -233,7 +233,7 @@ export function AppShell({
             <Search className="h-4 w-4" />
             <span className="text-xs">Buscar atletas, treinos, exercícios…</span>
           </div>
-          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
             {headerActions}
             <Badge variant="primary" className="hidden sm:inline-flex">
               <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-primary" />
@@ -249,7 +249,7 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="flex-1 px-4 pb-24 pt-5 sm:px-6 lg:pb-10">{children}</main>
+        <main className="flex-1 px-3 pb-24 pt-4 sm:px-6 sm:pt-5 lg:pb-10">{children}</main>
       </div>
     </div>
   );

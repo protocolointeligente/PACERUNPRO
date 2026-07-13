@@ -56,6 +56,16 @@ function WorkoutIcon({ type, className }: { type: string; className?: string }) 
   return <Footprints className={className} />;
 }
 
+function workoutCardClass(type: string, title = "") {
+  const key = `${type} ${title}`.toUpperCase();
+  if (key.includes("FORCA") || key.includes("FUNCIONAL")) return "border-violet-400/40 bg-violet-500/20 text-violet-50 shadow-violet-950/20";
+  if (key.includes("BIKE") || key.includes("CICL")) return "border-lime-400/40 bg-lime-500/20 text-lime-50 shadow-lime-950/20";
+  if (key.includes("NAT") || key.includes("SWIM")) return "border-sky-400/40 bg-sky-500/20 text-sky-50 shadow-sky-950/20";
+  if (key.includes("RECUP") || key.includes("MOBIL")) return "border-slate-300/25 bg-slate-400/20 text-slate-100 shadow-slate-950/20";
+  if (key.includes("TEMPO") || key.includes("INTERVAL") || key.includes("FARTLEK")) return "border-orange-400/35 bg-orange-500/20 text-orange-50 shadow-orange-950/20";
+  return "border-primary/35 bg-primary/20 text-primary-foreground shadow-primary/20";
+}
+
 // ── Status config ────────────────────────────────────────────────────────────
 
 const STATUS_BADGE: Record<string, { variant: "success" | "danger" | "default" | "outline"; label: string }> = {
@@ -1627,9 +1637,9 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
         </div>
       )}
 
-      <div className="grid gap-3 xl:grid-cols-[280px_minmax(0,1fr)_220px]">
-        <aside className="rounded-md border border-border bg-card">
-          <div className="border-b border-border px-3 py-2">
+      <div className="grid gap-3 xl:grid-cols-[280px_minmax(0,1fr)_240px]">
+        <aside className="overflow-hidden rounded-xl border border-white/10 bg-[#07111c]/85 shadow-2xl shadow-black/20 backdrop-blur-xl">
+          <div className="border-b border-white/10 bg-white/[0.03] px-3 py-2">
             <p className="text-xs font-semibold text-text">Atletas</p>
             <p className="text-[11px] text-text-muted">Selecione um atleta para abrir o mes</p>
           </div>
@@ -1642,8 +1652,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                   key={athlete.id}
                   onClick={() => setSelectedAthleteId(athlete.id)}
                   className={cn(
-                    "flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left transition-colors",
-                    selected ? "border-primary/50 bg-primary/10" : "border-transparent hover:bg-card-hover"
+                    "flex w-full items-center gap-2 rounded-xl border px-2 py-2 text-left transition-all",
+                    selected ? "border-primary/60 bg-primary/15 shadow-lg shadow-primary/10" : "border-transparent hover:bg-white/5"
                   )}
                 >
                   <Avatar className="h-8 w-8 shrink-0">
@@ -1663,7 +1673,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
               );
             })}
           </div>
-          <div className="border-t border-border px-3 py-2">
+          <div className="border-t border-white/10 px-3 py-2">
             <p className="mb-2 text-xs font-semibold text-text">Biblioteca</p>
             <div className="space-y-1">
               {libraryTemplates.map((template) => {
@@ -1687,7 +1697,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                         released: false,
                       },
                     })}
-                    className="flex w-full items-center gap-2 rounded-md border border-border bg-background/40 px-2 py-2 text-left text-xs transition-colors hover:border-primary/50 hover:bg-primary/5"
+                    className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-2 py-2 text-left text-xs transition-colors hover:border-primary/50 hover:bg-primary/10"
                   >
                     <span className={cn("flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold", cfg.bg, cfg.text)}>{cfg.short}</span>
                     <span className="truncate font-semibold text-text">{template.label}</span>
@@ -1698,8 +1708,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           </div>
         </aside>
 
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <Card className="overflow-hidden border-white/10 bg-[#07111c]/78 shadow-2xl shadow-black/20 backdrop-blur-xl">
+          <div className="flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-white/[0.06] via-primary/10 to-transparent px-4 py-3">
             <div>
               <p className="text-sm font-semibold capitalize text-text">{formatMonthLabel(monthStart)}</p>
               <p className="text-xs text-text-muted">{selectedAthlete?.name ?? "Selecione um atleta"}</p>
@@ -1718,7 +1728,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
               </Button>
             )}
           </div>
-          <div className="grid grid-cols-7 border-b border-border bg-card-hover/40">
+          <div className="grid grid-cols-7 border-b border-white/10 bg-white/[0.03]">
             {DAYS_PT.map((day) => (
               <div key={day} className="px-2 py-2 text-center text-[11px] font-semibold uppercase text-text-muted">
                 {day}
@@ -1744,10 +1754,10 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                       if (draggingWorkout) handleMoveWorkout(draggingWorkout.workoutId, selectedAthlete.id, day.iso);
                     }}
                     className={cn(
-                      "min-h-[132px] border-b border-r border-border/70 p-1.5 transition-colors",
-                      !day.inMonth && "bg-background/35 opacity-55",
-                      day.isToday && "bg-primary/5",
-                      draggingWorkout && "bg-primary/8"
+                      "min-h-[132px] border-b border-r border-white/10 bg-white/[0.025] p-1.5 transition-colors",
+                      !day.inMonth && "bg-black/15 opacity-50",
+                      day.isToday && "bg-primary/10 ring-1 ring-inset ring-primary/35",
+                      draggingWorkout && "bg-primary/10"
                     )}
                   >
                     <div className="mb-1 flex items-center justify-between">
@@ -1776,7 +1786,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                               date: day.iso,
                               workout,
                             })}
-                            className={cn("flex w-full items-center gap-1 rounded px-1.5 py-1 text-left text-[10px] font-semibold shadow-sm", cfg.bg, cfg.text)}
+                            className={cn("flex w-full items-center gap-1 rounded-lg border px-1.5 py-1.5 text-left text-[10px] font-semibold shadow-lg backdrop-blur-sm transition-transform hover:-translate-y-0.5", workoutCardClass(workout.type, workout.title))}
                           >
                             <WorkoutIcon type={`${workout.type} ${workout.title}`} className="h-3 w-3 shrink-0" />
                             <span className="min-w-0 flex-1 truncate">{workout.title}</span>
@@ -1801,8 +1811,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           </div>
         </Card>
 
-        <aside className="rounded-md border border-border bg-card">
-          <div className="border-b border-border px-3 py-2">
+        <aside className="overflow-hidden rounded-xl border border-white/10 bg-[#07111c]/85 shadow-2xl shadow-black/20 backdrop-blur-xl">
+          <div className="border-b border-white/10 bg-white/[0.03] px-3 py-2">
             <p className="text-xs font-semibold text-text">Resumo</p>
             <p className="text-[11px] text-text-muted">{selectedAthlete?.name ?? "Atleta"}</p>
           </div>
@@ -1812,6 +1822,20 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
             <SummaryMetric label="Concluidos" value={String(completedWorkouts)} />
             <SummaryMetric label="TSS" value={String(Math.round(visibleTss))} />
             <SummaryMetric label="Distancia" value={`${visibleDistance.toFixed(1)} km`} />
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Distribuicao</p>
+              <div className="space-y-2">
+                {["Corrida", "Ciclismo", "Natacao", "Forca"].map((label, index) => (
+                  <div key={label} className="flex items-center gap-2 text-[11px] text-text-muted">
+                    <span className={cn("h-2.5 w-2.5 rounded-full", index === 0 && "bg-orange-500", index === 1 && "bg-lime-500", index === 2 && "bg-sky-500", index === 3 && "bg-violet-500")} />
+                    <span className="w-14">{label}</span>
+                    <span className="h-1.5 flex-1 rounded-full bg-white/10">
+                      <span className={cn("block h-full rounded-full", index === 0 && "w-3/5 bg-orange-500", index === 1 && "w-2/5 bg-lime-500", index === 2 && "w-1/4 bg-sky-500", index === 3 && "w-1/3 bg-violet-500")} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </aside>
       </div>
