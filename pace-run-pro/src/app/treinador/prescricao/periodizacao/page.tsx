@@ -13,6 +13,15 @@ import {
   Info,
   CalendarDays,
   Dumbbell,
+  Trophy,
+  Medal,
+  Target,
+  Brain,
+  Sparkles,
+  SlidersHorizontal,
+  CheckCheck,
+  Ban,
+  BarChart3,
   ChevronRight,
   Pencil,
   Check,
@@ -59,6 +68,36 @@ interface Week {
 type Goal = "5k" | "10k" | "Meia-maratona" | "Maratona" | "Trail" | "Personalizado";
 type Level = "Iniciante" | "Intermediário" | "Avançado";
 type ViewTab = "macro" | "treinos";
+type LoadMethod = "horas" | "distancia" | "series" | "tonelagem" | "srpe";
+type Modality = "corrida" | "ciclismo" | "natacao" | "triathlon" | "forca" | "hibrido";
+type BuildMode = "automatica" | "manual" | "revisao";
+type RecoveryCycle = "4" | "6" | "8" | "manual";
+type EventPriority = "A" | "B" | "C";
+type SuggestionStatus = "pending" | "accepted" | "declined";
+
+interface TrainingEvent {
+  id: string;
+  name: string;
+  date: string;
+  modality: Modality;
+  priority: EventPriority;
+}
+
+interface PeriodizationSettings {
+  name: string;
+  startDate: string;
+  endDate: string;
+  loadMethod: LoadMethod;
+  modality: Modality;
+  buildMode: BuildMode;
+  recoveryCycle: RecoveryCycle;
+  fitnessMetric: string;
+  minVolume: number;
+  avgVolume: number;
+  maxVolume: number;
+  annualVolume: number;
+  includeStrength: boolean;
+}
 
 // ── Days of the week ─────────────────────────────────────────────────────────
 
@@ -156,6 +195,97 @@ const PHASE_BAR: Record<Phase, string> = {
 const goals: Goal[] = ["5k", "10k", "Meia-maratona", "Maratona", "Trail", "Personalizado"];
 const levels: Level[] = ["Iniciante", "Intermediário", "Avançado"];
 
+const loadMethodLabels: Record<LoadMethod, string> = {
+  horas: "Volume em horas",
+  distancia: "Volume em distancia",
+  series: "Series semanais",
+  tonelagem: "Tonelagem",
+  srpe: "Carga sRPE",
+};
+
+const modalityLabels: Record<Modality, string> = {
+  corrida: "Corrida",
+  ciclismo: "Ciclismo",
+  natacao: "Natacao",
+  triathlon: "Triathlon",
+  forca: "Forca",
+  hibrido: "Endurance + forca",
+};
+
+const defaultPeriodizationSettings: PeriodizationSettings = {
+  name: "Macrociclo principal",
+  startDate: new Date().toISOString().slice(0, 10),
+  endDate: new Date(Date.now() + 16 * 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+  loadMethod: "horas",
+  modality: "corrida",
+  buildMode: "automatica",
+  recoveryCycle: "4",
+  fitnessMetric: "VDOT 42 / intermediario",
+  minVolume: 4,
+  avgVolume: 7,
+  maxVolume: 10,
+  annualVolume: 360,
+  includeStrength: true,
+};
+
+function weeksBetween(startDate: string, endDate: string): number {
+  const start = new Date(startDate + "T12:00:00");
+  const end = new Date(endDate + "T12:00:00");
+  const diff = Math.max(7, end.getTime() - start.getTime());
+  return Math.min(52, Math.max(4, Math.ceil(diff / (7 * 24 * 60 * 60 * 1000))));
+}
+
+function weekIndexForDate(startDate: string, date: string): number {
+  const start = new Date(startDate + "T12:00:00");
+  const target = new Date(date + "T12:00:00");
+  return Math.max(1, Math.floor((target.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1);
+}
+
+function generateScientificPeriodization(
+  settings: PeriodizationSettings,
+  events: TrainingEvent[],
+  sessions: number,
+  athleteLevel: Level
+): Week[] {
+  const total = weeksBetween(settings.startDate, settings.endDate);
+  const base = generatePeriodization(total, sessions, athleteLevel);
+  const recoveryEvery = settings.recoveryCycle === "manual" ? 4 : Number(settings.recoveryCycle);
+  const priorityAWeeks = new Set(
+    events.filter((event) => event.priority === "A").map((event) => weekIndexForDate(settings.startDate, event.date))
+  );
+  const taperWeeks = new Set(Array.from(priorityAWeeks).map((week) => Math.max(1, week - 1)));
+
+  return base.map((week) => {
+    const isRaceWeek = priorityAWeeks.has(week.week);
+    const isTaper = taperWeeks.has(week.week);
+    const isRecovery = !isRaceWeek && !isTaper && week.week % recoveryEvery === 0;
+    const volumeRange = settings.maxVolume - settings.minVolume;
+    const progression = week.week / Math.max(1, total);
+    const plannedVolume = settings.minVolume + volumeRange * Math.min(1, progression * 1.15);
+    const volumeScale = settings.loadMethod === "distancia" ? 6 : settings.loadMethod === "srpe" ? 90 : settings.loadMethod === "series" ? 3 : settings.loadMethod === "tonelagem" ? 140 : 1;
+    const km = Math.max(1, Math.round(plannedVolume * volumeScale * (isRecovery ? 0.72 : isTaper ? 0.55 : isRaceWeek ? 0.35 : 1)));
+    const phase: Phase = isTaper || isRaceWeek ? "Taper" : week.phase;
+    const intensity = isRaceWeek ? 58 : isTaper ? 45 : Math.min(95, Math.round(week.intensity + (settings.buildMode === "manual" ? 0 : 4)));
+    const volume = isRaceWeek ? 38 : isTaper ? 48 : isRecovery ? 62 : Math.min(100, Math.round(68 + progression * 28));
+    return {
+      ...week,
+      phase,
+      isDeload: isRecovery || isTaper,
+      volume,
+      intensity,
+      km,
+      sessions: isRaceWeek ? Math.max(1, sessions - 2) : isRecovery ? Math.max(1, sessions - 1) : sessions,
+      notes: isRaceWeek
+        ? "Semana de prova principal: reduzir volume e preservar prontidao."
+        : isTaper
+        ? "Tapering para prova A: reduzir volume, manter ativacao curta."
+        : isRecovery
+        ? "Microciclo de recuperacao planejado."
+        : week.notes,
+    };
+  });
+}
+
 const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
 
@@ -197,6 +327,19 @@ export default function PeriodizacaoPage() {
   const [goal, setGoal] = useState<Goal>("Meia-maratona");
   const [level, setLevel] = useState<Level>("Intermediário");
   const [totalWeeks, setTotalWeeks] = useState(16);
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [periodizationSettings, setPeriodizationSettings] = useState<PeriodizationSettings>(defaultPeriodizationSettings);
+  const [trainingEvents, setTrainingEvents] = useState<TrainingEvent[]>([
+    {
+      id: "event-a",
+      name: "Prova-alvo",
+      date: defaultPeriodizationSettings.endDate,
+      modality: "corrida",
+      priority: "A",
+    },
+  ]);
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+  const [suggestionStatus, setSuggestionStatus] = useState<Record<string, SuggestionStatus>>({});
   // Training days — default Mon/Wed/Sat
   const [trainingDays, setTrainingDays] = useState<string[]>([
     "Segunda-feira",
@@ -233,12 +376,22 @@ export default function PeriodizacaoPage() {
   }
 
   function handleGenerate() {
-    const result = generatePeriodization(totalWeeks, trainingDays.length || 3, level);
+    const result = generateScientificPeriodization(
+      periodizationSettings,
+      trainingEvents,
+      trainingDays.length || 3,
+      level
+    );
     setWeeks(result);
+    setTotalWeeks(result.length);
     setGenerated(true);
     setSaved(false);
-    setWorkoutsMap({});
+    const nextWorkouts = buildWorkoutsMapFromWeeks(result);
+    setWorkoutsMap(nextWorkouts);
+    setSuggestionStatus({});
     setView("macro");
+    setSelectedWeek(1);
+    setBuilderOpen(false);
   }
 
   // Load draft on mount
@@ -312,9 +465,9 @@ export default function PeriodizacaoPage() {
     setLiberated(false);
   }
 
-  function buildWorkoutsMap(): Record<number, GeneratedWorkout[]> {
+  function buildWorkoutsMapFromWeeks(sourceWeeks: Week[]): Record<number, GeneratedWorkout[]> {
     const map: Record<number, GeneratedWorkout[]> = {};
-    for (const w of weeks) {
+    for (const w of sourceWeeks) {
       map[w.week] = generateWorkoutsForWeek({
         phase: w.phase as PhaseType,
         sessionsPerWeek: w.sessions,
@@ -327,6 +480,10 @@ export default function PeriodizacaoPage() {
       });
     }
     return map;
+  }
+
+  function buildWorkoutsMap(): Record<number, GeneratedWorkout[]> {
+    return buildWorkoutsMapFromWeeks(weeks);
   }
 
   function handleGenerateWorkouts() {
@@ -388,6 +545,45 @@ export default function PeriodizacaoPage() {
       const weekArr = [...(prev[weekNum] ?? [])];
       weekArr[sessionIdx] = { ...weekArr[sessionIdx], [field]: value };
       return { ...prev, [weekNum]: weekArr };
+    });
+  }
+
+  function setSuggestion(key: string, status: SuggestionStatus) {
+    setSuggestionStatus((prev) => ({ ...prev, [key]: status }));
+  }
+
+  function setWeekSuggestions(weekNum: number, status: SuggestionStatus) {
+    const workouts = workoutsMap[weekNum] ?? [];
+    setSuggestionStatus((prev) => {
+      const next = { ...prev };
+      workouts.forEach((_, index) => {
+        next[`${weekNum}-${index}`] = status;
+      });
+      return next;
+    });
+  }
+
+  function setMesoSuggestions(mesocycle: number, status: SuggestionStatus) {
+    setSuggestionStatus((prev) => {
+      const next = { ...prev };
+      weeks.filter((week) => week.mesocycle === mesocycle).forEach((week) => {
+        (workoutsMap[week.week] ?? []).forEach((_, index) => {
+          next[`${week.week}-${index}`] = status;
+        });
+      });
+      return next;
+    });
+  }
+
+  function setAllSuggestions(status: SuggestionStatus) {
+    setSuggestionStatus((prev) => {
+      const next = { ...prev };
+      weeks.forEach((week) => {
+        (workoutsMap[week.week] ?? []).forEach((_, index) => {
+          next[`${week.week}-${index}`] = status;
+        });
+      });
+      return next;
     });
   }
 
@@ -468,6 +664,47 @@ export default function PeriodizacaoPage() {
 
       {/* ── Body ── */}
       <div className="mx-auto max-w-7xl px-4 pt-6">
+        <div className="mb-5 rounded-2xl border border-border bg-card p-4 shadow-sm print:hidden">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-primary" />
+                <h1 className="font-display text-xl font-bold text-text">Periodizacao Intelligence</h1>
+              </div>
+              <p className="mt-1 text-sm text-text-muted">
+                Crie o macrociclo com ATR/blocos, tapering automatico, provas A/B/C e sugestoes de sessoes baseadas em ciencia do treinamento.
+              </p>
+              {generated && (
+                <p className="mt-2 text-xs text-text-muted">
+                  {periodizationSettings.name} · {modalityLabels[periodizationSettings.modality]} · {loadMethodLabels[periodizationSettings.loadMethod]} · {periodizationSettings.startDate} a {periodizationSettings.endDate}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => setBuilderOpen(true)}>
+                <SlidersHorizontal className="h-4 w-4" />
+                {generated ? "Editar configuracao" : "Criar periodizacao"}
+              </Button>
+              {generated && (
+                <Button variant="primary" size="sm" onClick={() => setAllSuggestions("accepted")}>
+                  <CheckCheck className="h-4 w-4" />
+                  Aceitar Intelligence
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <PeriodizationBuilderModal
+          open={builderOpen}
+          settings={periodizationSettings}
+          events={trainingEvents}
+          onClose={() => setBuilderOpen(false)}
+          onSettingsChange={setPeriodizationSettings}
+          onEventsChange={setTrainingEvents}
+          onGenerate={handleGenerate}
+        />
+
         <div className="flex flex-col lg:flex-row gap-6">
           {/* ── Left sidebar ── */}
           <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-4 print:hidden">
@@ -874,6 +1111,29 @@ export default function PeriodizacaoPage() {
                         athleteName={selectedAthletes.length === 1 ? (athletes.find((a) => a.id === selectedAthletes[0])?.name) : selectedAthletes.length > 1 ? `${selectedAthletes.length} atletas` : undefined}
                       />
                       <div className="space-y-4 print:hidden">
+                        <MacrocycleScienceChart
+                          weeks={weeks}
+                          events={trainingEvents}
+                          settings={periodizationSettings}
+                          selectedWeek={selectedWeek}
+                          onSelectWeek={setSelectedWeek}
+                        />
+                        <IntelligencePanel
+                          weeks={weeks}
+                          selectedWeek={selectedWeek}
+                          workoutsMap={workoutsMap}
+                          suggestionStatus={suggestionStatus}
+                          onAccept={(key) => setSuggestion(key, "accepted")}
+                          onDecline={(key) => setSuggestion(key, "declined")}
+                          onAcceptWeek={(weekNum) => setWeekSuggestions(weekNum, "accepted")}
+                          onDeclineWeek={(weekNum) => setWeekSuggestions(weekNum, "declined")}
+                          onAcceptMeso={(meso) => setMesoSuggestions(meso, "accepted")}
+                          onAcceptAll={() => setAllSuggestions("accepted")}
+                          onEditWeek={(weekNum) => {
+                            setView("treinos");
+                            setExpandedWeek(weekNum);
+                          }}
+                        />
                         <Card className="overflow-hidden">
                           <div className="flex items-center justify-between border-b border-border px-4 py-3">
                             <div>
@@ -1550,6 +1810,113 @@ function WorkoutSessionRow({
 }
 
 // ── SummaryRow ────────────────────────────────────────────────────────────────
+
+function PeriodizationBuilderModal({
+  open,
+  settings,
+  events,
+  onClose,
+  onSettingsChange,
+  onEventsChange,
+  onGenerate,
+}: {
+  open: boolean;
+  settings: PeriodizationSettings;
+  events: TrainingEvent[];
+  onClose: () => void;
+  onSettingsChange: (settings: PeriodizationSettings) => void;
+  onEventsChange: (events: TrainingEvent[]) => void;
+  onGenerate: () => void;
+}) {
+  if (!open) return null;
+  const update = <K extends keyof PeriodizationSettings,>(key: K, value: PeriodizationSettings[K]) => {
+    onSettingsChange({ ...settings, [key]: value });
+  };
+  const updateEvent = (id: string, patch: Partial<TrainingEvent>) => {
+    onEventsChange(events.map((event) => event.id === id ? { ...event, ...patch } : event));
+  };
+  const volumeLabel =
+    settings.loadMethod === "horas" ? "horas/sem" :
+    settings.loadMethod === "distancia" ? "km ou metros/sem" :
+    settings.loadMethod === "series" ? "series/sem" :
+    settings.loadMethod === "tonelagem" ? "kg totais/sem" :
+    "sRPE/sem";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-border bg-gradient-to-r from-[#ff6b1a] via-[#5b2df5] to-[#0284c7] px-5 py-4 text-white">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">PACE RUN PRO Intelligence</p>
+            <h2 className="font-display text-xl font-bold">Criar periodizacao cientifica</h2>
+            <p className="mt-1 max-w-2xl text-sm text-white/78">ATR/blocos, tapering, provas A/B/C, controle de carga por modalidade e sugestao automatica de sessoes.</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-white/80 hover:bg-white/15 hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-5">
+          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-4">
+              <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><SlidersHorizontal className="h-4 w-4 text-primary" />Estrutura do ciclo</CardTitle></CardHeader>
+                <CardContent className="grid gap-3 sm:grid-cols-2">
+                  <label className="space-y-1"><span className="text-xs font-medium text-text-muted">Metodo de controle de carga</span><select className={selectClass} value={settings.loadMethod} onChange={(e) => update("loadMethod", e.target.value as LoadMethod)}>{Object.entries(loadMethodLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+                  <label className="space-y-1"><span className="text-xs font-medium text-text-muted">Modalidade principal</span><select className={selectClass} value={settings.modality} onChange={(e) => update("modality", e.target.value as Modality)}>{Object.entries(modalityLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+                  <label className="space-y-1 sm:col-span-2"><span className="text-xs font-medium text-text-muted">Nome do ciclo / periodizacao</span><input className={inputClass} value={settings.name} onChange={(e) => update("name", e.target.value)} /></label>
+                  <label className="space-y-1"><span className="text-xs font-medium text-text-muted">Data de inicio</span><input type="date" className={inputClass} value={settings.startDate} onChange={(e) => update("startDate", e.target.value)} /></label>
+                  <label className="space-y-1"><span className="text-xs font-medium text-text-muted">Data de fim</span><input type="date" className={inputClass} value={settings.endDate} onChange={(e) => update("endDate", e.target.value)} /></label>
+                  <label className="space-y-1"><span className="text-xs font-medium text-text-muted">Construcao</span><select className={selectClass} value={settings.buildMode} onChange={(e) => update("buildMode", e.target.value as BuildMode)}><option value="automatica">Automatica</option><option value="revisao">Automatica com revisao</option><option value="manual">Manual</option></select></label>
+                  <label className="space-y-1"><span className="text-xs font-medium text-text-muted">Ciclo de recuperacao</span><select className={selectClass} value={settings.recoveryCycle} onChange={(e) => update("recoveryCycle", e.target.value as RecoveryCycle)}><option value="4">A cada 4 semanas</option><option value="6">A cada 6 semanas</option><option value="8">A cada 8 semanas</option><option value="manual">Manual</option></select></label>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><Target className="h-4 w-4 text-primary" />Condicionamento e volume</CardTitle></CardHeader>
+                <CardContent className="grid gap-3 sm:grid-cols-4">
+                  <label className="space-y-1 sm:col-span-4"><span className="text-xs font-medium text-text-muted">Condicionamento fisico atual</span><select className={selectClass} value={settings.fitnessMetric} onChange={(e) => update("fitnessMetric", e.target.value)}><option>VDOT 42 / intermediario</option><option>FTP 240w / zonas por potencia</option><option>CSS 1:55/100m / tecnica media</option><option>Forca iniciante / RIR 2-3</option><option>Forca intermediario / e1RM conhecido</option><option>Forca avancado / bloco de especializacao</option></select></label>
+                  {(["minVolume", "avgVolume", "maxVolume", "annualVolume"] as const).map((key) => <label key={key} className="space-y-1"><span className="text-xs font-medium text-text-muted">{key === "minVolume" ? "Semana facil" : key === "avgVolume" ? "Media" : key === "maxVolume" ? "Semana dificil" : "Total anual"}</span><input type="number" className={inputClass} value={settings[key]} onChange={(e) => update(key, Number(e.target.value))} /></label>)}
+                  <p className="rounded-xl border border-info/25 bg-info/10 p-3 text-xs leading-relaxed text-text-muted sm:col-span-4">Unidade atual: <span className="font-semibold text-text">{volumeLabel}</span>. Para musculacao, use series ou tonelagem; para endurance, horas, distancia ou sRPE.</p>
+                  <label className="flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 py-2 text-sm text-text sm:col-span-4"><input type="checkbox" checked={settings.includeStrength} onChange={(e) => update("includeStrength", e.target.checked)} className="accent-primary" />Inserir sugestoes de treino de forca nas modalidades de endurance</label>
+                </CardContent>
+              </Card>
+            </div>
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><Trophy className="h-4 w-4 text-warning" />Provas e eventos</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                {events.map((event) => <div key={event.id} className="rounded-xl border border-border bg-background/50 p-3"><div className="grid gap-2 sm:grid-cols-2"><input className={inputClass} value={event.name} onChange={(e) => updateEvent(event.id, { name: e.target.value })} /><input type="date" className={inputClass} value={event.date} onChange={(e) => updateEvent(event.id, { date: e.target.value })} /><select className={selectClass} value={event.modality} onChange={(e) => updateEvent(event.id, { modality: e.target.value as Modality })}>{Object.entries(modalityLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select><select className={selectClass} value={event.priority} onChange={(e) => updateEvent(event.id, { priority: e.target.value as EventPriority })}><option value="A">Prioridade A</option><option value="B">Prioridade B</option><option value="C">Prioridade C</option></select></div></div>)}
+                <Button variant="outline" size="sm" className="w-full" onClick={() => onEventsChange([...events, { id: `event-${Date.now()}`, name: "Novo evento", date: settings.endDate, modality: settings.modality, priority: "B" }])}><CalendarDays className="h-4 w-4" />Adicionar prova/evento</Button>
+                <div className="rounded-xl border border-primary/25 bg-primary/10 p-3 text-xs leading-relaxed text-text-muted"><p className="font-semibold text-text">Base cientifica aplicada</p><p className="mt-1">Forca: volume, RPE/RIR e progressao inspirados em Schoenfeld. Endurance: blocos ATR, tapering e especificidade por modalidade.</p></div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4"><Button variant="ghost" onClick={onClose}>Cancelar</Button><Button variant="primary" onClick={onGenerate}><Sparkles className="h-4 w-4" />Gerar periodizacao + Intelligence</Button></div>
+      </div>
+    </div>
+  );
+}
+
+function MacrocycleScienceChart({ weeks, events, settings, selectedWeek, onSelectWeek }: { weeks: Week[]; events: TrainingEvent[]; settings: PeriodizationSettings; selectedWeek: number | null; onSelectWeek: (week: number) => void }) {
+  const points = weeks.map((week, index) => `${weeks.length <= 1 ? 0 : (index / (weeks.length - 1)) * 100},${100 - week.intensity}`).join(" ");
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex flex-col gap-2 border-b border-border px-4 py-3 lg:flex-row lg:items-center lg:justify-between"><div><p className="flex items-center gap-2 text-sm font-semibold text-text"><BarChart3 className="h-4 w-4 text-primary" />Macrociclo completo</p><p className="text-xs text-text-muted">{settings.name} · colunas = volume · linha = intensidade · {loadMethodLabels[settings.loadMethod]}</p></div><div className="flex flex-wrap gap-2 text-[10px] text-text-muted">{(["Base", "Construção", "Específico", "Taper"] as Phase[]).map((phase) => <span key={phase} className="flex items-center gap-1"><span className={cn("h-2.5 w-2.5 rounded-full", PHASE_BAR[phase])} />{phase}</span>)}</div></div>
+      <div className="relative overflow-x-auto p-4"><div className="relative min-w-[980px]"><svg className="pointer-events-none absolute inset-x-0 top-4 h-56 w-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points={points} fill="none" stroke="#ff6b1a" strokeWidth="1.8" vectorEffect="non-scaling-stroke" /></svg><div className="grid h-64 items-end gap-1" style={{ gridTemplateColumns: `repeat(${weeks.length}, minmax(34px, 1fr))` }}>{weeks.map((week) => { const event = events.find((item) => weekIndexForDate(settings.startDate, item.date) === week.week); const selected = selectedWeek === week.week; return <button key={week.week} type="button" onClick={() => onSelectWeek(week.week)} className={cn("group relative flex h-full flex-col justify-end rounded-lg border px-1.5 pb-2 transition-all hover:border-primary/70", selected ? "border-primary bg-primary/10" : "border-border bg-background/35")}><span className="absolute left-1 top-1 text-[9px] font-bold text-text-muted">S{week.week}</span>{event && <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-warning text-background" title={event.name}>{event.priority === "A" ? <Trophy className="h-3 w-3" /> : <Medal className="h-3 w-3" />}</span>}<span className={cn("mx-auto w-full rounded-t-md", PHASE_BAR[week.phase], week.isDeload && "opacity-60")} style={{ height: `${Math.max(14, week.volume * 1.75)}px` }} /><span className="mt-1 truncate text-center text-[9px] font-semibold text-text">{week.km}</span></button>; })}</div></div></div>
+    </Card>
+  );
+}
+
+function IntelligencePanel({ weeks, selectedWeek, workoutsMap, suggestionStatus, onAccept, onDecline, onAcceptWeek, onDeclineWeek, onAcceptMeso, onAcceptAll, onEditWeek }: { weeks: Week[]; selectedWeek: number | null; workoutsMap: Record<number, GeneratedWorkout[]>; suggestionStatus: Record<string, SuggestionStatus>; onAccept: (key: string) => void; onDecline: (key: string) => void; onAcceptWeek: (week: number) => void; onDeclineWeek: (week: number) => void; onAcceptMeso: (mesocycle: number) => void; onAcceptAll: () => void; onEditWeek: (week: number) => void }) {
+  const week = weeks.find((item) => item.week === selectedWeek) ?? weeks[0];
+  const workouts = week ? workoutsMap[week.week] ?? [] : [];
+  return (
+    <Card>
+      <div className="flex flex-col gap-3 border-b border-border px-4 py-3 lg:flex-row lg:items-center lg:justify-between"><div><p className="flex items-center gap-2 text-sm font-semibold text-text"><Brain className="h-4 w-4 text-primary" />Intelligence de sessoes</p><p className="text-xs text-text-muted">Aceite, recuse ou edite as sugestoes sem perder o macrociclo de vista.</p></div>{week && <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => onEditWeek(week.week)}><Pencil className="h-4 w-4" />Editar semana {week.week}</Button><Button variant="secondary" size="sm" onClick={() => onAcceptWeek(week.week)}><CheckCheck className="h-4 w-4" />Aceitar semana</Button><Button variant="outline" size="sm" onClick={() => onAcceptMeso(week.mesocycle)}>Aceitar mesociclo</Button><Button variant="primary" size="sm" onClick={onAcceptAll}>Aceitar tudo</Button></div>}</div>
+      <CardContent className="grid gap-3 pt-4 lg:grid-cols-[1fr_260px]"><div className="space-y-2">{workouts.length === 0 ? <p className="rounded-xl border border-dashed border-border py-8 text-center text-sm text-text-muted">Selecione uma semana no grafico.</p> : workouts.map((workout, index) => { const key = `${week.week}-${index}`; const status = suggestionStatus[key] ?? "pending"; return <div key={key} className={cn("rounded-xl border p-3", status === "accepted" ? "border-success/40 bg-success/10" : status === "declined" ? "border-danger/40 bg-danger/10 opacity-70" : "border-border bg-background/50")}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-sm font-semibold text-text">{workout.dayLabel} · {workout.title}</p><p className="mt-1 text-xs text-text-muted">{workout.objective}</p><p className="mt-1 text-[11px] text-text-muted">Zona {workout.zone} · {workout.distanceKm} km · {workout.durationMin} min · RPE {workout.targetRpe}</p></div><div className="flex gap-1.5"><button onClick={() => onAccept(key)} className="rounded-lg border border-success/40 px-2 py-1 text-xs font-semibold text-success hover:bg-success/10"><Check className="inline h-3 w-3" /> Aceitar</button><button onClick={() => onDecline(key)} className="rounded-lg border border-danger/40 px-2 py-1 text-xs font-semibold text-danger hover:bg-danger/10"><Ban className="inline h-3 w-3" /> Recusar</button></div></div></div>; })}</div><div className="rounded-xl border border-primary/25 bg-primary/10 p-3"><p className="flex items-center gap-2 text-sm font-semibold text-text"><Sparkles className="h-4 w-4 text-primary" />Racional cientifico</p><p className="mt-2 text-xs leading-relaxed text-text-muted">As sessoes foram distribuidas pelo foco do microciclo, fase do mesociclo, volume alvo e intensidade. Em tapering, o volume cai e a intensidade vira ativacao curta.</p>{week && <button onClick={() => onDeclineWeek(week.week)} className="mt-3 w-full rounded-lg border border-danger/30 px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10">Recusar sugestoes da semana</button>}</div></CardContent>
+    </Card>
+  );
+}
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
