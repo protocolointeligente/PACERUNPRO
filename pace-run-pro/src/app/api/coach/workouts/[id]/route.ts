@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { WorkoutType } from "@prisma/client";
+import { Prisma, WorkoutType } from "@prisma/client";
 
 async function resolveCoachWorkout(userId: string, workoutId: string) {
   const coach = await prisma.coach.findUnique({
@@ -111,19 +111,7 @@ export async function PATCH(
     objective?: string | null;
   };
 
-  const data: {
-    date?: Date;
-    title?: string;
-    weekId?: string;
-    type?: WorkoutType;
-    structured?: boolean;
-    blocks?: unknown;
-    targetDistanceKm?: number | null;
-    targetDurationMin?: number | null;
-    targetPaceSecPerKm?: number | null;
-    targetRpe?: number | null;
-    objective?: string;
-  } = {};
+  const data: Prisma.WorkoutUncheckedUpdateInput = {};
   let targetDate: Date | null = null;
   if (body.date) {
     const d = new Date(body.date);
@@ -138,7 +126,7 @@ export async function PATCH(
   }
   if (body.type) data.type = body.type as WorkoutType;
   if (typeof body.structured === "boolean") data.structured = body.structured;
-  if (body.blocks !== undefined) data.blocks = body.blocks;
+  if (body.blocks !== undefined) data.blocks = body.blocks as Prisma.InputJsonValue;
   if (body.objective !== undefined) data.objective = body.objective ?? "";
   if (body.targetDistanceKm !== undefined) data.targetDistanceKm = body.targetDistanceKm;
   if (body.targetDurationMin !== undefined) data.targetDurationMin = body.targetDurationMin;
@@ -150,18 +138,6 @@ export async function PATCH(
       return NextResponse.json({ error: "Atleta invalido" }, { status: 403 });
     }
     const moveDate = targetDate ?? resolved.date;
-    const occupied = await prisma.workout.findFirst({
-      where: {
-        id: { not: id },
-        date: moveDate,
-        week: { plan: { athleteId: targetAthleteId, coachId: resolved.coachId } },
-      },
-      select: { id: true },
-    });
-    if (occupied) {
-      return NextResponse.json({ error: "Ja existe treino neste dia" }, { status: 409 });
-    }
-
     const week = await findOrCreatePlanAndWeek(targetAthleteId, resolved.coachId, moveDate);
     data.weekId = week.id;
   }
