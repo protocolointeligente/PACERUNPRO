@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { fetchAdminJson } from "@/lib/admin-api";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -40,12 +41,15 @@ export default function AprovacoesPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/coaches")
-      .then((r) => r.ok ? r.json() : [])
+    fetchAdminJson<(ApprovalItem & { status: string })[]>("/api/admin/coaches")
       .then((data: (ApprovalItem & { status: string })[]) => {
         setPending(data.filter((c) => c.status === "pendente"));
+        setError(null);
       })
-      .catch(() => null)
+      .catch((error) => {
+        setPending([]);
+        setError(error instanceof Error ? error.message : "Falha ao carregar aprovações.");
+      })
       .finally(() => setLoading(false));
   }, []);
 

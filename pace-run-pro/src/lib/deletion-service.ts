@@ -84,12 +84,11 @@ export async function softDeleteUser(
     },
   };
 
-  // Current schema does not have soft-delete columns; perform hard delete with cascade.
-  await prisma.user.delete({ where: { id: userId } });
+  await logDeletionBlocked(audit);
 
-  await logDeletion(audit);
-
-  return audit;
+  throw new Error(
+    "Soft delete is disabled: the current schema has no deletedAt/deletion audit columns. Refusing to hard-delete user data."
+  );
 }
 
 export async function hardDeleteUser(
@@ -133,8 +132,8 @@ export const excludeDeletedMiddleware = async (params: MiddlewareParams, next: M
   return next(params);
 };
 
-async function logDeletion(audit: DeletionAudit): Promise<void> {
-  console.log("[DELETION AUDIT]", JSON.stringify(audit, null, 2));
+async function logDeletionBlocked(audit: DeletionAudit): Promise<void> {
+  console.warn("[DELETION BLOCKED]", JSON.stringify(audit, null, 2));
 }
 
 const deletionService = {

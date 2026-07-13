@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { SectionHeader } from "@/components/shared/section-header";
+import { fetchAdminJson } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 
 const fadeUp = {
@@ -137,16 +138,22 @@ function EditPlanButton({ coachId, currentPlan }: { coachId: string; currentPlan
 export default function AssessoriasPage() {
   const [assessoriaList, setAssessoriaList] = useState<AssessoriaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch("/api/admin/coaches")
-      .then((r) => r.ok ? r.json() : [])
-      .then((data: AssessoriaItem[]) => setAssessoriaList(data))
-      .catch(() => null)
+    fetchAdminJson<AssessoriaItem[]>("/api/admin/coaches")
+      .then((data) => {
+        setAssessoriaList(data);
+        setLoadError(null);
+      })
+      .catch((error) => {
+        setAssessoriaList([]);
+        setLoadError(error instanceof Error ? error.message : "Falha ao carregar assessorias.");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -206,6 +213,12 @@ export default function AssessoriasPage() {
           </h1>
         </div>
       </motion.div>
+
+      {loadError && (
+        <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+          {loadError}
+        </div>
+      )}
 
       {/* Stats */}
       <motion.div

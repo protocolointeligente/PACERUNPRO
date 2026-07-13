@@ -21,6 +21,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { SectionHeader } from "@/components/shared/section-header";
 import { BarTrend } from "@/components/charts/trend-chart";
+import { fetchAdminJson } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 
 const fadeUp = {
@@ -73,6 +74,7 @@ const today = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "l
 export default function AdminDashboard() {
   const [assessoriaList, setAssessoriaList] = useState<AssessoriaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
   const [refusedIds, setRefusedIds] = useState<Set<string>>(new Set());
 
@@ -86,10 +88,15 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    fetch("/api/admin/coaches")
-      .then((r) => r.ok ? r.json() : [])
-      .then((data: AssessoriaItem[]) => setAssessoriaList(data))
-      .catch(() => null)
+    fetchAdminJson<AssessoriaItem[]>("/api/admin/coaches")
+      .then((data) => {
+        setAssessoriaList(data);
+        setLoadError(null);
+      })
+      .catch((error) => {
+        setAssessoriaList([]);
+        setLoadError(error instanceof Error ? error.message : "Falha ao carregar dados administrativos.");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -124,6 +131,12 @@ export default function AdminDashboard() {
           <p className="mt-1 text-sm text-text-muted">{today}</p>
         </div>
       </motion.div>
+
+      {loadError && (
+        <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+          {loadError}
+        </div>
+      )}
 
       {/* B2B KPIs */}
       <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
