@@ -575,7 +575,9 @@ export default function PeriodizacaoPage() {
 
   function dateForSuggestedWorkout(weekNum: number, dayLabel: string) {
     const start = new Date(`${periodizationSettings.startDate}T12:00:00`);
-    const dayIndex = Math.max(0, ALL_DAYS.indexOf(dayLabel));
+    const dayIndex = ALL_DAYS.includes(dayLabel as (typeof ALL_DAYS)[number])
+      ? ALL_DAYS.indexOf(dayLabel as (typeof ALL_DAYS)[number])
+      : 0;
     start.setDate(start.getDate() + ((weekNum - 1) * 7) + dayIndex);
     return start.toISOString().slice(0, 10);
   }
