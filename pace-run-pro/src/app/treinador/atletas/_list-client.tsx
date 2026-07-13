@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ComponentType } from "react";
 import Link from "next/link";
 import {
   ChevronLeft, ChevronRight, Search, Users, X,
@@ -8,7 +8,7 @@ import {
   Flame, ShieldAlert, CalendarCheck,
   BookmarkPlus, Copy, CopyPlus, Plus, Loader2, Check,
   Clipboard, ClipboardPaste, Trash2, GripVertical,
-  Bike, Waves, Dumbbell, Footprints,
+  Bike, Waves, Dumbbell,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +53,19 @@ function WorkoutIcon({ type, className }: { type: string; className?: string }) 
   if (key.includes("NAT") || key.includes("SWIM")) {
     return <Waves className={className} />;
   }
-  return <Footprints className={className} />;
+  return <RunIcon className={className} />;
+}
+
+function RunIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="14.5" cy="4.5" r="2" />
+      <path d="m13 7-3 4 4 2 2-3" />
+      <path d="m10 11-4 1" />
+      <path d="m14 13 3 2 2 4" />
+      <path d="m12 13-2 4-4 3" />
+    </svg>
+  );
 }
 
 function workoutCardClass(type: string, title = "") {
@@ -551,8 +563,8 @@ const QUICK_TYPES = [
 
 type LibraryModality = "corrida" | "ciclismo" | "natacao" | "forca";
 
-const LIBRARY_MODALITIES: { value: LibraryModality; label: string; icon: typeof Footprints }[] = [
-  { value: "corrida", label: "Corrida", icon: Footprints },
+const LIBRARY_MODALITIES: { value: LibraryModality; label: string; icon: ComponentType<{ className?: string }> }[] = [
+  { value: "corrida", label: "Corrida", icon: RunIcon },
   { value: "ciclismo", label: "Ciclismo", icon: Bike },
   { value: "natacao", label: "Natacao", icon: Waves },
   { value: "forca", label: "Forca", icon: Dumbbell },
@@ -619,8 +631,17 @@ interface QuickPrescribePayload {
   workout?: WorkoutEntry;
 }
 
+interface StrengthExerciseOption {
+  id: string;
+  name: string;
+  category: string;
+  gifUrl?: string;
+  imageUrl?: string;
+  description?: string;
+}
+
 // eslint-disable-next-line no-unused-vars
-function QuickPrescribeModal({
+function LegacyDisabledPrescriptionForm({
   payload,
   onClose,
   onSaved,
@@ -629,6 +650,7 @@ function QuickPrescribeModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  return null;
   const [type, setType] = useState("RODAGEM_LEVE");
   const [title, setTitle] = useState("Rodagem leve");
   const [durationMin, setDurationMin] = useState("");
@@ -769,7 +791,7 @@ function QuickPrescribeModal({
 
 // ── CopyWorkoutModal ──────────────────────────────────────────────────────────
 
-function IntervalsPrescribeModal({
+export function IntervalsPrescribeModal({
   payload,
   onClose,
   onSaved,
@@ -778,22 +800,25 @@ function IntervalsPrescribeModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const editingWorkout = payload.workout;
+  const seedWorkout = payload.workout;
+  const editingWorkout = seedWorkout && !seedWorkout.id.startsWith("periodizacao-") ? seedWorkout : undefined;
   const [category, setCategory] = useState("Treino");
   const [sport, setSport] = useState(
-    editingWorkout?.type === "FORCA" ? "Forca" : "Corrida"
+    seedWorkout?.type === "FORCA" ? "Forca" : "Corrida"
   );
-  const [type, setType] = useState(editingWorkout?.type ?? "RODAGEM_LEVE");
-  const [title, setTitle] = useState(editingWorkout?.title ?? "Rodagem leve");
-  const [durationMin, setDurationMin] = useState(editingWorkout?.targetDurationMin ? String(editingWorkout.targetDurationMin) : "");
-  const [distanceKm, setDistanceKm] = useState(editingWorkout?.targetDistanceKm ? String(editingWorkout.targetDistanceKm) : "");
+  const [type, setType] = useState(seedWorkout?.type ?? "RODAGEM_LEVE");
+  const [title, setTitle] = useState(seedWorkout?.title ?? "Rodagem leve");
+  const [durationMin, setDurationMin] = useState(seedWorkout?.targetDurationMin ? String(seedWorkout.targetDurationMin) : "");
+  const [distanceKm, setDistanceKm] = useState(seedWorkout?.targetDistanceKm ? String(seedWorkout.targetDistanceKm) : "");
   const [load, setLoad] = useState("");
-  const [rpe, setRpe] = useState(editingWorkout?.targetRpe ? String(editingWorkout.targetRpe) : "");
+  const [rpe, setRpe] = useState(seedWorkout?.targetRpe ? String(seedWorkout.targetRpe) : "");
   const [ftp, setFtp] = useState("");
   const [heartRate, setHeartRate] = useState("");
   const [pace, setPace] = useState("");
   const [poolDistance, setPoolDistance] = useState("25");
   const [strengthExercise, setStrengthExercise] = useState("Agachamento");
+  const [exerciseQuery, setExerciseQuery] = useState("Agachamento");
+  const [exerciseDb, setExerciseDb] = useState<StrengthExerciseOption[]>([]);
   const [sets, setSets] = useState("3");
   const [reps, setReps] = useState("10");
   const [loadKg, setLoadKg] = useState("");
@@ -817,6 +842,19 @@ function IntervalsPrescribeModal({
     month: "short",
     year: "numeric",
   });
+  const exerciseSuggestions = exerciseDb
+    .filter((exercise) => exercise.name.toLowerCase().includes(exerciseQuery.toLowerCase()))
+    .slice(0, 5);
+  const selectedExercise = exerciseDb.find((exercise) => exercise.name === strengthExercise);
+
+  useEffect(() => {
+    fetch("/exercises.json")
+      .then((response) => response.ok ? response.json() : [])
+      .then((data: StrengthExerciseOption[]) => {
+        if (Array.isArray(data)) setExerciseDb(data);
+      })
+      .catch(() => null);
+  }, []);
 
   function handleTypeChange(value: string) {
     setType(value);
@@ -1039,11 +1077,15 @@ function IntervalsPrescribeModal({
             <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-slate-50/90 p-3 shadow-inner shadow-slate-100 lg:grid-cols-7 dark:border-border dark:bg-[#07100d] dark:shadow-none">
               <label className="col-span-2 block space-y-1 lg:col-span-2">
                 <span className="text-[11px] font-medium text-text-muted">Exercicio da biblioteca</span>
-                <select value={strengthExercise} onChange={(event) => setStrengthExercise(event.target.value)} className={inputClass}>
-                  {STRENGTH_LIBRARY.map((item) => (
-                    <option key={item} value={item} className={optionClass}>{item}</option>
-                  ))}
-                </select>
+                <input
+                  value={exerciseQuery}
+                  onChange={(event) => {
+                    setExerciseQuery(event.target.value);
+                    setStrengthExercise(event.target.value);
+                  }}
+                  placeholder="Digite para buscar..."
+                  className={inputClass}
+                />
               </label>
               <label className="block space-y-1">
                 <span className="text-[11px] font-medium text-text-muted">Series</span>
@@ -1066,6 +1108,41 @@ function IntervalsPrescribeModal({
                 <input placeholder="90s" value={restSec} onChange={(event) => setRestSec(event.target.value)} className={inputClass} />
               </label>
               <div className="col-span-2 flex flex-col justify-end gap-2 lg:col-span-7">
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {(exerciseSuggestions.length > 0 ? exerciseSuggestions : STRENGTH_LIBRARY.map((name, index) => ({ id: `fallback-${index}`, name, category: "Forca" }))).map((exercise) => (
+                    <button
+                      key={exercise.id}
+                      type="button"
+                      onClick={() => {
+                        setStrengthExercise(exercise.name);
+                        setExerciseQuery(exercise.name);
+                      }}
+                      className={cn(
+                        "flex items-center gap-2 rounded-lg border px-2 py-2 text-left text-xs transition-colors",
+                        strengthExercise === exercise.name
+                          ? "border-[#5b2df5]/50 bg-[#5b2df5]/10 text-[#5b2df5] dark:border-info/50 dark:bg-info/10 dark:text-info"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-[#5b2df5]/40 dark:border-border dark:bg-background/50 dark:text-text"
+                      )}
+                    >
+                      {(exercise.gifUrl || exercise.imageUrl) ? (
+                        <img src={exercise.gifUrl ?? exercise.imageUrl} alt="" className="h-10 w-14 shrink-0 rounded-md border border-border object-cover" />
+                      ) : (
+                        <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-md border border-border bg-card-hover/40">
+                          <Dumbbell className="h-4 w-4" />
+                        </span>
+                      )}
+                      <span className="min-w-0">
+                        <span className="block truncate font-semibold">{exercise.name}</span>
+                        <span className="block truncate text-[10px] opacity-70">{exercise.category}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {selectedExercise?.description && (
+                  <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] text-slate-600 dark:border-border dark:bg-background/40 dark:text-text-muted">
+                    {selectedExercise.description}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={addStrengthExercise}
@@ -1421,6 +1498,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   const [savingLibrary, setSavingLibrary] = useState<string | null>(null); // workoutId being saved
   const [savedLibrary, setSavedLibrary] = useState<Set<string>>(new Set());
   const [libraryModality, setLibraryModality] = useState<LibraryModality>("corrida");
+  const [calendarView, setCalendarView] = useState<"Semana" | "Mes" | "Lista">("Mes");
 
   useEffect(() => {
     fetch("/api/coach/action-center")
@@ -1636,6 +1714,18 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
 
       {/* Week navigation */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+        <select
+          value={selectedAthlete?.id ?? ""}
+          onChange={(event) => setSelectedAthleteId(event.target.value)}
+          className="min-h-10 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-text outline-none focus:border-primary/60"
+        >
+          {athletes.map((athlete) => (
+            <option key={athlete.id} value={athlete.id}>
+              {athlete.name}
+            </option>
+          ))}
+        </select>
         <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-2 py-1.5">
           <button
             onClick={prevWeek}
@@ -1660,6 +1750,22 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
               Hoje
             </button>
           )}
+        </div>
+        <div className="flex rounded-xl border border-border bg-card p-1">
+          {(["Semana", "Mes", "Lista"] as const).map((view) => (
+            <button
+              key={view}
+              type="button"
+              onClick={() => setCalendarView(view)}
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
+                calendarView === view ? "bg-primary text-white" : "text-text-muted hover:bg-card-hover hover:text-text"
+              )}
+            >
+              {view}
+            </button>
+          ))}
+        </div>
         </div>
 
         {/* Legend */}
@@ -1739,13 +1845,13 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
         </div>
       )}
 
-      <div className="grid gap-3 xl:grid-cols-[280px_minmax(0,1fr)_240px]">
+      <div className="grid gap-3 xl:grid-cols-[260px_minmax(0,1fr)_240px]">
         <aside className="overflow-hidden rounded-xl border border-white/10 bg-[#07111c]/85 shadow-2xl shadow-black/20 backdrop-blur-xl">
-          <div className="border-b border-white/10 bg-white/[0.03] px-3 py-2">
+          <div className="hidden border-b border-white/10 bg-white/[0.03] px-3 py-2">
             <p className="text-xs font-semibold text-text">Atletas</p>
             <p className="text-[11px] text-text-muted">Selecione um atleta para abrir o mes</p>
           </div>
-          <div className="max-h-[460px] space-y-1 overflow-y-auto p-2">
+          <div className="hidden max-h-[460px] space-y-1 overflow-y-auto p-2">
             {filtered.map((athlete) => {
               const selected = athlete.id === selectedAthlete?.id;
               const statusCfg = STATUS_BADGE[athlete.status] ?? STATUS_BADGE.ativo;
@@ -1775,7 +1881,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
               );
             })}
           </div>
-          <div className="border-t border-white/10 px-3 py-2">
+          <div className="px-3 py-2">
             <p className="mb-2 text-xs font-semibold text-text">Biblioteca</p>
             <div className="mb-2 grid grid-cols-2 gap-1">
               {LIBRARY_MODALITIES.map((modality) => {
@@ -1836,7 +1942,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           <div className="flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-white/[0.06] via-primary/10 to-transparent px-4 py-3">
             <div>
               <p className="text-sm font-semibold capitalize text-text">{formatMonthLabel(monthStart)}</p>
-              <p className="text-xs text-text-muted">{selectedAthlete?.name ?? "Selecione um atleta"}</p>
+              <p className="text-xs text-text-muted">{selectedAthlete?.name ?? "Selecione um atleta"} · Visualizacao {calendarView}</p>
             </div>
             {selectedAthlete && (
               <Button

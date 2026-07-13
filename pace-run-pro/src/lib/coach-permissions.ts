@@ -59,7 +59,6 @@ const coreNav: NavItem[] = [
 
 const prescriptionNav: NavItem[] = [
   { href: "/treinador/prescricao/periodizacao", label: "Periodizacao", icon: BarChart2, sectionStart: "Prescricao" },
-  { href: "/treinador/prescricao/forca", label: "Forca", icon: Dumbbell },
   { href: "/treinador/grupos", label: "Grupos", icon: Layers },
   { href: "/treinador/analise-semanal", label: "Analise semanal", icon: Users },
 ];

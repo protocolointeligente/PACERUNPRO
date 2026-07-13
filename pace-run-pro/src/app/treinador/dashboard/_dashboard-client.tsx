@@ -81,7 +81,7 @@ const QUICK_ACTIONS = [
   {
     label: "Prescrever força",
     description: "Adicione treino de força, mobilidade ou funcional.",
-    href: "/treinador/prescricao/forca",
+    href: "/treinador/atletas",
     icon: Dumbbell,
     accent: "text-violet-400",
     bg: "bg-violet-400/10",

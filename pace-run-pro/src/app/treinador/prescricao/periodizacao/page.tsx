@@ -36,6 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { AthleteListItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { IntervalsPrescribeModal } from "../../atletas/_list-client";
 import {
   generateWorkoutsForWeek,
   formatPaceSec,
@@ -364,6 +365,24 @@ export default function PeriodizacaoPage() {
   const [workoutsMap, setWorkoutsMap] = useState<Record<number, GeneratedWorkout[]>>({});
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
   const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [prescriptionModal, setPrescriptionModal] = useState<{
+    athleteId: string;
+    athleteName: string;
+    date: string;
+    workout?: {
+      id: string;
+      date: string;
+      type: string;
+      title: string;
+      status: string;
+      targetDistanceKm: number | null;
+      targetDurationMin: number | null;
+      targetPaceSecPerKm: number | null;
+      targetRpe: number | null;
+      tss: number;
+      released: boolean;
+    };
+  } | null>(null);
   const [liberating, setLiberating] = useState(false);
   const [liberated, setLiberated] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
@@ -551,6 +570,38 @@ export default function PeriodizacaoPage() {
       const weekArr = [...(prev[weekNum] ?? [])];
       weekArr[sessionIdx] = { ...weekArr[sessionIdx], [field]: value };
       return { ...prev, [weekNum]: weekArr };
+    });
+  }
+
+  function dateForSuggestedWorkout(weekNum: number, dayLabel: string) {
+    const start = new Date(`${periodizationSettings.startDate}T12:00:00`);
+    const dayIndex = Math.max(0, ALL_DAYS.indexOf(dayLabel));
+    start.setDate(start.getDate() + ((weekNum - 1) * 7) + dayIndex);
+    return start.toISOString().slice(0, 10);
+  }
+
+  function openPrescriptionModal(weekNum: number, workout: GeneratedWorkout, sessionIdx: number) {
+    const athleteId = selectedAthletes[0] ?? athletes[0]?.id;
+    if (!athleteId) return;
+    const athleteName = athletes.find((athlete) => athlete.id === athleteId)?.name ?? "Atleta";
+    const date = dateForSuggestedWorkout(weekNum, workout.dayLabel);
+    setPrescriptionModal({
+      athleteId,
+      athleteName,
+      date,
+      workout: {
+        id: `periodizacao-${weekNum}-${sessionIdx}`,
+        date,
+        type: "RODAGEM_LEVE",
+        title: workout.title,
+        status: "PLANEJADO",
+        targetDistanceKm: workout.distanceKm,
+        targetDurationMin: workout.durationMin,
+        targetPaceSecPerKm: workout.targetPaceSecPerKm,
+        targetRpe: workout.targetRpe,
+        tss: Math.round(workout.durationMin * workout.targetRpe),
+        released: false,
+      },
     });
   }
 
@@ -1312,10 +1363,8 @@ export default function PeriodizacaoPage() {
                                 setExpandedWeek(isExpanded ? null : w.week)
                               }
                               editingKey={editingKey}
-                              onEdit={(key) =>
-                                setEditingKey(editingKey === key ? null : key)
-                              }
                               onUpdateWorkout={handleUpdateWorkout}
+                              onOpenPrescription={openPrescriptionModal}
                             />
                           );
                         })
@@ -1431,6 +1480,13 @@ export default function PeriodizacaoPage() {
           )}
         </div>
       </div>
+      {prescriptionModal && (
+        <IntervalsPrescribeModal
+          payload={prescriptionModal}
+          onClose={() => setPrescriptionModal(null)}
+          onSaved={() => setPrescriptionModal(null)}
+        />
+      )}
     </div>
   );
 }
@@ -1528,21 +1584,21 @@ function WeekWorkoutsCard({
   isExpanded,
   onToggleExpand,
   editingKey,
-  onEdit,
   onUpdateWorkout,
+  onOpenPrescription,
 }: {
   week: Week;
   workouts: GeneratedWorkout[];
   isExpanded: boolean;
   onToggleExpand: () => void;
   editingKey: string | null;
-  onEdit: (key: string) => void;
   onUpdateWorkout: (
     weekNum: number,
     sessionIdx: number,
     field: keyof GeneratedWorkout,
     value: string | number
   ) => void;
+  onOpenPrescription: (weekNum: number, workout: GeneratedWorkout, sessionIdx: number) => void;
 }) {
   const totalKm = workouts.reduce((s, w) => s + w.distanceKm, 0);
 
@@ -1601,7 +1657,7 @@ function WeekWorkoutsCard({
                   key={key}
                   workout={wo}
                   isEditing={editingKey === key}
-                  onEdit={() => onEdit(key)}
+                  onEdit={() => onOpenPrescription(week.week, wo, idx)}
                   onChange={(field, value) => onUpdateWorkout(week.week, idx, field, value)}
                   isLast={idx === workouts.length - 1}
                 />
