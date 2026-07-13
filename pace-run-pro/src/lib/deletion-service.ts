@@ -30,6 +30,7 @@ export interface DeletionAudit {
 }
 
 type MiddlewareArgs = {
+  where?: Record<string, unknown>;
   meta?: {
     includeSoftDeleted?: boolean;
   };
@@ -42,6 +43,23 @@ type MiddlewareParams = {
 };
 
 type MiddlewareNext = (params: MiddlewareParams) => Promise<unknown>;
+
+const SOFT_DELETE_MODELS = new Set([
+  "User",
+  "Athlete",
+  "Coach",
+  "Subscription",
+  "BillingSettings",
+]);
+
+const READ_ACTIONS = new Set([
+  "findUnique",
+  "findFirst",
+  "findMany",
+  "count",
+  "aggregate",
+  "groupBy",
+]);
 
 export async function softDeleteUser(
   userId: string,
@@ -69,13 +87,20 @@ export async function softDeleteUser(
     throw new Error(`User ${userId} not found`);
   }
 
+  if (user.deletedAt) {
+    throw new Error(`User ${userId} is already soft-deleted`);
+  }
+
+  const deletedAt = new Date();
+  const anonymizedEmail = `deleted-${deletedAt.getTime()}-${user.id}@deleted.local`;
+
   const audit: DeletionAudit = {
     userId: user.id,
     email: user.email,
     role: user.role,
     reason: options.reason,
     deletedBy: options.deletedBy,
-    deletedAt: new Date(),
+    deletedAt,
     relatedEntitiesDeleted: {
       athletes: user.athlete ? 1 : 0,
       coaches: user.coach ? 1 : 0,
@@ -84,11 +109,74 @@ export async function softDeleteUser(
     },
   };
 
-  await logDeletionBlocked(audit);
+  await prisma.$transaction(async (tx) => {
+    if (user.athlete) {
+      await tx.athlete.update({
+        where: { id: user.athlete.id },
+        data: { deletedAt },
+      });
+    }
 
-  throw new Error(
-    "Soft delete is disabled: the current schema has no deletedAt/deletion audit columns. Refusing to hard-delete user data."
-  );
+    if (user.coach) {
+      await tx.coach.update({
+        where: { id: user.coach.id },
+        data: { deletedAt },
+      });
+    }
+
+    await tx.subscription.updateMany({
+      where: { userId, deletedAt: null },
+      data: { deletedAt, status: "CANCELED", canceledAt: deletedAt },
+    });
+
+    if (user.billingSettings) {
+      await tx.billingSettings.update({
+        where: { id: user.billingSettings.id },
+        data: {
+          deletedAt,
+          cpfCnpj: null,
+          pixKey: null,
+          bankAccount: null,
+          bankAccountType: null,
+        },
+      });
+    }
+
+    await tx.session.deleteMany({ where: { userId } });
+    await tx.account.deleteMany({ where: { userId } });
+
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        email: anonymizedEmail,
+        passwordHash: null,
+        name: "Conta excluida",
+        avatarUrl: null,
+        bannerUrl: null,
+        image: null,
+        phone: null,
+        city: null,
+        state: null,
+        deletedAt,
+        deletionReason: options.reason,
+        deletedBy: options.deletedBy,
+      },
+    });
+
+    await tx.deletionAuditLog.create({
+      data: {
+        userId: audit.userId,
+        email: audit.email,
+        role: audit.role,
+        reason: audit.reason,
+        deletedBy: audit.deletedBy,
+        deletedAt: audit.deletedAt,
+        relatedEntities: audit.relatedEntitiesDeleted,
+      },
+    });
+  });
+
+  return audit;
 }
 
 export async function hardDeleteUser(
@@ -107,17 +195,52 @@ export async function hardDeleteUser(
   };
 }
 
-export async function cleanupSoftDeletedUsers(_options: {
+export async function cleanupSoftDeletedUsers(options: {
   grace_days?: number;
   batchSize?: number;
   dryRun?: boolean;
 } = {}): Promise<{ deleted: number; errors: Array<{ userId: string; error: string }> }> {
-  // No-op while the schema has no deletedAt/deletion queue columns.
-  return { deleted: 0, errors: [] };
+  const graceDays = options.grace_days ?? 30;
+  const batchSize = options.batchSize ?? 100;
+  const cutoff = new Date(Date.now() - graceDays * 24 * 60 * 60 * 1000);
+
+  const users = await prisma.user.findMany({
+    where: {
+      deletedAt: { lte: cutoff },
+    },
+    select: { id: true },
+    take: batchSize,
+    orderBy: { deletedAt: "asc" },
+  });
+
+  if (options.dryRun) {
+    return { deleted: users.length, errors: [] };
+  }
+
+  if (users.length > 0 && process.env.ALLOW_HARD_DELETE_CLEANUP !== "true") {
+    throw new Error("Hard-delete cleanup requires ALLOW_HARD_DELETE_CLEANUP=true");
+  }
+
+  let deleted = 0;
+  const errors: Array<{ userId: string; error: string }> = [];
+
+  for (const user of users) {
+    try {
+      await hardDeleteUser(user.id, { force: true });
+      deleted += 1;
+    } catch (error) {
+      errors.push({
+        userId: user.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  return { deleted, errors };
 }
 
 export const NOT_DELETED = {
-  where: {},
+  where: { deletedAt: null },
 };
 
 export const INCLUDE_DELETED = {
@@ -125,16 +248,30 @@ export const INCLUDE_DELETED = {
 };
 
 export const excludeDeletedMiddleware = async (params: MiddlewareParams, next: MiddlewareNext) => {
-  if (params.args.meta?.includeSoftDeleted === true) {
+  if (
+    params.args.meta?.includeSoftDeleted === true ||
+    !params.model ||
+    !SOFT_DELETE_MODELS.has(params.model) ||
+    !READ_ACTIONS.has(params.action)
+  ) {
     return next(params);
   }
 
+  if (params.action === "findUnique") {
+    params.action = "findFirst";
+  }
+
+  if (Object.prototype.hasOwnProperty.call(params.args.where ?? {}, "deletedAt")) {
+    return next(params);
+  }
+
+  params.args.where = {
+    ...(params.args.where ?? {}),
+    deletedAt: null,
+  };
+
   return next(params);
 };
-
-async function logDeletionBlocked(audit: DeletionAudit): Promise<void> {
-  console.warn("[DELETION BLOCKED]", JSON.stringify(audit, null, 2));
-}
 
 const deletionService = {
   softDeleteUser,

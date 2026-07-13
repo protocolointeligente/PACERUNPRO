@@ -58,6 +58,9 @@ model User {
   city          String?
   state         String?
   emailVerified DateTime?
+  deletedAt     DateTime?
+  deletionReason String?
+  deletedBy     String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -76,7 +79,23 @@ model User {
   billingSettings     BillingSettings?
   workoutLogComments  WorkoutLogComment[]
 
+  @@index([deletedAt])
   @@map("users")
+}
+
+model DeletionAuditLog {
+  id              String   @id @default(cuid())
+  userId          String
+  email           String
+  role            String
+  reason          String
+  deletedBy       String?
+  deletedAt       DateTime @default(now())
+  relatedEntities Json
+
+  @@index([userId])
+  @@index([deletedAt])
+  @@map("deletion_audit_logs")
 }
 
 model Account {
@@ -146,6 +165,7 @@ model Athlete {
 
   parqAccepted       Boolean         @default(false)
   parqAcceptedAt     DateTime?
+  deletedAt          DateTime?
 
   metrics            Metric[]
   checkins           CheckIn[]
@@ -162,6 +182,7 @@ model Athlete {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  @@index([deletedAt])
   @@map("athletes")
 }
 
@@ -192,7 +213,9 @@ model Coach {
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
 
+  @@index([deletedAt])
   @@map("coaches")
 }
 
@@ -709,9 +732,11 @@ model Subscription {
   startedAt DateTime           @default(now())
   renewsAt  DateTime?
   canceledAt DateTime?
+  deletedAt DateTime?
 
   payments  Payment[]
 
+  @@index([deletedAt])
   @@map("subscriptions")
 }
 
@@ -850,7 +875,9 @@ model BillingSettings {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
+  @@index([deletedAt])
   @@map("billing_settings")
 }
 
