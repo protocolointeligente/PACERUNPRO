@@ -741,8 +741,9 @@ function IntervalsPrescribeModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const inputClass = "w-full rounded-md border border-border bg-[#0b1511] px-2.5 py-2 text-sm text-text outline-none focus:border-info";
-  const optionClass = "bg-[#0b1511] text-text";
+  const inputClass = "w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-950 shadow-inner shadow-slate-100 outline-none transition-colors placeholder:text-slate-400 focus:border-[#5b2df5] focus:ring-2 focus:ring-[#5b2df5]/15 dark:border-border dark:bg-[#07111c] dark:text-text dark:shadow-none dark:placeholder:text-text-muted dark:focus:border-info";
+  const optionClass = "bg-white text-slate-950 dark:bg-[#07111c] dark:text-text";
+  const modalityPanelClass = "mt-4 grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-slate-50/90 p-3 shadow-inner shadow-slate-100 sm:grid-cols-3 dark:border-border dark:bg-[#07100d] dark:shadow-none";
   const dateLabel = new Date(payload.date + "T12:00:00").toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "short",
@@ -820,19 +821,22 @@ function IntervalsPrescribeModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-slate-950/35 backdrop-blur-sm dark:bg-black/60" />
       <div
-        className="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-md border border-border bg-card shadow-2xl"
+        className="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/20 dark:border-border dark:bg-[#07111c] dark:shadow-black/45"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between bg-info px-4 py-2.5 text-white">
-          <p className="text-sm font-semibold">{editingWorkout ? "Editar Entrada no Calendario" : "Adicionar Entrada no Calendario"}</p>
-          <button onClick={onClose} className="rounded p-1 text-white/80 hover:bg-white/15 hover:text-white">
+        <div className="flex items-center justify-between bg-gradient-to-r from-[#ff6b1a] via-[#7c3aed] to-[#2563eb] px-4 py-3 text-white">
+          <div>
+            <p className="text-sm font-semibold">{editingWorkout ? "Editar Entrada no Calendario" : "Adicionar Entrada no Calendario"}</p>
+            <p className="text-[11px] text-white/75">{payload.athleteName} • {dateLabel}</p>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1 text-white/80 hover:bg-white/15 hover:text-white">
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-white p-4 dark:bg-[#07111c]">
           <div className="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
             <label className="block space-y-1">
               <span className="text-[11px] font-medium text-text-muted">Categoria</span>
@@ -894,7 +898,7 @@ function IntervalsPrescribeModal({
           </div>
 
           {sport === "Corrida" && (
-            <div className="mt-4 grid grid-cols-1 gap-3 rounded-md border border-border bg-[#07100d] p-3 sm:grid-cols-3">
+            <div className={modalityPanelClass}>
               <label className="block space-y-1">
                 <span className="text-[11px] font-medium text-text-muted">Pace alvo</span>
                 <input placeholder="5:20/km" value={pace} onChange={(event) => setPace(event.target.value)} className={inputClass} />
@@ -911,7 +915,7 @@ function IntervalsPrescribeModal({
           )}
 
           {sport === "Ciclismo" && (
-            <div className="mt-4 grid grid-cols-1 gap-3 rounded-md border border-border bg-[#07100d] p-3 sm:grid-cols-3">
+            <div className={modalityPanelClass}>
               <label className="block space-y-1">
                 <span className="text-[11px] font-medium text-text-muted">FTP / watts</span>
                 <input placeholder="FTP 240 / 180-210w" value={ftp} onChange={(event) => setFtp(event.target.value)} className={inputClass} />
@@ -928,7 +932,7 @@ function IntervalsPrescribeModal({
           )}
 
           {sport === "Natacao" && (
-            <div className="mt-4 grid grid-cols-1 gap-3 rounded-md border border-border bg-[#07100d] p-3 sm:grid-cols-3">
+            <div className={modalityPanelClass}>
               <label className="block space-y-1">
                 <span className="text-[11px] font-medium text-text-muted">Piscina</span>
                 <select value={poolDistance} onChange={(event) => setPoolDistance(event.target.value)} className={inputClass}>
@@ -947,7 +951,7 @@ function IntervalsPrescribeModal({
           )}
 
           {sport === "Forca" && (
-            <div className="mt-4 grid grid-cols-2 gap-3 rounded-md border border-border bg-[#07100d] p-3 lg:grid-cols-7">
+            <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-slate-50/90 p-3 shadow-inner shadow-slate-100 lg:grid-cols-7 dark:border-border dark:bg-[#07100d] dark:shadow-none">
               <label className="col-span-2 block space-y-1 lg:col-span-2">
                 <span className="text-[11px] font-medium text-text-muted">Exercicio da biblioteca</span>
                 <select value={strengthExercise} onChange={(event) => setStrengthExercise(event.target.value)} className={inputClass}>
@@ -981,16 +985,16 @@ function IntervalsPrescribeModal({
 
           <label className="mt-4 block space-y-1">
             <span className="text-[11px] font-medium text-text-muted">Descricao</span>
-            <textarea rows={4} value={description} onChange={(event) => setDescription(event.target.value)} className="w-full resize-none border-0 border-b border-border bg-transparent px-0 py-2 text-sm text-text outline-none focus:border-info" />
+            <textarea rows={4} value={description} onChange={(event) => setDescription(event.target.value)} className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 shadow-inner shadow-slate-100 outline-none transition-colors placeholder:text-slate-400 focus:border-[#5b2df5] focus:ring-2 focus:ring-[#5b2df5]/15 dark:border-border dark:bg-[#07111c] dark:text-text dark:shadow-none dark:focus:border-info" />
           </label>
 
-          <div className="mt-4 rounded-md border border-border bg-background/35">
-            <div className="flex items-center justify-between border-b border-border px-3 py-2">
-              <p className="text-xs font-semibold text-text">Etapas estruturadas</p>
+          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50/80 shadow-sm dark:border-border dark:bg-background/35 dark:shadow-none">
+            <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-border">
+              <p className="text-xs font-semibold text-slate-950 dark:text-text">Etapas estruturadas</p>
               <button
                 type="button"
                 onClick={() => setSteps((prev) => `${prev}${prev ? "\n" : ""}Novo bloco 5min Z2`)}
-                className="text-xs font-semibold text-info hover:text-primary"
+                className="text-xs font-semibold text-[#5b2df5] hover:text-[#ff6b1a] dark:text-info dark:hover:text-primary"
               >
                 ADICIONAR ETAPA
               </button>
@@ -999,13 +1003,13 @@ function IntervalsPrescribeModal({
               rows={5}
               value={steps}
               onChange={(event) => setSteps(event.target.value)}
-              className="w-full resize-none bg-transparent px-3 py-2 font-mono text-xs text-text outline-none"
+              className="w-full resize-none bg-transparent px-3 py-2 font-mono text-xs text-slate-900 outline-none dark:text-text"
             />
-            <div className="grid h-20 grid-cols-12 items-end gap-1 border-t border-border px-3 py-2">
+            <div className="grid h-20 grid-cols-12 items-end gap-1 border-t border-slate-200 px-3 py-2 dark:border-border">
               {Array.from({ length: 12 }, (_, index) => (
                 <span
                   key={index}
-                  className="rounded-t bg-info/50"
+                  className="rounded-t bg-gradient-to-t from-[#5b2df5] to-[#ff6b1a] opacity-70 dark:from-info/60 dark:to-primary/70"
                   style={{ height: `${18 + ((index % 5) + Number(rpe || 3)) * 5}px` }}
                 />
               ))}
@@ -1015,7 +1019,7 @@ function IntervalsPrescribeModal({
           {error && <p className="mt-3 text-xs text-danger">{error}</p>}
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
+        <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/80 px-4 py-3 dark:border-border dark:bg-[#07111c]">
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
           <Button onClick={handleSave} disabled={saving} className="gap-2">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
