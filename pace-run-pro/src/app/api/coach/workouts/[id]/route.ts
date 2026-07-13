@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 async function resolveCoachWorkout(userId: string, workoutId: string) {
   const coach = await prisma.coach.findUnique({
     where: { userId },
-    select: { id: true },
+    select: { id: true, athletes: { select: { id: true } } },
   });
   if (!coach) return null;
 
@@ -13,7 +13,62 @@ async function resolveCoachWorkout(userId: string, workoutId: string) {
     where: { id: workoutId, week: { plan: { coachId: coach.id } } },
     select: { id: true },
   });
-  return workout ? { coachId: coach.id, workoutId: workout.id } : null;
+  return workout ? { coachId: coach.id, workoutId: workout.id, athleteIds: coach.athletes.map((a) => a.id) } : null;
+}
+
+async function findOrCreatePlanAndWeek(
+  athleteId: string,
+  coachId: string,
+  workoutDate: Date
+) {
+  let plan = await prisma.trainingPlan.findFirst({
+    where: { athleteId, coachId, endDate: { gte: new Date() } },
+  });
+  if (!plan) {
+    const athlete = await prisma.athlete.findUnique({
+      where: { id: athleteId },
+      select: { goal: true },
+    });
+    plan = await prisma.trainingPlan.create({
+      data: {
+        athleteId,
+        coachId,
+        name: "Plano de Treinamento",
+        goal: athlete?.goal ?? "PERFORMANCE",
+        phase: "BASE",
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+
+  const dow = workoutDate.getDay();
+  const diffToMon = (dow + 6) % 7;
+  const weekStart = new Date(workoutDate);
+  weekStart.setDate(workoutDate.getDate() - diffToMon);
+  weekStart.setHours(0, 0, 0, 0);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  let week = await prisma.trainingWeek.findFirst({
+    where: { planId: plan.id, startDate: weekStart },
+  });
+  if (!week) {
+    const weekCount = await prisma.trainingWeek.count({ where: { planId: plan.id } });
+    week = await prisma.trainingWeek.create({
+      data: {
+        planId: plan.id,
+        weekNumber: weekCount + 1,
+        phase: plan.phase,
+        startDate: weekStart,
+        endDate: weekEnd,
+        released: true,
+      },
+    });
+  }
+
+  return week;
 }
 
 export async function PATCH(
@@ -29,18 +84,27 @@ export async function PATCH(
   const resolved = await resolveCoachWorkout(session.user.id, id);
   if (!resolved) return NextResponse.json({ error: "Treino não encontrado" }, { status: 404 });
 
-  const body = (await req.json()) as { date?: string; title?: string };
+  const body = (await req.json()) as { athleteId?: string; date?: string; title?: string };
 
-  const data: { date?: Date; title?: string } = {};
+  const data: { date?: Date; title?: string; weekId?: string } = {};
+  let targetDate: Date | null = null;
   if (body.date) {
     const d = new Date(body.date);
     if (isNaN(d.getTime())) {
       return NextResponse.json({ error: "Data inválida" }, { status: 400 });
     }
     data.date = d;
+    targetDate = d;
   }
   if (typeof body.title === "string" && body.title.trim()) {
     data.title = body.title.trim();
+  }
+  if (body.athleteId) {
+    if (!resolved.athleteIds.includes(body.athleteId)) {
+      return NextResponse.json({ error: "Atleta invalido" }, { status: 403 });
+    }
+    const week = await findOrCreatePlanAndWeek(body.athleteId, resolved.coachId, targetDate ?? new Date());
+    data.weekId = week.id;
   }
 
   if (Object.keys(data).length === 0) {

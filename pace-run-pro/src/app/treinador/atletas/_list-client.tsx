@@ -84,7 +84,6 @@ interface WeeklyData {
 
 interface DragPayload {
   workoutId: string;
-  athleteId: string;
 }
 
 interface WorkoutClipboard {
@@ -982,14 +981,13 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
     }
   }
 
-  async function handleMoveWorkout(workoutId: string, athleteId: string, targetAthleteId: string, date: string) {
-    if (athleteId !== targetAthleteId) return;
+  async function handleMoveWorkout(workoutId: string, targetAthleteId: string, date: string) {
     setBusyCell(`${targetAthleteId}:${date}`);
     try {
       const res = await fetch(`/api/coach/workouts/${workoutId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date }),
+        body: JSON.stringify({ athleteId: targetAthleteId, date }),
       });
       if (!res.ok) throw new Error("Nao foi possivel mover o treino.");
       fetchWeek(weekStart);
@@ -1331,13 +1329,13 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={() => {
                           if (draggingWorkout) {
-                            handleMoveWorkout(draggingWorkout.workoutId, draggingWorkout.athleteId, athlete.id, d.date);
+                            handleMoveWorkout(draggingWorkout.workoutId, athlete.id, d.date);
                           }
                         }}
                         className={cn(
                           "flex min-h-[74px] flex-col gap-1 rounded-lg border border-transparent p-1 transition-colors",
                           isToday && "border-primary/20 bg-primary/5",
-                          draggingWorkout && draggingWorkout.athleteId === athlete.id && "border-dashed border-primary/40 bg-primary/8",
+                          draggingWorkout && "border-dashed border-primary/40 bg-primary/8",
                         )}
                       >
                         {dayWorkouts.length === 0 ? (
@@ -1377,7 +1375,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                               onClick={() => setModal({ athlete, dayDate: d.date, workouts: dayWorkouts })}
                               onCopy={() => setWorkoutClipboard({ workout: wo })}
                               onDelete={() => handleDeleteWorkout(wo)}
-                              onDragStart={() => setDraggingWorkout({ workoutId: wo.id, athleteId: athlete.id })}
+                              onDragStart={() => setDraggingWorkout({ workoutId: wo.id })}
                               onDragEnd={() => setDraggingWorkout(null)}
                             />
                           ))
