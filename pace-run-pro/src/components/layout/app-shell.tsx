@@ -99,7 +99,7 @@ export function AppShell({
               {active && (
                 <motion.span
                   layoutId="active-pill"
-                  className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
+                  className="ml-auto h-1.5 w-1.5 rounded-full bg-accent"
                 />
               )}
             </>
@@ -119,7 +119,7 @@ export function AppShell({
         )}
       >
         <div className={cn("flex items-center py-4 border-b border-border/40", collapsed ? "justify-center px-3" : "justify-between px-4")}>
-          {!collapsed && <Logo size={32} />}
+          <Logo variant={collapsed ? "mark" : "horizontal"} size={32} />
           <button
             onClick={toggleCollapsed}
             title={collapsed ? "Expandir sidebar" : "Recolher sidebar"}
@@ -134,7 +134,22 @@ export function AppShell({
 
         <nav className="flex-1 overflow-y-auto space-y-0.5 px-3 pb-2 pt-1">
           {nav.map((item) => renderNavItem(item))}
-          {moreNav.length > 0 && moreNav.map((item) => renderNavItem(item))}
+          {moreNav.length > 0 && !collapsed && (
+            <details className="group">
+              <summary className="mt-2 flex cursor-pointer list-none items-center rounded-xl px-3.5 py-2.5 text-sm font-medium text-text-muted transition-colors hover:bg-card-hover hover:text-text">
+                Mais
+                <span className="ml-auto text-xs transition-transform group-open:rotate-90">&gt;</span>
+              </summary>
+              <div className="mt-1 space-y-0.5">
+                {moreNav.map((item) => renderNavItem(item))}
+              </div>
+            </details>
+          )}
+          {moreNav.length > 0 && collapsed && (
+            <div className="mt-2 border-t border-border/60 pt-2">
+              {moreNav.slice(0, 4).map((item) => renderNavItem(item))}
+            </div>
+          )}
         </nav>
 
         <div className="border-t border-border p-4">
@@ -180,7 +195,7 @@ export function AppShell({
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
-              className="fixed inset-y-0 left-0 z-50 w-72 border-r border-border bg-[#070b18] p-4 lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 w-72 border-r border-border bg-card p-4 lg:hidden"
             >
               <div className="mb-6 px-2 pt-2">
                 <Logo size={30} />

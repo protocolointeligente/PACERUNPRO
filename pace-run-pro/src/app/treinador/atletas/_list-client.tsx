@@ -1245,15 +1245,15 @@ function Header({ total }: { total: number }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <Badge variant="primary" className="mb-2">Central de atletas</Badge>
-        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Seus atletas</h1>
+        <Badge variant="primary" className="mb-2">Prescricao principal</Badge>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Calendario de prescricao</h1>
         <p className="mt-1 text-sm text-text-muted">
-          {total} {total === 1 ? "atleta" : "atletas"} — calendário semanal de treinos
+          Clique em qualquer dia vazio para prescrever. {total} {total === 1 ? "atleta" : "atletas"} nesta semana.
         </p>
       </div>
       <div className="flex items-center gap-2">
         <Link href="/treinador/atletas/convidar">
-          <Button variant="primary">Convidar atleta</Button>
+          <Button variant="secondary">Convidar atleta</Button>
         </Link>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { CalendarPlus } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { CoachRoleProvider, useCoachRole } from "@/context/coach-role-context";
@@ -73,10 +73,10 @@ function TreinadorLayoutInner({ children, userName, userCredential, userAvatarUr
       avatarUrl={userAvatarUrl}
       sidebarFooterSlot={process.env.NODE_ENV !== "production" ? <RoleSwitcher /> : undefined}
       headerActions={
-        <Link href="/treinador/prescricao/corrida">
+        <Link href="/treinador/atletas">
           <Button size="sm" className="hidden gap-1.5 sm:inline-flex">
-            <Plus className="h-3.5 w-3.5" />
-            Prescrever
+            <CalendarPlus className="h-3.5 w-3.5" />
+            Prescrever no calendario
           </Button>
         </Link>
       }
