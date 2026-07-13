@@ -618,6 +618,12 @@ const STRENGTH_LIBRARY = [
   "Prancha",
 ];
 
+const FALLBACK_STRENGTH_EXERCISES: StrengthExerciseOption[] = STRENGTH_LIBRARY.map((name, index) => ({
+  id: `fallback-${index}`,
+  name,
+  category: "Forca",
+}));
+
 const CATEGORY_FOR_TYPE: Record<string, string> = {
   FORCA: "FORCA", FUNCIONAL: "FORCA", MOBILIDADE: "MOBILIDADE",
 };
@@ -1109,7 +1115,7 @@ export function IntervalsPrescribeModal({
               </label>
               <div className="col-span-2 flex flex-col justify-end gap-2 lg:col-span-7">
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {(exerciseSuggestions.length > 0 ? exerciseSuggestions : STRENGTH_LIBRARY.map((name, index) => ({ id: `fallback-${index}`, name, category: "Forca" }))).map((exercise) => (
+                  {(exerciseSuggestions.length > 0 ? exerciseSuggestions : FALLBACK_STRENGTH_EXERCISES).map((exercise) => (
                     <button
                       key={exercise.id}
                       type="button"
