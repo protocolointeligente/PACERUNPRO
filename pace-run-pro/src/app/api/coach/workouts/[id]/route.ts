@@ -11,9 +11,21 @@ async function resolveCoachWorkout(userId: string, workoutId: string) {
 
   const workout = await prisma.workout.findFirst({
     where: { id: workoutId, week: { plan: { coachId: coach.id } } },
-    select: { id: true },
+    select: {
+      id: true,
+      date: true,
+      week: { select: { plan: { select: { athleteId: true } } } },
+    },
   });
-  return workout ? { coachId: coach.id, workoutId: workout.id, athleteIds: coach.athletes.map((a) => a.id) } : null;
+  return workout
+    ? {
+        coachId: coach.id,
+        workoutId: workout.id,
+        athleteId: workout.week.plan.athleteId,
+        date: workout.date,
+        athleteIds: coach.athletes.map((a) => a.id),
+      }
+    : null;
 }
 
 async function findOrCreatePlanAndWeek(
@@ -99,11 +111,25 @@ export async function PATCH(
   if (typeof body.title === "string" && body.title.trim()) {
     data.title = body.title.trim();
   }
-  if (body.athleteId) {
-    if (!resolved.athleteIds.includes(body.athleteId)) {
+  const targetAthleteId = body.athleteId ?? resolved.athleteId;
+  if (body.athleteId || body.date) {
+    if (!resolved.athleteIds.includes(targetAthleteId)) {
       return NextResponse.json({ error: "Atleta invalido" }, { status: 403 });
     }
-    const week = await findOrCreatePlanAndWeek(body.athleteId, resolved.coachId, targetDate ?? new Date());
+    const moveDate = targetDate ?? resolved.date;
+    const occupied = await prisma.workout.findFirst({
+      where: {
+        id: { not: id },
+        date: moveDate,
+        week: { plan: { athleteId: targetAthleteId, coachId: resolved.coachId } },
+      },
+      select: { id: true },
+    });
+    if (occupied) {
+      return NextResponse.json({ error: "Ja existe treino neste dia" }, { status: 409 });
+    }
+
+    const week = await findOrCreatePlanAndWeek(targetAthleteId, resolved.coachId, moveDate);
     data.weekId = week.id;
   }
 

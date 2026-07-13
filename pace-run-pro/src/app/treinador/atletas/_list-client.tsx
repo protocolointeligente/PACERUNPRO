@@ -976,6 +976,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
       if (!res.ok) throw new Error("Nao foi possivel excluir o treino.");
       fetchWeek(weekStart);
       setModal(null);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Nao foi possivel excluir o treino.");
     } finally {
       setBusyCell(null);
     }
@@ -989,8 +991,13 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ athleteId: targetAthleteId, date }),
       });
-      if (!res.ok) throw new Error("Nao foi possivel mover o treino.");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Nao foi possivel mover o treino.");
+      }
       fetchWeek(weekStart);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Nao foi possivel mover o treino.");
     } finally {
       setBusyCell(null);
       setDraggingWorkout(null);
@@ -1016,8 +1023,13 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           targetRpe: workout.targetRpe,
         }),
       });
-      if (!res.ok) throw new Error("Nao foi possivel colar o treino.");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Nao foi possivel colar o treino.");
+      }
       fetchWeek(weekStart);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Nao foi possivel colar o treino.");
     } finally {
       setBusyCell(null);
     }
@@ -1036,8 +1048,13 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           targetAthleteIds: [athlete.id],
         }),
       });
-      if (!res.ok) throw new Error("Nao foi possivel colar a semana.");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Nao foi possivel colar a semana.");
+      }
       fetchWeek(weekStart);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Nao foi possivel colar a semana.");
     } finally {
       setBusyCell(null);
     }
