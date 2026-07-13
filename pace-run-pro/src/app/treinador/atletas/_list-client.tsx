@@ -7,6 +7,7 @@ import {
   Clock, Ruler, Zap, CheckCircle2, CircleAlert, Circle,
   Flame, ShieldAlert, CalendarCheck,
   BookmarkPlus, Copy, CopyPlus, Plus, Loader2, Check,
+  Clipboard, ClipboardPaste, Trash2, GripVertical,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,6 +82,21 @@ interface WeeklyData {
   athletes: AthleteWeekly[];
 }
 
+interface DragPayload {
+  workoutId: string;
+  athleteId: string;
+}
+
+interface WorkoutClipboard {
+  workout: WorkoutEntry;
+}
+
+interface WeekClipboard {
+  athlete: AthleteWeekly;
+  weekStart: string;
+  workoutCount: number;
+}
+
 // Props passed from the server page (static athlete list for count + empty state)
 export interface AthleteRow {
   id: string;
@@ -144,11 +160,15 @@ function WorkoutModal({
   payload,
   onClose,
   onCopy,
+  onCopyToClipboard,
+  onDelete,
   onSaveToLib,
 }: {
   payload: ModalPayload;
   onClose: () => void;
   onCopy: (workout: WorkoutEntry, athlete: AthleteWeekly) => void;
+  onCopyToClipboard: (workout: WorkoutEntry) => void;
+  onDelete: (workout: WorkoutEntry) => void;
   onSaveToLib: (workout: WorkoutEntry) => void;
 }) {
   const date = new Date(payload.dayDate + "T12:00:00");
@@ -266,6 +286,20 @@ function WorkoutModal({
                     <Copy className="h-3 w-3" />
                     Copiar para...
                   </button>
+                  <button
+                    onClick={() => onCopyToClipboard(wo)}
+                    className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-text-muted transition-colors hover:border-info/40 hover:bg-info/5 hover:text-info"
+                  >
+                    <Clipboard className="h-3 w-3" />
+                    Copiar
+                  </button>
+                  <button
+                    onClick={() => onDelete(wo)}
+                    className="ml-auto flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-text-muted transition-colors hover:border-danger/40 hover:bg-danger/5 hover:text-danger"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    Excluir
+                  </button>
                 </div>
               </div>
             );
@@ -310,27 +344,54 @@ function MetricCell({
 function WorkoutDot({
   workout,
   onClick,
+  onCopy,
+  onDelete,
+  onDragStart,
+  onDragEnd,
 }: {
   workout: WorkoutEntry;
   onClick: () => void;
+  onCopy: () => void;
+  onDelete: () => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
 }) {
   const cfg = woCfg(workout.type);
   const isCompleted = workout.status === "CONCLUIDO";
   const isMissed    = workout.status === "PERDIDO";
 
   return (
-    <button
-      onClick={onClick}
-      title={`${cfg.label} — TSS ${workout.tss}`}
+    <div
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      title={`${cfg.label} - TSS ${workout.tss}`}
       className={cn(
-        "flex h-7 w-7 items-center justify-center rounded-full text-[9px] font-bold transition-transform hover:scale-110",
+        "group/workout min-h-[42px] cursor-grab rounded-md border border-white/10 px-2 py-1.5 text-left shadow-sm transition active:cursor-grabbing",
         cfg.bg, cfg.text,
         isCompleted && "ring-2 ring-success ring-offset-1",
-        isMissed && "opacity-40",
+        isMissed && "opacity-45",
       )}
     >
-      {cfg.short}
-    </button>
+      <div className="flex items-center gap-1">
+        <GripVertical className="h-3 w-3 shrink-0 opacity-60" />
+        <button onClick={onClick} className="min-w-0 flex-1 text-left">
+          <span className="block truncate text-[11px] font-bold leading-tight">{workout.title ?? cfg.label}</span>
+          <span className="text-[9px] font-semibold opacity-85">
+            {workout.targetDistanceKm ? `${workout.targetDistanceKm} km` : cfg.short}
+            {workout.targetDurationMin ? ` / ${workout.targetDurationMin}min` : ""}
+          </span>
+        </button>
+        <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover/workout:opacity-100">
+          <button onClick={onCopy} title="Copiar treino" className="rounded p-0.5 hover:bg-black/15">
+            <Clipboard className="h-3 w-3" />
+          </button>
+          <button onClick={onDelete} title="Excluir treino" className="rounded p-0.5 hover:bg-black/15">
+            <Trash2 className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -870,6 +931,10 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   const [quickPrescribe, setQuickPrescribe] = useState<QuickPrescribePayload | null>(null);
   const [copyWorkout, setCopyWorkout] = useState<CopyWorkoutPayload | null>(null);
   const [copyWeek, setCopyWeek] = useState<CopyWeekPayload | null>(null);
+  const [workoutClipboard, setWorkoutClipboard] = useState<WorkoutClipboard | null>(null);
+  const [weekClipboard, setWeekClipboard] = useState<WeekClipboard | null>(null);
+  const [draggingWorkout, setDraggingWorkout] = useState<DragPayload | null>(null);
+  const [busyCell, setBusyCell] = useState<string | null>(null);
   const [savingLibrary, setSavingLibrary] = useState<string | null>(null); // workoutId being saved
   const [savedLibrary, setSavedLibrary] = useState<Set<string>>(new Set());
 
@@ -901,6 +966,82 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
       setSavedLibrary((prev) => new Set([...prev, workout.id]));
     } finally {
       setSavingLibrary(null);
+    }
+  }
+
+  async function handleDeleteWorkout(workout: WorkoutEntry) {
+    if (!confirm(`Excluir "${workout.title}"?`)) return;
+    setBusyCell(workout.id);
+    try {
+      const res = await fetch(`/api/coach/workouts/${workout.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Nao foi possivel excluir o treino.");
+      fetchWeek(weekStart);
+      setModal(null);
+    } finally {
+      setBusyCell(null);
+    }
+  }
+
+  async function handleMoveWorkout(workoutId: string, athleteId: string, targetAthleteId: string, date: string) {
+    if (athleteId !== targetAthleteId) return;
+    setBusyCell(`${targetAthleteId}:${date}`);
+    try {
+      const res = await fetch(`/api/coach/workouts/${workoutId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date }),
+      });
+      if (!res.ok) throw new Error("Nao foi possivel mover o treino.");
+      fetchWeek(weekStart);
+    } finally {
+      setBusyCell(null);
+      setDraggingWorkout(null);
+    }
+  }
+
+  async function handlePasteWorkout(athlete: AthleteWeekly, date: string) {
+    if (!workoutClipboard) return;
+    const { workout } = workoutClipboard;
+    setBusyCell(`${athlete.id}:${date}`);
+    try {
+      const res = await fetch("/api/coach/workouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: athlete.id,
+          date,
+          title: workout.title,
+          type: workout.type,
+          targetDistanceKm: workout.targetDistanceKm,
+          targetDurationMin: workout.targetDurationMin,
+          targetPaceSecPerKm: workout.targetPaceSecPerKm,
+          targetRpe: workout.targetRpe,
+        }),
+      });
+      if (!res.ok) throw new Error("Nao foi possivel colar o treino.");
+      fetchWeek(weekStart);
+    } finally {
+      setBusyCell(null);
+    }
+  }
+
+  async function handlePasteWeek(athlete: AthleteWeekly) {
+    if (!weekClipboard || weekClipboard.athlete.id === athlete.id) return;
+    setBusyCell(`week:${athlete.id}`);
+    try {
+      const res = await fetch("/api/coach/workouts/copy-week", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceAthleteId: weekClipboard.athlete.id,
+          weekStart: weekClipboard.weekStart,
+          targetAthleteIds: [athlete.id],
+        }),
+      });
+      if (!res.ok) throw new Error("Nao foi possivel colar a semana.");
+      fetchWeek(weekStart);
+    } finally {
+      setBusyCell(null);
     }
   }
 
@@ -964,7 +1105,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className="mx-auto max-w-none space-y-4">
       <Header total={staticAthletes.length} />
 
       {actionCenter && <ActionBanner data={actionCenter} />}
@@ -1052,11 +1193,34 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
         </div>
       </div>
 
+      {(workoutClipboard || weekClipboard) && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary/8 px-3 py-2 text-xs text-text">
+          {workoutClipboard && (
+            <span className="flex items-center gap-1.5">
+              <Clipboard className="h-3.5 w-3.5 text-primary" />
+              Treino copiado: <strong>{workoutClipboard.workout.title}</strong>
+            </span>
+          )}
+          {weekClipboard && (
+            <span className="flex items-center gap-1.5">
+              <CopyPlus className="h-3.5 w-3.5 text-primary" />
+              Semana copiada: <strong>{weekClipboard.athlete.name}</strong> ({weekClipboard.workoutCount} treinos)
+            </span>
+          )}
+          <button
+            onClick={() => { setWorkoutClipboard(null); setWeekClipboard(null); }}
+            className="ml-auto rounded-md px-2 py-1 font-semibold text-text-muted hover:bg-card-hover hover:text-text"
+          >
+            Limpar
+          </button>
+        </div>
+      )}
+
       {/* Calendar grid */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-x-auto">
         {/* Column headers */}
-        <div className="grid border-b border-border bg-card-hover/40 px-4 py-2"
-          style={{ gridTemplateColumns: "1.8fr repeat(7, 2.2rem) 3.5rem 4rem" }}>
+        <div className="grid min-w-[1280px] border-b border-border bg-card-hover/40 px-4 py-2"
+          style={{ gridTemplateColumns: "minmax(220px, 1.35fr) repeat(7, minmax(132px, 1fr)) 64px 72px" }}>
           <div className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Atleta</div>
           {weekDays.map((d) => {
             const isToday = d.date === toISODate(new Date());
@@ -1094,8 +1258,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
               return (
                 <div
                   key={athlete.id}
-                  className="grid items-center gap-x-2 px-4 py-2.5 transition-colors hover:bg-card-hover/30"
-                  style={{ gridTemplateColumns: "1.8fr repeat(7, 2.2rem) 3.5rem 4rem" }}
+                  className="grid min-w-[1280px] items-stretch gap-x-2 px-4 py-2.5 transition-colors hover:bg-card-hover/30"
+                  style={{ gridTemplateColumns: "minmax(220px, 1.35fr) repeat(7, minmax(132px, 1fr)) 64px 72px" }}
                 >
                   {/* Athlete info */}
                   <div className="group/row flex min-w-0 items-center gap-1.5">
@@ -1119,16 +1283,39 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                       </div>
                     </Link>
                     {athlete.workouts.length > 0 && (
+                      <div className="flex shrink-0 gap-1 opacity-0 transition-all group-hover/row:opacity-100">
+                        <button
+                          onClick={() => setWeekClipboard({
+                            athlete,
+                            weekStart: toISODate(weekStart),
+                            workoutCount: athlete.workouts.length,
+                          })}
+                          title="Copiar semana"
+                          className="rounded-lg p-1 text-text-muted hover:bg-card-hover hover:text-primary"
+                        >
+                          <Clipboard className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setCopyWeek({
+                            athlete,
+                            weekStart: toISODate(weekStart),
+                            workoutCount: athlete.workouts.length,
+                          })}
+                          title="Copiar semana para varios atletas"
+                          className="rounded-lg p-1 text-text-muted hover:bg-card-hover hover:text-primary"
+                        >
+                          <CopyPlus className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    {weekClipboard && weekClipboard.athlete.id !== athlete.id && (
                       <button
-                        onClick={() => setCopyWeek({
-                          athlete,
-                          weekStart: toISODate(weekStart),
-                          workoutCount: athlete.workouts.length,
-                        })}
-                        title="Copiar semana para outros atletas"
-                        className="shrink-0 rounded-lg p-1 text-text-muted opacity-0 transition-all hover:bg-card-hover hover:text-primary group-hover/row:opacity-100"
+                        onClick={() => handlePasteWeek(athlete)}
+                        disabled={busyCell === `week:${athlete.id}`}
+                        title={`Colar semana de ${weekClipboard.athlete.name}`}
+                        className="shrink-0 rounded-lg p-1 text-text-muted transition-colors hover:bg-card-hover hover:text-success disabled:opacity-50"
                       >
-                        <CopyPlus className="h-3.5 w-3.5" />
+                        {busyCell === `week:${athlete.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ClipboardPaste className="h-3.5 w-3.5" />}
                       </button>
                     )}
                   </div>
@@ -1137,33 +1324,61 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                   {weekDays.map((d) => {
                     const dayWorkouts = workoutsByDay.get(d.date) ?? [];
                     const isToday = d.date === toISODate(new Date());
+                    const isBusy = busyCell === `${athlete.id}:${d.date}`;
                     return (
                       <div
                         key={d.date}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={() => {
+                          if (draggingWorkout) {
+                            handleMoveWorkout(draggingWorkout.workoutId, draggingWorkout.athleteId, athlete.id, d.date);
+                          }
+                        }}
                         className={cn(
-                          "flex flex-col items-center gap-0.5 rounded-lg py-1",
-                          isToday && "bg-primary/5",
+                          "flex min-h-[74px] flex-col gap-1 rounded-lg border border-transparent p-1 transition-colors",
+                          isToday && "border-primary/20 bg-primary/5",
+                          draggingWorkout && draggingWorkout.athleteId === athlete.id && "border-dashed border-primary/40 bg-primary/8",
                         )}
                       >
                         {dayWorkouts.length === 0 ? (
-                          <button
-                            onClick={() => setQuickPrescribe({
-                              athleteId: athlete.id,
-                              athleteName: athlete.name,
-                              date: d.date,
-                            })}
-                            title={`Prescrever treino para ${athlete.name.split(" ")[0]}`}
-                            className="group/cell relative flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-primary/10"
-                          >
-                            <Circle className="h-4 w-4 text-border transition-colors group-hover/cell:hidden" />
-                            <Plus className="hidden h-3.5 w-3.5 text-primary group-hover/cell:block" />
-                          </button>
+                          <div className="flex h-full min-h-[58px] flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border/80 bg-background/25">
+                            {isBusy ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            ) : workoutClipboard ? (
+                              <button
+                                onClick={() => handlePasteWorkout(athlete, d.date)}
+                                title={`Colar ${workoutClipboard.workout.title}`}
+                                className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold text-success hover:bg-success/10"
+                              >
+                                <ClipboardPaste className="h-3 w-3" />
+                                Colar
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => setQuickPrescribe({
+                                  athleteId: athlete.id,
+                                  athleteName: athlete.name,
+                                  date: d.date,
+                                })}
+                                title={`Prescrever treino para ${athlete.name.split(" ")[0]}`}
+                                className="group/cell flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold text-text-muted transition-colors hover:bg-primary/10 hover:text-primary"
+                              >
+                                <Circle className="h-3 w-3 text-border transition-colors group-hover/cell:hidden" />
+                                <Plus className="hidden h-3 w-3 group-hover/cell:block" />
+                                Prescrever
+                              </button>
+                            )}
+                          </div>
                         ) : (
                           dayWorkouts.slice(0, 2).map((wo) => (
                             <WorkoutDot
                               key={wo.id}
                               workout={wo}
                               onClick={() => setModal({ athlete, dayDate: d.date, workouts: dayWorkouts })}
+                              onCopy={() => setWorkoutClipboard({ workout: wo })}
+                              onDelete={() => handleDeleteWorkout(wo)}
+                              onDragStart={() => setDraggingWorkout({ workoutId: wo.id, athleteId: athlete.id })}
+                              onDragEnd={() => setDraggingWorkout(null)}
                             />
                           ))
                         )}
@@ -1205,6 +1420,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           payload={modal}
           onClose={() => setModal(null)}
           onCopy={(workout, athlete) => { setModal(null); setCopyWorkout({ workout, athlete }); }}
+          onCopyToClipboard={(workout) => setWorkoutClipboard({ workout })}
+          onDelete={handleDeleteWorkout}
           onSaveToLib={handleSaveToLib}
         />
       )}

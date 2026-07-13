@@ -51,7 +51,7 @@ function planTier(planId: string): number {
 
 const coreNav: NavItem[] = [
   { href: "/treinador/atletas", label: "Calendario", icon: CalendarDays },
-  { href: "/treinador/dashboard", label: "Resumo", icon: LayoutDashboard },
+  { href: "/treinador/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/treinador/alertas", label: "Alertas", icon: Bell },
   { href: "/treinador/biblioteca", label: "Biblioteca", icon: BookOpen },
   { href: "/treinador/relatorios", label: "Relatorios", icon: FileBarChart },
@@ -88,7 +88,7 @@ const businessNavUnlimited: NavItem[] = [
 const helpNav: NavItem[] = [
   { href: "/treinador/configuracoes/zonas", label: "Zonas de treino", icon: Zap, sectionStart: "Conta" },
   { href: "/treinador/perfil", label: "Meu perfil", icon: User },
-  { href: "/treinador/conheca-o-sistema", label: "Conheca o sistema", icon: GraduationCap },
+  { href: "/treinador/conheca-o-sistema", label: "PACE University", icon: GraduationCap },
 ];
 
 export function getCoachNav(
