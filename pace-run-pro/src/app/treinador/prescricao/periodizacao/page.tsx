@@ -340,6 +340,12 @@ export default function PeriodizacaoPage() {
   ]);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
   const [suggestionStatus, setSuggestionStatus] = useState<Record<string, SuggestionStatus>>({});
+
+  useEffect(() => {
+    if (selectedAthletes.length === 0 && athletes[0]?.id) {
+      setSelectedAthletes([athletes[0].id]);
+    }
+  }, [athletes, selectedAthletes.length]);
   // Training days — default Mon/Wed/Sat
   const [trainingDays, setTrainingDays] = useState<string[]>([
     "Segunda-feira",
@@ -674,6 +680,26 @@ export default function PeriodizacaoPage() {
               <p className="mt-1 text-sm text-text-muted">
                 Crie o macrociclo com ATR/blocos, tapering automatico, provas A/B/C e sugestoes de sessoes baseadas em ciencia do treinamento.
               </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {athletes.slice(0, 8).map((athlete) => {
+                  const selected = selectedAthletes.includes(athlete.id);
+                  return (
+                    <button
+                      key={athlete.id}
+                      type="button"
+                      onClick={() => toggleAthlete(athlete.id)}
+                      className={cn(
+                        "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+                        selected
+                          ? "border-primary/60 bg-primary/15 text-primary"
+                          : "border-border bg-background/60 text-text-muted hover:border-primary/40 hover:text-text"
+                      )}
+                    >
+                      {athlete.name}
+                    </button>
+                  );
+                })}
+              </div>
               {generated && (
                 <p className="mt-2 text-xs text-text-muted">
                   {periodizationSettings.name} · {modalityLabels[periodizationSettings.modality]} · {loadMethodLabels[periodizationSettings.loadMethod]} · {periodizationSettings.startDate} a {periodizationSettings.endDate}
@@ -705,9 +731,9 @@ export default function PeriodizacaoPage() {
           onGenerate={handleGenerate}
         />
 
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="block">
           {/* ── Left sidebar ── */}
-          <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-4 print:hidden">
+          <aside className="hidden">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -988,7 +1014,7 @@ export default function PeriodizacaoPage() {
           </aside>
 
           {/* ── Main area ── */}
-          <div className="flex-1 min-w-0 space-y-4">
+          <div className="min-w-0 space-y-4">
             {/* Draft restored banner */}
             {draftRestored && (
               <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm text-primary print:hidden">
@@ -1026,6 +1052,10 @@ export default function PeriodizacaoPage() {
                   Configure os parâmetros e clique em{" "}
                   <span className="text-primary font-medium">Gerar periodização</span>
                 </p>
+                <Button variant="primary" className="mt-6" onClick={() => setBuilderOpen(true)}>
+                  <Sparkles className="h-4 w-4" />
+                  Criar periodizacao
+                </Button>
                 <div className="mt-6 flex items-center gap-2 text-xs text-text-muted">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card font-bold text-primary">1</span>
                   <span>Configurar</span>
@@ -1082,7 +1112,7 @@ export default function PeriodizacaoPage() {
                           {saved ? "Rascunho salvo!" : "Salvar rascunho"}
                         </Button>
                       )}
-                      {view === "treinos" && totalWorkouts > 0 && (
+                      {totalWorkouts > 0 && (
                         <Button
                           variant={liberated ? "success" : "primary"}
                           size="sm"
@@ -1134,7 +1164,7 @@ export default function PeriodizacaoPage() {
                             setExpandedWeek(weekNum);
                           }}
                         />
-                        <Card className="overflow-hidden">
+                        <Card className="hidden overflow-hidden">
                           <div className="flex items-center justify-between border-b border-border px-4 py-3">
                             <div>
                               <p className="text-sm font-semibold text-text">Plano de periodizacao</p>
@@ -1184,6 +1214,7 @@ export default function PeriodizacaoPage() {
                             </div>
                           </div>
                         </Card>
+                        <div className="hidden">
                         {Object.entries(mesocycles).map(([meso, mesoWeeks]) => {
                           const dominantPhase = mesoWeeks.reduce((acc, w) => {
                             acc[w.phase] = (acc[w.phase] ?? 0) + 1;
@@ -1231,6 +1262,7 @@ export default function PeriodizacaoPage() {
                             </div>
                           );
                         })}
+                        </div>
                         <div className="flex justify-end gap-2 pt-2">
                           <Button variant="outline" size="sm" onClick={() => window.print()}>
                             <FileDown className="h-4 w-4" />
@@ -1297,7 +1329,7 @@ export default function PeriodizacaoPage() {
 
           {/* ── Right sidebar ── */}
           {generated && (
-            <aside className="w-full lg:w-60 xl:w-64 shrink-0 space-y-4 print:hidden">
+            <aside className="hidden">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-sm">Resumo</CardTitle>

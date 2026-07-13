@@ -549,6 +549,63 @@ const QUICK_TYPES = [
   { value: "MOBILIDADE",        label: "Mobilidade"        },
 ] as const;
 
+type LibraryModality = "corrida" | "ciclismo" | "natacao" | "forca";
+
+const LIBRARY_MODALITIES: { value: LibraryModality; label: string; icon: typeof Footprints }[] = [
+  { value: "corrida", label: "Corrida", icon: Footprints },
+  { value: "ciclismo", label: "Ciclismo", icon: Bike },
+  { value: "natacao", label: "Natacao", icon: Waves },
+  { value: "forca", label: "Forca", icon: Dumbbell },
+];
+
+const LIBRARY_TEMPLATES: Record<LibraryModality, { value: string; label: string }[]> = {
+  corrida: [
+    { value: "RODAGEM_LEVE", label: "Rodagem leve" },
+    { value: "REGENERATIVO", label: "Regenerativo" },
+    { value: "PROGRESSIVO", label: "Progressivo" },
+    { value: "TEMPO_RUN", label: "Tempo Run" },
+    { value: "FARTLEK", label: "Fartlek" },
+    { value: "INTERVALADO_LONGO", label: "Intervalado longo" },
+    { value: "INTERVALADO_CURTO", label: "Intervalado curto" },
+    { value: "LONGAO", label: "Longao" },
+  ],
+  ciclismo: [
+    { value: "RODAGEM_LEVE", label: "Bike endurance" },
+    { value: "TEMPO_RUN", label: "Sweet spot 88-94% FTP" },
+    { value: "INTERVALADO_LONGO", label: "VO2 bike 5x4min" },
+    { value: "REGENERATIVO", label: "Giro regenerativo" },
+    { value: "PROGRESSIVO", label: "Cadencia progressiva" },
+  ],
+  natacao: [
+    { value: "TECNICA", label: "Natacao tecnica" },
+    { value: "RODAGEM_LEVE", label: "Aerobio continuo" },
+    { value: "INTERVALADO_CURTO", label: "CSS curto" },
+    { value: "INTERVALADO_LONGO", label: "CSS longo" },
+    { value: "REGENERATIVO", label: "Soltura regenerativa" },
+  ],
+  forca: [
+    { value: "FORCA", label: "Forca superior" },
+    { value: "FORCA", label: "Forca inferior" },
+    { value: "FORCA", label: "Full body" },
+    { value: "FUNCIONAL", label: "Core funcional" },
+    { value: "MOBILIDADE", label: "Mobilidade" },
+  ],
+};
+
+const STRENGTH_LIBRARY = [
+  "Agachamento livre",
+  "Levantamento terra",
+  "Supino reto",
+  "Remada curvada",
+  "Avanco",
+  "Leg press",
+  "Desenvolvimento",
+  "Puxada alta",
+  "Stiff",
+  "Panturrilha",
+  "Prancha",
+];
+
 const CATEGORY_FOR_TYPE: Record<string, string> = {
   FORCA: "FORCA", FUNCIONAL: "FORCA", MOBILIDADE: "MOBILIDADE",
 };
@@ -743,6 +800,7 @@ function IntervalsPrescribeModal({
   const [rir, setRir] = useState("");
   const [restSec, setRestSec] = useState("90");
   const [description, setDescription] = useState("");
+  const [strengthExercises, setStrengthExercises] = useState<string[]>([]);
   const [steps, setSteps] = useState(
     editingWorkout?.type === "FORCA"
       ? "Agachamento 3x10 carga moderada RPE 7 descanso 90s\nRemada 3x12 RIR 2 descanso 75s"
@@ -780,6 +838,20 @@ function IntervalsPrescribeModal({
     }
   }
 
+  function addStrengthExercise() {
+    const line = `${strengthExercise} ${sets}x${reps}${loadKg ? ` x ${loadKg}kg` : ""}${rpe ? ` RPE ${rpe}` : ""}${rir ? ` RIR ${rir}` : ""} descanso ${restSec}s`;
+    setStrengthExercises((prev) => [...prev, line]);
+    setSteps((prev) => `${prev}${prev ? "\n" : ""}${line}`);
+  }
+
+  function removeStrengthExercise(index: number) {
+    setStrengthExercises((prev) => {
+      const removed = prev[index];
+      setSteps((current) => current.split("\n").filter((line) => line !== removed).join("\n"));
+      return prev.filter((_, itemIndex) => itemIndex !== index);
+    });
+  }
+
   async function handleSave() {
     if (!title.trim()) {
       setError("Informe o nome do treino.");
@@ -788,8 +860,11 @@ function IntervalsPrescribeModal({
     setSaving(true);
     setError("");
     try {
+      const strengthSummary = strengthExercises.length > 0
+        ? strengthExercises.join("\n")
+        : `${strengthExercise}: ${sets}x${reps}${loadKg ? ` x ${loadKg}kg` : ""}${rpe ? ` RPE ${rpe}` : ""}${rir ? ` RIR ${rir}` : ""} / descanso ${restSec}s`;
       const structuredSteps = sport === "Forca"
-        ? `${strengthExercise} ${sets}x${reps}${loadKg ? ` ${loadKg}kg` : ""}${rpe ? ` RPE ${rpe}` : ""}${rir ? ` RIR ${rir}` : ""} descanso ${restSec}s\n${steps}`
+        ? (strengthExercises.length > 0 ? steps : `${strengthSummary}\n${steps}`)
         : steps;
       const res = await fetch(editingWorkout ? `/api/coach/workouts/${editingWorkout.id}` : "/api/coach/workouts", {
         method: editingWorkout ? "PATCH" : "POST",
@@ -804,7 +879,7 @@ function IntervalsPrescribeModal({
             sport === "Corrida" && (pace || heartRate || load) ? `Pace ${pace || "-"} / FC ${heartRate || "-"}${load ? ` / carga ${load}` : ""}` : "",
             sport === "Ciclismo" && (ftp || heartRate) ? `FTP ${ftp || "-"} / FC ${heartRate || "-"}` : "",
             sport === "Natacao" ? `Piscina ${poolDistance}m${pace ? ` / ritmo ${pace}` : ""}` : "",
-            sport === "Forca" ? `${strengthExercise}: ${sets}x${reps}${loadKg ? ` x ${loadKg}kg` : ""}${rpe ? ` RPE ${rpe}` : ""}${rir ? ` RIR ${rir}` : ""} / descanso ${restSec}s` : "",
+            sport === "Forca" ? strengthSummary : "",
           ].filter(Boolean).join("\n"),
           structured: Boolean(structuredSteps.trim()),
           blocks: structuredSteps.trim()
@@ -965,7 +1040,7 @@ function IntervalsPrescribeModal({
               <label className="col-span-2 block space-y-1 lg:col-span-2">
                 <span className="text-[11px] font-medium text-text-muted">Exercicio da biblioteca</span>
                 <select value={strengthExercise} onChange={(event) => setStrengthExercise(event.target.value)} className={inputClass}>
-                  {["Agachamento", "Levantamento terra", "Supino", "Remada", "Avanco", "Prancha", "Panturrilha"].map((item) => (
+                  {STRENGTH_LIBRARY.map((item) => (
                     <option key={item} value={item} className={optionClass}>{item}</option>
                   ))}
                 </select>
@@ -990,6 +1065,33 @@ function IntervalsPrescribeModal({
                 <span className="text-[11px] font-medium text-text-muted">Descanso</span>
                 <input placeholder="90s" value={restSec} onChange={(event) => setRestSec(event.target.value)} className={inputClass} />
               </label>
+              <div className="col-span-2 flex flex-col justify-end gap-2 lg:col-span-7">
+                <button
+                  type="button"
+                  onClick={addStrengthExercise}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#5b2df5]/30 bg-[#5b2df5]/10 px-3 py-2 text-xs font-semibold text-[#5b2df5] transition-colors hover:bg-[#5b2df5]/15 dark:border-info/40 dark:bg-info/10 dark:text-info"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Adicionar exercicio ao treino
+                </button>
+                {strengthExercises.length > 0 && (
+                  <div className="grid gap-1">
+                    {strengthExercises.map((exercise, index) => (
+                      <div key={`${exercise}-${index}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] text-slate-800 dark:border-border dark:bg-background/50 dark:text-text">
+                        <span className="truncate">{exercise}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeStrengthExercise(index)}
+                          className="ml-2 rounded p-1 text-text-muted hover:bg-danger/10 hover:text-danger"
+                          title="Remover exercicio"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1318,6 +1420,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   const [busyCell, setBusyCell] = useState<string | null>(null);
   const [savingLibrary, setSavingLibrary] = useState<string | null>(null); // workoutId being saved
   const [savedLibrary, setSavedLibrary] = useState<Set<string>>(new Set());
+  const [libraryModality, setLibraryModality] = useState<LibraryModality>("corrida");
 
   useEffect(() => {
     fetch("/api/coach/action-center")
@@ -1500,7 +1603,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   const visibleDistance = visibleWorkouts.reduce((sum, workout) => sum + (workout.targetDistanceKm ?? 0), 0);
   const completedWorkouts = visibleWorkouts.filter((workout) => workout.status === "CONCLUIDO").length;
   const plannedWorkouts = visibleWorkouts.filter((workout) => workout.status !== "CONCLUIDO").length;
-  const libraryTemplates = QUICK_TYPES.slice(0, 8);
+  const libraryTemplates = LIBRARY_TEMPLATES[libraryModality];
 
   const isThisWeek = toISODate(monthStart) === toISODate(getMonthStart(new Date()));
 
@@ -1545,8 +1648,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           </span>
           <button
             onClick={nextWeek}
-            disabled={isThisWeek}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-card-hover hover:text-text disabled:opacity-30"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-card-hover hover:text-text"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -1675,12 +1777,34 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           </div>
           <div className="border-t border-white/10 px-3 py-2">
             <p className="mb-2 text-xs font-semibold text-text">Biblioteca</p>
+            <div className="mb-2 grid grid-cols-2 gap-1">
+              {LIBRARY_MODALITIES.map((modality) => {
+                const Icon = modality.icon;
+                const selected = libraryModality === modality.value;
+                return (
+                  <button
+                    key={modality.value}
+                    type="button"
+                    onClick={() => setLibraryModality(modality.value)}
+                    className={cn(
+                      "flex items-center justify-center gap-1 rounded-lg border px-2 py-1.5 text-[10px] font-semibold transition-colors",
+                      selected
+                        ? "border-primary/60 bg-primary/15 text-primary"
+                        : "border-white/10 bg-white/[0.03] text-text-muted hover:border-primary/40 hover:text-text"
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {modality.label}
+                  </button>
+                );
+              })}
+            </div>
             <div className="space-y-1">
               {libraryTemplates.map((template) => {
                 const cfg = woCfg(template.value);
                 return (
                   <button
-                    key={template.value}
+                    key={`${template.value}-${template.label}`}
                     type="button"
                     onClick={() => setWorkoutClipboard({
                       workout: {
@@ -1773,9 +1897,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                     <div className="space-y-1">
                       {isBusy && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
                       {dayWorkouts.map((workout) => {
-                        const cfg = woCfg(workout.type);
                         return (
-                          <button
+                          <div
                             key={workout.id}
                             draggable
                             onDragStart={() => setDraggingWorkout({ workoutId: workout.id })}
@@ -1786,12 +1909,34 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                               date: day.iso,
                               workout,
                             })}
-                            className={cn("flex w-full items-center gap-1 rounded-lg border px-1.5 py-1.5 text-left text-[10px] font-semibold shadow-lg backdrop-blur-sm transition-transform hover:-translate-y-0.5", workoutCardClass(workout.type, workout.title))}
+                            className={cn("group flex w-full cursor-pointer items-center gap-1 rounded-lg border px-1.5 py-1.5 text-left text-[10px] font-semibold shadow-lg backdrop-blur-sm transition-transform hover:-translate-y-0.5", workoutCardClass(workout.type, workout.title))}
                           >
                             <WorkoutIcon type={`${workout.type} ${workout.title}`} className="h-3 w-3 shrink-0" />
                             <span className="min-w-0 flex-1 truncate">{workout.title}</span>
                             {workout.targetDurationMin && <span className="shrink-0 opacity-80">{workout.targetDurationMin}m</span>}
-                          </button>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setWorkoutClipboard({ workout });
+                              }}
+                              className="rounded p-0.5 opacity-0 transition-opacity hover:bg-white/15 group-hover:opacity-100"
+                              title="Copiar treino"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleDeleteWorkout(workout);
+                              }}
+                              className="rounded p-0.5 opacity-0 transition-opacity hover:bg-white/15 group-hover:opacity-100"
+                              title="Excluir treino"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
                         );
                       })}
                       {dayWorkouts.length === 0 && workoutClipboard && (
