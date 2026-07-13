@@ -11,6 +11,21 @@ export class AuthSessionError extends Error {
   }
 }
 
+function isNextDynamicServerError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+
+  const maybeDynamic = error as Error & {
+    digest?: string;
+    description?: string;
+  };
+
+  return (
+    maybeDynamic.digest === "DYNAMIC_SERVER_USAGE" ||
+    maybeDynamic.description?.includes("couldn't be rendered statically") === true ||
+    error.message.includes("Dynamic server usage")
+  );
+}
+
 /**
  * Resolves the current Auth.js session.
  *
@@ -22,6 +37,10 @@ export async function getSession(): Promise<Session | null> {
   try {
     return await auth();
   } catch (error) {
+    if (isNextDynamicServerError(error)) {
+      throw error;
+    }
+
     console.error("[AUTH SESSION ERROR]", error);
     throw new AuthSessionError(error);
   }
