@@ -511,6 +511,7 @@ interface QuickPrescribePayload {
   date: string;
 }
 
+// eslint-disable-next-line no-unused-vars
 function QuickPrescribeModal({
   payload,
   onClose,
@@ -659,6 +660,204 @@ function QuickPrescribeModal({
 }
 
 // ── CopyWorkoutModal ──────────────────────────────────────────────────────────
+
+function IntervalsPrescribeModal({
+  payload,
+  onClose,
+  onSaved,
+}: {
+  payload: QuickPrescribePayload;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [category, setCategory] = useState("Treino");
+  const [sport, setSport] = useState("Corrida");
+  const [type, setType] = useState("RODAGEM_LEVE");
+  const [title, setTitle] = useState("Rodagem leve");
+  const [durationMin, setDurationMin] = useState("");
+  const [distanceKm, setDistanceKm] = useState("");
+  const [load, setLoad] = useState("");
+  const [rpe, setRpe] = useState("");
+  const [description, setDescription] = useState("");
+  const [steps, setSteps] = useState("Aquecimento 10min Z1\nPrincipal 30min Z2\nVolta a calma 5min");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const inputClass = "w-full border-0 border-b border-border bg-transparent px-0 py-1.5 text-sm text-text outline-none focus:border-info";
+  const dateLabel = new Date(payload.date + "T12:00:00").toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  function handleTypeChange(value: string) {
+    setType(value);
+    const selected = QUICK_TYPES.find((item) => item.value === value);
+    if (selected) setTitle(selected.label);
+  }
+
+  async function handleSave() {
+    if (!title.trim()) {
+      setError("Informe o nome do treino.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/coach/workouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: payload.athleteId,
+          date: payload.date,
+          title: title.trim(),
+          type,
+          objective: description || steps,
+          structured: Boolean(steps.trim()),
+          blocks: steps.trim()
+            ? steps.split("\n").filter(Boolean).map((line, index) => ({ order: index + 1, text: line }))
+            : undefined,
+          ...(durationMin ? { targetDurationMin: parseInt(durationMin, 10) } : {}),
+          ...(distanceKm ? { targetDistanceKm: parseFloat(distanceKm) } : {}),
+          ...(rpe ? { targetRpe: parseInt(rpe, 10) } : {}),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? "Erro ao salvar treino.");
+        return;
+      }
+      onSaved();
+      onClose();
+    } catch {
+      setError("Erro de conexao.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
+      <div
+        className="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-md border border-border bg-card shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between bg-info px-4 py-2.5 text-white">
+          <p className="text-sm font-semibold">Adicionar Entrada no Calendario</p>
+          <button onClick={onClose} className="rounded p-1 text-white/80 hover:bg-white/15 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto p-4">
+          <div className="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
+            <label className="block space-y-1">
+              <span className="text-[11px] font-medium text-text-muted">Categoria</span>
+              <select value={category} onChange={(event) => setCategory(event.target.value)} className={inputClass}>
+                {["Treino", "Atividade Manual", "Nota", "Temporada", "Lesionado", "Definir FTP"].map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[11px] font-medium text-text-muted">Nome</span>
+              <input value={title} onChange={(event) => setTitle(event.target.value)} className={inputClass} />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[11px] font-medium text-text-muted">Esporte</span>
+              <select value={sport} onChange={(event) => setSport(event.target.value)} className={inputClass}>
+                {["Corrida", "Ciclismo", "Natacao", "Trilha", "Treino de Peso"].map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[11px] font-medium text-text-muted">Tipo de treino</span>
+              <select value={type} onChange={(event) => handleTypeChange(event.target.value)} className={inputClass}>
+                {QUICK_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+              </select>
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[11px] font-medium text-text-muted">Data</span>
+              <input value={dateLabel} readOnly className={cn(inputClass, "text-text-muted")} />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[11px] font-medium text-text-muted">Atleta</span>
+              <input value={payload.athleteName} readOnly className={cn(inputClass, "text-text-muted")} />
+            </label>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <label className="block space-y-1">
+              <span className="text-[11px] font-medium text-text-muted">Duracao</span>
+              <input type="number" min={1} placeholder="min" value={durationMin} onChange={(event) => setDurationMin(event.target.value)} className={inputClass} />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[11px] font-medium text-text-muted">Distancia(km)</span>
+              <input type="number" min={0.1} step={0.1} placeholder="km" value={distanceKm} onChange={(event) => setDistanceKm(event.target.value)} className={inputClass} />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[11px] font-medium text-text-muted">Carga</span>
+              <input type="number" min={1} placeholder="TSS" value={load} onChange={(event) => setLoad(event.target.value)} className={inputClass} />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[11px] font-medium text-text-muted">Subtipo</span>
+              <input value={type.replaceAll("_", " ")} readOnly className={cn(inputClass, "text-text-muted")} />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-[11px] font-medium text-text-muted">RPE</span>
+              <input type="number" min={1} max={10} placeholder="-" value={rpe} onChange={(event) => setRpe(event.target.value)} className={inputClass} />
+            </label>
+          </div>
+
+          <label className="mt-4 block space-y-1">
+            <span className="text-[11px] font-medium text-text-muted">Descricao</span>
+            <textarea rows={4} value={description} onChange={(event) => setDescription(event.target.value)} className="w-full resize-none border-0 border-b border-border bg-transparent px-0 py-2 text-sm text-text outline-none focus:border-info" />
+          </label>
+
+          <div className="mt-4 rounded-md border border-border bg-background/35">
+            <div className="flex items-center justify-between border-b border-border px-3 py-2">
+              <p className="text-xs font-semibold text-text">Etapas estruturadas</p>
+              <button
+                type="button"
+                onClick={() => setSteps((prev) => `${prev}${prev ? "\n" : ""}Novo bloco 5min Z2`)}
+                className="text-xs font-semibold text-info hover:text-primary"
+              >
+                ADICIONAR ETAPA
+              </button>
+            </div>
+            <textarea
+              rows={5}
+              value={steps}
+              onChange={(event) => setSteps(event.target.value)}
+              className="w-full resize-none bg-transparent px-3 py-2 font-mono text-xs text-text outline-none"
+            />
+            <div className="grid h-20 grid-cols-12 items-end gap-1 border-t border-border px-3 py-2">
+              {Array.from({ length: 12 }, (_, index) => (
+                <span
+                  key={index}
+                  className="rounded-t bg-info/50"
+                  style={{ height: `${18 + ((index % 5) + Number(rpe || 3)) * 5}px` }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {error && <p className="mt-3 text-xs text-danger">{error}</p>}
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleSave} disabled={saving} className="gap-2">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            {saving ? "Salvando..." : "OK"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface CopyWorkoutPayload {
   workout: WorkoutEntry;
@@ -1095,6 +1294,12 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
     if (tab === "Sem plano") return a.workouts.length === 0;
     return true;
   });
+  const visibleWorkouts = filtered.flatMap((athlete) => athlete.workouts);
+  const visibleTss = visibleWorkouts.reduce((sum, workout) => sum + workout.tss, 0);
+  const visibleDistance = visibleWorkouts.reduce((sum, workout) => sum + (workout.targetDistanceKm ?? 0), 0);
+  const completedWorkouts = visibleWorkouts.filter((workout) => workout.status === "CONCLUIDO").length;
+  const plannedWorkouts = visibleWorkouts.filter((workout) => workout.status !== "CONCLUIDO").length;
+  const libraryTemplates = QUICK_TYPES.slice(0, 8);
 
   const isThisWeek = toISODate(weekStart) === toISODate(getMondayOf(new Date()));
 
@@ -1231,8 +1436,53 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
         </div>
       )}
 
-      {/* Calendar grid */}
-      <Card className="overflow-x-auto">
+      <div className="grid gap-3 xl:grid-cols-[230px_minmax(0,1fr)_190px]">
+        <aside className="hidden rounded-md border border-border bg-card xl:block">
+          <div className="border-b border-border px-3 py-2">
+            <p className="text-xs font-semibold text-text">Biblioteca de Treinos</p>
+            <p className="text-[11px] text-text-muted">Arraste modelos para a semana</p>
+          </div>
+          <div className="space-y-1 p-2">
+            {libraryTemplates.map((template) => {
+              const cfg = woCfg(template.value);
+              return (
+                <button
+                  key={template.value}
+                  type="button"
+                  onClick={() => {
+                    setWorkoutClipboard({
+                      workout: {
+                        id: `template-${template.value}`,
+                        date: toISODate(weekStart),
+                        type: template.value,
+                        title: template.label,
+                        status: "PLANEJADO",
+                        targetDistanceKm: null,
+                        targetDurationMin: null,
+                        targetPaceSecPerKm: null,
+                        targetRpe: null,
+                        tss: 0,
+                        released: false,
+                      },
+                    });
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md border border-border bg-background/40 px-2 py-2 text-left text-xs transition-colors hover:border-primary/50 hover:bg-primary/5"
+                >
+                  <span className={cn("flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold", cfg.bg, cfg.text)}>
+                    {cfg.short}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold text-text">{template.label}</span>
+                    <span className="text-[10px] text-text-muted">copiar para colar</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* Calendar grid */}
+        <Card className="overflow-x-auto">
         {/* Column headers */}
         <div className="grid min-w-[1280px] border-b border-border bg-card-hover/40 px-4 py-2"
           style={{ gridTemplateColumns: "minmax(220px, 1.35fr) repeat(7, minmax(132px, 1fr)) 64px 72px" }}>
@@ -1427,7 +1677,39 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
             })
           )}
         </div>
-      </Card>
+        </Card>
+
+        <aside className="hidden rounded-md border border-border bg-card xl:block">
+          <div className="border-b border-border px-3 py-2">
+            <p className="text-xs font-semibold text-text">Resumo</p>
+            <p className="text-[11px] text-text-muted">{filtered.length} atletas visiveis</p>
+          </div>
+          <div className="space-y-3 p-3">
+            <SummaryMetric label="Treinos" value={String(visibleWorkouts.length)} />
+            <SummaryMetric label="Planejados" value={String(plannedWorkouts)} />
+            <SummaryMetric label="Concluidos" value={String(completedWorkouts)} />
+            <SummaryMetric label="TSS" value={String(Math.round(visibleTss))} />
+            <SummaryMetric label="Distancia" value={`${visibleDistance.toFixed(1)} km`} />
+            <div className="rounded-md border border-border bg-background/40 p-2">
+              <p className="mb-2 text-[11px] font-semibold text-text-muted">Distribuicao semanal</p>
+              <div className="space-y-1">
+                {weekDays.map((day) => {
+                  const count = visibleWorkouts.filter((workout) => workout.date === day.date).length;
+                  return (
+                    <div key={day.date} className="flex items-center gap-2 text-[11px]">
+                      <span className="w-8 text-text-muted">{day.dayLabel}</span>
+                      <span className="h-1.5 flex-1 rounded bg-border">
+                        <span className="block h-full rounded bg-primary" style={{ width: `${Math.min(100, count * 24)}%` }} />
+                      </span>
+                      <span className="w-4 text-right font-semibold text-text">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
 
       {/* Workout detail modal */}
       {modal && (
@@ -1443,7 +1725,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
 
       {/* Quick prescribe from calendar cell */}
       {quickPrescribe && (
-        <QuickPrescribeModal
+        <IntervalsPrescribeModal
           payload={quickPrescribe}
           onClose={() => setQuickPrescribe(null)}
           onSaved={() => fetchWeek(weekStart)}
@@ -1488,6 +1770,15 @@ function Header({ total }: { total: number }) {
           <Button variant="secondary">Convidar atleta</Button>
         </Link>
       </div>
+    </div>
+  );
+}
+
+function SummaryMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between border-b border-border/60 pb-2 last:border-0 last:pb-0">
+      <span className="text-[11px] text-text-muted">{label}</span>
+      <span className="text-sm font-bold text-text">{value}</span>
     </div>
   );
 }

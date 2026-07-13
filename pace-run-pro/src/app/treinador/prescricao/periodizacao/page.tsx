@@ -284,7 +284,7 @@ export default function PeriodizacaoPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weeks, workoutsMap, goal, level, totalWeeks, trainingDays, vdotValue, raceDistId, raceTime, generated]);
 
-  function handleWeekChange(weekNum: number, field: keyof Week, value: string | number) {
+  function handleWeekChange(weekNum: number, field: keyof Week, value: string | number | boolean) {
     setWeeks((prev) => prev.map((w) => (w.week === weekNum ? { ...w, [field]: value } : w)));
     setSaved(false);
   }
@@ -874,6 +874,56 @@ export default function PeriodizacaoPage() {
                         athleteName={selectedAthletes.length === 1 ? (athletes.find((a) => a.id === selectedAthletes[0])?.name) : selectedAthletes.length > 1 ? `${selectedAthletes.length} atletas` : undefined}
                       />
                       <div className="space-y-4 print:hidden">
+                        <Card className="overflow-hidden">
+                          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                            <div>
+                              <p className="text-sm font-semibold text-text">Plano de periodizacao</p>
+                              <p className="text-xs text-text-muted">Visao por fase, mesociclo, carga e semanas de descarga</p>
+                            </div>
+                            <div className="hidden items-center gap-2 text-[11px] text-text-muted sm:flex">
+                              <span>{totalWeeks} semanas</span>
+                              <span>{Object.keys(mesocycles).length} mesociclos</span>
+                              <span>{deloadWeeks} descargas</span>
+                            </div>
+                          </div>
+                          <div className="overflow-x-auto p-3">
+                            <div
+                              className="grid min-w-[900px] gap-1"
+                              style={{ gridTemplateColumns: `repeat(${weeks.length}, minmax(42px, 1fr))` }}
+                            >
+                              {weeks.map((week) => (
+                                <button
+                                  key={week.week}
+                                  type="button"
+                                  onClick={() => handleWeekChange(week.week, "isDeload", !week.isDeload)}
+                                  className={cn(
+                                    "group relative min-h-[116px] rounded-md border p-1.5 text-left transition-colors hover:border-primary/60",
+                                    PHASE_BG[week.phase],
+                                    week.isDeload && "ring-1 ring-warning/60"
+                                  )}
+                                  title="Clique para alternar descarga"
+                                >
+                                  <span className="block text-[10px] font-bold text-text-muted">S{week.week}</span>
+                                  <span className="mt-1 block truncate text-[10px] font-semibold text-text">{week.phase}</span>
+                                  <span className="absolute bottom-1.5 left-1.5 right-1.5 h-12 rounded bg-background/40">
+                                    <span
+                                      className={cn("absolute bottom-0 left-0 right-0 rounded", PHASE_BAR[week.phase])}
+                                      style={{ height: `${Math.max(12, week.volume / 2)}%` }}
+                                    />
+                                  </span>
+                                  {week.isDeload && (
+                                    <span className="absolute right-1.5 top-1.5 rounded bg-warning px-1 text-[9px] font-bold text-background">
+                                      D
+                                    </span>
+                                  )}
+                                  <span className="absolute bottom-14 left-1.5 text-[10px] font-semibold text-text">
+                                    {week.km}km
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </Card>
                         {Object.entries(mesocycles).map(([meso, mesoWeeks]) => {
                           const dominantPhase = mesoWeeks.reduce((acc, w) => {
                             acc[w.phase] = (acc[w.phase] ?? 0) + 1;
