@@ -13,6 +13,7 @@
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
+    "db:audit:readonly": "tsx scripts/audit-production-readonly.ts",
     "migrate:encrypt": "npx tsx scripts/migrate-encryption.ts",
     "cleanup:soft-deletes": "npx tsx scripts/cleanup-soft-deletes.ts",
     "deploy:p0": "bash scripts/deploy-p0.sh"

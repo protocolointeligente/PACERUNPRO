@@ -1,75 +1,97 @@
-# Deploy — Pace Run Pro
+# Deploy - Pace Run Pro
 
-## 1. Banco de dados (Neon)
+## Production Safety Flow
 
-1. Crie conta em [neon.tech](https://neon.tech)
-2. "Create Project" → nome: `pacerunpro` → região: US East ou São Paulo
-3. Na página "Connection Details" do Neon existem **duas** connection strings —
-   guarde as duas, elas são usadas em lugares diferentes:
-   - **Pooled connection** (host termina em `-pooler`): use esta no `DATABASE_URL`
-     da Vercel (produção). É feita para muitas conexões curtas, como funções
-     serverless.
-   - **Direct connection** (sem `-pooler`): use esta apenas localmente, no seu
-     `.env.local`, para rodar as migrações (`prisma migrate dev`) e o seed.
-     Migrações precisam de uma conexão direta porque o pooler do Neon
-     (PgBouncer) não suporta os locks de sessão que o Prisma Migrate usa.
-4. No `.env.local`, coloque a **connection string direta** em `DATABASE_URL` e
-   execute as migrações:
+Before changing Production, follow this order:
+
+1. Create a provider snapshot/backup of the current Production database.
+2. Confirm `DATABASE_URL` and any direct migration URL point to the intended Production database.
+3. Run the read-only audit:
+
    ```bash
    cd pace-run-pro
-   npx prisma migrate dev --name init
-   npx prisma db seed
+   npm run db:audit:readonly
    ```
-   Isso cria a pasta `prisma/migrations/` (deve ser commitada no git) e popula
-   o banco com o usuário treinador e o atleta de exemplo.
 
-## 2. Google OAuth
+4. Review counts for `users`, `coaches`, `athletes`, training tables, missing soft-delete columns, and recent Prisma migrations.
+5. Deploy only after the backup and read-only audit are captured.
+6. After deploy/migration, run `npm run db:audit:readonly` again and compare counts.
 
-1. Acesse [console.cloud.google.com](https://console.cloud.google.com)
-2. Crie um projeto → "APIs & Services" → "Credentials" → "Create OAuth 2.0 Client"
-3. Tipo: Web Application
-4. Authorized redirect URIs:
-   - `http://localhost:3000/api/auth/callback/google` (dev)
-   - `https://www.pacerunpro.com.br/api/auth/callback/google` (prod)
-5. Copie Client ID e Client Secret para `.env.local`
+Do not run `prisma db seed`, `prisma migrate reset`, `prisma db push`, or destructive SQL against Production.
 
-## 3. Variáveis de ambiente
+## Database
 
-Copie `.env.example` para `.env.local` e preencha todos os valores, incluindo:
+Use two PostgreSQL connection strings when the provider exposes them:
 
-- `AUTH_SECRET` — gere com:
-  ```bash
-  openssl rand -base64 32
-  ```
-- `ADMIN_EMAILS` — lista de e-mails (separados por vírgula) que devem virar
-  `ADMIN` automaticamente no primeiro login com Google. Coloque aqui o seu
-  e-mail (ex.: `ricardo.pace.jr@gmail.com`) para ter acesso a `/admin` e
-  `/treinador` ao entrar com sua conta Google.
+- Pooled/serverless connection: use this for `DATABASE_URL` in Vercel runtime.
+- Direct/non-pooled connection: use this for Prisma migrations and local maintenance commands.
 
-## 4. Deploy na Vercel
+Vercel currently runs:
 
-1. Importe o repositório `arena` na Vercel
-2. Root Directory: `pace-run-pro`
-3. Em "Environment Variables" adicione todas as variáveis do `.env.local`,
-   mas com `DATABASE_URL` apontando para a **connection string pooled**
-   do Neon (host com `-pooler`), e `NEXTAUTH_URL` com a URL final de produção
-4. Deploy
-5. Após o primeiro deploy, se ainda não rodou `prisma migrate dev` localmente
-   (passo 1.4), rode-o agora a partir da sua máquina apontando `DATABASE_URL`
-   para a connection string **direta** do Neon — isso cria as tabelas em
-   produção. Deploys futuros não precisam disso, a menos que o schema mude
-   (nesse caso, gere uma nova migração localmente e rode
-   `npx prisma migrate deploy` apontando para a connection string direta).
+```bash
+prisma generate && prisma migrate deploy && next build
+```
 
-## Credenciais de acesso (seed)
+Because deploy runs migrations, every Production deployment that includes schema changes must be treated as a database change:
 
-| Perfil | E-mail | Senha |
-|--------|--------|-------|
-| Treinador (Coach) | `ricardo@pacerunpro.com.br` | `PaceRunPro@2026` |
-| Atleta (demo) | `camila@exemplo.com` | `Atleta@2026` |
+1. snapshot first;
+2. read-only audit before deploy;
+3. deploy;
+4. read-only audit after deploy.
 
-> **Altere as senhas imediatamente após o primeiro login em produção.**
+## Seed Policy
 
-> Para entrar como administrador com sua própria conta Google, basta fazer
-> login normalmente — se o seu e-mail estiver em `ADMIN_EMAILS`, a conta é
-> promovida a `ADMIN` automaticamente no login.
+The seed is for development only. It does not contain passwords in source and it skips destructive reset by default.
+
+Required local variables:
+
+```bash
+SEED_ADMIN_PASSWORD="..."
+SEED_COACH_PASSWORD="..."
+SEED_ATHLETE_PASSWORD="..."
+```
+
+Local non-destructive seed:
+
+```bash
+npx prisma db seed
+```
+
+Local destructive reset plus seed requires explicit opt-in:
+
+```bash
+ALLOW_DESTRUCTIVE_SEED=true npx prisma db seed
+```
+
+Production-like databases are blocked unless `ALLOW_PRODUCTION_SEED=true` is set. A destructive production-like seed also requires `ALLOW_PRODUCTION_SEED_RESET=true`. Use those only after a verified backup.
+
+## Google OAuth
+
+1. Open Google Cloud Console.
+2. Create or select the project.
+3. Create an OAuth 2.0 Web Application client.
+4. Add callback URLs:
+   - `http://localhost:3000/api/auth/callback/google`
+   - `https://www.pacerunpro.com.br/api/auth/callback/google`
+5. Store the client ID and secret in environment variables.
+
+## Environment Variables
+
+Required core variables:
+
+- `DATABASE_URL`
+- `AUTH_SECRET`
+- `ADMIN_EMAILS`
+- Google OAuth client ID/secret when Google login is enabled
+
+Never document real passwords in this repository. Rotate any credential that was ever committed or shared in plaintext.
+
+## Soft Delete Cleanup
+
+The cleanup job can permanently delete records after the grace period, but physical deletion is disabled unless:
+
+```bash
+ALLOW_HARD_DELETE_CLEANUP=true
+```
+
+Keep that variable unset unless a backup exists and the deletion window has been reviewed.
