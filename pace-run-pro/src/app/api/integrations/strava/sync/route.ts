@@ -5,6 +5,7 @@ import {
   StravaApiError,
   fetchStravaActivities,
   refreshStravaToken,
+  type StravaActivity,
 } from "@/lib/integrations/strava";
 import { persistStravaActivity } from "@/lib/integrations/strava-sync";
 import { decrypt, encrypt } from "@/lib/encryption";
