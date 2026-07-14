@@ -387,7 +387,7 @@ const SYSTEM_TEMPLATES: Template[] = [
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function BibliotecaPage() {
-  const [tab, setTab] = useState<"meus" | "equipe">("meus");
+  const [tab, setTab] = useState<"meus" | "equipe">("equipe");
   const [category, setCategory] = useState<TemplateCategory | "">("");
   const [search, setSearch] = useState("");
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -567,7 +567,7 @@ export default function BibliotecaPage() {
           <BookOpen className="h-8 w-8 text-text-muted/40" />
           <p className="text-sm font-semibold text-text">Nenhum template aqui ainda</p>
           <p className="text-sm text-text-muted">
-            {tab === "equipe" ? "Nenhum treinador compartilhou templates com a equipe ainda." : "Crie seu primeiro template clicando em \"Novo template\"."}
+            {tab === "equipe" ? "Nenhum modelo do sistema ou da equipe foi encontrado." : "Crie seu primeiro template clicando em \"Novo template\"."}
           </p>
         </div>
       ) : (
@@ -701,6 +701,8 @@ export default function BibliotecaPage() {
                   <label className="mb-1.5 block text-xs font-semibold text-text">Categoria</label>
                   <select className={inputClass} value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as TemplateCategory }))}>
                     <option value="CORRIDA">Corrida</option>
+                    <option value="CICLISMO">Ciclismo</option>
+                    <option value="NATACAO">Natacao</option>
                     <option value="FORCA">Força</option>
                     <option value="MOBILIDADE">Mobilidade</option>
                     <option value="FUNCIONAL">Funcional</option>

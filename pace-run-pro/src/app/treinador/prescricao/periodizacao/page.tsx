@@ -76,6 +76,21 @@ type RecoveryCycle = "4" | "6" | "8" | "manual";
 type EventPriority = "A" | "B" | "C";
 type SuggestionStatus = "pending" | "accepted" | "declined";
 
+interface SavedPlan {
+  id: string;
+  name: string;
+  macrocycle: string | null;
+  startDate: string;
+  endDate: string;
+  weeksCount: number;
+  workoutsCount: number;
+  releasedWeeksCount: number;
+  athlete: {
+    id: string;
+    user: { name: string; avatarUrl: string | null };
+  };
+}
+
 interface TrainingEvent {
   id: string;
   name: string;
@@ -341,6 +356,22 @@ export default function PeriodizacaoPage() {
   ]);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
   const [suggestionStatus, setSuggestionStatus] = useState<Record<string, SuggestionStatus>>({});
+  const [savedPlans, setSavedPlans] = useState<SavedPlan[]>([]);
+
+  async function refreshSavedPlans() {
+    try {
+      const response = await fetch("/api/planos", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json() as { plans?: SavedPlan[] };
+      setSavedPlans(data.plans ?? []);
+    } catch {
+      // Keep periodization usable even if history cannot be loaded.
+    }
+  }
+
+  useEffect(() => {
+    refreshSavedPlans();
+  }, []);
 
   useEffect(() => {
     if (selectedAthletes.length === 0 && athletes[0]?.id) {
@@ -533,8 +564,8 @@ export default function PeriodizacaoPage() {
     setLiberating(true);
     try {
       await Promise.all(
-        selectedAthletes.map((athleteId) =>
-          fetch("/api/planos", {
+        selectedAthletes.map(async (athleteId) => {
+          const response = await fetch("/api/planos", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -549,10 +580,15 @@ export default function PeriodizacaoPage() {
                 Object.entries(workoutsMap).map(([k, v]) => [k, v])
               ),
             }),
-          })
-        )
+          });
+          if (!response.ok) {
+            const data = await response.json().catch(() => null) as { error?: string } | null;
+            throw new Error(data?.error ?? "Nao foi possivel liberar a periodizacao.");
+          }
+        })
       );
       setLiberated(true);
+      await refreshSavedPlans();
       try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
       setTimeout(() => setLiberated(false), 4000);
     } finally {
@@ -773,6 +809,50 @@ export default function PeriodizacaoPage() {
             </div>
           </div>
         </div>
+
+        {savedPlans.length > 0 && (
+          <div className="mb-5 rounded-2xl border border-border bg-card p-4 shadow-sm print:hidden">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-text">Periodizacoes salvas</p>
+                <p className="text-xs text-text-muted">Ultimos macrociclos gerados e enviados para consulta do treinador.</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={refreshSavedPlans}>
+                <RefreshCw className="h-4 w-4" />
+                Atualizar
+              </Button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {savedPlans.slice(0, 6).map((plan) => (
+                <div key={plan.id} className="rounded-xl border border-border bg-background/60 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-text">{plan.name}</p>
+                      <p className="truncate text-xs text-text-muted">{plan.athlete.user.name}</p>
+                    </div>
+                    <Badge variant={plan.releasedWeeksCount > 0 ? "success" : "outline"}>
+                      {plan.releasedWeeksCount > 0 ? "Liberado" : "Rascunho"}
+                    </Badge>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                    <div className="rounded-lg bg-card-hover/50 p-2">
+                      <p className="text-text-muted">Semanas</p>
+                      <p className="font-semibold text-text">{plan.weeksCount}</p>
+                    </div>
+                    <div className="rounded-lg bg-card-hover/50 p-2">
+                      <p className="text-text-muted">Treinos</p>
+                      <p className="font-semibold text-text">{plan.workoutsCount}</p>
+                    </div>
+                    <div className="rounded-lg bg-card-hover/50 p-2">
+                      <p className="text-text-muted">Periodo</p>
+                      <p className="truncate font-semibold text-text">{new Date(plan.startDate).toLocaleDateString("pt-BR", { month: "short", day: "2-digit" })}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <PeriodizationBuilderModal
           open={builderOpen}

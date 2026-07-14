@@ -1,700 +1,233 @@
 import Link from "next/link";
 import {
-  Activity,
   ArrowRight,
-  BarChart2,
+  BadgeCheck,
   Bell,
   Brain,
-  Building2,
   CalendarDays,
   CheckCircle2,
+  CreditCard,
   Dumbbell,
-  Globe,
-  HeartPulse,
-  ShoppingBag,
-  Star,
-  TrendingUp,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
   Users,
-  Zap,
+  WalletCards,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { integrationLogos, testimonials } from "@/lib/mock-data";
-import { PricingSection } from "@/components/landing/pricing-section";
-import { PlatformShowcase } from "@/components/landing/platform-showcase";
-import { ComparisonTable } from "@/components/landing/comparison-table";
 
-// ── Feature data ───────────────────────────────────────────────────────────────
+const starterPrice = 97;
+const athleteCount = 20;
+const athleteMonthlyFee = 150;
+const grossRevenue = athleteCount * athleteMonthlyFee;
+const platformSplit = grossRevenue * 0.1;
+const coachNet = grossRevenue - platformSplit;
+const totalPlatformRevenue = starterPrice + platformSplit;
 
-const coachBenefits = [
+const trainerFlow = [
+  {
+    icon: BadgeCheck,
+    title: "Treinador assina o Starter",
+    text: `Simulacao: plano Starter de R$ ${starterPrice}/mes para ativar calendario, periodizacao, biblioteca, alertas e CRM.`,
+  },
+  {
+    icon: WalletCards,
+    title: "Conta Asaas vinculada",
+    text: "No onboarding, ele informa os dados de recebimento. A plataforma cria/valida a conta para split de pagamento.",
+  },
+  {
+    icon: Mail,
+    title: "Convite isolado por treinador",
+    text: "Cada atleta recebe um link unico do treinador. O pagamento nunca deve cair no treinador errado.",
+  },
+  {
+    icon: CreditCard,
+    title: "Atleta paga a mensalidade",
+    text: `Com 20 atletas a R$ ${athleteMonthlyFee}/mes, a assessoria movimenta R$ ${grossRevenue.toLocaleString("pt-BR")}/mes.`,
+  },
+  {
+    icon: ShieldCheck,
+    title: "Split automatico 90/10",
+    text: `Treinador recebe R$ ${coachNet.toLocaleString("pt-BR")}/mes e a plataforma recebe R$ ${platformSplit.toLocaleString("pt-BR")}/mes em split.`,
+  },
+  {
+    icon: CalendarDays,
+    title: "Entrega do treino",
+    text: "Treinador prescreve no calendario ou edita sugestoes da periodizacao. O atleta recebe tudo no app premium.",
+  },
+];
+
+const productBlocks = [
+  {
+    icon: CalendarDays,
+    title: "Calendario estilo TrainingPeaks",
+    text: "Selecao do atleta, visao semana/mes/lista, copiar e colar treino ou semana, drag and drop e modalidades por icone.",
+  },
   {
     icon: Brain,
-    title: "Prescrição inteligente com IA",
-    text: "Sugestões de pace, volume e RPE baseadas no histórico de cada atleta. Reduza horas de planejamento para minutos.",
+    title: "Periodizacao Intelligence",
+    text: "Macrociclo visual com volume em colunas, intensidade em linha, tapering, eventos A/B/C e sugestoes de sessoes.",
+  },
+  {
+    icon: Dumbbell,
+    title: "Modal unico de prescricao",
+    text: "Corrida, ciclismo, natacao e forca no mesmo fluxo. Forca busca exercicios da biblioteca com GIF e estrutura series x reps x carga.",
   },
   {
     icon: Bell,
-    title: "Alertas de risco automáticos",
-    text: "Saiba antes do atleta se algo vai sair dos trilhos. Overtraining detectado em 48 horas com ação recomendada.",
+    title: "Alertas e previsto x realizado",
+    text: "Carga planejada versus executada, Strava quando sincronizado, check-ins e sinais de fadiga para o treinador agir rapido.",
   },
-  {
-    icon: CalendarDays,
-    title: "Liberação semanal controlada",
-    text: "O atleta só vê o que você liberar — controle total sobre o planejamento, sem spoiler de ciclos longos.",
-  },
-  {
-    icon: BarChart2,
-    title: "Carga calculada automaticamente",
-    text: "CTL, ATL e TSB para toda a sua base, atualizados em tempo real. Decisões baseadas em ciência, não em intuição.",
-  },
-];
-
-const athleteFeatures = [
-  {
-    icon: CalendarDays,
-    title: "Plano liberado semana a semana",
-    text: "Sem ansiedade de ver o ciclo todo. Você vê só o que importa agora — com contexto e objetivo claros.",
-  },
-  {
-    icon: HeartPulse,
-    title: "Check-in inteligente pós-treino",
-    text: "60 segundos de resposta. O motor ajusta a próxima sessão automaticamente com base no que você sentiu.",
-  },
-  {
-    icon: BarChart2,
-    title: "Evolução em gráficos reais",
-    text: "Pace, FC, VO2máx, curva de pico de pace — tudo num só lugar para você acompanhar o progresso.",
-  },
-  {
-    icon: ShoppingBag,
-    title: "Loja de planos de treino",
-    text: "Compre planos de treinadores certificados sem precisar de um treinador fixo. Acesso imediato e vitalício.",
-  },
-];
-
-const agencyFeatures = [
   {
     icon: Users,
-    title: "Multi-treinadores",
-    text: "Vários treinadores em uma conta, cada um com sua equipe e visão separada.",
+    title: "CRM da assessoria",
+    text: "Atletas, leads, planos contratados, pagantes, convites e link de pagamento por treinador.",
   },
   {
-    icon: Globe,
-    title: "White-label",
-    text: "Sua logo e seu domínio — seus atletas nunca saem da sua marca.",
-  },
-  {
-    icon: Building2,
-    title: "Painel administrativo",
-    text: "Visão completa da saúde da assessoria: atletas ativos, MRR, inadimplência.",
-  },
-  {
-    icon: ShoppingBag,
-    title: "Biblioteca de equipe",
-    text: "Templates de treino compartilhados entre todos os treinadores da assessoria.",
+    icon: LockKeyhole,
+    title: "Super admin operacional",
+    text: "Controle de planos, treinadores, pagamentos, convites, configuracoes e rotas criticas sem depender de programacao.",
   },
 ];
 
-const HOW_IT_WORKS = [
-  {
-    step: "01",
-    icon: Users,
-    title: "Cadastre o atleta",
-    desc: "Perfil completo com histórico, metas, zonas de treino e preferências de modalidade.",
-    color: "#2563EB",
-  },
-  {
-    step: "02",
-    icon: CalendarDays,
-    title: "Monte o plano semanal",
-    desc: "Prescreva corrida e força com VDOT, zonas e carga calculada automaticamente.",
-    color: "#7c3aed",
-  },
-  {
-    step: "03",
-    icon: Activity,
-    title: "Acompanhe a execução",
-    desc: "Check-ins diários, alertas de fadiga e sincronização com Strava em tempo real.",
-    color: "#0891b2",
-  },
-  {
-    step: "04",
-    icon: TrendingUp,
-    title: "Ajuste pela carga",
-    desc: "CTL, ATL e TSB para decisões inteligentes a cada semana. Menos lesão, mais resultado.",
-    color: "#22c55e",
-  },
-];
-
-// ── Inline product mockup — real dashboard layout ───────────────────────────
-
-function HeroDashboardMock() {
-  return (
-    <div
-      className="overflow-hidden rounded-2xl shadow-2xl shadow-black/60"
-      style={{
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "#111827",
-        display: "flex",
-        height: "460px",
-      }}
-    >
-      {/* Collapsed sidebar */}
-      <div
-        className="flex shrink-0 flex-col"
-        style={{
-          width: "52px",
-          backgroundColor: "#0B1020",
-          borderRight: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
-        {/* Logo */}
-        <div className="flex items-center justify-center p-3 pb-2.5">
-          <div className="flex h-6 w-6 items-center justify-center rounded-lg" style={{ backgroundColor: "#2563EB" }}>
-            <span className="font-display text-[8px] font-black text-white">P</span>
-          </div>
-        </div>
-        {/* Nav icon slots */}
-        <div className="flex-1 space-y-1 px-2 pt-3">
-          {[true, false, false, false, false, false].map((active, i) => (
-            <div
-              key={i}
-              className="flex h-8 items-center justify-center rounded-lg"
-              style={{ backgroundColor: active ? "rgba(37,99,235,0.18)" : "transparent" }}
-            >
-              <div
-                className="h-3.5 w-3.5 rounded-sm"
-                style={{ backgroundColor: active ? "#60a5fa" : "#334155" }}
-              />
-            </div>
-          ))}
-        </div>
-        {/* Avatar */}
-        <div className="p-2.5">
-          <div
-            className="mx-auto flex h-7 w-7 items-center justify-center rounded-full text-[8px] font-bold text-white"
-            style={{ backgroundColor: "#2563EB" }}
-          >
-            R
-          </div>
-        </div>
-      </div>
-
-      {/* Main panel */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Browser chrome */}
-        <div
-          className="flex items-center gap-2 px-4 py-2.5"
-          style={{ backgroundColor: "#0B1020", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-        >
-          <div className="flex gap-1.5">
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "rgba(239,68,68,0.45)" }} />
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "rgba(234,179,8,0.45)" }} />
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "rgba(34,197,94,0.45)" }} />
-          </div>
-          <div
-            className="ml-1 flex-1 truncate rounded px-2 py-0.5 text-center text-[10px]"
-            style={{ backgroundColor: "rgba(255,255,255,0.04)", color: "#64748b" }}
-          >
-            app.pacerunpro.com.br/treinador/dashboard
-          </div>
-        </div>
-
-        {/* Dashboard content */}
-        <div className="flex-1 overflow-hidden p-4">
-          {/* Greeting */}
-          <div className="mb-4">
-            <p className="text-[10px]" style={{ color: "#64748b" }}>Painel do treinador</p>
-            <p className="text-sm font-bold leading-snug" style={{ color: "#f8fafc" }}>
-              Olá, Ricardo 👋{" "}
-              <span style={{ color: "#64748b", fontWeight: 400 }}>· Semana de 23 Jun</span>
-            </p>
-          </div>
-
-          {/* Ações rápidas */}
-          <div className="mb-3">
-            <p
-              className="mb-2 text-[9px] font-semibold uppercase tracking-wider"
-              style={{ color: "#475569" }}
-            >
-              Ações rápidas
-            </p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {[
-                { label: "Criar treino", accent: "#2563EB" },
-                { label: "Criar semana", accent: "#7c3aed" },
-                { label: "Prescrever força", accent: "#0891b2" },
-                { label: "Usar modelo", accent: "#059669" },
-              ].map((a) => (
-                <div
-                  key={a.label}
-                  className="rounded-lg p-2.5"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                  }}
-                >
-                  <div
-                    className="mb-1.5 h-3.5 w-3.5 rounded-sm"
-                    style={{ backgroundColor: a.accent + "40" }}
-                  />
-                  <p className="text-[9px] font-semibold" style={{ color: "#e2e8f0" }}>
-                    {a.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* O que precisa de ação */}
-          <div>
-            <p
-              className="mb-2 text-[9px] font-semibold uppercase tracking-wider"
-              style={{ color: "#475569" }}
-            >
-              O que precisa de ação hoje
-            </p>
-            <div className="space-y-1.5">
-              {[
-                { label: "Sem treino esta semana", value: "3 atletas", color: "#f97316" },
-                { label: "Check-ins com alerta", value: "2", color: "#f97316" },
-                { label: "Treinos cumpridos", value: "18 / 21", color: "#22c55e" },
-                { label: "Atletas totais", value: "24", color: "#60a5fa" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between rounded-lg px-2.5 py-1.5"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.05)",
-                  }}
-                >
-                  <p className="text-[9px]" style={{ color: "#94a3b8" }}>{item.label}</p>
-                  <span className="text-[9px] font-bold" style={{ color: item.color }}>
-                    {item.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+function money(value: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
-// ── Athlete list mockup ──────────────────────────────────────────────────────
-
-function PrescriptionMock() {
-  const ATHLETES = [
-    { initials: "CA", name: "Camila Andrade", meta: "Meia · Sem. 18", adherence: 94, alert: false },
-    { initials: "BM", name: "Bruno Martins", meta: "10k · Sem. 12", adherence: 81, alert: true },
-    { initials: "RL", name: "Rafael Lima", meta: "Maratona · Sem. 24", adherence: 98, alert: false },
+function MiniCalendar() {
+  const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
+  const sessions = [
+    ["Corrida Z2", "Forca A"],
+    ["Bike Sweet"],
+    ["Natacao CSS"],
+    ["Forca B"],
+    ["Tempo Run"],
+    ["Longao"],
+    ["Off"],
   ];
 
   return (
-    <div
-      className="overflow-hidden rounded-2xl shadow-xl shadow-black/50"
-      style={{ border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#111827" }}
-    >
-      {/* Browser chrome */}
-      <div
-        className="flex items-center gap-2 px-4 py-2.5"
-        style={{ backgroundColor: "#0B1020", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-      >
-        <div className="flex gap-1.5">
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "rgba(239,68,68,0.45)" }} />
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "rgba(234,179,8,0.45)" }} />
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "rgba(34,197,94,0.45)" }} />
+    <div className="rounded-2xl border border-white/10 bg-[#07111d] p-4 shadow-2xl shadow-black/40">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-orange-500" />
+          <div>
+            <p className="text-sm font-bold text-white">Joao Silva</p>
+            <p className="text-xs text-slate-400">Triatleta - Semana 12</p>
+          </div>
         </div>
-        <div
-          className="ml-1 flex-1 truncate rounded px-2 py-0.5 text-center text-[10px]"
-          style={{ backgroundColor: "rgba(255,255,255,0.04)", color: "#64748b" }}
-        >
-          /treinador/atletas
-        </div>
+        <Badge variant="primary">Semana</Badge>
       </div>
-
-      <div className="space-y-3 p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold" style={{ color: "#f8fafc" }}>Meus atletas</p>
-          <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-medium"
-            style={{ backgroundColor: "rgba(37,99,235,0.15)", color: "#60a5fa" }}
-          >
-            24 ativos
-          </span>
-        </div>
-
-        {/* Athlete rows */}
-        {ATHLETES.map((a) => (
-          <div
-            key={a.initials}
-            className="flex items-center gap-3 rounded-xl p-3"
-            style={{
-              backgroundColor: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.05)",
-            }}
-          >
-            <div
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ background: "linear-gradient(135deg, #2563eb, #4f46e5)" }}
-            >
-              {a.initials}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold" style={{ color: "#f8fafc" }}>{a.name}</p>
-              <p className="text-[10px]" style={{ color: "#64748b" }}>{a.meta}</p>
-            </div>
-            <div>
-              {a.alert ? (
-                <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                  style={{ backgroundColor: "rgba(249,115,22,0.15)", color: "#fb923c" }}
+      <div className="grid grid-cols-7 overflow-hidden rounded-xl border border-white/10">
+        {days.map((day, index) => (
+          <div key={day} className="min-h-44 border-r border-white/10 bg-white/[0.03] p-2 last:border-r-0">
+            <p className="mb-3 text-center text-[11px] font-semibold uppercase text-slate-400">{day}</p>
+            <div className="space-y-2">
+              {sessions[index].map((session) => (
+                <div
+                  key={session}
+                  className="rounded-lg border border-white/10 px-2 py-2 text-[11px] font-semibold text-white"
+                  style={{
+                    background:
+                      session.includes("Forca") ? "linear-gradient(135deg, rgba(124,58,237,.42), rgba(124,58,237,.18))" :
+                      session.includes("Bike") ? "linear-gradient(135deg, rgba(34,197,94,.38), rgba(34,197,94,.16))" :
+                      session.includes("Natacao") ? "linear-gradient(135deg, rgba(14,165,233,.38), rgba(14,165,233,.16))" :
+                      session === "Off" ? "rgba(148,163,184,.12)" :
+                      "linear-gradient(135deg, rgba(249,115,22,.42), rgba(249,115,22,.18))",
+                  }}
                 >
-                  ⚠ Fadiga
-                </span>
-              ) : (
-                <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                  style={{ backgroundColor: "rgba(34,197,94,0.12)", color: "#4ade80" }}
-                >
-                  {a.adherence}%
-                </span>
-              )}
+                  {session}
+                </div>
+              ))}
             </div>
           </div>
         ))}
-
-        {/* Prescription preview */}
-        <div
-          className="rounded-xl p-3"
-          style={{
-            backgroundColor: "rgba(37,99,235,0.06)",
-            border: "1px solid rgba(37,99,235,0.18)",
-          }}
-        >
-          <p className="mb-1.5 text-[10px] font-semibold" style={{ color: "#60a5fa" }}>
-            Semana 18 → Camila Andrade
-          </p>
-          <div className="flex flex-wrap gap-1">
-            {[
-              { label: "Rodagem 12km Z2", type: "run" },
-              { label: "Força A", type: "strength" },
-              { label: "Intervalado 8×400m", type: "run" },
-              { label: "Força B", type: "strength" },
-              { label: "Longão 22km", type: "run" },
-            ].map((t) => (
-              <span
-                key={t.label}
-                className="rounded px-1.5 py-0.5 text-[9px]"
-                style={{
-                  backgroundColor: t.type === "run"
-                    ? "rgba(37,99,235,0.15)"
-                    : "rgba(124,58,237,0.15)",
-                  color: t.type === "run" ? "#60a5fa" : "#a78bfa",
-                }}
-              >
-                {t.label}
-              </span>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );
 }
 
-// ── Page ───────────────────────────────────────────────────────────────────────
-
 export default function LandingPage() {
   return (
-    <div className="min-h-dvh bg-background text-text">
-
-      {/* ── Nav ──────────────────────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Logo size={32} />
+    <main className="min-h-dvh bg-[#050b12] text-white">
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#050b12]/90 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+          <Link href="/" className="flex items-center gap-3">
+            <Logo size={34} />
           </Link>
-
           <div className="hidden items-center gap-1 md:flex">
-            {[
-              { label: "Para Treinadores", href: "#para-treinadores" },
-              { label: "Para Atletas", href: "#para-atletas" },
-              { label: "Como funciona", href: "#como-funciona" },
-              { label: "Loja", href: "/loja" },
-              { label: "Preços", href: "#precos" },
-            ].map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                className="rounded-lg px-3.5 py-2 text-sm text-text-muted transition-colors hover:bg-card-hover hover:text-text"
-              >
-                {l.label}
-              </a>
-            ))}
+            <a href="#produto" className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">Produto</a>
+            <a href="#fluxo" className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">Fluxo SaaS</a>
+            <a href="#financeiro" className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">Simulacao</a>
+            <a href="#mvp" className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">MVP</a>
           </div>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="hidden text-sm font-medium text-text-muted transition-colors hover:text-text md:block"
-            >
-              Entrar
-            </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/login" className="hidden text-sm font-semibold text-slate-300 hover:text-white sm:block">Entrar</Link>
             <Link href="/cadastro?perfil=treinador">
-              <Button size="sm" className="gap-1.5">
-                Começar grátis <ArrowRight className="h-3.5 w-3.5" />
+              <Button size="sm" className="bg-orange-500 text-white hover:bg-orange-400">
+                Comecar agora <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pb-16 pt-16 sm:pb-20 sm:pt-24">
-        {/* Subtle directional light — blue only, no orange */}
-        <div
-          className="pointer-events-none absolute inset-0 -z-10"
-          style={{
-            background:
-              "radial-gradient(ellipse 800px 500px at 10% 0%, rgba(37,99,235,0.09) 0%, transparent 65%)",
-          }}
-        />
-
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-14">
-            {/* Copy */}
-            <div>
-              <Badge variant="primary" className="mb-5 text-xs">
-                Plataforma em português para corrida, força e gestão de atletas
-              </Badge>
-
-              <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-[3.25rem]">
-                Performance, prescrição e{" "}
-                <span style={{ color: "#2563eb" }}>gestão de atletas</span>{" "}
-                em uma única plataforma.
-              </h1>
-
-              <p className="mt-5 text-lg leading-relaxed text-text-muted">
-                Prescrição, periodização, check-ins, carga de treino, força, relatórios e loja de planos — em um único ecossistema em português.
-              </p>
-
-              {/* CTAs — clear hierarchy */}
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/cadastro?perfil=treinador">
-                  <Button
-                    size="lg"
-                    className="gap-2"
-                    style={{ backgroundColor: "#2563eb", borderColor: "#2563eb" }}
-                  >
-                    Começar como treinador
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/cadastro?perfil=atleta_independente">
-                  <Button size="lg" variant="outline" className="gap-2 border-border/60">
-                    Ver experiência do atleta
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Feature trust row */}
-              <div className="mt-10 flex flex-wrap gap-2">
-                {[
-                  { icon: Activity, label: "Corrida & VDOT" },
-                  { icon: Dumbbell, label: "Treino de força" },
-                  { icon: HeartPulse, label: "Check-ins inteligentes" },
-                  { icon: BarChart2, label: "CTL / ATL / TSB" },
-                  { icon: Zap, label: "Strava conectado" },
-                  { icon: ShoppingBag, label: "Loja de planos" },
-                ].map(({ icon: Icon, label }) => (
-                  <span
-                    key={label}
-                    className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs text-text-muted"
-                    style={{
-                      borderColor: "rgba(255,255,255,0.09)",
-                      backgroundColor: "rgba(255,255,255,0.03)",
-                    }}
-                  >
-                    <Icon className="h-3 w-3 text-primary" />
-                    {label}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Real dashboard mockup */}
-            <div className="hidden lg:block">
-              <HeroDashboardMock />
-            </div>
+      <section className="mx-auto grid max-w-7xl gap-10 px-5 py-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-24">
+        <div>
+          <Badge variant="primary" className="mb-5 bg-orange-500/15 text-orange-300">SaaS para treinadores e assessorias</Badge>
+          <h1 className="font-display text-4xl font-black leading-tight sm:text-6xl">
+            Prescricao, periodizacao e gestao financeira em um unico sistema.
+          </h1>
+          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-300">
+            O Pace Run Pro organiza a rotina do treinador: calendario premium, periodizacao com Intelligence,
+            modal unico de treino, CRM de atletas e pagamentos com split via Asaas.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/cadastro?perfil=treinador">
+              <Button size="lg" className="bg-orange-500 text-white hover:bg-orange-400">
+                Assinar Starter <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="#financeiro">
+              <Button size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
+                Ver simulacao financeira
+              </Button>
+            </Link>
+          </div>
+          <div className="mt-8 grid max-w-xl grid-cols-3 gap-3">
+            <Metric label="Atletas exemplo" value={`${athleteCount}`} />
+            <Metric label="Mensalidade" value={money(athleteMonthlyFee)} />
+            <Metric label="Receita treinador" value={money(coachNet)} />
           </div>
         </div>
+        <MiniCalendar />
       </section>
 
-      {/* ── Como funciona ─────────────────────────────────────────────────────── */}
-      <section
-        id="como-funciona"
-        className="py-20 sm:py-24"
-        style={{ backgroundColor: "#0B1020" }}
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-12 max-w-xl">
-            <Badge variant="default" className="mb-4">Como funciona</Badge>
-            <h2 className="font-display text-3xl font-extrabold sm:text-4xl">
-              Do cadastro ao resultado{" "}
-              <span style={{ color: "#2563eb" }}>em 4 passos</span>
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {HOW_IT_WORKS.map(({ step, icon: Icon, title, desc, color }) => (
-              <div key={step} className="relative">
-                {/* Step number + connector */}
-                <div className="mb-5 flex items-center gap-3">
-                  <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-mono text-sm font-bold"
-                    style={{ backgroundColor: color + "18", color }}
-                  >
-                    {step}
-                  </div>
-                  <div
-                    className="h-px flex-1"
-                    style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
-                  />
-                </div>
-
-                {/* Mini screen mockup per step */}
-                <div
-                  className="mb-4 flex h-16 items-center justify-center rounded-xl"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.03)",
-                    border: `1px solid ${color}20`,
-                  }}
-                >
-                  <Icon className="h-6 w-6" style={{ color }} />
-                </div>
-
-                <h4 className="mb-1.5 font-display font-semibold text-text">{title}</h4>
-                <p className="text-sm leading-relaxed text-text-muted">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Platform showcase ──────────────────────────────────────────────────── */}
-      <PlatformShowcase />
-
-      {/* ── Para Treinadores ──────────────────────────────────────────────────── */}
-      <section
-        id="para-treinadores"
-        className="py-24 sm:py-32"
-        style={{ backgroundColor: "#0B1020" }}
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="grid grid-cols-1 items-center gap-14 lg:grid-cols-2">
-            {/* Left: prescription mockup */}
-            <div>
-              <PrescriptionMock />
-            </div>
-
-            {/* Right: benefits — 4, not 6 */}
-            <div>
-              <Badge variant="primary" className="mb-5">Para Treinadores</Badge>
-              <h2 className="font-display text-4xl font-extrabold sm:text-5xl">
-                Prescreva mais rápido.{" "}
-                <span style={{ color: "#2563eb" }}>Monitore melhor.</span>
-              </h2>
-              <p className="mt-4 leading-relaxed text-text-muted">
-                Reduza o tempo de prescrição de horas para minutos. Fique por dentro da evolução de cada atleta sem precisar esperar o próximo treino.
-              </p>
-
-              <div className="mt-8 space-y-5">
-                {coachBenefits.map(({ icon: Icon, title, text }) => (
-                  <div key={title} className="flex gap-4">
-                    <div
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: "rgba(37,99,235,0.12)", color: "#60a5fa" }}
-                    >
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-text">{title}</p>
-                      <p className="mt-0.5 text-sm leading-relaxed text-text-muted">{text}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Callout */}
-              <div
-                className="mt-8 rounded-2xl p-5"
-                style={{
-                  backgroundColor: "rgba(37,99,235,0.06)",
-                  border: "1px solid rgba(37,99,235,0.18)",
-                }}
-              >
-                <p className="text-sm font-semibold text-text">
-                  &ldquo;Treinadores relatam redução de 2–3 horas por semana no tempo de prescrição depois de implementar o Pace Run Pro.&rdquo;
-                </p>
-              </div>
-
-              <div className="mt-8">
-                <Link href="/cadastro?perfil=treinador">
-                  <Button size="lg" className="gap-2">
-                    Testar gratuitamente
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Para Atletas ──────────────────────────────────────────────────────── */}
-      <section id="para-atletas" className="py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-12 max-w-2xl">
-            <Badge variant="info" className="mb-4">Para Atletas</Badge>
-            <h2 className="font-display text-4xl font-extrabold sm:text-5xl">
-              Seu melhor desempenho,{" "}
-              <span style={{ color: "#38bdf8" }}>com dados reais</span>
-            </h2>
-            <p className="mt-4 leading-relaxed text-text-muted">
-              Seja com ou sem treinador, a plataforma adapta o plano ao seu ritmo, percebe sinais de overtraining antes de você e mostra sua evolução em gráficos claros.
+      <section id="produto" className="border-y border-white/10 bg-white/[0.025] py-16">
+        <div className="mx-auto max-w-7xl px-5">
+          <div className="mb-10 max-w-3xl">
+            <Badge variant="info" className="mb-4">Produto</Badge>
+            <h2 className="font-display text-3xl font-black sm:text-5xl">O coracao do MVP e a entrega do treino.</h2>
+            <p className="mt-4 text-slate-300">
+              A experiencia foi reorganizada para evitar rotas duplicadas: calendario e periodizacao usam o mesmo modal de prescricao.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/cadastro?perfil=atleta_independente">
-                <Button size="sm" className="gap-2">
-                  Criar conta grátis <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/loja">
-                <Button variant="outline" size="sm" className="border-border/60">
-                  Ver loja de planos
-                </Button>
-              </Link>
-            </div>
           </div>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {athleteFeatures.map(({ icon: Icon, title, text }) => (
-              <Card key={title} className="glass border-border/50">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {productBlocks.map(({ icon: Icon, title, text }) => (
+              <Card key={title} className="border-white/10 bg-[#07111d]">
                 <CardContent className="p-6">
-                  <div
-                    className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl"
-                    style={{ backgroundColor: "rgba(56,189,248,0.10)", color: "#38bdf8" }}
-                  >
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500/15 text-orange-300">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <h4 className="mb-2 font-display font-semibold text-text">{title}</h4>
-                  <p className="text-sm leading-relaxed text-text-muted">{text}</p>
+                  <h3 className="font-display text-lg font-bold text-white">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-400">{text}</p>
                 </CardContent>
               </Card>
             ))}
@@ -702,263 +235,100 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Para Assessorias ──────────────────────────────────────────────────── */}
-      <section
-        id="para-assessorias"
-        className="py-24 sm:py-32"
-        style={{ backgroundColor: "#0B1020" }}
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-12 max-w-2xl">
-            <Badge variant="success" className="mb-4">Para Assessorias</Badge>
-            <h2 className="font-display text-4xl font-extrabold sm:text-5xl">
-              Escale sua equipe.{" "}
-              <span style={{ color: "#22c55e" }}>Centralize tudo.</span>
-            </h2>
-            <p className="mt-4 leading-relaxed text-text-muted">
-              De 2 a 200 treinadores, o Pace Run Pro mantém sua assessoria organizada — com white-label, biblioteca compartilhada e painel de gestão completo.
-            </p>
-            <div className="mt-6">
-              <Link href="/cadastro?perfil=assessoria">
-                <Button size="sm" className="gap-2">
-                  Conhecer o plano Assessoria <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {agencyFeatures.map(({ icon: Icon, title, text }) => (
-              <Card
-                key={title}
-                className="border-border/50"
-                style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
-              >
-                <CardContent className="p-6">
-                  <div
-                    className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl"
-                    style={{ backgroundColor: "rgba(34,197,94,0.10)", color: "#22c55e" }}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h4 className="mb-2 font-display font-semibold text-text">{title}</h4>
-                  <p className="text-sm leading-relaxed text-text-muted">{text}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+      <section id="fluxo" className="mx-auto max-w-7xl px-5 py-16">
+        <div className="mb-10 max-w-3xl">
+          <Badge variant="success" className="mb-4">Fluxo completo</Badge>
+          <h2 className="font-display text-3xl font-black sm:text-5xl">Do interesse do treinador ao atleta treinando.</h2>
         </div>
-      </section>
-
-      {/* ── Comparativo ────────────────────────────────────────────────────────── */}
-      <ComparisonTable />
-
-      {/* ── Integrações ────────────────────────────────────────────────────────── */}
-      <section id="integracoes" className="py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-12 text-center">
-            <Badge variant="default" className="mb-4">Integrações</Badge>
-            <h2 className="font-display text-4xl font-extrabold sm:text-5xl">
-              Conecte seus{" "}
-              <span style={{ color: "#2563eb" }}>dispositivos</span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-text-muted">
-              Strava disponível agora. Garmin, Coros, Polar e Apple Watch em desenvolvimento.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-3">
-            {integrationLogos.map((integration) => (
-              <div
-                key={integration.id}
-                className="glass flex items-center gap-2.5 rounded-full px-5 py-2.5 text-sm font-medium text-text"
-              >
-                <span
-                  className="h-2 w-2 shrink-0 rounded-full"
-                  style={{ backgroundColor: integration.color }}
-                />
-                {integration.name}
-                {integration.id === "strava" ? (
-                  <span
-                    className="ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                    style={{ backgroundColor: "rgba(34,197,94,0.15)", color: "#4ade80" }}
-                  >
-                    Disponível
-                  </span>
-                ) : (
-                  <span
-                    className="ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                    style={{ backgroundColor: "rgba(255,255,255,0.06)", color: "#64748b" }}
-                  >
-                    Em breve
-                  </span>
-                )}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {trainerFlow.map(({ icon: Icon, title, text }, index) => (
+            <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/8 text-orange-300">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <span className="font-mono text-xs text-slate-500">{String(index + 1).padStart(2, "0")}</span>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Preços ─────────────────────────────────────────────────────────────── */}
-      <PricingSection />
-
-      {/* ── Depoimentos ────────────────────────────────────────────────────────── */}
-      <section
-        className="py-24 sm:py-32"
-        style={{ backgroundColor: "#0B1020" }}
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-14 text-center">
-            <Badge variant="success" className="mb-4">Depoimentos</Badge>
-            <h2 className="font-display text-4xl font-extrabold sm:text-5xl">
-              Quem usa,{" "}
-              <span style={{ color: "#22c55e" }}>aprova</span>
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {testimonials.map((t) => (
-              <Card
-                key={t.id}
-                className="border-border/40"
-                style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
-              >
-                <CardContent className="p-7">
-                  <div className="mb-5 flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #2563eb, #4f46e5)" }}>
-                      {t.avatar}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-text">{t.name}</div>
-                      <div className="text-xs text-text-muted">{t.role}</div>
-                    </div>
-                  </div>
-                  <div className="mb-4 flex gap-0.5">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 text-warning" fill="currentColor" />
-                    ))}
-                  </div>
-                  <p className="text-sm italic leading-relaxed text-text-muted">
-                    &ldquo;{t.quote}&rdquo;
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA Final ──────────────────────────────────────────────────────────── */}
-      <section className="py-24 sm:py-32">
-        <div className="mx-auto max-w-4xl px-6">
-          <div
-            className="rounded-3xl p-10 text-center sm:p-16"
-            style={{
-              backgroundColor: "rgba(37,99,235,0.06)",
-              border: "1px solid rgba(37,99,235,0.18)",
-            }}
-          >
-            <h2 className="font-display text-3xl font-extrabold sm:text-5xl">
-              Pronto para treinar com{" "}
-              <span style={{ color: "#2563eb" }}>mais inteligência?</span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-lg leading-relaxed text-text-muted">
-              Prescrição de corrida e força, check-ins com IA, carga de treino e loja de planos — tudo em uma plataforma em português.
-            </p>
-
-            <div className="mx-auto mt-10 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
-              <Link href="/cadastro?perfil=treinador" className="block">
-                <div
-                  className="cursor-pointer rounded-2xl p-5 text-left transition-all hover:scale-[1.02]"
-                  style={{
-                    border: "1px solid rgba(37,99,235,0.35)",
-                    backgroundColor: "rgba(37,99,235,0.08)",
-                  }}
-                >
-                  <Users className="mb-2 h-6 w-6" style={{ color: "#60a5fa" }} />
-                  <p className="font-semibold text-text">Sou treinador</p>
-                  <p className="mt-0.5 text-xs text-text-muted">14 dias grátis, cancelo quando quiser</p>
-                </div>
-              </Link>
-              <Link href="/cadastro?perfil=atleta_independente" className="block">
-                <div
-                  className="cursor-pointer rounded-2xl p-5 text-left transition-all hover:scale-[1.02]"
-                  style={{
-                    border: "1px solid rgba(255,255,255,0.10)",
-                    backgroundColor: "rgba(255,255,255,0.03)",
-                  }}
-                >
-                  <HeartPulse className="mb-2 h-6 w-6" style={{ color: "#94a3b8" }} />
-                  <p className="font-semibold text-text">Sou atleta</p>
-                  <p className="mt-0.5 text-xs text-text-muted">Começo grátis, sem cartão</p>
-                </div>
-              </Link>
+              <h3 className="font-display text-lg font-bold">{title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{text}</p>
             </div>
+          ))}
+        </div>
+      </section>
 
-            <p className="mt-8 text-xs text-text-muted">
-              Pagamento via cartão ou PIX · Acesso imediato · Sem taxa de setup
+      <section id="financeiro" className="border-y border-white/10 bg-[#07111d] py-16">
+        <div className="mx-auto grid max-w-7xl gap-8 px-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <Badge variant="warning" className="mb-4">Simulacao financeira</Badge>
+            <h2 className="font-display text-3xl font-black sm:text-5xl">Treinador Starter com 20 atletas.</h2>
+            <p className="mt-4 text-slate-300">
+              Exemplo para visualizar a economia do SaaS: o treinador paga a assinatura e cobra mensalidades dos atletas com split automatico.
             </p>
           </div>
+          <div className="rounded-2xl border border-white/10 bg-[#050b12] p-5">
+            <FinancialRow label="Assinatura Starter paga pelo treinador" value={money(starterPrice)} />
+            <FinancialRow label={`${athleteCount} atletas x ${money(athleteMonthlyFee)}/mes`} value={money(grossRevenue)} />
+            <FinancialRow label="Split plataforma sobre mensalidades (10%)" value={money(platformSplit)} />
+            <FinancialRow label="Repasse para treinador (90%)" value={money(coachNet)} />
+            <div className="mt-4 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4">
+              <p className="text-sm text-orange-200">Receita total Pace Run Pro neste exemplo</p>
+              <p className="font-display text-3xl font-black text-white">{money(totalPlatformRevenue)}/mes</p>
+              <p className="mt-1 text-xs text-slate-400">Starter + split da carteira deste treinador.</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ── Footer ─────────────────────────────────────────────────────────────── */}
-      <footer
-        className="border-t border-border/50 py-14"
-        style={{ backgroundColor: "#0B1020" }}
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-5">
-            <div className="md:col-span-2">
-              <Link href="/">
-                <Logo size={30} />
-              </Link>
-              <p className="mt-3 max-w-xs text-sm leading-relaxed text-text-muted">
-                Prescrição, periodização, check-ins, carga de treino, força e loja de planos — em um único ecossistema para corrida.
-              </p>
-              <p className="mt-2 text-xs text-text-muted">Performance · Ciência · Propósito</p>
+      <section id="mvp" className="mx-auto max-w-7xl px-5 py-16">
+        <div className="mb-10 max-w-3xl">
+          <Badge variant="primary" className="mb-4">MVP</Badge>
+          <h2 className="font-display text-3xl font-black sm:text-5xl">O que precisa estar redondo para vender.</h2>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {[
+            "Treinador cria conta, assina Starter e cadastra dados Asaas.",
+            "Treinador convida atleta por link isolado e acompanha status no CRM.",
+            "Atleta paga, entra no app e recebe treinos liberados no calendario.",
+            "Treinador cria periodizacao, aceita/edita sugestoes e envia para o atleta.",
+            "Treinos de forca usam biblioteca com GIF e execucao mobile premium.",
+            "Super admin controla planos, usuarios, cobranças, split e configuracoes criticas.",
+          ].map((item) => (
+            <div key={item} className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
+              {item}
             </div>
+          ))}
+        </div>
+      </section>
 
-            <div>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-text-muted">
-                Para treinadores
-              </h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#para-treinadores" className="text-text-muted transition-colors hover:text-text">Funcionalidades</a></li>
-                <li><a href="#precos" className="text-text-muted transition-colors hover:text-text">Planos e preços</a></li>
-                <li><Link href="/cadastro?perfil=treinador" className="text-text-muted transition-colors hover:text-text">Começar 14 dias grátis</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-text-muted">
-                Para atletas
-              </h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#para-atletas" className="text-text-muted transition-colors hover:text-text">Funcionalidades</a></li>
-                <li><Link href="/loja" className="text-text-muted transition-colors hover:text-text">Loja de planos</Link></li>
-                <li><Link href="/cadastro?perfil=atleta_independente" className="text-text-muted transition-colors hover:text-text">Criar conta grátis</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-text-muted">
-                Empresa
-              </h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#integracoes" className="text-text-muted transition-colors hover:text-text">Integrações</a></li>
-                <li><Link href="/termos" className="text-text-muted transition-colors hover:text-text">Termos de uso</Link></li>
-                <li><Link href="/privacidade" className="text-text-muted transition-colors hover:text-text">Privacidade</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border/50 pt-8 text-xs text-text-muted sm:flex-row">
-            <span>© 2026 PACE RUN PRO — CREF 014626-G/MG</span>
-            <span>Responsável técnico: Ricardo Luiz Pace Júnior</span>
+      <footer className="border-t border-white/10 py-10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
+          <Logo size={30} />
+          <div className="flex flex-wrap gap-4">
+            <Link href="/termos" className="hover:text-white">Termos</Link>
+            <Link href="/privacidade" className="hover:text-white">Privacidade</Link>
+            <Link href="/login" className="hover:text-white">Entrar</Link>
           </div>
         </div>
       </footer>
+    </main>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+      <p className="text-xs text-slate-400">{label}</p>
+      <p className="mt-1 font-display text-xl font-black">{value}</p>
+    </div>
+  );
+}
+
+function FinancialRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-white/10 py-3 last:border-b-0">
+      <span className="text-sm text-slate-300">{label}</span>
+      <span className="font-display text-lg font-bold text-white">{value}</span>
     </div>
   );
 }

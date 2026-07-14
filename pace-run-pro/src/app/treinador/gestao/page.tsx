@@ -20,6 +20,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 function money(cents: number) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",

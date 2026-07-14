@@ -41,6 +41,89 @@ const FULL_DAY_MAP: Record<string, number> = {
   "Sábado": 6,
 };
 
+export async function GET(req: NextRequest) {
+  const session = await getSession();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+  }
+
+  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } });
+  if (!coach) {
+    return NextResponse.json({ error: "Coach nao encontrado" }, { status: 404 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const athleteId = searchParams.get("athleteId") ?? undefined;
+
+  if (athleteId) {
+    const athlete = await prisma.athlete.findFirst({
+      where: { id: athleteId, coachId: coach.id },
+      select: { id: true },
+    });
+    if (!athlete) {
+      return NextResponse.json({ error: "Atleta nao encontrado" }, { status: 404 });
+    }
+  }
+
+  const plans = await prisma.trainingPlan.findMany({
+    where: {
+      coachId: coach.id,
+      ...(athleteId ? { athleteId } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+    take: 12,
+    select: {
+      id: true,
+      name: true,
+      goal: true,
+      macrocycle: true,
+      startDate: true,
+      endDate: true,
+      createdAt: true,
+      athlete: {
+        select: {
+          id: true,
+          user: { select: { name: true, avatarUrl: true } },
+        },
+      },
+      weeks: {
+        orderBy: { weekNumber: "asc" },
+        select: {
+          id: true,
+          weekNumber: true,
+          phase: true,
+          startDate: true,
+          endDate: true,
+          released: true,
+          targetVolumeKm: true,
+          workouts: {
+            orderBy: { date: "asc" },
+            select: {
+              id: true,
+              title: true,
+              date: true,
+              type: true,
+              status: true,
+              targetDurationMin: true,
+              targetDistanceKm: true,
+              targetRpe: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return NextResponse.json({
+    plans: plans.map((plan) => ({
+      ...plan,
+      weeksCount: plan.weeks.length,
+      workoutsCount: plan.weeks.reduce((sum, week) => sum + week.workouts.length, 0),
+      releasedWeeksCount: plan.weeks.filter((week) => week.released).length,
+    })),
+  });
+}
+
 function nextMonday(): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -129,8 +212,8 @@ export async function POST(req: NextRequest) {
           const weekEnd = new Date(weekStart);
           weekEnd.setDate(weekEnd.getDate() + 6);
 
-          // Auto-release: release week if its start date has already arrived
-          const weekReleased = liberar && weekStart <= now;
+          // When the coach sends the plan, future weeks must be visible to the athlete too.
+          const weekReleased = Boolean(liberar);
 
           const sessionList = workoutsMap[String(w.week)] ?? [];
 

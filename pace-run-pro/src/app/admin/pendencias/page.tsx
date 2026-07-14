@@ -1,209 +1,188 @@
-"use client";
-
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { AlertTriangle, CheckCircle2, Clock, ExternalLink, Mail, ShieldAlert, Zap } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import type { ReactNode } from "react";
+import Link from "next/link";
+import { AlertTriangle, Clock, CreditCard, ShieldAlert, WalletCards } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { pendencias, pendingApprovals, type PendenciaItem, type PendenciaType } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { prisma } from "@/lib/prisma";
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  show: (i: number = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4, ease: "easeOut" as const } }),
-};
+export const dynamic = "force-dynamic";
 
-const TYPE_CONFIG: Record<PendenciaType, { label: string; variant: "warning" | "danger" | "info" | "primary"; icon: React.ElementType }> = {
-  "white-label-setup": { label: "White Label",   variant: "primary", icon: Zap          },
-  "cobranca-falha":    { label: "Falha",          variant: "danger",  icon: AlertTriangle },
-  "pix-expirado":      { label: "PIX pendente",   variant: "warning", icon: Clock        },
-  "fraude":            { label: "Suspeita",        variant: "danger",  icon: ShieldAlert  },
-};
-
-function PendenciaCard({ item, onResolve }: { item: PendenciaItem; onResolve: (id: string) => void }) {
-  const cfg = TYPE_CONFIG[item.type];
-  const Icon = cfg.icon;
-
-  return (
-    <Card className="border-border/60">
-      <CardContent className="p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className={cn(
-              "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-              cfg.variant === "danger"  && "bg-danger/10",
-              cfg.variant === "warning" && "bg-warning/10",
-              cfg.variant === "primary" && "bg-primary/10",
-              cfg.variant === "info"    && "bg-info/10",
-            )}>
-              <Icon className={cn(
-                "h-4 w-4",
-                cfg.variant === "danger"  && "text-danger",
-                cfg.variant === "warning" && "text-warning",
-                cfg.variant === "primary" && "text-primary",
-                cfg.variant === "info"    && "text-info",
-              )} />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="font-display text-sm font-bold text-text">{item.title}</p>
-                <Badge variant={cfg.variant} className="text-[10px]">{cfg.label}</Badge>
-              </div>
-              <p className="mt-0.5 text-xs font-medium text-primary">{item.assessoria}</p>
-              <p className="mt-1 max-w-lg text-xs text-text-muted">{item.description}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-text-muted">
-                <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{item.contact}</span>
-                {item.value && <span className="font-medium text-text">R$ {item.value}/mês</span>}
-                <span>{item.createdAt}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {item.type === "white-label-setup" && (
-            <>
-              <Button variant="primary" size="sm" className="gap-1.5">
-                <ExternalLink className="h-3.5 w-3.5" /> Iniciar setup
-              </Button>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Mail className="h-3.5 w-3.5" /> Contatar cliente
-              </Button>
-            </>
-          )}
-          {item.type === "cobranca-falha" && (
-            <>
-              <Button variant="primary" size="sm" className="gap-1.5">
-                <Zap className="h-3.5 w-3.5" /> Tentar novamente
-              </Button>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Mail className="h-3.5 w-3.5" /> Notificar cliente
-              </Button>
-            </>
-          )}
-          {item.type === "pix-expirado" && (
-            <>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Mail className="h-3.5 w-3.5" /> Enviar lembrete
-              </Button>
-            </>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-success hover:text-success gap-1.5"
-            onClick={() => onResolve(item.id)}
-          >
-            <CheckCircle2 className="h-3.5 w-3.5" /> Marcar resolvido
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+function money(cents: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(cents / 100);
 }
 
-function WhiteLabelCard({ item, onResolve }: { item: typeof pendingApprovals[number]; onResolve: (id: string) => void }) {
+export default async function PendenciasPage() {
+  const [failedPayments, pendingPayments, pastDueSubscriptions, coachesMissingBilling] = await Promise.all([
+    prisma.payment.findMany({
+      where: { status: "FAILED" },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      select: {
+        id: true,
+        amountCents: true,
+        method: true,
+        createdAt: true,
+        user: { select: { name: true, email: true } },
+      },
+    }),
+    prisma.payment.findMany({
+      where: { status: "PENDING" },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      select: {
+        id: true,
+        amountCents: true,
+        method: true,
+        createdAt: true,
+        user: { select: { name: true, email: true } },
+      },
+    }),
+    prisma.subscription.findMany({
+      where: { status: "PAST_DUE", deletedAt: null },
+      orderBy: { startedAt: "desc" },
+      take: 8,
+      select: {
+        id: true,
+        plan: true,
+        renewsAt: true,
+        user: { select: { name: true, email: true } },
+      },
+    }),
+    prisma.coach.findMany({
+      where: { deletedAt: null },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      select: {
+        id: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+            billingSettings: {
+              select: {
+                cpfCnpj: true,
+                receivingMethod: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+  ]);
+
+  const billingIssues = coachesMissingBilling
+    .filter((coach) => !coach.user.billingSettings?.cpfCnpj || !coach.user.billingSettings?.receivingMethod)
+    .slice(0, 8);
+  const total = failedPayments.length + pendingPayments.length + pastDueSubscriptions.length + billingIssues.length;
+
   return (
-    <Card className="border-primary/20">
-      <CardContent className="p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="font-display text-sm font-bold text-text">{item.name}</p>
-              <Badge variant="primary" className="text-[10px]">White Label</Badge>
-            </div>
-            <p className="mt-0.5 text-xs text-text-muted">{item.city} · {item.contact}</p>
-            <p className="mt-1 text-xs text-text-muted">Plano pago — aguardando onboarding e setup de domínio dedicado.</p>
-          </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button variant="primary" size="sm" className="gap-1.5">
-            <Zap className="h-3.5 w-3.5" /> Iniciar onboarding
-          </Button>
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Mail className="h-3.5 w-3.5" /> Contatar
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-success hover:text-success gap-1.5"
-            onClick={() => onResolve(item.id)}
-          >
-            <CheckCircle2 className="h-3.5 w-3.5" /> Concluir setup
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-export default function PendenciasPage() {
-  const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set());
-
-  const resolve = (id: string) => setResolvedIds((prev) => new Set([...prev, id]));
-
-  const activePendencias = pendencias.filter((p) => !resolvedIds.has(p.id));
-  const activeWL = pendingApprovals.filter((a) => !resolvedIds.has(a.id));
-  const total = activePendencias.length + activeWL.length;
-
-  return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <motion.div variants={fadeUp} initial="hidden" animate="show">
-        <Badge variant={total > 0 ? "warning" : "success"} className="mb-2">
-          <Clock className="h-3 w-3" /> Pendências operacionais
+    <div className="mx-auto max-w-5xl space-y-6">
+      <div>
+        <Badge variant={total > 0 ? "warning" : "success"}>
+          <Clock className="h-3 w-3" /> Pendencias operacionais
         </Badge>
-        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Pendências</h1>
-        <p className="mt-1.5 text-sm text-text-muted">
-          Itens que exigem ação manual: setups White Label, cobranças com falha e PIX aguardando.
-          Planos Starter, Pro e Assessoria são ativados automaticamente após confirmação de pagamento.
+        <h1 className="mt-3 font-display text-3xl font-bold text-text">Fila operacional do SaaS</h1>
+        <p className="mt-2 max-w-2xl text-sm text-text-muted">
+          Lista real de itens que podem bloquear venda, repasse, acesso ou renovacao. Sem dados mockados.
         </p>
-      </motion.div>
+      </div>
 
       {total === 0 ? (
-        <motion.div variants={fadeUp} custom={1} initial="hidden" animate="show">
-          <Card>
-            <CardContent className="p-10 text-center">
-              <CheckCircle2 className="mx-auto h-10 w-10 text-success mb-3" />
-              <p className="font-display text-base font-bold text-text">Sem pendências</p>
-              <p className="mt-1 text-sm text-text-muted">Nenhum item requer atenção manual no momento.</p>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <Card>
+          <CardContent className="p-10 text-center">
+            <ShieldAlert className="mx-auto mb-3 h-10 w-10 text-success" />
+            <p className="font-display text-lg font-bold text-text">Sem pendencias criticas</p>
+            <p className="mt-1 text-sm text-text-muted">Nenhum pagamento, assinatura ou conta de recebimento requer acao agora.</p>
+          </CardContent>
+        </Card>
       ) : (
-        <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show" className="space-y-3">
-          {/* White Label setup requests */}
-          {activeWL.map((a) => (
-            <WhiteLabelCard key={a.id} item={a} onResolve={resolve} />
-          ))}
-
-          {/* Operational issues */}
-          {activePendencias.map((p) => (
-            <PendenciaCard key={p.id} item={p} onResolve={resolve} />
-          ))}
-        </motion.div>
-      )}
-
-      {resolvedIds.size > 0 && (
-        <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-text-muted">Resolvidos nesta sessão</p>
-          <div className="space-y-1.5">
-            {[...resolvedIds].map((id) => {
-              const name = pendencias.find((p) => p.id === id)?.assessoria
-                ?? pendingApprovals.find((a) => a.id === id)?.name
-                ?? id;
-              return (
-                <Card key={id} className="opacity-50">
-                  <CardContent className="flex items-center justify-between p-3">
-                    <span className="text-sm text-text-muted">{name}</span>
-                    <Badge variant="success"><CheckCircle2 className="h-3 w-3" /> Resolvido</Badge>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </motion.div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <IssueGroup
+            title="Pagamentos com falha"
+            icon={<AlertTriangle className="h-4 w-4" />}
+            items={failedPayments.map((payment) => ({
+              id: payment.id,
+              title: payment.user.name,
+              subtitle: `${payment.user.email} - ${payment.method ?? "metodo nao informado"}`,
+              meta: money(payment.amountCents),
+              href: "/admin/financeiro",
+            }))}
+          />
+          <IssueGroup
+            title="Pagamentos pendentes"
+            icon={<CreditCard className="h-4 w-4" />}
+            items={pendingPayments.map((payment) => ({
+              id: payment.id,
+              title: payment.user.name,
+              subtitle: `${payment.user.email} - ${payment.method ?? "metodo nao informado"}`,
+              meta: money(payment.amountCents),
+              href: "/admin/financeiro",
+            }))}
+          />
+          <IssueGroup
+            title="Assinaturas vencidas"
+            icon={<Clock className="h-4 w-4" />}
+            items={pastDueSubscriptions.map((subscription) => ({
+              id: subscription.id,
+              title: subscription.user.name,
+              subtitle: `${subscription.user.email} - plano ${subscription.plan}`,
+              meta: subscription.renewsAt ? subscription.renewsAt.toLocaleDateString("pt-BR") : "sem vencimento",
+              href: "/admin/usuarios",
+            }))}
+          />
+          <IssueGroup
+            title="Treinadores sem recebimento"
+            icon={<WalletCards className="h-4 w-4" />}
+            items={billingIssues.map((coach) => ({
+              id: coach.id,
+              title: coach.user.name,
+              subtitle: coach.user.email,
+              meta: coach.user.billingSettings?.cpfCnpj ? "falta metodo" : "falta CPF/CNPJ",
+              href: "/admin/assessorias",
+            }))}
+          />
+        </div>
       )}
     </div>
+  );
+}
+
+function IssueGroup({
+  title,
+  icon,
+  items,
+}: {
+  title: string;
+  icon: ReactNode;
+  items: Array<{ id: string; title: string; subtitle: string; meta: string; href: string }>;
+}) {
+  return (
+    <Card>
+      <CardContent className="p-0">
+        <div className="flex items-center gap-2 border-b border-border px-5 py-4">
+          <span className="text-primary">{icon}</span>
+          <h2 className="font-display text-base font-bold text-text">{title}</h2>
+          <Badge variant={items.length > 0 ? "warning" : "success"} className="ml-auto">{items.length}</Badge>
+        </div>
+        <div className="divide-y divide-border">
+          {items.length === 0 ? (
+            <div className="px-5 py-6 text-sm text-text-muted">Nada nesta fila.</div>
+          ) : (
+            items.map((item) => (
+              <Link key={item.id} href={item.href} className="grid gap-1 px-5 py-4 transition-colors hover:bg-card-hover/60">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-semibold text-text">{item.title}</p>
+                  <span className="text-xs font-semibold text-primary">{item.meta}</span>
+                </div>
+                <p className="text-xs text-text-muted">{item.subtitle}</p>
+              </Link>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
