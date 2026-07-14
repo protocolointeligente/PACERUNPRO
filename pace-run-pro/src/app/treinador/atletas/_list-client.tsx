@@ -1033,12 +1033,12 @@ export function IntervalsPrescribeModal({
         className="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/20 dark:border-border dark:bg-[#07111c] dark:shadow-black/45"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between bg-gradient-to-r from-[#ff6b1a] via-[#7c3aed] to-[#2563eb] px-4 py-3 text-white">
+        <div className="flex items-center justify-between border-b border-border bg-[#0A0C0F] px-4 py-3 text-text">
           <div>
             <p className="text-sm font-semibold">{editingWorkout ? "Editar Entrada no Calendario" : "Adicionar Entrada no Calendario"}</p>
             <p className="text-[11px] text-white/75">{payload.athleteName} • {dateLabel}</p>
           </div>
-          <button onClick={onClose} className="rounded-md p-1 text-white/80 hover:bg-white/15 hover:text-white">
+          <button onClick={onClose} className="rounded-md p-1 text-text-muted hover:bg-card-hover hover:text-text">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -1791,15 +1791,27 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
     adherence: a.adherence, workouts: [],
   }));
 
+  const normalizedQuery = query.trim().toLowerCase();
+  const athleteMatchesQuery = (athlete: AthleteWeekly) =>
+    !normalizedQuery ||
+    athlete.name.toLowerCase().includes(normalizedQuery) ||
+    (athlete.goal ?? "").toLowerCase().includes(normalizedQuery);
+  const athletePickerOptions = athletes.filter(athleteMatchesQuery);
+
   const filtered = athletes.filter((a) => {
-    const matchQuery = a.name.toLowerCase().includes(query.toLowerCase());
+    const matchQuery = athleteMatchesQuery(a);
     if (!matchQuery) return false;
     if (tab === "Em risco") return a.status === "risco";
     if (tab === "Com treino") return a.workouts.length > 0;
     if (tab === "Sem plano") return a.workouts.length === 0;
     return true;
   });
-  const selectedAthlete = athletes.find((athlete) => athlete.id === selectedAthleteId) ?? filtered[0] ?? athletes[0] ?? null;
+  const selectedAthlete =
+    athletePickerOptions.find((athlete) => athlete.id === selectedAthleteId) ??
+    filtered[0] ??
+    athletePickerOptions[0] ??
+    athletes[0] ??
+    null;
   const selectedWorkouts = selectedAthlete?.workouts ?? [];
   const visibleWorkouts = selectedWorkouts;
   const listWorkouts = [...visibleWorkouts].sort((a, b) => a.date.localeCompare(b.date));
@@ -1860,7 +1872,9 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           </button>
           {athletePickerOpen && (
             <div className="absolute left-0 top-full z-40 mt-2 max-h-72 w-72 overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-2xl shadow-black/30">
-              {athletes.map((athlete) => {
+              {athletePickerOptions.length === 0 ? (
+                <div className="px-3 py-6 text-center text-xs text-text-muted">Nenhum atleta encontrado.</div>
+              ) : athletePickerOptions.map((athlete) => {
                 const statusCfg = STATUS_BADGE[athlete.status] ?? STATUS_BADGE.ativo;
                 return (
                   <button

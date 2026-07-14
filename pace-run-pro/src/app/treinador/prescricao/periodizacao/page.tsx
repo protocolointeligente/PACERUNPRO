@@ -570,6 +570,9 @@ export default function PeriodizacaoPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               athleteId,
+              periodizationName: periodizationSettings.name,
+              startDate: periodizationSettings.startDate,
+              endDate: periodizationSettings.endDate,
               goal,
               level,
               totalWeeks,

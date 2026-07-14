@@ -1,8 +1,8 @@
 // Pace Run Pro — Service Worker
 // Push notifications + offline-first cache strategies.
 
-const CACHE_STATIC = "prp-static-v1";
-const CACHE_PAGES  = "prp-pages-v1";
+const CACHE_STATIC = "prp-static-v3";
+const CACHE_PAGES  = "prp-pages-v3";
 
 // Static assets to precache on install
 const PRECACHE_URLS = [
@@ -72,17 +72,25 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // HTML pages: stale-while-revalidate
+  // Authenticated HTML pages: network-first to avoid serving old dashboards/menus after a deploy.
   if (request.headers.get("accept")?.includes("text/html")) {
     e.respondWith(
       caches.open(CACHE_PAGES).then((cache) =>
-        cache.match(request).then((cached) => {
-          const networkFetch = fetch(request).then((resp) => {
+        fetch(request)
+          .then((resp) => {
             if (resp.ok) cache.put(request, resp.clone());
             return resp;
-          });
-          return cached ?? networkFetch;
-        })
+          })
+          .catch(() =>
+            cache.match(request).then(
+              (cached) =>
+                cached ??
+                new Response("Offline", {
+                  status: 503,
+                  headers: { "content-type": "text/plain; charset=utf-8" },
+                })
+            )
+          )
       )
     );
     return;

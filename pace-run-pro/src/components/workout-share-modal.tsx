@@ -114,9 +114,9 @@ export function WorkoutShareModal({
         img.src = photoDataUrl;
       } else {
         const grad = ctx.createLinearGradient(0, 0, 1080, 1920);
-        grad.addColorStop(0, "#14101f");
-        grad.addColorStop(0.5, "#0d0814");
-        grad.addColorStop(1, "#07030f");
+        grad.addColorStop(0, "#14171C");
+        grad.addColorStop(0.5, "#0A0C0F");
+        grad.addColorStop(1, "#050608");
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 1080, 1920);
         drawOverlay(ctx, canvas, statFont, resolve);
@@ -167,13 +167,13 @@ export function WorkoutShareModal({
       id: `post-${Date.now()}`,
       athleteName: "Você",
       athleteAvatar: "EU",
-      avatarColor: "bg-purple-700",
+      avatarColor: "bg-primary text-[#0A0C0F]",
       timeAgo: "agora mesmo",
       caption:
         caption ||
         `${activityType === "corrida" ? "Treino de corrida" : "Treino de força"} concluído! 💪`,
       photoGradient:
-        "linear-gradient(135deg, #14101f 0%, #1c1530 50%, #07030f 100%)",
+        "linear-gradient(135deg, #14171C 0%, #0A0C0F 55%, #1A1E24 100%)",
       photoDataUrl: photoDataUrl || undefined,
       metrics: {
         distance: metrics.distance ?? 0,
@@ -286,7 +286,7 @@ export function WorkoutShareModal({
                   style={{
                     background: photoDataUrl
                       ? undefined
-                      : "linear-gradient(160deg, #14101f 0%, #07030f 100%)",
+                      : "linear-gradient(160deg, #14171C 0%, #0A0C0F 100%)",
                   }}
                 >
                   {photoDataUrl && (
@@ -307,7 +307,7 @@ export function WorkoutShareModal({
                   }}
                 />
 
-                <div className="absolute top-3 left-3 flex h-8 w-8 items-center justify-center rounded-full bg-purple-700 text-xs font-bold text-white">
+                <div className="absolute top-3 left-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-[#0A0C0F]">
                   EU
                 </div>
 
@@ -405,10 +405,10 @@ export function WorkoutShareModal({
               </button>
               <button
                 onClick={handlePostToCommunity}
-                className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white"
+                className="gradient-primary flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-[#0A0C0F]"
                 style={{
                   background:
-                    "linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)",
+                    "linear-gradient(135deg, #D4FF5E 0%, #C6F24E 55%, #A6D43B 100%)",
                 }}
               >
                 <span>🚀</span> Postar na comunidade

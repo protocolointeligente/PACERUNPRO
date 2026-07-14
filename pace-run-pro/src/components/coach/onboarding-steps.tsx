@@ -37,8 +37,8 @@ const STEPS = [
     description: "Selecione o plano ideal para o tamanho da sua equipe e comece a crescer.",
     href: "/treinador/loja-planos",
     cta: "Ver planos",
-    accent: "text-violet-400",
-    bg: "bg-violet-400/10",
+    accent: "text-accent",
+    bg: "bg-accent/10",
   },
 ] as const;
 

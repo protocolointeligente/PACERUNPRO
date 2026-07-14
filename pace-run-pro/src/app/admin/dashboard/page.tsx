@@ -245,7 +245,7 @@ export default function AdminDashboard() {
                 {b2bSeries.length === 0 ? (
                   <p className="py-4 text-center text-sm text-text-muted">Sem dados de MRR ainda.</p>
                 ) : (
-                  <BarTrend data={b2bSeries} dataKey="b2b" color="#7C3AED" unit="" />
+                  <BarTrend data={b2bSeries} dataKey="b2b" color="#C6F24E" unit="" />
                 )}
               </CardContent>
             </Card>

@@ -143,6 +143,9 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json() as {
     athleteId: string;
+    periodizationName?: string;
+    startDate?: string;
+    endDate?: string;
     goal: string;
     level: string;
     totalWeeks: number;
@@ -189,9 +192,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Atleta não encontrado" }, { status: 404 });
   }
 
-  const startDate = nextMonday();
-  const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + body.totalWeeks * 7);
+  const parsedStartDate = body.startDate ? new Date(`${body.startDate}T00:00:00`) : null;
+  const startDate =
+    parsedStartDate && !Number.isNaN(parsedStartDate.getTime())
+      ? parsedStartDate
+      : nextMonday();
+  startDate.setHours(0, 0, 0, 0);
+
+  const parsedEndDate = body.endDate ? new Date(`${body.endDate}T23:59:59`) : null;
+  const endDate =
+    parsedEndDate && !Number.isNaN(parsedEndDate.getTime())
+      ? parsedEndDate
+      : new Date(startDate);
+  if (!body.endDate || Number.isNaN(endDate.getTime())) {
+    endDate.setDate(startDate.getDate() + body.totalWeeks * 7);
+  }
 
   const goalEnum = GOAL_MAP[goal] ?? "PERFORMANCE";
   const now = new Date();
@@ -200,7 +215,7 @@ export async function POST(req: NextRequest) {
     data: {
       athleteId,
       coachId: coach.id,
-      name: `${goal} — ${body.totalWeeks} semanas`,
+      name: `${body.periodizationName?.trim() || goal} — ${body.totalWeeks} semanas`,
       goal: goalEnum,
       startDate,
       endDate,

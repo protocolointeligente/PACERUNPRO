@@ -83,8 +83,8 @@ const QUICK_ACTIONS = [
     description: "Adicione treino de força, mobilidade ou funcional.",
     href: "/treinador/atletas",
     icon: Dumbbell,
-    accent: "text-violet-400",
-    bg: "bg-violet-400/10",
+    accent: "text-accent",
+    bg: "bg-accent/10",
   },
   {
     label: "Usar modelo",

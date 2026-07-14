@@ -1,41 +1,41 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Sora, Montserrat } from "next/font/google";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CookieConsent } from "@/components/cookie-consent";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const sora = Sora({
-  variable: "--font-sora",
-  subsets: ["latin"],
-});
-
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
-  weight: ["600", "700", "800"],
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Pace Run Pro — Treine com propósito. Evolua todos os dias.",
+  title: "PACERUNPRO — Sistema operacional de performance",
   description:
-    "Plataforma profissional para treinadores de corrida, assessorias esportivas, personal trainers e corredores. Prescrição inteligente, periodização, força e funcional, testes de performance e gestão de atletas em um só lugar.",
+    "Plataforma profissional para treinadores, assessorias e atletas: prescrição, periodização, força, dados de performance e gestão em um só lugar.",
+  applicationName: "PACERUNPRO",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "PACERUNPRO",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/favicon-32.png"],
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#07030f" },
-    { media: "(prefers-color-scheme: light)", color: "#f8f6fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0C0F" },
+    { media: "(prefers-color-scheme: light)", color: "#F4F3EE" },
   ],
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
-const themeScript = `(function(){try{var t=localStorage.getItem("theme");if(t==="light"){document.documentElement.classList.add("light");}}catch(e){}})();`;
+const themeScript = `(function(){try{var t=localStorage.getItem("theme")||"system";var light=t==="light"||(t==="system"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches);document.documentElement.classList.toggle("light",light);document.documentElement.dataset.theme=t;}catch(e){}})();`;
 
 export default function RootLayout({
   children,
@@ -45,7 +45,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${sora.variable} ${montserrat.variable} h-full`}
+      className="h-full"
       suppressHydrationWarning
     >
       <head>

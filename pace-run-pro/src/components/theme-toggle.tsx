@@ -1,34 +1,79 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Moon, Sun } from "lucide-react";
+import { Laptop, Moon, Sun } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type ThemeMode = "system" | "light" | "dark";
+
+const modes: Array<{ mode: ThemeMode; label: string; icon: typeof Laptop }> = [
+  { mode: "system", label: "Sistema", icon: Laptop },
+  { mode: "light", label: "Claro", icon: Sun },
+  { mode: "dark", label: "Escuro", icon: Moon },
+];
+
+function systemPrefersLight() {
+  return window.matchMedia?.("(prefers-color-scheme: light)").matches ?? false;
+}
+
+function applyTheme(mode: ThemeMode) {
+  const light = mode === "light" || (mode === "system" && systemPrefersLight());
+  document.documentElement.classList.toggle("light", light);
+  document.documentElement.dataset.theme = mode;
+}
 
 export function ThemeToggle() {
-  const [isLight, setIsLight] = useState(false);
+  const [mode, setMode] = useState<ThemeMode>("system");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    const stored = localStorage.getItem("theme") as ThemeMode | null;
+    const initial = stored === "light" || stored === "dark" || stored === "system" ? stored : "system";
+    setMode(initial);
+    applyTheme(initial);
     setMounted(true);
-    setIsLight(document.documentElement.classList.contains("light"));
+
+    const media = window.matchMedia?.("(prefers-color-scheme: light)");
+    const onChange = () => {
+      if ((localStorage.getItem("theme") ?? "system") === "system") applyTheme("system");
+    };
+    media?.addEventListener?.("change", onChange);
+    return () => media?.removeEventListener?.("change", onChange);
   }, []);
 
-  function toggle() {
-    const next = !isLight;
-    setIsLight(next);
-    document.documentElement.classList.toggle("light", next);
-    localStorage.setItem("theme", next ? "light" : "dark");
+  function select(next: ThemeMode) {
+    setMode(next);
+    localStorage.setItem("theme", next);
+    applyTheme(next);
   }
 
   if (!mounted) return null;
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label={isLight ? "Ativar modo escuro" : "Ativar modo claro"}
-      className="fixed top-4 right-4 z-[100] flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card/80 text-text-muted shadow-md backdrop-blur-sm transition-colors hover:text-primary"
+    <div
+      className="fixed bottom-20 right-3 z-40 flex rounded-full border border-border bg-card/85 p-1 shadow-lg shadow-black/20 backdrop-blur-xl lg:bottom-4 lg:right-4"
+      aria-label="Selecionar tema"
+      role="group"
     >
-      {isLight ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-    </button>
+      {modes.map((item) => {
+        const Icon = item.icon;
+        const selected = mode === item.mode;
+        return (
+          <button
+            key={item.mode}
+            type="button"
+            onClick={() => select(item.mode)}
+            aria-label={`Tema ${item.label}`}
+            title={`Tema ${item.label}`}
+            className={cn(
+              "flex h-8 w-8 items-center justify-center rounded-full text-text-muted transition-colors",
+              selected ? "bg-primary text-[#0A0C0F]" : "hover:bg-card-hover hover:text-text"
+            )}
+          >
+            <Icon className="h-3.5 w-3.5" />
+          </button>
+        );
+      })}
+    </div>
   );
 }
