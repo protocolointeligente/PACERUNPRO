@@ -2,24 +2,11 @@ import {
   LayoutDashboard,
   Bell,
   BarChart2,
-  Users,
   CalendarDays,
-  Dumbbell,
-  FileBarChart,
-  DollarSign,
-  PackagePlus,
-  ShoppingBag,
-  Wallet,
-  Globe,
-  Ticket,
-  Kanban,
-  Palette,
-  Settings,
-  GraduationCap,
   User,
-  Zap,
   BookOpen,
   Layers,
+  BriefcaseBusiness,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -50,44 +37,21 @@ function planTier(planId: string): number {
 }
 
 const coreNav: NavItem[] = [
-  { href: "/treinador/atletas", label: "Calendario", icon: CalendarDays },
   { href: "/treinador/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/treinador/alertas", label: "Alertas", icon: Bell },
-  { href: "/treinador/biblioteca", label: "Biblioteca", icon: BookOpen },
-  { href: "/treinador/relatorios", label: "Relatorios", icon: FileBarChart },
+  { href: "/treinador/atletas", label: "Calendario", icon: CalendarDays },
 ];
 
-const prescriptionNav: NavItem[] = [
-  { href: "/treinador/prescricao/periodizacao", label: "Periodizacao", icon: BarChart2, sectionStart: "Prescricao" },
+const workflowNav: NavItem[] = [
+  { href: "/treinador/prescricao/periodizacao", label: "Periodizacao", icon: BarChart2 },
   { href: "/treinador/grupos", label: "Grupos", icon: Layers },
-  { href: "/treinador/analise-semanal", label: "Analise semanal", icon: Users },
+  { href: "/treinador/biblioteca", label: "Biblioteca", icon: BookOpen },
 ];
 
-const businessNavBase: NavItem[] = [
-  { href: "/treinador/gestao", label: "Gestao & vendas", icon: DollarSign, sectionStart: "Administracao" },
-  { href: "/treinador/planos-venda", label: "Meus planos", icon: PackagePlus },
-  { href: "/treinador/loja-planos", label: "Loja de planilhas", icon: ShoppingBag },
-  { href: "/treinador/financeiro", label: "Financeiro", icon: Wallet },
-  { href: "/treinador/minha-pagina", label: "Pagina publica", icon: Globe },
-  { href: "/treinador/crm", label: "CRM de leads", icon: Kanban },
-];
-
-const businessNavPro: NavItem[] = [
-  { href: "/treinador/vouchers", label: "Vouchers", icon: Ticket },
-];
-
-const businessNavAssessoria: NavItem[] = [
-  { href: "/treinador/admin", label: "Minha assessoria", icon: Settings },
-];
-
-const businessNavUnlimited: NavItem[] = [
-  { href: "/treinador/white-label", label: "White-label", icon: Palette },
-];
-
-const helpNav: NavItem[] = [
-  { href: "/treinador/configuracoes/zonas", label: "Zonas de treino", icon: Zap, sectionStart: "Conta" },
+const businessNav: NavItem[] = [
+  { href: "/treinador/gestao", label: "Gestao", icon: BriefcaseBusiness },
+  { href: "/treinador/glossario", label: "Glossario", icon: BookOpen },
   { href: "/treinador/perfil", label: "Meu perfil", icon: User },
-  { href: "/treinador/conheca-o-sistema", label: "PACE University", icon: GraduationCap },
 ];
 
 export function getCoachNav(
@@ -95,20 +59,12 @@ export function getCoachNav(
   planId: string = "b2b-free"
 ): { main: NavItem[]; more: NavItem[] } {
   if (role === "hired") {
-    return { main: coreNav, more: [...prescriptionNav, ...helpNav] };
+    return { main: coreNav, more: [...workflowNav, ...businessNav] };
   }
 
-  const tier = planTier(planId);
-  const more: NavItem[] = [
-    ...prescriptionNav,
-    ...(tier >= 1 ? businessNavBase : []),
-    ...(tier >= 2 ? businessNavPro : []),
-    ...(tier >= 3 ? businessNavAssessoria : []),
-    ...(tier >= 4 ? businessNavUnlimited : []),
-    ...helpNav,
-  ];
+  planTier(planId);
 
-  return { main: coreNav, more };
+  return { main: coreNav, more: [...workflowNav, ...businessNav] };
 }
 
 export type CoachFeature =

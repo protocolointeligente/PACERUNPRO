@@ -1,600 +1,366 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import QRCode from "react-qr-code";
-import { Copy, Download, Link2, Users, TrendingUp, AlertTriangle, UserPlus, Plus, Trash2, Receipt } from "lucide-react";
-import { useCoachRole } from "@/context/coach-role-context";
-import { canAccess } from "@/lib/coach-permissions";
-import { AccessRestricted } from "@/components/shared/access-restricted";
-import { Card, CardContent } from "@/components/ui/card";
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Copy,
+  CreditCard,
+  Link2,
+  Mail,
+  ShieldCheck,
+  UserPlus,
+  Users,
+  WalletCards,
+} from "lucide-react";
+import { getSession } from "@/lib/auth-guard";
+import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { coachRosterStats, athleteRosterList, paymentHistory } from "@/lib/mock-data";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-interface ExpenseRow {
-  id: string;
-  description: string;
-  amountCents: number;
-  category: string;
-  supplier?: string | null;
-  date: string;
-  recurring: boolean;
+function money(cents: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(cents / 100);
 }
 
-const EXPENSE_CATEGORIES: Record<string, string> = {
-  software: "Software",
-  marketing: "Marketing",
-  pessoal: "Pessoal",
-  equipamento: "Equipamento",
-  fornecedor: "Fornecedor",
-  outros: "Outros",
-};
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
 
-const CATEGORY_COLORS: Record<string, string> = {
-  software: "bg-blue-700/60 text-blue-200",
-  marketing: "bg-purple-700/60 text-purple-200",
-  pessoal: "bg-amber-700/60 text-amber-200",
-  equipamento: "bg-cyan-700/60 text-cyan-200",
-  fornecedor: "bg-orange-700/60 text-orange-200",
-  outros: "bg-slate-700/60 text-slate-200",
-};
+export default async function GestaoPage() {
+  const session = await getSession();
+  if (!session?.user?.id) redirect("/login");
 
-const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 transition-colors";
+  const coach = await prisma.coach.findUnique({
+    where: { userId: session.user.id },
+    select: {
+      id: true,
+      slug: true,
+      whatsapp: true,
+      user: {
+        select: {
+          name: true,
+          email: true,
+          billingSettings: {
+            select: {
+              cpfCnpj: true,
+              pixKey: true,
+              bankName: true,
+              receivingMethod: true,
+              autoChargeEnabled: true,
+            },
+          },
+        },
+      },
+      athletes: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          status: true,
+          adherenceRate: true,
+          createdAt: true,
+          user: {
+            select: {
+              name: true,
+              email: true,
+              avatarUrl: true,
+            },
+          },
+          planPurchases: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: {
+              status: true,
+              pricePaidCents: true,
+              product: {
+                select: {
+                  title: true,
+                  priceCents: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      planProducts: {
+        orderBy: { updatedAt: "desc" },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          sport: true,
+          level: true,
+          priceCents: true,
+          published: true,
+          purchases: true,
+        },
+      },
+      leads: {
+        orderBy: { updatedAt: "desc" },
+        take: 6,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          stage: true,
+          source: true,
+          monthlyFeeCents: true,
+        },
+      },
+    },
+  });
 
-function GestaoContent() {
-  const [inviteEnabled, setInviteEnabled] = useState(true);
-  const [copied, setCopied] = useState(false);
-  const [slug, setSlug] = useState<string | null>(null);
+  if (!coach) redirect("/login");
 
-  const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
-  const [loadingExpenses, setLoadingExpenses] = useState(true);
-  const [showExpenseForm, setShowExpenseForm] = useState(false);
-  const [expDesc, setExpDesc] = useState("");
-  const [expAmount, setExpAmount] = useState("");
-  const [expCategory, setExpCategory] = useState("outros");
-  const [expSupplier, setExpSupplier] = useState("");
-  const [expDate, setExpDate] = useState(new Date().toISOString().slice(0, 10));
-  const [expRecurring, setExpRecurring] = useState(false);
-  const [savingExpense, setSavingExpense] = useState(false);
-
-  const inviteUrl = slug
-    ? `https://pacerunpro.com.br/convite/${slug}`
-    : "Configure seu slug na página pública para gerar o link";
-
-  useEffect(() => {
-    fetch("/api/coach/profile")
-      .then((r) => r.json())
-      .then((d: { slug?: string | null }) => { if (d.slug) setSlug(d.slug); })
-      .catch(() => null);
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/coach/expenses")
-      .then((r) => r.json())
-      .then((d: ExpenseRow[]) => setExpenses(Array.isArray(d) ? d : []))
-      .catch(() => [])
-      .finally(() => setLoadingExpenses(false));
-  }, []);
-
-  async function addExpense() {
-    if (!expDesc || !expAmount) return;
-    setSavingExpense(true);
-    try {
-      const res = await fetch("/api/coach/expenses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: expDesc,
-          amountCents: Math.round(parseFloat(expAmount.replace(",", ".")) * 100),
-          category: expCategory,
-          supplier: expSupplier || undefined,
-          date: expDate,
-          recurring: expRecurring,
-        }),
-      });
-      if (res.ok) {
-        const created = await res.json() as ExpenseRow;
-        setExpenses((prev) => [created, ...prev]);
-        setExpDesc(""); setExpAmount(""); setExpCategory("outros"); setExpSupplier(""); setExpRecurring(false);
-        setShowExpenseForm(false);
-      }
-    } finally {
-      setSavingExpense(false);
-    }
-  }
-
-  async function deleteExpense(id: string) {
-    await fetch(`/api/coach/expenses/${id}`, { method: "DELETE" });
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
-  }
-
-  function handleCopy() {
-    if (!slug) return;
-    void navigator.clipboard.writeText(inviteUrl).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
-  const slotPct = (coachRosterStats.usedSlots / coachRosterStats.totalSlots) * 100;
-  const totalExpensesMonth = expenses.reduce((acc, e) => acc + e.amountCents, 0);
-
-  const revenueByAthlete = [...athleteRosterList]
-    .filter((a) => a.billingStatus === "em dia")
-    .sort((a, b) => b.monthlyFee - a.monthlyFee);
+  const origin = process.env.NEXT_PUBLIC_APP_URL ?? "https://pacerunpro.com.br";
+  const inviteUrl = `${origin}/convite/${coach.slug ?? coach.id}`;
+  const activeAthletes = coach.athletes.filter((athlete) => athlete.status !== "inativo");
+  const paidAthletes = coach.athletes.filter((athlete) =>
+    athlete.planPurchases.some((purchase) => purchase.status === "paid")
+  );
+  const monthlyRevenue = paidAthletes.reduce((sum, athlete) => {
+    const purchase = athlete.planPurchases[0];
+    return sum + (purchase?.pricePaidCents || purchase?.product.priceCents || 0);
+  }, 0);
+  const platformFee = Math.round(monthlyRevenue * 0.1);
+  const coachNet = monthlyRevenue - platformFee;
+  const asaasReady = Boolean(
+    coach.user.billingSettings?.cpfCnpj &&
+      (coach.user.billingSettings.pixKey || coach.user.billingSettings.bankName)
+  );
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <Badge variant="primary">Gestão &amp; Vendas</Badge>
-          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
-            Gestão financeira do roster
+    <div className="mx-auto max-w-7xl space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <Badge variant="primary">CRM da assessoria</Badge>
+          <h1 className="mt-3 font-display text-3xl font-bold text-text">
+            Gestao dos alunos e vendas
           </h1>
+          <p className="mt-2 max-w-2xl text-sm text-text-muted">
+            Um unico painel para matricular atletas, acompanhar planos contratados e preparar cobrancas com split Asaas por treinador.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/treinador/atletas" className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>
+            <UserPlus className="h-4 w-4" />
+            Inscrever manualmente
+          </Link>
+          <Link href="/treinador/gestao#planos" className={cn(buttonVariants({ variant: "primary", size: "sm" }))}>
+            <CreditCard className="h-4 w-4" />
+            Criar plano
+          </Link>
         </div>
       </div>
 
-      <Tabs defaultValue="roster">
-        <TabsList>
-          <TabsTrigger value="roster">Roster</TabsTrigger>
-          <TabsTrigger value="financeiro">Receitas</TabsTrigger>
-          <TabsTrigger value="despesas">Despesas</TabsTrigger>
-          <TabsTrigger value="convite">Link de convite</TabsTrigger>
-        </TabsList>
+      <div className="grid gap-3 md:grid-cols-4">
+        <MetricCard label="Atletas ativos" value={String(activeAthletes.length)} icon={<Users className="h-5 w-5" />} tone="text-info" />
+        <MetricCard label="Pagantes" value={String(paidAthletes.length)} icon={<BadgeCheck className="h-5 w-5" />} tone="text-success" />
+        <MetricCard label="MRR bruto" value={money(monthlyRevenue)} icon={<CreditCard className="h-5 w-5" />} tone="text-primary" />
+        <MetricCard label="Liquido treinador" value={money(coachNet)} icon={<WalletCards className="h-5 w-5" />} tone="text-warning" />
+      </div>
 
-        {/* ── Tab 1: Roster ─────────────────────────────────────────────── */}
-        <TabsContent value="roster">
-          <div className="space-y-4">
-            {/* Stats row */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatCard
-                icon={<Users className="h-4 w-4" />}
-                label="Slots usados"
-                value={`${coachRosterStats.usedSlots}/${coachRosterStats.totalSlots}`}
-                color="text-info"
-                bgColor="bg-info/15"
-              />
-              <StatCard
-                icon={<TrendingUp className="h-4 w-4" />}
-                label="MRR da base"
-                value={`R$ ${coachRosterStats.mrr.toLocaleString("pt-BR")}`}
-                color="text-success"
-                bgColor="bg-success/15"
-              />
-              <StatCard
-                icon={<UserPlus className="h-4 w-4" />}
-                label="Novos 30d"
-                value={`+${coachRosterStats.newAthletes30d}`}
-                color="text-primary"
-                bgColor="bg-primary/15"
-              />
-              <StatCard
-                icon={<AlertTriangle className="h-4 w-4" />}
-                label="Inadimplentes"
-                value={String(coachRosterStats.pendingInvoices)}
-                color="text-danger"
-                bgColor="bg-danger/15"
-              />
+      <div className="grid gap-4 lg:grid-cols-[1.4fr_0.9fr]">
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <div className="border-b border-border px-5 py-4">
+              <h2 className="font-display text-lg font-bold text-text">Atletas e contratos</h2>
+              <p className="text-sm text-text-muted">Cada linha fica isolada por coachId para evitar convites e pagamentos cruzados.</p>
             </div>
-
-            {/* Slot progress */}
-            <Card>
-              <CardContent className="p-4 space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-text-muted">
-                    Capacidade do plano <span className="font-semibold text-text">{coachRosterStats.planName}</span>
-                  </span>
-                  <span className="font-display font-bold text-text">
-                    {coachRosterStats.usedSlots} / {coachRosterStats.totalSlots} atletas
-                  </span>
-                </div>
-                <Progress value={slotPct} />
-                <p className="text-xs text-text-muted">
-                  {coachRosterStats.totalSlots - coachRosterStats.usedSlots} slots disponíveis
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Athlete list */}
-            <div className="space-y-2">
-              {athleteRosterList.map((athlete) => (
-                <Card key={athlete.id}>
-                  <CardContent className="flex items-center gap-3 p-3 sm:p-4">
-                    {/* Name + plan */}
-                    <div className="min-w-0 flex-1 space-y-0.5">
-                      <p className="truncate font-display text-sm font-semibold text-text">
-                        {athlete.name}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <p className="text-xs text-text-muted">{athlete.plan}</p>
-                        <Badge
-                          variant={
-                            athlete.status === "ativo"
-                              ? "success"
-                              : athlete.status === "risco"
-                              ? "danger"
-                              : "default"
-                          }
-                          className="text-[10px]"
-                        >
-                          {athlete.status}
-                        </Badge>
-                        <Badge
-                          variant={athlete.billingStatus === "em dia" ? "success" : "danger"}
-                          className="text-[10px]"
-                        >
-                          {athlete.billingStatus}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {/* Billing info + joined — visible based on screen size */}
-                    <div className="hidden text-right sm:block">
-                      <p className="text-sm font-semibold text-text">
-                        R$ {athlete.monthlyFee}/mês
-                      </p>
-                      <p className="text-xs text-text-muted">Próx. {athlete.nextBilling}</p>
-                    </div>
-                    <div className="hidden text-right lg:block">
-                      <p className="text-xs text-text-muted">Desde {athlete.joinedAt}</p>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex shrink-0 gap-2">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => {
-                          window.location.href = `/treinador/atletas/${athlete.id}`;
-                        }}
-                      >
-                        Ver
-                      </Button>
-                      {athlete.billingStatus === "inadimplente" && (
-                        <Button size="sm" variant="danger">
-                          Cobrar
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* ── Tab 2: Financeiro ──────────────────────────────────────────── */}
-        <TabsContent value="financeiro">
-          <div className="space-y-4">
-            {/* MRR card */}
-            <Card>
-              <CardContent className="p-5">
-                <p className="text-xs uppercase tracking-wider text-text-muted">
-                  Receita Recorrente Mensal (MRR)
-                </p>
-                <p className="mt-1 font-display text-3xl font-bold text-text">
-                  R$ {coachRosterStats.mrr.toLocaleString("pt-BR")}
-                  <span className="ml-1 text-base font-normal text-text-muted">/mês</span>
-                </p>
-                <p className="mt-1 text-sm text-success">
-                  +{Math.round(coachRosterStats.mrrGrowth * 100)}% vs mês anterior
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Revenue breakdown */}
-            <Card>
-              <CardContent className="p-5 space-y-3">
-                <h3 className="font-display text-sm font-semibold text-text">
-                  Receita por atleta
-                </h3>
-                <div className="space-y-2">
-                  {revenueByAthlete.map((athlete) => (
-                    <div
-                      key={athlete.id}
-                      className="flex items-center justify-between rounded-lg border border-border bg-card-hover/30 px-3 py-2.5"
-                    >
-                      <span className="text-sm text-text">{athlete.name}</span>
-                      <span className="font-display text-sm font-semibold text-success">
-                        R$ {athlete.monthlyFee}/mês
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Payment history */}
-            <Card>
-              <CardContent className="p-5 space-y-3">
-                <h3 className="font-display text-sm font-semibold text-text">
-                  Histórico de pagamentos da plataforma
-                </h3>
-                <div className="space-y-2">
-                  {paymentHistory.map((payment) => (
-                    <div
-                      key={payment.id}
-                      className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card-hover/30 px-3 py-2.5"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-text">{payment.description}</p>
-                        <p className="text-xs text-text-muted">
-                          {payment.period} · {payment.date}
-                        </p>
-                      </div>
-                      <span className="font-display text-sm font-semibold text-text">
-                        R$ {payment.amount.toLocaleString("pt-BR")}
-                      </span>
-                      <Badge variant={payment.status === "pago" ? "success" : "warning"}>
-                        {payment.status}
-                      </Badge>
-                      <Button size="sm" variant="outline">
-                        Nota fiscal
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-text-muted">
-                  Os repasses são processados automaticamente via Pagar.me · Próximo repasse: 15 jun 2026
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* ── Tab 3: Despesas ───────────────────────────────────────────── */}
-        <TabsContent value="despesas">
-          <div className="space-y-4">
-            {/* Summary */}
-            <div className="grid gap-3 sm:grid-cols-3">
-              <StatCard icon={<Receipt className="h-4 w-4" />} label="Despesas (total)" value={`R$ ${(totalExpensesMonth / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} color="text-danger" bgColor="bg-danger/15" />
-              <StatCard icon={<TrendingUp className="h-4 w-4" />} label="MRR" value={`R$ ${coachRosterStats.mrr.toLocaleString("pt-BR")}`} color="text-success" bgColor="bg-success/15" />
-              <StatCard
-                icon={<TrendingUp className="h-4 w-4" />}
-                label="Resultado líquido"
-                value={`R$ ${((coachRosterStats.mrr * 100 - totalExpensesMonth) / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
-                color={(coachRosterStats.mrr * 100 - totalExpensesMonth) >= 0 ? "text-success" : "text-danger"}
-                bgColor={(coachRosterStats.mrr * 100 - totalExpensesMonth) >= 0 ? "bg-success/15" : "bg-danger/15"}
-              />
-            </div>
-
-            {/* Add expense */}
-            <Card>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-display text-sm font-semibold text-text">Despesas e fornecedores</h3>
-                  <Button size="sm" variant="primary" onClick={() => setShowExpenseForm((v) => !v)}>
-                    <Plus className="h-3.5 w-3.5" /> Nova despesa
-                  </Button>
-                </div>
-
-                {showExpenseForm && (
-                  <div className="rounded-xl border border-border bg-card-hover/30 p-4 space-y-3">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-1 block text-xs font-semibold text-text-muted">Descrição *</label>
-                        <input className={inputClass} value={expDesc} onChange={(e) => setExpDesc(e.target.value)} placeholder="Ex.: Assinatura Notion" />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-semibold text-text-muted">Valor (R$) *</label>
-                        <input className={inputClass} value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0,00" />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-semibold text-text-muted">Categoria</label>
-                        <select className={inputClass} value={expCategory} onChange={(e) => setExpCategory(e.target.value)}>
-                          {Object.entries(EXPENSE_CATEGORIES).map(([k, v]) => (
-                            <option key={k} value={k}>{v}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-semibold text-text-muted">Fornecedor</label>
-                        <input className={inputClass} value={expSupplier} onChange={(e) => setExpSupplier(e.target.value)} placeholder="Nome da empresa (opcional)" />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-semibold text-text-muted">Data</label>
-                        <input type="date" className={inputClass} value={expDate} onChange={(e) => setExpDate(e.target.value)} />
-                      </div>
-                      <div className="flex items-center gap-2 pt-5">
-                        <input type="checkbox" id="recurring" checked={expRecurring} onChange={(e) => setExpRecurring(e.target.checked)} className="h-4 w-4 accent-primary" />
-                        <label htmlFor="recurring" className="text-sm text-text-muted">Recorrente (mensal)</label>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 justify-end">
-                      <Button size="sm" variant="ghost" onClick={() => setShowExpenseForm(false)}>Cancelar</Button>
-                      <Button size="sm" variant="primary" onClick={addExpense} disabled={savingExpense || !expDesc || !expAmount}>
-                        {savingExpense ? "Salvando…" : "Salvar"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {loadingExpenses ? (
-                  <p className="text-center text-sm text-text-muted py-4">Carregando…</p>
-                ) : expenses.length === 0 ? (
-                  <p className="text-center text-sm text-text-muted py-6">Nenhuma despesa cadastrada. Comece adicionando seus custos fixos e variáveis.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {expenses.map((e) => (
-                      <div key={e.id} className="flex items-center gap-3 rounded-xl border border-border bg-card-hover/30 px-3 py-2.5">
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-text">{e.description}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            {e.supplier && <p className="text-xs text-text-muted">{e.supplier}</p>}
-                            <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold", CATEGORY_COLORS[e.category] ?? CATEGORY_COLORS.outros)}>
-                              {EXPENSE_CATEGORIES[e.category] ?? e.category}
-                            </span>
-                            {e.recurring && <span className="text-[10px] text-primary font-semibold">↻ Recorrente</span>}
+            <div className="divide-y divide-border">
+              {coach.athletes.length === 0 ? (
+                <div className="px-5 py-10 text-sm text-text-muted">Nenhum atleta inscrito ainda.</div>
+              ) : (
+                coach.athletes.map((athlete) => {
+                  const purchase = athlete.planPurchases[0];
+                  return (
+                    <div key={athlete.id} className="grid gap-3 px-5 py-4 md:grid-cols-[1.2fr_0.8fr_0.8fr_auto] md:items-center">
+                      <div className="flex min-w-0 items-center gap-3">
+                        {athlete.user.avatarUrl ? (
+                          <img src={athlete.user.avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover" />
+                        ) : (
+                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
+                            {initials(athlete.user.name)}
                           </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-text">{athlete.user.name}</p>
+                          <p className="truncate text-xs text-text-muted">{athlete.user.email}</p>
                         </div>
-                        <p className="text-sm font-semibold text-danger shrink-0">
-                          R$ {(e.amountCents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                        </p>
-                        <p className="hidden text-xs text-text-muted sm:block shrink-0">
-                          {new Date(e.date).toLocaleDateString("pt-BR")}
-                        </p>
-                        <button onClick={() => deleteExpense(e.id)} className="shrink-0 rounded-lg p-1.5 text-text-muted hover:bg-danger/10 hover:text-danger transition-colors">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-text-muted">Plano</p>
+                        <p className="text-sm font-semibold text-text">{purchase?.product.title ?? "Sem plano"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-text-muted">Pagamento</p>
+                        <Badge variant={purchase?.status === "paid" ? "success" : purchase ? "warning" : "outline"}>
+                          {purchase?.status === "paid" ? "Pago" : purchase?.status ?? "Aguardando"}
+                        </Badge>
+                      </div>
+                      <Link href={`/treinador/atletas?athlete=${athlete.id}`} className="text-sm font-semibold text-primary">
+                        Abrir <ArrowRight className="inline h-4 w-4" />
+                      </Link>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* ── Tab 4: Link de convite ─────────────────────────────────────── */}
-        <TabsContent value="convite">
-          <div className="space-y-4">
-            {/* Explanation card */}
-            <Card>
-              <CardContent className="p-5 space-y-4">
-                <div className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                    <Link2 className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <h3 className="font-display text-sm font-semibold text-text">
-                      Link de convite personalizado
-                    </h3>
-                    <p className="mt-1 text-sm text-text-muted">
-                      Compartilhe o link abaixo para que novos atletas se cadastrem diretamente
-                      vinculados à sua conta.
+        <div className="space-y-4">
+          <Card>
+            <CardContent className="space-y-4 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-lg font-bold text-text">Convite seguro</h2>
+                  <p className="text-sm text-text-muted">Link unico deste treinador.</p>
+                </div>
+                <Link2 className="h-5 w-5 text-primary" />
+              </div>
+              <div className="rounded-xl border border-border bg-background/70 p-3 text-sm text-text-muted">
+                {inviteUrl}
+              </div>
+              <button className={cn(buttonVariants({ variant: "secondary", size: "sm" }), "w-full")}>
+                <Copy className="h-4 w-4" />
+                Copiar link
+              </button>
+              <div className="rounded-xl border border-info/25 bg-info/10 p-3 text-xs leading-relaxed text-info">
+                O checkout Asaas deve receber o coachId do convite e criar a cobranca com split 90/10 antes de liberar o acesso do atleta.
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="space-y-4 p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-lg font-bold text-text">Asaas split</h2>
+                <Badge variant={asaasReady ? "success" : "warning"}>{asaasReady ? "Dados prontos" : "Pendente"}</Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-text-muted">Plataforma</p>
+                  <p className="font-display text-2xl font-bold text-text">{money(platformFee)}</p>
+                  <p className="text-xs text-text-muted">10%</p>
+                </div>
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-text-muted">Treinador</p>
+                  <p className="font-display text-2xl font-bold text-text">{money(coachNet)}</p>
+                  <p className="text-xs text-text-muted">90%</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 text-xs leading-relaxed text-text-muted">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                Na proxima fase, gravar IDs Asaas de cliente/subconta/cobranca por coach e validar webhooks por assinatura.
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div id="planos" className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+        <Card>
+          <CardContent className="space-y-4 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="font-display text-lg font-bold text-text">Planos de venda</h2>
+                <p className="text-sm text-text-muted">Produtos do treinador para contratar via convite.</p>
+              </div>
+              <CreditCard className="h-5 w-5 text-primary" />
+            </div>
+            <div className="space-y-3">
+              {coach.planProducts.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border p-5 text-sm text-text-muted">
+                  Crie planos de assessoria para que o atleta receba o link de pagamento correto deste treinador.
+                </div>
+              ) : (
+                coach.planProducts.map((plan) => (
+                  <div key={plan.id} className="rounded-xl border border-border p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-text">{plan.title}</p>
+                        <p className="text-xs text-text-muted">{plan.sport} · {plan.level} · {plan.purchases} vendas</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-display text-lg font-bold text-text">{money(plan.priceCents)}</p>
+                        <Badge variant={plan.published ? "success" : "outline"}>{plan.published ? "Publicado" : "Rascunho"}</Badge>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="space-y-4 p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-lg font-bold text-text">Leads</h2>
+              <Mail className="h-5 w-5 text-primary" />
+            </div>
+            <div className="space-y-3">
+              {coach.leads.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-border p-5 text-sm text-text-muted">
+                  Os interessados por formulario, WhatsApp ou convite aparecem aqui antes de virar atleta.
+                </p>
+              ) : (
+                coach.leads.map((lead) => (
+                  <div key={lead.id} className="rounded-xl border border-border p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-text">{lead.name}</p>
+                        <p className="text-xs text-text-muted">{lead.email ?? lead.phone ?? "Sem contato"}</p>
+                      </div>
+                      <Badge variant="info">{lead.stage}</Badge>
+                    </div>
+                    <p className="mt-2 text-xs text-text-muted">
+                      Origem: {lead.source} {lead.monthlyFeeCents ? `· proposta ${money(lead.monthlyFeeCents)}` : ""}
                     </p>
                   </div>
-                </div>
-
-                {/* URL input + copy */}
-                <div className="flex gap-2">
-                  <input
-                    readOnly
-                    value={inviteUrl}
-                    className="min-w-0 flex-1 rounded-xl border border-border bg-card-hover px-3 py-2 text-sm text-text-muted focus:outline-none"
-                  />
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={handleCopy}
-                    className="shrink-0"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                    {copied ? "Copiado!" : "Copiar"}
-                  </Button>
-                </div>
-
-                {/* Toggle */}
-                <div className="flex items-center justify-between rounded-xl border border-border bg-card-hover/30 px-4 py-3">
-                  <span className="text-sm text-text">Aceitar novos cadastros via link</span>
-                  <button
-                    type="button"
-                    onClick={() => setInviteEnabled((v) => !v)}
-                    className={cn(
-                      "relative h-6 w-11 rounded-full transition-colors",
-                      inviteEnabled ? "bg-primary" : "bg-card-hover",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform",
-                        inviteEnabled ? "translate-x-5" : "translate-x-0.5",
-                      )}
-                    />
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Stats */}
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <p className="font-display text-2xl font-bold text-text">1</p>
-                  <p className="text-xs text-text-muted">atleta cadastrou-se via link</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <p className="font-display text-2xl font-bold text-success">100%</p>
-                  <p className="text-xs text-text-muted">taxa de conversão</p>
-                </CardContent>
-              </Card>
+                ))
+              )}
             </div>
-
-            {/* QR Code */}
-            <Card>
-              <CardContent className="flex flex-col items-center gap-4 p-6">
-                <h3 className="font-display text-sm font-semibold text-text">QR Code do link de convite</h3>
-                <div className="rounded-xl border border-border bg-white p-3">
-                  <QRCode value={inviteUrl} size={160} />
-                </div>
-                <p className="text-center text-xs text-text-muted">
-                  Imprima ou compartilhe para novos atletas se cadastrarem diretamente na sua conta
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 text-xs"
-                  onClick={() => {
-                    const svg = document.querySelector("#invite-qr svg") as SVGElement | null;
-                    if (!svg) return;
-                    const blob = new Blob([svg.outerHTML], { type: "image/svg+xml" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "qrcode-convite.svg";
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  }}
-                >
-                  <Download className="h-3.5 w-3.5" /> Baixar SVG
-                </Button>
-                <div id="invite-qr" className="sr-only" aria-hidden>
-                  <QRCode value={inviteUrl} size={400} />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
 
-interface StatCardProps {
-  icon: React.ReactNode;
+function MetricCard({
+  label,
+  value,
+  icon,
+  tone,
+}: {
   label: string;
   value: string;
-  color: string;
-  bgColor: string;
-}
-
-function StatCard({ icon, label, value, color, bgColor }: StatCardProps) {
+  icon: ReactNode;
+  tone: string;
+}) {
   return (
     <Card>
-      <CardContent className="flex items-center gap-3 p-4">
-        <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", bgColor, color)}>
+      <CardContent className="flex items-center justify-between gap-3 p-5">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-text-muted">{label}</p>
+          <p className="mt-2 font-display text-2xl font-bold text-text">{value}</p>
+        </div>
+        <div className={cn("flex h-11 w-11 items-center justify-center rounded-full bg-card-hover", tone)}>
           {icon}
-        </span>
-        <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-wider text-text-muted">{label}</p>
-          <p className="font-display text-base font-bold text-text">{value}</p>
         </div>
       </CardContent>
     </Card>
   );
-}
-
-export default function GestaoPage() {
-  const { role } = useCoachRole();
-  if (!canAccess(role, "gestao")) {
-    return <AccessRestricted feature="Gestão & Vendas" currentRole={role} requiredRoles={["autonomo", "owner"]} />;
-  }
-  return <GestaoContent />;
 }
