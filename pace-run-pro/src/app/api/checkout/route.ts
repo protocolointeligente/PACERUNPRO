@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { createPixOrder, createCreditCardOrder } from "@/lib/pagbank";
 import { checkoutLimiter } from "@/lib/rate-limit";
+import { b2cPlans } from "@/lib/mock-data";
 
 export async function POST(req: NextRequest) {
   const rl = checkoutLimiter(req);
@@ -17,8 +18,6 @@ export async function POST(req: NextRequest) {
   const body = (await req.json()) as {
     method: string;
     planId: string;
-    planName: string;
-    amountCents: number;
     customerName: string;
     customerEmail: string;
     customerCpf: string;
@@ -29,9 +28,9 @@ export async function POST(req: NextRequest) {
     cardCvv?: string;
   };
 
-  const { method, planId, planName, amountCents, customerName, customerEmail, customerCpf } = body;
+  const { method, planId, customerName, customerEmail, customerCpf } = body;
 
-  if (!method || !planId || !amountCents || !customerName || !customerEmail) {
+  if (!method || !planId || !customerName || !customerEmail) {
     return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
   }
 
@@ -39,6 +38,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Faça login antes de prosseguir com o pagamento." }, { status: 401 });
   }
   const userId = session.user.id;
+  const plan = b2cPlans.find((item) => item.id === planId);
+  if (!plan) {
+    return NextResponse.json({ error: "Plano invalido." }, { status: 400 });
+  }
+  const planName = plan.name;
+  const amountCents = Math.round(plan.totalPrice * 100);
 
   const origin =
     req.headers.get("origin") ??
