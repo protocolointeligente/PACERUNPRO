@@ -1,16 +1,60 @@
 // Pace Run Pro — Service Worker
 // Push notifications + offline-first cache strategies.
 
-const CACHE_STATIC = "prp-static-v3";
-const CACHE_PAGES  = "prp-pages-v3";
+const CACHE_STATIC = "prp-static-v4";
+const CACHE_PAGES  = "prp-pages-v4";
+const CACHE_RSC    = "prp-rsc-v4";
+const CACHE_API    = "prp-api-v4";
 
 // Static assets to precache on install
 const PRECACHE_URLS = [
   "/",
   "/atleta/dashboard",
+  "/manifest.webmanifest",
+  "/favicon-32.png",
+  "/icons/apple-touch-icon.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
 ];
+
+function offlineResponse(message, contentType = "text/plain; charset=utf-8") {
+  return new Response(message, {
+    status: 503,
+    headers: { "content-type": contentType },
+  });
+}
+
+function shouldCacheApi(pathname) {
+  return (
+    pathname.startsWith("/api/") &&
+    !pathname.startsWith("/api/auth/") &&
+    !pathname.startsWith("/api/webhooks/") &&
+    !pathname.startsWith("/api/checkout") &&
+    !pathname.startsWith("/api/stripe/") &&
+    !pathname.startsWith("/api/cron/") &&
+    !pathname.startsWith("/api/debug/")
+  );
+}
+
+function isRscRequest(request, url) {
+  const accept = request.headers.get("accept") ?? "";
+  return (
+    request.headers.get("rsc") === "1" ||
+    url.searchParams.has("_rsc") ||
+    accept.includes("text/x-component")
+  );
+}
+
+async function networkFirst(cacheName, request, fallback) {
+  const cache = await caches.open(cacheName);
+  try {
+    const response = await fetch(request);
+    if (response.ok) await cache.put(request, response.clone());
+    return response;
+  } catch {
+    return (await cache.match(request)) ?? fallback();
+  }
+}
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
@@ -25,7 +69,7 @@ self.addEventListener("activate", (e) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((k) => k !== CACHE_STATIC && k !== CACHE_PAGES)
+          .filter((k) => ![CACHE_STATIC, CACHE_PAGES, CACHE_RSC, CACHE_API].includes(k))
           .map((k) => caches.delete(k))
       )
     ).then(() => self.clients.claim())
@@ -39,18 +83,18 @@ self.addEventListener("fetch", (e) => {
   // Skip non-GET requests and cross-origin requests
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
-  // API routes: network-first, no cache
-  if (url.pathname.startsWith("/api/")) {
+  // API read routes: network-first + last loaded fallback for offline mode.
+  if (shouldCacheApi(url.pathname)) {
     e.respondWith(
-      fetch(request).catch(() =>
-        new Response(JSON.stringify({ error: "offline" }), {
-          status: 503,
-          headers: { "content-type": "application/json" },
-        })
+      networkFirst(CACHE_API, request, () =>
+        offlineResponse(JSON.stringify({ error: "offline" }), "application/json; charset=utf-8")
       )
     );
     return;
   }
+
+  // Other API routes are never cached.
+  if (url.pathname.startsWith("/api/")) return;
 
   // Static assets (_next/static, icons, fonts): cache-first
   if (
@@ -72,25 +116,21 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // Authenticated HTML pages: network-first to avoid serving old dashboards/menus after a deploy.
-  if (request.headers.get("accept")?.includes("text/html")) {
+  // Next.js App Router navigation data: keep the last loaded RSC payload available offline.
+  if (isRscRequest(request, url)) {
     e.respondWith(
-      caches.open(CACHE_PAGES).then((cache) =>
-        fetch(request)
-          .then((resp) => {
-            if (resp.ok) cache.put(request, resp.clone());
-            return resp;
-          })
-          .catch(() =>
-            cache.match(request).then(
-              (cached) =>
-                cached ??
-                new Response("Offline", {
-                  status: 503,
-                  headers: { "content-type": "text/plain; charset=utf-8" },
-                })
-            )
-          )
+      networkFirst(CACHE_RSC, request, () =>
+        offlineResponse("Offline", "text/x-component; charset=utf-8")
+      )
+    );
+    return;
+  }
+
+  // Authenticated HTML pages: network-first to avoid serving old dashboards/menus after a deploy.
+  if (request.mode === "navigate" || request.headers.get("accept")?.includes("text/html")) {
+    e.respondWith(
+      networkFirst(CACHE_PAGES, request, () =>
+        offlineResponse("Offline")
       )
     );
     return;
