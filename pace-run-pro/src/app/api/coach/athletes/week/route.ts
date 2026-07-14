@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { estimateTSS } from "@/lib/training-load";
+import { estimateActualTSS, estimateTSS } from "@/lib/training-load";
 
 function getMondayOf(dateStr?: string | null): Date {
   const d = dateStr ? new Date(dateStr + "T12:00:00Z") : new Date();
@@ -72,6 +72,19 @@ export async function GET(req: NextRequest) {
       targetDurationMin: true,
       targetPaceSecPerKm: true,
       targetRpe: true,
+      logs: {
+        orderBy: { startedAt: "desc" },
+        take: 1,
+        select: {
+          source: true,
+          distanceKm: true,
+          durationSec: true,
+          avgPaceSecPerKm: true,
+          avgHr: true,
+          maxHr: true,
+          rpe: true,
+        },
+      },
       week: {
         select: {
           released: true,
@@ -100,17 +113,8 @@ export async function GET(req: NextRequest) {
       goal: athlete.goal,
       level: athlete.level,
       adherence: athlete.adherenceRate,
-      workouts: athleteWorkouts.map((wo) => ({
-        id: wo.id,
-        date: wo.date.toISOString().slice(0, 10),
-        type: wo.type as string,
-        title: wo.title,
-        status: wo.status as string,
-        targetDistanceKm: wo.targetDistanceKm,
-        targetDurationMin: wo.targetDurationMin,
-        targetPaceSecPerKm: wo.targetPaceSecPerKm,
-        targetRpe: wo.targetRpe,
-        tss: estimateTSS(
+      workouts: athleteWorkouts.map((wo) => {
+        const plannedTss = estimateTSS(
           {
             type: wo.type as string,
             targetDistanceKm: wo.targetDistanceKm,
@@ -119,9 +123,30 @@ export async function GET(req: NextRequest) {
             targetRpe: wo.targetRpe,
           },
           loadParamsMap.get(athlete.id),
-        ),
-        released: wo.week.released,
-      })),
+        );
+        const log = wo.logs[0] ?? null;
+        const actualTss = log ? estimateActualTSS(log, loadParamsMap.get(athlete.id), wo.targetRpe ?? 6) : null;
+        return {
+          id: wo.id,
+          date: wo.date.toISOString().slice(0, 10),
+          type: wo.type as string,
+          title: wo.title,
+          status: wo.status as string,
+          targetDistanceKm: wo.targetDistanceKm,
+          targetDurationMin: wo.targetDurationMin,
+          targetPaceSecPerKm: wo.targetPaceSecPerKm,
+          targetRpe: wo.targetRpe,
+          tss: actualTss ?? plannedTss,
+          plannedTss,
+          actualTss,
+          actualSource: log?.source ?? null,
+          actualDistanceKm: log?.distanceKm ?? null,
+          actualDurationMin: log?.durationSec ? Math.round(log.durationSec / 60) : null,
+          actualAvgPaceSecPerKm: log?.avgPaceSecPerKm ?? null,
+          actualAvgHr: log?.avgHr ?? null,
+          released: wo.week.released,
+        };
+      }),
     };
   });
 

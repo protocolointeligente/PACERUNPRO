@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { exchangeStravaCode } from "@/lib/integrations/strava";
+import { exchangeStravaCode, fetchStravaActivities } from "@/lib/integrations/strava";
+import { persistStravaActivity } from "@/lib/integrations/strava-sync";
 import { encrypt } from "@/lib/encryption";
 
 export async function GET(request: NextRequest) {
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     const token = await exchangeStravaCode(code);
     const externalId = token.athlete?.id ? String(token.athlete.id) : null;
 
-    await prisma.connectedDevice.upsert({
+    const device = await prisma.connectedDevice.upsert({
       where: { userId_provider: { userId: session.user.id, provider: "STRAVA" } },
       update: {
         externalId,
@@ -45,6 +46,25 @@ export async function GET(request: NextRequest) {
         refreshToken: token.refresh_token ? encrypt(token.refresh_token) : null,
       },
     });
+
+    const athlete = await prisma.athlete.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true },
+    });
+    if (athlete) {
+      try {
+        const activities = await fetchStravaActivities(token.access_token, 30);
+        for (const activity of activities) {
+          await persistStravaActivity(athlete.id, activity);
+        }
+        await prisma.connectedDevice.update({
+          where: { id: device.id },
+          data: { lastSyncAt: new Date() },
+        });
+      } catch (syncErr) {
+        console.warn("[strava callback initial sync]", syncErr);
+      }
+    }
   } catch (err) {
     console.error("[strava callback]", err);
     return NextResponse.redirect(new URL("/atleta/perfil?tab=dispositivos&error=strava_token", request.url));

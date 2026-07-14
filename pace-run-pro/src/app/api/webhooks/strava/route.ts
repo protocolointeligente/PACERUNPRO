@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { StravaApiError, fetchStravaActivity, refreshStravaToken } from "@/lib/integrations/strava";
+import { persistStravaActivity } from "@/lib/integrations/strava-sync";
 import { decrypt, encrypt } from "@/lib/encryption";
 
-// Strava sends a GET to verify the webhook subscription
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const mode = searchParams.get("hub.mode");
@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 }
 
-// Strava sends POST for new/updated activities
 export async function POST(request: NextRequest) {
   const secret = new URL(request.url).searchParams.get("secret");
   const expectedSecret = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN;
@@ -31,28 +30,24 @@ export async function POST(request: NextRequest) {
     owner_id?: number;
   };
 
-  const { object_type, object_id, aspect_type, owner_id } = body;
-
-  if (object_type !== "activity" || aspect_type !== "create") {
+  if (body.object_type !== "activity" || body.aspect_type !== "create" || !body.object_id || !body.owner_id) {
     return NextResponse.json({ status: "ignored" });
   }
 
   const device = await prisma.connectedDevice.findFirst({
-    where: { provider: "STRAVA", externalId: String(owner_id) },
+    where: { provider: "STRAVA", externalId: String(body.owner_id) },
     include: { user: { include: { athlete: true } } },
   });
 
   if (!device?.accessToken || !device.user.athlete) {
-    console.warn("[strava webhook] device or athlete not found for owner_id", owner_id);
+    console.warn("[strava webhook] device or athlete not found for owner_id", body.owner_id);
     return NextResponse.json({ status: "not_found" });
   }
-
-  const athlete = device.user.athlete;
 
   let accessToken = decrypt(device.accessToken);
   let activity;
   try {
-    activity = await fetchStravaActivity(String(object_id), accessToken);
+    activity = await fetchStravaActivity(String(body.object_id), accessToken);
   } catch (err) {
     if (err instanceof StravaApiError && err.status === 401 && device.refreshToken) {
       const refreshed = await refreshStravaToken(decrypt(device.refreshToken));
@@ -64,99 +59,19 @@ export async function POST(request: NextRequest) {
           refreshToken: encrypt(refreshed.refresh_token),
         },
       });
-      activity = await fetchStravaActivity(String(object_id), accessToken);
+      activity = await fetchStravaActivity(String(body.object_id), accessToken);
     } else {
       console.error("[strava webhook] failed to fetch activity", err);
       return NextResponse.json({ error: "fetch_failed" }, { status: 502 });
     }
   }
 
-  const activityDate = new Date(activity.start_date);
-  const dayStart = new Date(activityDate);
-  dayStart.setUTCHours(0, 0, 0, 0);
-  const dayEnd = new Date(activityDate);
-  dayEnd.setUTCHours(23, 59, 59, 999);
-
-  const matchedWorkout = await prisma.workout.findFirst({
-    where: {
-      week: {
-        plan: { athleteId: athlete.id },
-        released: true,
-      },
-      date: { gte: dayStart, lte: dayEnd },
-      status: { in: ["LIBERADO", "AGENDADO"] },
-    },
-    orderBy: { date: "asc" },
-  });
-
-  const distanceKm = activity.distance > 0 ? activity.distance / 1000 : null;
-  const avgPaceSecPerKm =
-    distanceKm && distanceKm > 0 && activity.moving_time > 0
-      ? Math.round(activity.moving_time / distanceKm)
-      : null;
-
-  if (matchedWorkout) {
-    await prisma.$transaction([
-      prisma.workoutLog.create({
-        data: {
-          workoutId: matchedWorkout.id,
-          athleteId: athlete.id,
-          startedAt: activityDate,
-          finishedAt: new Date(activityDate.getTime() + activity.elapsed_time * 1000),
-          distanceKm,
-          durationSec: activity.moving_time || null,
-          avgPaceSecPerKm,
-          avgHr: activity.average_heartrate ? Math.round(activity.average_heartrate) : null,
-          maxHr: activity.max_heartrate ? Math.round(activity.max_heartrate) : null,
-          elevationGainM: activity.total_elevation_gain || null,
-          cadence: activity.average_cadence ? Math.round(activity.average_cadence) : null,
-          calories: activity.calories ? Math.round(activity.calories) : null,
-        },
-      }),
-      prisma.workout.update({
-        where: { id: matchedWorkout.id },
-        data: { status: "CONCLUIDO" },
-      }),
-    ]);
-
-    const since28d = new Date();
-    since28d.setDate(since28d.getDate() - 28);
-
-    const [totalScheduled, totalCompleted] = await Promise.all([
-      prisma.workout.count({
-        where: {
-          week: { plan: { athleteId: athlete.id }, released: true },
-          date: { gte: since28d },
-        },
-      }),
-      prisma.workout.count({
-        where: {
-          week: { plan: { athleteId: athlete.id } },
-          date: { gte: since28d },
-          status: "CONCLUIDO",
-        },
-      }),
-    ]);
-
-    const adherenceRate = totalScheduled > 0 ? totalCompleted / totalScheduled : 0;
-    await prisma.athlete.update({
-      where: { id: athlete.id },
-      data: { adherenceRate },
-    });
-
-    console.log(
-      `[strava webhook] activity ${object_id} → workout ${matchedWorkout.id} CONCLUIDO | adherence ${Math.round(adherenceRate * 100)}%`
-    );
-  } else {
-    console.log(
-      `[strava webhook] activity ${object_id} on ${activityDate.toISOString()} — no matching workout for athlete ${athlete.id}`
-    );
-  }
+  const result = await persistStravaActivity(device.user.athlete.id, activity);
 
   await prisma.connectedDevice.update({
     where: { id: device.id },
     data: { lastSyncAt: new Date() },
   });
 
-  return NextResponse.json({ status: "ok", matched: !!matchedWorkout });
+  return NextResponse.json({ status: "ok", matched: result.matched, created: result.created });
 }

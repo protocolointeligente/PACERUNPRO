@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { estimateTSS, computeLoadSeries, detectAlerts } from "@/lib/training-load";
+import { estimateActualTSS, estimateTSS, computeLoadSeries, detectAlerts } from "@/lib/training-load";
 
 export async function GET(
   _req: NextRequest,
@@ -37,6 +37,19 @@ export async function GET(
         targetDurationMin: true,
         targetPaceSecPerKm: true,
         targetRpe: true,
+        logs: {
+          orderBy: { startedAt: "desc" },
+          take: 1,
+          select: {
+            startedAt: true,
+            durationSec: true,
+            distanceKm: true,
+            avgPaceSecPerKm: true,
+            avgHr: true,
+            maxHr: true,
+            rpe: true,
+          },
+        },
       },
       orderBy: { date: "asc" },
     }),
@@ -45,17 +58,20 @@ export async function GET(
   // Aggregate TSS per day
   const dailyTss = new Map<string, number>();
   for (const w of workouts) {
-    const tss = estimateTSS(
-      {
-        type: w.type as string,
-        targetDistanceKm: w.targetDistanceKm,
-        targetDurationMin: w.targetDurationMin,
-        targetPaceSecPerKm: w.targetPaceSecPerKm,
-        targetRpe: w.targetRpe,
-      },
-      loadParams,
-    );
-    const day = w.date.toISOString().slice(0, 10);
+    const log = w.logs[0] ?? null;
+    const tss = log
+      ? estimateActualTSS(log, loadParams, w.targetRpe ?? 6)
+      : estimateTSS(
+          {
+            type: w.type as string,
+            targetDistanceKm: w.targetDistanceKm,
+            targetDurationMin: w.targetDurationMin,
+            targetPaceSecPerKm: w.targetPaceSecPerKm,
+            targetRpe: w.targetRpe,
+          },
+          loadParams,
+        );
+    const day = (log?.startedAt ?? w.date).toISOString().slice(0, 10);
     dailyTss.set(day, (dailyTss.get(day) ?? 0) + tss);
   }
 

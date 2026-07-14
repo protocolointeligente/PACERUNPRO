@@ -99,6 +99,13 @@ interface WorkoutEntry {
   targetPaceSecPerKm: number | null;
   targetRpe: number | null;
   tss: number;
+  plannedTss?: number;
+  actualTss?: number | null;
+  actualSource?: string | null;
+  actualDistanceKm?: number | null;
+  actualDurationMin?: number | null;
+  actualAvgPaceSecPerKm?: number | null;
+  actualAvgHr?: number | null;
   released: boolean;
 }
 
@@ -1794,6 +1801,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   const listWorkouts = [...visibleWorkouts].sort((a, b) => a.date.localeCompare(b.date));
   const selectedWeekWorkoutCount = selectedWorkouts.filter((workout) => weekDays.some((day) => day.date === workout.date)).length;
   const visibleTss = visibleWorkouts.reduce((sum, workout) => sum + workout.tss, 0);
+  const plannedTss = visibleWorkouts.reduce((sum, workout) => sum + (workout.plannedTss ?? workout.tss), 0);
+  const actualTss = visibleWorkouts.reduce((sum, workout) => sum + (workout.actualTss ?? 0), 0);
   const visibleDistance = visibleWorkouts.reduce((sum, workout) => sum + (workout.targetDistanceKm ?? 0), 0);
   const completedWorkouts = visibleWorkouts.filter((workout) => workout.status === "CONCLUIDO").length;
   const plannedWorkouts = visibleWorkouts.filter((workout) => workout.status !== "CONCLUIDO").length;
@@ -2202,6 +2211,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                             <WorkoutIcon type={`${workout.type} ${workout.title}`} className="h-3 w-3 shrink-0" />
                             <span className="min-w-0 flex-1 truncate">{workout.title}</span>
                             {workout.targetDurationMin && <span className="shrink-0 opacity-80">{workout.targetDurationMin}m</span>}
+                            {workout.actualTss != null && <span className="shrink-0 rounded bg-white/15 px-1 text-[9px] uppercase">real</span>}
                             <button
                               type="button"
                               onClick={(event) => {
@@ -2275,6 +2285,10 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                           {workout.targetDurationMin ? ` · ${workout.targetDurationMin} min` : ""}
                           {workout.targetDistanceKm ? ` · ${workout.targetDistanceKm} km` : ""}
                         </span>
+                        <span className="mt-1 block text-[11px] text-text-muted">
+                          Previsto {Math.round(workout.plannedTss ?? workout.tss)} TSS
+                          {workout.actualTss != null ? ` · Realizado ${Math.round(workout.actualTss)} TSS (${workout.actualSource ?? "real"})` : ""}
+                        </span>
                       </span>
                     </button>
                     <div className="flex gap-2">
@@ -2303,7 +2317,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
             <SummaryMetric label="Treinos" value={String(visibleWorkouts.length)} />
             <SummaryMetric label="Planejados" value={String(plannedWorkouts)} />
             <SummaryMetric label="Concluidos" value={String(completedWorkouts)} />
-            <SummaryMetric label="TSS" value={String(Math.round(visibleTss))} />
+            <SummaryMetric label="TSS previsto" value={String(Math.round(plannedTss || visibleTss))} />
+            <SummaryMetric label="TSS realizado" value={actualTss > 0 ? String(Math.round(actualTss)) : "-"} />
             <SummaryMetric label="Distancia" value={`${visibleDistance.toFixed(1)} km`} />
             <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Distribuicao</p>

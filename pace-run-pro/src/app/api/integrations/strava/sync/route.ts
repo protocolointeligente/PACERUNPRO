@@ -5,55 +5,9 @@ import {
   StravaApiError,
   fetchStravaActivities,
   refreshStravaToken,
-  type StravaActivity,
 } from "@/lib/integrations/strava";
+import { persistStravaActivity } from "@/lib/integrations/strava-sync";
 import { decrypt, encrypt } from "@/lib/encryption";
-
-function stravaTypeToWorkoutType(type: string): string {
-  switch (type) {
-    case "Run":           return "RODAGEM_LEVE";
-    case "TrailRun":      return "SUBIDA";
-    case "VirtualRun":    return "RODAGEM_LEVE";
-    case "Ride":          return "RODAGEM_LEVE";
-    case "Swim":          return "RODAGEM_LEVE";
-    case "WeightTraining":return "FORCA";
-    case "Workout":       return "FUNCIONAL";
-    default:              return "RODAGEM_LEVE";
-  }
-}
-
-async function persistActivity(athleteId: string, activity: StravaActivity, workoutId: string | null) {
-  const stravaId = String(activity.id);
-  const exists = await prisma.workoutLog.findUnique({
-    where: { stravaActivityId: stravaId },
-    select: { id: true },
-  });
-  if (exists) return false;
-
-  const distKm = activity.distance / 1000;
-  const avgPace = distKm > 0 && activity.moving_time > 0
-    ? Math.round(activity.moving_time / distKm)
-    : null;
-
-  await prisma.workoutLog.create({
-    data: {
-      workoutId: workoutId ?? undefined,
-      athleteId,
-      source: "strava",
-      stravaActivityId: stravaId,
-      startedAt: new Date(activity.start_date),
-      distanceKm: distKm,
-      durationSec: activity.moving_time,
-      avgPaceSecPerKm: avgPace,
-      avgHr: activity.average_heartrate ?? null,
-      maxHr: activity.max_heartrate ?? null,
-      elevationGainM: activity.total_elevation_gain ?? null,
-      calories: activity.calories ?? null,
-      cadence: activity.average_cadence ?? null,
-    },
-  });
-  return true;
-}
 
 export async function POST() {
   const session = await getSession();
@@ -98,23 +52,11 @@ export async function POST() {
   }
 
   let synced = 0;
+  let matched = 0;
   for (const activity of activities) {
-    const actDate = new Date(activity.start_date);
-    const windowStart = new Date(actDate.getTime() - 12 * 60 * 60 * 1000);
-    const windowEnd   = new Date(actDate.getTime() + 12 * 60 * 60 * 1000);
-
-    const nearest = await prisma.workout.findFirst({
-      where: {
-        week: { plan: { athleteId: athlete.id } },
-        date: { gte: windowStart, lte: windowEnd },
-        status: { in: ["AGENDADO", "LIBERADO"] },
-      },
-      orderBy: { date: "asc" },
-      select: { id: true },
-    });
-
-    const created = await persistActivity(athlete.id, activity, nearest?.id ?? null);
-    if (created) synced++;
+    const result = await persistStravaActivity(athlete.id, activity);
+    if (result.created) synced++;
+    if (result.matched) matched++;
   }
 
   const now = new Date();
@@ -126,6 +68,7 @@ export async function POST() {
   return NextResponse.json({
     ok: true,
     synced,
+    matched,
     total: activities.length,
     lastSyncAt: now.toISOString(),
   });

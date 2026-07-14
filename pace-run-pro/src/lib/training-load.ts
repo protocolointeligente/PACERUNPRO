@@ -20,6 +20,15 @@ export interface WorkoutForLoad {
   targetRpe?: number | null;
 }
 
+export interface WorkoutLogForLoad {
+  durationSec?: number | null;
+  distanceKm?: number | null;
+  avgPaceSecPerKm?: number | null;
+  avgHr?: number | null;
+  maxHr?: number | null;
+  rpe?: number | null;
+}
+
 // Intensity Factor (IF) by workout type when threshold pace is unknown
 const ZONE_IF: Record<string, number> = {
   REGENERATIVO:       0.65,
@@ -87,6 +96,26 @@ export function estimateTSS(workout: WorkoutForLoad, params?: LoadParams | null)
 
   const tss = durationHours * intensityFactor * intensityFactor * 100;
   return Math.round(tss);
+}
+
+export function estimateActualTSS(log: WorkoutLogForLoad, params?: LoadParams | null, fallbackRpe = 6): number {
+  const durationMin = log.durationSec && log.durationSec > 0 ? log.durationSec / 60 : 0;
+  if (durationMin <= 0) return 0;
+
+  const trimp = trimpWithFallback(durationMin, {
+    avgHr: log.avgHr,
+    maxHr: log.maxHr ?? params?.hrMax,
+    hrRest: params?.hrRest,
+    rpe: log.rpe ?? fallbackRpe,
+  });
+  if (trimp.method === "banister") return Math.round(trimp.value);
+
+  if (params?.thresholdPaceSecPerKm && log.avgPaceSecPerKm) {
+    const intensityFactor = Math.min(params.thresholdPaceSecPerKm / log.avgPaceSecPerKm, 1.3);
+    return Math.round((durationMin / 60) * intensityFactor * intensityFactor * 100);
+  }
+
+  return Math.round((durationMin / 60) * Math.pow((log.rpe ?? fallbackRpe) / 10, 2) * 100);
 }
 
 // ── CTL/ATL/TSB time series ─────────────────────────────────────────────
