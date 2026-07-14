@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { displayWorkoutType, inferWorkoutModality } from "@/lib/workout-normalization";
 
 const TYPE_SHORT: Record<string, string> = {
+  CICLISMO_RODAGEM_LEVE: "ciclismo",
+  CICLISMO_INTERVALADO_CURTO: "ciclismo",
+  CICLISMO_INTERVALADO_LONGO: "ciclismo",
+  CICLISMO_TEMPO_RUN: "ciclismo",
+  CICLISMO_FARTLEK: "ciclismo",
+  CICLISMO_PROGRESSIVO: "ciclismo",
+  CICLISMO_REGENERATIVO: "ciclismo",
+  NATACAO_TECNICA: "natacao",
+  NATACAO_RODAGEM_LEVE: "natacao",
+  NATACAO_INTERVALADO_CURTO: "natacao",
+  NATACAO_INTERVALADO_LONGO: "natacao",
+  NATACAO_REGENERATIVO: "natacao",
+  TRIATHLON_RODAGEM_LEVE: "triathlon",
   RODAGEM_LEVE: "corrida",
   INTERVALADO_CURTO: "corrida",
   INTERVALADO_LONGO: "corrida",
@@ -36,6 +50,9 @@ const SUBTYPE_LABEL: Record<string, string> = {
 const TYPE_COLORS: Record<string, string> = {
   corrida: "#38bdf8",
   forca: "#8b5cf6",
+  ciclismo: "#84cc16",
+  natacao: "#0ea5e9",
+  triathlon: "#f97316",
   funcional: "#a855f7",
   mobilidade: "#84cc16",
   recuperacao: "#94a3b8",
@@ -90,6 +107,7 @@ export async function GET(req: NextRequest) {
       title: true,
       status: true,
       objective: true,
+      notes: true,
       targetPaceSecPerKm: true,
       targetDistanceKm: true,
       targetDurationMin: true,
@@ -101,13 +119,15 @@ export async function GET(req: NextRequest) {
 
   const result = workouts.map((w) => {
     const rawType = w.type as string;
-    const typeShort = TYPE_SHORT[rawType] ?? "corrida";
+    const modality = inferWorkoutModality({ type: rawType, title: w.title, objective: w.objective, notes: w.notes });
+    const displayType = displayWorkoutType(rawType, modality);
+    const typeShort = TYPE_SHORT[displayType] ?? TYPE_SHORT[rawType] ?? modality;
     const color = TYPE_COLORS[typeShort] ?? "#38bdf8";
     return {
       id: w.id,
       date: w.date.toISOString(),
       type: typeShort,
-      subtype: SUBTYPE_LABEL[rawType],
+      subtype: SUBTYPE_LABEL[rawType] ?? w.title,
       title: w.title,
       status: (w.status as string).toLowerCase() as "liberado" | "agendado",
       objective: w.objective,

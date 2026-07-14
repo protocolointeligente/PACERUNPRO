@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { estimateActualTSS, estimateTSS } from "@/lib/training-load";
+import { displayWorkoutType, inferWorkoutModality } from "@/lib/workout-normalization";
 
 function getMondayOf(dateStr?: string | null): Date {
   const d = dateStr ? new Date(dateStr + "T12:00:00Z") : new Date();
@@ -100,6 +101,8 @@ export async function GET(req: NextRequest) {
       type: true,
       title: true,
       status: true,
+      objective: true,
+      notes: true,
       targetDistanceKm: true,
       targetDurationMin: true,
       targetPaceSecPerKm: true,
@@ -161,7 +164,10 @@ export async function GET(req: NextRequest) {
         return {
           id: wo.id,
           date: wo.date.toISOString().slice(0, 10),
-          type: wo.type as string,
+          type: displayWorkoutType(
+            wo.type as string,
+            inferWorkoutModality({ type: wo.type as string, title: wo.title, objective: wo.objective, notes: wo.notes }),
+          ),
           title: wo.title,
           status: wo.status as string,
           targetDistanceKm: wo.targetDistanceKm,

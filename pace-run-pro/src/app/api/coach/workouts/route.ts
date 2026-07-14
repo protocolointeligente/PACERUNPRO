@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { WorkoutType } from "@prisma/client";
+import { displayWorkoutType, inferWorkoutModality, modalityNote, normalizeWorkoutType } from "@/lib/workout-normalization";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
     targetPaceSecPerKm,
     targetRpe,
     objective,
+    sport,
   } = body as {
     athleteId: string;
     date: string;
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest) {
     targetPaceSecPerKm?: number;
     targetRpe?: number;
     objective?: string;
+    sport?: string;
   };
 
   if (!athleteId || !date || !title || !type) {
@@ -65,7 +67,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Data inválida" }, { status: 400 });
   }
 
-  const workoutType = type as WorkoutType;
+  const workoutType = normalizeWorkoutType(type, sport);
+  const modality = inferWorkoutModality({ sport, type, title, objective });
+  const note = modalityNote(sport);
 
   // Find or create active plan
   let plan = await prisma.trainingPlan.findFirst({
@@ -130,6 +134,7 @@ export async function POST(req: NextRequest) {
       title,
       status: "LIBERADO",
       objective: objective ?? "",
+      notes: note ?? undefined,
       structured,
       ...(blocks ? { blocks } : {}),
       ...(targetDistanceKm != null ? { targetDistanceKm } : {}),
@@ -137,8 +142,11 @@ export async function POST(req: NextRequest) {
       ...(targetPaceSecPerKm != null ? { targetPaceSecPerKm } : {}),
       ...(targetRpe != null ? { targetRpe } : {}),
     },
-    select: { id: true, date: true, title: true, type: true, status: true, structured: true },
+    select: { id: true, date: true, title: true, type: true, status: true, structured: true, objective: true, notes: true },
   });
 
-  return NextResponse.json(workout, { status: 201 });
+  return NextResponse.json({
+    ...workout,
+    type: displayWorkoutType(workout.type as string, modality),
+  }, { status: 201 });
 }

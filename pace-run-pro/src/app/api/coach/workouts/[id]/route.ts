@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { Prisma, WorkoutType } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { modalityNote, normalizeWorkoutType } from "@/lib/workout-normalization";
 
 async function resolveCoachWorkout(userId: string, workoutId: string) {
   const coach = await prisma.coach.findUnique({
@@ -109,6 +110,7 @@ export async function PATCH(
     targetPaceSecPerKm?: number | null;
     targetRpe?: number | null;
     objective?: string | null;
+    sport?: string | null;
   };
 
   const data: Prisma.WorkoutUncheckedUpdateInput = {};
@@ -124,10 +126,11 @@ export async function PATCH(
   if (typeof body.title === "string" && body.title.trim()) {
     data.title = body.title.trim();
   }
-  if (body.type) data.type = body.type as WorkoutType;
+  if (body.type) data.type = normalizeWorkoutType(body.type, body.sport);
   if (typeof body.structured === "boolean") data.structured = body.structured;
   if (body.blocks !== undefined) data.blocks = body.blocks as Prisma.InputJsonValue;
   if (body.objective !== undefined) data.objective = body.objective ?? "";
+  if (body.sport) data.notes = [modalityNote(body.sport), body.sport ? `Esporte: ${body.sport}` : null].filter(Boolean).join("\n");
   if (body.targetDistanceKm !== undefined) data.targetDistanceKm = body.targetDistanceKm;
   if (body.targetDurationMin !== undefined) data.targetDurationMin = body.targetDurationMin;
   if (body.targetPaceSecPerKm !== undefined) data.targetPaceSecPerKm = body.targetPaceSecPerKm;

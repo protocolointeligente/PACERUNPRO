@@ -60,20 +60,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
   }
 
-  const coachAthleteIds = new Set(coach.athletes.map((a) => a.id));
+  const planAthletes = await prisma.trainingPlan.findMany({
+    where: { coachId: coach.id },
+    distinct: ["athleteId"],
+    select: { athleteId: true },
+  });
+  const coachAthleteIds = new Set([
+    ...coach.athletes.map((a) => a.id),
+    ...planAthletes.map((plan) => plan.athleteId),
+  ]);
   const invalidIds = athleteIds.filter((id) => !coachAthleteIds.has(id));
   if (invalidIds.length > 0) {
     return NextResponse.json({ error: "Atletas inválidos" }, { status: 403 });
   }
 
-  const weekStart = new Date(startDate);
+  const weekStart = new Date(`${startDate}T00:00:00`);
   const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
 
   let totalWorkoutsCreated = 0;
 
   // ✅ P1.7 Optimization: Batch fetch plans instead of N queries
   const existingPlans = await prisma.trainingPlan.findMany({
-    where: { athleteId: { in: athleteIds }, coachId: coach.id, endDate: { gte: new Date() } },
+    where: { athleteId: { in: athleteIds }, coachId: coach.id, endDate: { gte: weekStart } },
     select: { id: true, athleteId: true, phase: true },
   });
   const plansByAthleteId = new Map(existingPlans.map(p => [p.athleteId, p]));
@@ -98,8 +106,8 @@ export async function POST(req: NextRequest) {
         name: "Plano de Treinamento",
         goal: athleteGoals.get(athleteId) ?? Goal.PERFORMANCE,
         phase: CyclePhase.BASE,
-        startDate: new Date(startDate),
-        endDate: new Date(new Date(startDate).getTime() + 90 * 24 * 60 * 60 * 1000),
+        startDate: weekStart,
+        endDate: new Date(weekStart.getTime() + 90 * 24 * 60 * 60 * 1000),
       },
     });
     plansByAthleteId.set(athleteId, plan);

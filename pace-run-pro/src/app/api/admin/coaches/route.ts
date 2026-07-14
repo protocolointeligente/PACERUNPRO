@@ -59,7 +59,28 @@ export async function GET() {
       },
     },
     orderBy: { createdAt: "desc" },
-  });
+  }).catch(() => prisma.coach.findMany({
+    select: {
+      id: true,
+      createdAt: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          updatedAt: true,
+        },
+      },
+      athletes: {
+        select: {
+          id: true,
+          status: true,
+          adherenceRate: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  }));
 
   // ✅ Fetch subscriptions com batch query ao invés de N queries
   const subscriptionsByUserId = new Map<
@@ -104,8 +125,10 @@ export async function GET() {
     const churnRisk: "baixo" | "medio" | "alto" =
       daysSinceUpdate > 30 ? "alto" : daysSinceUpdate > 14 ? "medio" : "baixo";
 
+    const cityValue = "city" in coach.user ? coach.user.city : null;
+    const stateValue = "state" in coach.user ? coach.user.state : null;
     const city =
-      [coach.user.city, coach.user.state].filter(Boolean).join(", ") || "—";
+      [cityValue, stateValue].filter(Boolean).join(", ") || "-";
 
     return {
       id: coach.id,
@@ -122,7 +145,7 @@ export async function GET() {
       healthScore,
       churnRisk,
       lastLoginDays: daysSinceUpdate,
-      prescribedLast7d: coach.trainingPlans.length,
+      prescribedLast7d: "trainingPlans" in coach ? coach.trainingPlans.length : 0,
     };
   });
 

@@ -8,7 +8,6 @@ import {
   CheckSquare,
   ClipboardList,
   DollarSign,
-  Dumbbell,
   GraduationCap,
   Kanban,
   LayoutDashboard,
@@ -33,9 +32,8 @@ export interface NavItem {
 
 export const athleteNav: NavItem[] = [
   { href: "/atleta/dashboard", label: "Inicio", icon: LayoutDashboard },
-  { href: "/atleta/calendario", label: "Calendario", icon: CalendarDays },
+  { href: "/atleta/calendario", label: "Meus treinos", icon: CalendarDays },
   { href: "/atleta/evolucao", label: "Evolucao", icon: BarChart2 },
-  { href: "/atleta/forca", label: "Forca", icon: Dumbbell },
   { href: "/atleta/comunidade", label: "Comunidade", icon: Trophy },
 ];
 

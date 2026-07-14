@@ -43,6 +43,8 @@ interface RaceRow {
 
 const calendarLegend = [
   { type: "corrida", color: "#38bdf8", label: "Corrida" },
+  { type: "ciclismo", color: "#84cc16", label: "Ciclismo" },
+  { type: "natacao", color: "#0ea5e9", label: "Natacao" },
   { type: "forca", color: "#8b5cf6", label: "Força" },
   { type: "funcional", color: "#a855f7", label: "Funcional" },
   { type: "mobilidade", color: "#84cc16", label: "Mobilidade" },
@@ -51,6 +53,9 @@ const calendarLegend = [
 
 const TYPE_LABELS: Record<string, string> = {
   corrida: "Corrida",
+  ciclismo: "Ciclismo",
+  natacao: "Natacao",
+  triathlon: "Triathlon",
   forca: "Força",
   funcional: "Funcional",
   mobilidade: "Mobilidade",
@@ -210,6 +215,19 @@ export default function CalendarPage() {
   }, [workouts]);
 
   const upcomingRaces = races.filter((r) => new Date(r.date) >= new Date());
+  const modalitySummary = useMemo(() => {
+    const items = [
+      { type: "corrida", label: "Corrida", icon: Footprints },
+      { type: "ciclismo", label: "Ciclismo", icon: Bike },
+      { type: "natacao", label: "Natacao", icon: Waves },
+      { type: "forca", label: "Forca", icon: Dumbbell },
+    ];
+    return items.map((item) => {
+      const list = workouts.filter((workout) => workout.type === item.type);
+      const next = list.find((workout) => new Date(workout.date) >= new Date());
+      return { ...item, count: list.length, next };
+    });
+  }, [workouts]);
 
   async function addRace() {
     if (!raceName || !raceDate) return;
@@ -242,7 +260,7 @@ export default function CalendarPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <Badge variant="primary" className="mb-2">Calendário de treinos</Badge>
+          <Badge variant="primary" className="mb-2">Meus treinos</Badge>
           <h1 className="font-display text-2xl font-bold capitalize text-text sm:text-3xl">{monthLabel}</h1>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -264,6 +282,37 @@ export default function CalendarPage() {
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {modalitySummary.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Card key={item.type}>
+              <CardContent className="flex items-center justify-between gap-3 p-4">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: `${TYPE_COLORS[item.type] ?? "#38bdf8"}22`, color: TYPE_COLORS[item.type] ?? "#38bdf8" }}>
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="font-semibold text-text">{item.label}</p>
+                      <p className="text-xs text-text-muted">{item.count} treino(s)</p>
+                    </div>
+                  </div>
+                  <p className="mt-3 truncate text-xs text-text-muted">
+                    {item.next ? `Proximo: ${item.next.title}` : "Sem treino liberado"}
+                  </p>
+                </div>
+                {item.next ? (
+                  <a href={item.type === "forca" ? `/atleta/forca/treino/${item.next.id}` : `/atleta/treino/${item.next.id}`} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-text hover:border-primary/50 hover:text-primary">
+                    Abrir
+                  </a>
+                ) : null}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <div className="flex flex-wrap gap-2">

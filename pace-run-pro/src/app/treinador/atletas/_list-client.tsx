@@ -995,6 +995,7 @@ export function IntervalsPrescribeModal({
           date: payload.date,
           title: title.trim(),
           type,
+          sport,
             objective: [
               description,
               trainingZone ? `Zona: ${trainingZone}` : "",
@@ -1691,6 +1692,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           date,
           title: workout.title,
           type: workout.type,
+          sport: libraryModality === "ciclismo" ? "Ciclismo" : libraryModality === "natacao" ? "Natacao" : libraryModality === "forca" ? "Forca" : "Corrida",
           targetDistanceKm: workout.targetDistanceKm,
           targetDurationMin: workout.targetDurationMin,
           targetPaceSecPerKm: workout.targetPaceSecPerKm,

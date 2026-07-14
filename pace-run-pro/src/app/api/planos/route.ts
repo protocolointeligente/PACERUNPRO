@@ -186,7 +186,13 @@ export async function POST(req: NextRequest) {
   }
 
   const athlete = await prisma.athlete.findFirst({
-    where: { id: athleteId, coachId: coach.id },
+    where: {
+      id: athleteId,
+      OR: [
+        { coachId: coach.id },
+        { trainingPlans: { some: { coachId: coach.id } } },
+      ],
+    },
   });
   if (!athlete) {
     return NextResponse.json({ error: "Atleta não encontrado" }, { status: 404 });

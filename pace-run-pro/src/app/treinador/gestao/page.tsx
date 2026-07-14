@@ -38,6 +38,49 @@ function initials(name: string) {
     .join("");
 }
 
+type BillingSettingsSummary = {
+  cpfCnpj?: string | null;
+  pixKey?: string | null;
+  bankName?: string | null;
+};
+
+type PlanPurchaseSummary = {
+  status: string;
+  pricePaidCents: number | null;
+  product: {
+    title: string;
+    priceCents: number;
+  };
+};
+
+type PlanProductSummary = {
+  id: string;
+  title: string;
+  sport: string | null;
+  level: string | null;
+  priceCents: number;
+  published: boolean;
+  purchases: number;
+};
+
+type LeadSummary = {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  stage: string;
+  source: string | null;
+  monthlyFeeCents: number | null;
+};
+
+function readArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function readPlanPurchases(athlete: object): PlanPurchaseSummary[] {
+  return "planPurchases" in athlete ? readArray<PlanPurchaseSummary>(athlete.planPurchases) : [];
+}
+
 export default async function GestaoPage() {
   const session = await getSession();
   if (!session?.user?.id) redirect("/login");
@@ -121,48 +164,65 @@ export default async function GestaoPage() {
         },
       },
     },
-  }).catch(() => {
+  }).catch(async () => {
     loadError = true;
-    return null;
+    return prisma.coach.findUnique({
+      where: { userId: session.user.id },
+      select: {
+        id: true,
+        slug: true,
+        whatsapp: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        athletes: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            status: true,
+            adherenceRate: true,
+            createdAt: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+      },
+    });
   });
 
   if (loadError) {
-    return (
-      <div className="mx-auto max-w-3xl space-y-4">
-        <Badge variant="warning">CRM da assessoria</Badge>
-        <Card>
-          <CardContent className="space-y-3 p-6">
-            <h1 className="font-display text-2xl font-bold text-text">Gestao temporariamente indisponivel</h1>
-            <p className="text-sm leading-relaxed text-text-muted">
-              A rota abriu sem quebrar a plataforma, mas os dados de atletas, planos e leads nao puderam ser carregados agora.
-              Verifique a conexao do banco e rode as migrations antes de validar o CRM completo.
-            </p>
-            <Link href="/treinador/dashboard" className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>
-              Voltar ao dashboard
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    console.warn("Gestao CRM carregada em modo fallback: rode as migrations para habilitar leads, produtos e billing.");
   }
 
   if (!coach) redirect("/login");
 
   const origin = process.env.NEXT_PUBLIC_APP_URL ?? "https://pacerunpro.com.br";
   const inviteUrl = `${origin}/convite/${coach.slug ?? coach.id}`;
+  const billingSettings =
+    "billingSettings" in coach.user ? (coach.user.billingSettings as BillingSettingsSummary | null) : null;
+  const planProducts = "planProducts" in coach ? readArray<PlanProductSummary>(coach.planProducts) : [];
+  const leads = "leads" in coach ? readArray<LeadSummary>(coach.leads) : [];
   const activeAthletes = coach.athletes.filter((athlete) => athlete.status !== "inativo");
   const paidAthletes = coach.athletes.filter((athlete) =>
-    athlete.planPurchases.some((purchase) => purchase.status === "paid")
+    readPlanPurchases(athlete).some((purchase) => purchase.status === "paid")
   );
   const monthlyRevenue = paidAthletes.reduce((sum, athlete) => {
-    const purchase = athlete.planPurchases[0];
+    const purchase = readPlanPurchases(athlete)[0];
     return sum + (purchase?.pricePaidCents || purchase?.product.priceCents || 0);
   }, 0);
   const platformFee = Math.round(monthlyRevenue * 0.1);
   const coachNet = monthlyRevenue - platformFee;
   const asaasReady = Boolean(
-    coach.user.billingSettings?.cpfCnpj &&
-      (coach.user.billingSettings.pixKey || coach.user.billingSettings.bankName)
+    billingSettings?.cpfCnpj &&
+      (billingSettings.pixKey || billingSettings.bankName)
   );
 
   return (
@@ -208,7 +268,7 @@ export default async function GestaoPage() {
                 <div className="px-5 py-10 text-sm text-text-muted">Nenhum atleta inscrito ainda.</div>
               ) : (
                 coach.athletes.map((athlete) => {
-                  const purchase = athlete.planPurchases[0];
+                  const purchase = readPlanPurchases(athlete)[0];
                   return (
                     <div key={athlete.id} className="grid gap-3 px-5 py-4 md:grid-cols-[1.2fr_0.8fr_0.8fr_auto] md:items-center">
                       <div className="flex min-w-0 items-center gap-3">
@@ -306,12 +366,12 @@ export default async function GestaoPage() {
               <CreditCard className="h-5 w-5 text-primary" />
             </div>
             <div className="space-y-3">
-              {coach.planProducts.length === 0 ? (
+              {planProducts.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-border p-5 text-sm text-text-muted">
                   Crie planos de assessoria para que o atleta receba o link de pagamento correto deste treinador.
                 </div>
               ) : (
-                coach.planProducts.map((plan) => (
+                planProducts.map((plan) => (
                   <div key={plan.id} className="rounded-xl border border-border p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
@@ -337,12 +397,12 @@ export default async function GestaoPage() {
               <Mail className="h-5 w-5 text-primary" />
             </div>
             <div className="space-y-3">
-              {coach.leads.length === 0 ? (
+              {leads.length === 0 ? (
                 <p className="rounded-xl border border-dashed border-border p-5 text-sm text-text-muted">
                   Os interessados por formulario, WhatsApp ou convite aparecem aqui antes de virar atleta.
                 </p>
               ) : (
-                coach.leads.map((lead) => (
+                leads.map((lead) => (
                   <div key={lead.id} className="rounded-xl border border-border p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>

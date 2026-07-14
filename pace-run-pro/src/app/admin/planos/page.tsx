@@ -81,11 +81,27 @@ function Cell({ value }: { value: boolean | string }) {
 
 export default function PlanosPage() {
   const [plans, setPlans] = useState<EditablePlan[]>(() => PLANS.map((plan) => ({ ...plan })));
+  const [modules, setModules] = useState(() => MODULES.map((group) => ({
+    ...group,
+    items: group.items.map((item) => ({ ...item, plans: { ...item.plans } })),
+  })));
   const [saved, setSaved] = useState(false);
 
   function updatePlan(id: PlanId, patch: Partial<{ price: number; maxAthletes: number | null; maxCoaches: number | null }>) {
     setSaved(false);
     setPlans((current) => current.map((plan) => (plan.id === id ? { ...plan, ...patch } : plan)));
+  }
+
+  function toggleModule(groupName: string, label: string, planId: PlanId) {
+    setSaved(false);
+    setModules((current) => current.map((group) => group.group !== groupName ? group : {
+      ...group,
+      items: group.items.map((item) => {
+        if (item.label !== label) return item;
+        const currentValue = item.plans[planId];
+        return { ...item, plans: { ...item.plans, [planId]: currentValue === true ? false : true } };
+      }),
+    }));
   }
 
   return (
@@ -144,13 +160,13 @@ export default function PlanosPage() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="p-4 text-left font-semibold text-text w-1/3">Módulo / Funcionalidade</th>
-                  {PLANS.map((p) => (
+                  {plans.map((p) => (
                     <th key={p.id} className={cn("p-4 text-center font-semibold", p.color)}>{p.label}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {MODULES.map((group) => (
+                {modules.map((group) => (
                   <Fragment key={group.group}>
                     <tr key={group.group} className="bg-card-hover/40">
                       <td colSpan={5} className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-text-muted">
@@ -160,9 +176,16 @@ export default function PlanosPage() {
                     {group.items.map((item) => (
                       <tr key={item.label} className="border-b border-border/50 hover:bg-card-hover/20 transition-colors">
                         <td className="px-4 py-3 text-sm text-text-muted">{item.label}</td>
-                        {PLANS.map((p) => (
+                        {plans.map((p) => (
                           <td key={p.id} className="px-4 py-3 text-center">
-                            <Cell value={item.plans[p.id]} />
+                            <button
+                              type="button"
+                              onClick={() => toggleModule(group.group, item.label, p.id)}
+                              className="mx-auto flex h-8 min-w-8 items-center justify-center rounded-lg border border-transparent px-2 transition-colors hover:border-primary/40 hover:bg-primary/10"
+                              title="Clique para ativar/desativar este modulo no plano"
+                            >
+                              <Cell value={item.plans[p.id]} />
+                            </button>
                           </td>
                         ))}
                       </tr>
