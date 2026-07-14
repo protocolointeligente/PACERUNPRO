@@ -55,12 +55,44 @@ export async function GET(req: NextRequest) {
 
   if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
 
-  const athleteIds = coach.athletes.map((a) => a.id);
+  const planAthletes = await prisma.trainingPlan.findMany({
+    where: { coachId: coach.id },
+    distinct: ["athleteId"],
+    select: {
+      athlete: {
+        select: {
+          id: true,
+          goal: true,
+          level: true,
+          adherenceRate: true,
+          user: { select: { name: true, avatarUrl: true } },
+          loadParams: true,
+        },
+      },
+    },
+  });
+
+  const athleteById = new Map(coach.athletes.map((athlete) => [athlete.id, athlete]));
+  for (const row of planAthletes) {
+    athleteById.set(row.athlete.id, row.athlete);
+  }
+
+  const visibleAthletes = Array.from(athleteById.values()).sort((a, b) =>
+    (a.user.name ?? "").localeCompare(b.user.name ?? "", "pt-BR"),
+  );
+  const athleteIds = visibleAthletes.map((a) => a.id);
 
   const workouts = await prisma.workout.findMany({
     where: {
       date: { gte: weekStart, lte: weekEnd },
-      week: { plan: { athleteId: { in: athleteIds } } },
+      week: {
+        plan: {
+          OR: [
+            { coachId: coach.id },
+            { athleteId: { in: athleteIds } },
+          ],
+        },
+      },
     },
     select: {
       id: true,
@@ -101,9 +133,9 @@ export async function GET(req: NextRequest) {
     workoutsByAthlete.get(athleteId)!.push(wo);
   }
 
-  const loadParamsMap = new Map(coach.athletes.map((a) => [a.id, a.loadParams]));
+  const loadParamsMap = new Map(visibleAthletes.map((a) => [a.id, a.loadParams]));
 
-  const athletes = coach.athletes.map((athlete) => {
+  const athletes = visibleAthletes.map((athlete) => {
     const athleteWorkouts = workoutsByAthlete.get(athlete.id) ?? [];
     return {
       id: athlete.id,

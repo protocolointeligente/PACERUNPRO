@@ -15,7 +15,7 @@ function money(cents: number) {
 }
 
 export default async function PendenciasPage() {
-  const [failedPayments, pendingPayments, pastDueSubscriptions, coachesMissingBilling] = await Promise.all([
+  const pendingData = await Promise.all([
     prisma.payment.findMany({
       where: { status: "FAILED" },
       orderBy: { createdAt: "desc" },
@@ -71,7 +71,9 @@ export default async function PendenciasPage() {
         },
       },
     }),
-  ]);
+  ]).then((data) => ({ data, error: false })).catch(() => ({ data: null, error: true }));
+
+  const [failedPayments, pendingPayments, pastDueSubscriptions, coachesMissingBilling] = pendingData.data ?? [[], [], [], []];
 
   const billingIssues = coachesMissingBilling
     .filter((coach) => !coach.user.billingSettings?.cpfCnpj || !coach.user.billingSettings?.receivingMethod)
@@ -88,6 +90,11 @@ export default async function PendenciasPage() {
         <p className="mt-2 max-w-2xl text-sm text-text-muted">
           Lista real de itens que podem bloquear venda, repasse, acesso ou renovacao. Sem dados mockados.
         </p>
+        {pendingData.error && (
+          <p className="mt-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
+            Nao foi possivel carregar as pendencias agora. Confira conexao do banco e migrations; a rota permanece acessivel.
+          </p>
+        )}
       </div>
 
       {total === 0 ? (

@@ -3,7 +3,6 @@ import {
   BarChart2,
   Bell,
   BookOpen,
-  Bot,
   Building2,
   CalendarDays,
   CheckSquare,
@@ -42,10 +41,8 @@ export const athleteNav: NavItem[] = [
 
 export const athleteMoreNav: NavItem[] = [
   { href: "/atleta/atividade", label: "Atividades", icon: CheckSquare },
-  { href: "/atleta/testes", label: "Testes de performance", icon: Activity },
   { href: "/atleta/planos", label: "Planos & periodizacao", icon: ClipboardList },
   { href: "/atleta/previsao", label: "Previsao & estrategia", icon: Target },
-  { href: "/atleta/ia-treinadora", label: "IA Treinadora", icon: Bot },
   { href: "/atleta/tenis", label: "Tenis tracker", icon: Shirt },
   { href: "/atleta/perfil", label: "Perfil", icon: User },
 ];
@@ -55,6 +52,7 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/alertas", label: "Alertas", icon: Bell },
   { href: "/treinador/atletas", label: "Calendario", icon: CalendarDays },
   { href: "/treinador/prescricao/periodizacao", label: "Periodizacao", icon: BarChart2 },
+  { href: "/treinador/avaliacao", label: "Avaliacao", icon: Activity },
   { href: "/treinador/grupos", label: "Grupos", icon: Users },
   { href: "/treinador/biblioteca", label: "Biblioteca", icon: BookOpen },
   { href: "/treinador/gestao", label: "Gestao", icon: Kanban },

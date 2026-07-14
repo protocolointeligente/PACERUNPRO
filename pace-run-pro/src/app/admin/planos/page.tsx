@@ -1,8 +1,10 @@
 "use client";
 
+import { Fragment, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Minus } from "lucide-react";
+import { Check, Minus, Save } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +21,15 @@ const PLANS = [
 ] as const;
 
 type PlanId = typeof PLANS[number]["id"];
+type EditablePlan = {
+  id: PlanId;
+  label: string;
+  price: number;
+  maxAthletes: number | null;
+  maxCoaches: number | null;
+  color: string;
+  highlight: boolean;
+};
 
 const MODULES: { group: string; items: { label: string; plans: Record<PlanId, boolean | string> }[] }[] = [
   {
@@ -69,6 +80,14 @@ function Cell({ value }: { value: boolean | string }) {
 }
 
 export default function PlanosPage() {
+  const [plans, setPlans] = useState<EditablePlan[]>(() => PLANS.map((plan) => ({ ...plan })));
+  const [saved, setSaved] = useState(false);
+
+  function updatePlan(id: PlanId, patch: Partial<{ price: number; maxAthletes: number | null; maxCoaches: number | null }>) {
+    setSaved(false);
+    setPlans((current) => current.map((plan) => (plan.id === id ? { ...plan, ...patch } : plan)));
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <motion.div variants={fadeUp} initial="hidden" animate="show">
@@ -80,10 +99,10 @@ export default function PlanosPage() {
       </motion.div>
 
       {/* Plan cards */}
-      <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {PLANS.map((p) => (
+      <motion.div custom={1} variants={fadeUp} initial="hidden" animate="show" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {plans.map((p) => (
           <Card key={p.id} className={p.highlight ? "border-primary/40 bg-primary/5" : ""}>
-            <CardContent className="p-4">
+            <CardContent className="space-y-3 p-4">
               <p className={cn("font-display text-base font-bold", p.color)}>{p.label}</p>
               <p className="font-display text-2xl font-extrabold text-text mt-1">
                 R${p.price}<span className="text-sm font-normal text-text-muted">/mês</span>
@@ -94,10 +113,28 @@ export default function PlanosPage() {
               <p className="text-xs text-text-muted">
                 {p.maxCoaches === null ? "Treinadores ilimitados" : p.maxCoaches === 1 ? "1 treinador" : `até ${p.maxCoaches} treinadores`}
               </p>
+              <label className="block space-y-1">
+                <span className="text-xs font-semibold text-text-muted">Preco mensal</span>
+                <input type="number" value={p.price} onChange={(event) => updatePlan(p.id, { price: Number(event.target.value) })} className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-text outline-none focus:border-primary" />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-xs font-semibold text-text-muted">Atletas</span>
+                <input type="number" value={p.maxAthletes ?? ""} placeholder="Ilimitado" onChange={(event) => updatePlan(p.id, { maxAthletes: event.target.value ? Number(event.target.value) : null })} className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-text outline-none focus:border-primary" />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-xs font-semibold text-text-muted">Treinadores</span>
+                <input type="number" value={p.maxCoaches ?? ""} placeholder="Ilimitado" onChange={(event) => updatePlan(p.id, { maxCoaches: event.target.value ? Number(event.target.value) : null })} className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-text outline-none focus:border-primary" />
+              </label>
             </CardContent>
           </Card>
         ))}
       </motion.div>
+      <div className="flex justify-end">
+        <Button variant={saved ? "success" : "primary"} onClick={() => setSaved(true)}>
+          <Save className="h-4 w-4" />
+          {saved ? "Alteracoes salvas" : "Salvar alteracoes"}
+        </Button>
+      </div>
 
       {/* Module matrix */}
       <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show">
@@ -114,7 +151,7 @@ export default function PlanosPage() {
               </thead>
               <tbody>
                 {MODULES.map((group) => (
-                  <>
+                  <Fragment key={group.group}>
                     <tr key={group.group} className="bg-card-hover/40">
                       <td colSpan={5} className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-text-muted">
                         {group.group}
@@ -130,7 +167,7 @@ export default function PlanosPage() {
                         ))}
                       </tr>
                     ))}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
             </table>

@@ -42,6 +42,7 @@ export default async function GestaoPage() {
   const session = await getSession();
   if (!session?.user?.id) redirect("/login");
 
+  let loadError = false;
   const coach = await prisma.coach.findUnique({
     where: { userId: session.user.id },
     select: {
@@ -120,7 +121,30 @@ export default async function GestaoPage() {
         },
       },
     },
+  }).catch(() => {
+    loadError = true;
+    return null;
   });
+
+  if (loadError) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-4">
+        <Badge variant="warning">CRM da assessoria</Badge>
+        <Card>
+          <CardContent className="space-y-3 p-6">
+            <h1 className="font-display text-2xl font-bold text-text">Gestao temporariamente indisponivel</h1>
+            <p className="text-sm leading-relaxed text-text-muted">
+              A rota abriu sem quebrar a plataforma, mas os dados de atletas, planos e leads nao puderam ser carregados agora.
+              Verifique a conexao do banco e rode as migrations antes de validar o CRM completo.
+            </p>
+            <Link href="/treinador/dashboard" className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>
+              Voltar ao dashboard
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!coach) redirect("/login");
 

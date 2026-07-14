@@ -14,8 +14,7 @@ function money(cents: number) {
 }
 
 export default async function FinanceiroPage() {
-  const [paidPayments, pendingPayments, failedPayments, activeSubscriptions, coaches, athletes, paidPurchases] =
-    await Promise.all([
+  const financeData = await Promise.all([
       prisma.payment.aggregate({ where: { status: "PAID" }, _sum: { amountCents: true }, _count: true }),
       prisma.payment.aggregate({ where: { status: "PENDING" }, _sum: { amountCents: true }, _count: true }),
       prisma.payment.count({ where: { status: "FAILED" } }),
@@ -39,7 +38,25 @@ export default async function FinanceiroPage() {
           },
         },
       }),
-    ]);
+    ]).then((data) => ({ data, error: false })).catch(() => ({ data: null, error: true }));
+
+  const [
+    paidPayments,
+    pendingPayments,
+    failedPayments,
+    activeSubscriptions,
+    coaches,
+    athletes,
+    paidPurchases,
+  ] = financeData.data ?? [
+    { _sum: { amountCents: null }, _count: 0 },
+    { _sum: { amountCents: null }, _count: 0 },
+    0,
+    0,
+    0,
+    0,
+    [],
+  ];
 
   const paidTotal = paidPayments._sum.amountCents ?? 0;
   const pendingTotal = pendingPayments._sum.amountCents ?? 0;
@@ -56,6 +73,11 @@ export default async function FinanceiroPage() {
           Numeros vindos do banco. Quando Asaas entrar, esta tela deve consolidar assinatura do treinador,
           mensalidades dos atletas, webhooks e repasses 90/10.
         </p>
+        {financeData.error && (
+          <p className="mt-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
+            Nao foi possivel carregar o financeiro agora. Confira variaveis do banco e migrations; a tela permanece acessivel para nao travar o admin.
+          </p>
+        )}
       </div>
 
       <div className="grid gap-3 md:grid-cols-4">

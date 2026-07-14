@@ -70,7 +70,15 @@ export async function POST(req: NextRequest) {
   });
   if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
 
-  const coachAthleteIds = new Set(coach.athletes.map((a) => a.id));
+  const planAthletes = await prisma.trainingPlan.findMany({
+    where: { coachId: coach.id },
+    distinct: ["athleteId"],
+    select: { athleteId: true },
+  });
+  const coachAthleteIds = new Set([
+    ...coach.athletes.map((a) => a.id),
+    ...planAthletes.map((plan) => plan.athleteId),
+  ]);
 
   const body = await req.json();
   const { sourceAthleteId, weekStart: weekStartStr, targetWeekStart: targetWeekStartStr, targetAthleteIds } = body as {

@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
 
   const coach = await prisma.coach.findUnique({
     where: { userId: session.user.id },
-    select: { id: true, athletes: { select: { id: true } } },
+    select: { id: true },
   });
   if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
 
@@ -46,12 +46,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Dados incompletos" }, { status: 400 });
   }
 
-  const coachAthleteIds = new Set(coach.athletes.map((a) => a.id));
-  if (!coachAthleteIds.has(athleteId)) {
+  const athlete = await prisma.athlete.findFirst({
+    where: {
+      id: athleteId,
+      OR: [
+        { coachId: coach.id },
+        { trainingPlans: { some: { coachId: coach.id } } },
+      ],
+    },
+    select: { goal: true },
+  });
+  if (!athlete) {
     return NextResponse.json({ error: "Atleta inválido" }, { status: 403 });
   }
 
-  const workoutDate = new Date(date);
+  const workoutDate = new Date(`${date}T12:00:00`);
   if (isNaN(workoutDate.getTime())) {
     return NextResponse.json({ error: "Data inválida" }, { status: 400 });
   }
@@ -60,13 +69,15 @@ export async function POST(req: NextRequest) {
 
   // Find or create active plan
   let plan = await prisma.trainingPlan.findFirst({
-    where: { athleteId, coachId: coach.id, endDate: { gte: new Date() } },
+    where: {
+      athleteId,
+      coachId: coach.id,
+      startDate: { lte: workoutDate },
+      endDate: { gte: workoutDate },
+    },
+    orderBy: { createdAt: "desc" },
   });
   if (!plan) {
-    const athlete = await prisma.athlete.findUnique({
-      where: { id: athleteId },
-      select: { goal: true },
-    });
     plan = await prisma.trainingPlan.create({
       data: {
         athleteId,
@@ -74,8 +85,8 @@ export async function POST(req: NextRequest) {
         name: "Plano de Treinamento",
         goal: athlete?.goal ?? "PERFORMANCE",
         phase: "BASE",
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+        startDate: workoutDate,
+        endDate: new Date(workoutDate.getTime() + 90 * 24 * 60 * 60 * 1000),
       },
     });
   }
@@ -91,7 +102,11 @@ export async function POST(req: NextRequest) {
   weekEnd.setHours(23, 59, 59, 999);
 
   let week = await prisma.trainingWeek.findFirst({
-    where: { planId: plan.id, startDate: weekStart },
+    where: {
+      planId: plan.id,
+      startDate: { lte: workoutDate },
+      endDate: { gte: workoutDate },
+    },
   });
   if (!week) {
     const weekCount = await prisma.trainingWeek.count({ where: { planId: plan.id } });

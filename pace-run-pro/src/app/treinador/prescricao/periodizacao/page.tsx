@@ -593,7 +593,6 @@ export default function PeriodizacaoPage() {
       setLiberated(true);
       await refreshSavedPlans();
       try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
-      setTimeout(() => setLiberated(false), 4000);
     } finally {
       setLiberating(false);
     }
@@ -698,6 +697,11 @@ export default function PeriodizacaoPage() {
   const taperWeeks = weeks.filter((w) => w.phase === "Taper").length;
   const deloadWeeks = weeks.filter((w) => w.isDeload).length;
   const totalWorkouts = Object.values(workoutsMap).reduce((s, arr) => s + arr.length, 0);
+  const acceptedSuggestions = weeks.reduce((sum, week) => {
+    const workouts = workoutsMap[week.week] ?? [];
+    return sum + workouts.filter((_, index) => suggestionStatus[`${week.week}-${index}`] === "accepted").length;
+  }, 0);
+  const allSuggestionsAccepted = totalWorkouts > 0 && acceptedSuggestions === totalWorkouts;
 
   const mesocycles = weeks.reduce((acc, w) => {
     if (!acc[w.mesocycle]) acc[w.mesocycle] = [];
@@ -804,9 +808,9 @@ export default function PeriodizacaoPage() {
                 {generated ? "Editar configuracao" : "Criar periodizacao"}
               </Button>
               {generated && (
-                <Button variant="primary" size="sm" onClick={() => setAllSuggestions("accepted")}>
+                <Button variant={allSuggestionsAccepted ? "success" : "primary"} size="sm" onClick={() => setAllSuggestions("accepted")}>
                   <CheckCheck className="h-4 w-4" />
-                  Aceitar Intelligence
+                  {allSuggestionsAccepted ? "Sugestões aceitas" : "Aceitar Intelligence"}
                 </Button>
               )}
             </div>
@@ -2025,13 +2029,13 @@ function PeriodizationBuilderModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm" onClick={onClose} />
       <div className="relative z-10 flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
-        <div className="flex items-start justify-between gap-4 border-b border-border bg-gradient-to-r from-[#ff6b1a] via-[#5b2df5] to-[#0284c7] px-5 py-4 text-white">
+        <div className="flex items-start justify-between gap-4 border-b border-border bg-card px-5 py-4 text-text">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">PACE RUN PRO Intelligence</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">PACE RUN PRO Intelligence</p>
             <h2 className="font-display text-xl font-bold">Criar periodizacao cientifica</h2>
-            <p className="mt-1 max-w-2xl text-sm text-white/78">ATR/blocos, tapering, provas A/B/C, controle de carga por modalidade e sugestao automatica de sessoes.</p>
+            <p className="mt-1 max-w-2xl text-sm text-text-muted">ATR/blocos, tapering, provas A/B/C, controle de carga por modalidade e sugestao automatica de sessoes.</p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-white/80 hover:bg-white/15 hover:text-white">
+          <button onClick={onClose} className="rounded-lg p-1.5 text-text-muted hover:bg-card-hover hover:text-text">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -2121,9 +2125,15 @@ function MacrocycleScienceChart({ weeks, events, settings, selectedWeek, onSelec
 function IntelligencePanel({ weeks, selectedWeek, workoutsMap, suggestionStatus, onAccept, onDecline, onAcceptWeek, onDeclineWeek, onAcceptMeso, onAcceptAll, onEditWeek }: { weeks: Week[]; selectedWeek: number | null; workoutsMap: Record<number, GeneratedWorkout[]>; suggestionStatus: Record<string, SuggestionStatus>; onAccept: (key: string) => void; onDecline: (key: string) => void; onAcceptWeek: (week: number) => void; onDeclineWeek: (week: number) => void; onAcceptMeso: (mesocycle: number) => void; onAcceptAll: () => void; onEditWeek: (week: number) => void }) {
   const week = weeks.find((item) => item.week === selectedWeek) ?? weeks[0];
   const workouts = week ? workoutsMap[week.week] ?? [] : [];
+  const totalSuggestions = weeks.reduce((sum, item) => sum + (workoutsMap[item.week]?.length ?? 0), 0);
+  const acceptedSuggestions = weeks.reduce((sum, item) => {
+    const list = workoutsMap[item.week] ?? [];
+    return sum + list.filter((_, index) => suggestionStatus[`${item.week}-${index}`] === "accepted").length;
+  }, 0);
+  const allAccepted = totalSuggestions > 0 && acceptedSuggestions === totalSuggestions;
   return (
     <Card>
-      <div className="flex flex-col gap-3 border-b border-border px-4 py-3 lg:flex-row lg:items-center lg:justify-between"><div><p className="flex items-center gap-2 text-sm font-semibold text-text"><Brain className="h-4 w-4 text-primary" />Intelligence de sessoes</p><p className="text-xs text-text-muted">Aceite, recuse ou edite as sugestoes sem perder o macrociclo de vista.</p></div>{week && <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => onEditWeek(week.week)}><Pencil className="h-4 w-4" />Editar semana {week.week}</Button><Button variant="secondary" size="sm" onClick={() => onAcceptWeek(week.week)}><CheckCheck className="h-4 w-4" />Aceitar semana</Button><Button variant="outline" size="sm" onClick={() => onAcceptMeso(week.mesocycle)}>Aceitar mesociclo</Button><Button variant="primary" size="sm" onClick={onAcceptAll}>Aceitar tudo</Button></div>}</div>
+      <div className="flex flex-col gap-3 border-b border-border px-4 py-3 lg:flex-row lg:items-center lg:justify-between"><div><p className="flex items-center gap-2 text-sm font-semibold text-text"><Brain className="h-4 w-4 text-primary" />Intelligence de sessoes</p><p className="text-xs text-text-muted">Aceite, recuse ou edite as sugestoes sem perder o macrociclo de vista.</p></div>{week && <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => onEditWeek(week.week)}><Pencil className="h-4 w-4" />Editar semana {week.week}</Button><Button variant="secondary" size="sm" onClick={() => onAcceptWeek(week.week)}><CheckCheck className="h-4 w-4" />Aceitar semana</Button><Button variant="outline" size="sm" onClick={() => onAcceptMeso(week.mesocycle)}>Aceitar mesociclo</Button><Button variant={allAccepted ? "success" : "primary"} size="sm" onClick={onAcceptAll}>{allAccepted ? "Tudo aceito" : "Aceitar tudo"}</Button></div>}</div>
       <CardContent className="grid gap-3 pt-4 lg:grid-cols-[1fr_260px]"><div className="space-y-2">{workouts.length === 0 ? <p className="rounded-xl border border-dashed border-border py-8 text-center text-sm text-text-muted">Selecione uma semana no grafico.</p> : workouts.map((workout, index) => { const key = `${week.week}-${index}`; const status = suggestionStatus[key] ?? "pending"; return <div key={key} className={cn("rounded-xl border p-3", status === "accepted" ? "border-success/40 bg-success/10" : status === "declined" ? "border-danger/40 bg-danger/10 opacity-70" : "border-border bg-background/50")}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-sm font-semibold text-text">{workout.dayLabel} · {workout.title}</p><p className="mt-1 text-xs text-text-muted">{workout.objective}</p><p className="mt-1 text-[11px] text-text-muted">Zona {workout.zone} · {workout.distanceKm} km · {workout.durationMin} min · RPE {workout.targetRpe}</p></div><div className="flex gap-1.5"><button onClick={() => onAccept(key)} className="rounded-lg border border-success/40 px-2 py-1 text-xs font-semibold text-success hover:bg-success/10"><Check className="inline h-3 w-3" /> Aceitar</button><button onClick={() => onDecline(key)} className="rounded-lg border border-danger/40 px-2 py-1 text-xs font-semibold text-danger hover:bg-danger/10"><Ban className="inline h-3 w-3" /> Recusar</button></div></div></div>; })}</div><div className="rounded-xl border border-primary/25 bg-primary/10 p-3"><p className="flex items-center gap-2 text-sm font-semibold text-text"><Sparkles className="h-4 w-4 text-primary" />Racional cientifico</p><p className="mt-2 text-xs leading-relaxed text-text-muted">As sessoes foram distribuidas pelo foco do microciclo, fase do mesociclo, volume alvo e intensidade. Em tapering, o volume cai e a intensidade vira ativacao curta.</p>{week && <button onClick={() => onDeclineWeek(week.week)} className="mt-3 w-full rounded-lg border border-danger/30 px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10">Recusar sugestoes da semana</button>}</div></CardContent>
     </Card>
   );
