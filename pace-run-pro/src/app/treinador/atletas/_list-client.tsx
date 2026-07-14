@@ -1709,7 +1709,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
     }
   }
 
-  async function handlePasteWeek(athlete: AthleteWeekly) {
+  async function handlePasteWeek(athlete: AthleteWeekly, targetWeekStart?: string) {
     if (!weekClipboard) return;
     setBusyCell(`week:${athlete.id}`);
     try {
@@ -1719,7 +1719,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           body: JSON.stringify({
             sourceAthleteId: weekClipboard.athlete.id,
             weekStart: weekClipboard.weekStart,
-            targetWeekStart: toISODate(weekStart),
+            targetWeekStart: targetWeekStart ?? toISODate(weekStart),
             targetAthleteIds: [athlete.id],
           }),
       });
@@ -1779,6 +1779,10 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
         isToday: day.date === toISODate(new Date()),
       }))
     : monthDays;
+  const calendarRows = Array.from(
+    { length: Math.ceil(calendarGridDays.length / 7) },
+    (_, rowIndex) => calendarGridDays.slice(rowIndex * 7, rowIndex * 7 + 7)
+  );
 
   // Use weekly API data if loaded, fall back to static athletes for empty state
   const athletes: AthleteWeekly[] = weeklyData?.athletes ?? staticAthletes.map((a) => ({
@@ -1799,7 +1803,6 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   const selectedWorkouts = selectedAthlete?.workouts ?? [];
   const visibleWorkouts = selectedWorkouts;
   const listWorkouts = [...visibleWorkouts].sort((a, b) => a.date.localeCompare(b.date));
-  const selectedWeekWorkoutCount = selectedWorkouts.filter((workout) => weekDays.some((day) => day.date === workout.date)).length;
   const visibleTss = visibleWorkouts.reduce((sum, workout) => sum + workout.tss, 0);
   const plannedTss = visibleWorkouts.reduce((sum, workout) => sum + (workout.plannedTss ?? workout.tss), 0);
   const actualTss = visibleWorkouts.reduce((sum, workout) => sum + (workout.actualTss ?? 0), 0);
@@ -2113,30 +2116,6 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
               <div className="flex flex-wrap justify-end gap-2">
                 <Button
                   size="sm"
-                  variant="outline"
-                  disabled={selectedWeekWorkoutCount === 0}
-                  onClick={() => setWeekClipboard({
-                    athlete: selectedAthlete,
-                    weekStart: toISODate(weekStart),
-                    workoutCount: selectedWeekWorkoutCount,
-                  })}
-                >
-                  <Clipboard className="h-4 w-4" />
-                  Copiar semana
-                </Button>
-                {weekClipboard && (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => handlePasteWeek(selectedAthlete)}
-                    disabled={busyCell === `week:${selectedAthlete.id}`}
-                  >
-                    {busyCell === `week:${selectedAthlete.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardPaste className="h-4 w-4" />}
-                    Colar semana
-                  </Button>
-                )}
-                <Button
-                  size="sm"
                   onClick={() => setQuickPrescribe({
                     athleteId: selectedAthlete.id,
                     athleteName: selectedAthlete.name,
@@ -2149,51 +2128,64 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
               </div>
             )}
           </div>
-          <div className={cn("grid grid-cols-7 border-b border-white/10 bg-white/[0.03]", calendarView === "Lista" && "hidden")}>
+          <div className={cn("grid grid-cols-[repeat(7,minmax(0,1fr))_48px] border-b border-white/10 bg-white/[0.03]", calendarView === "Lista" && "hidden")}>
             {DAYS_PT.map((day) => (
               <div key={day} className="px-2 py-2 text-center text-[11px] font-semibold uppercase text-text-muted">
                 {day}
               </div>
             ))}
+            <div className="px-1 py-2 text-center text-[10px] font-semibold uppercase text-text-muted">
+              Acoes
+            </div>
           </div>
-          <div className={cn("grid grid-cols-7", calendarView === "Lista" && "hidden")}>
+          <div className={cn(calendarView === "Lista" && "hidden")}>
             {loading ? (
-              <div className="col-span-7 flex items-center justify-center py-16">
+              <div className="flex items-center justify-center py-16">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
               </div>
             ) : !selectedAthlete ? (
-              <div className="col-span-7 py-16 text-center text-sm text-text-muted">Selecione um atleta.</div>
+              <div className="py-16 text-center text-sm text-text-muted">Selecione um atleta.</div>
             ) : (
-              calendarGridDays.map((day) => {
-                const dayWorkouts = selectedWorkouts.filter((workout) => workout.date === day.iso);
-                const isBusy = busyCell === `${selectedAthlete.id}:${day.iso}`;
+              calendarRows.map((row, rowIndex) => {
+                const rowWeekStart = row[0]?.iso ?? toISODate(weekStart);
+                const rowWorkoutCount = selectedWorkouts.filter((workout) => row.some((day) => day.iso === workout.date)).length;
+                const canPasteWeek = Boolean(weekClipboard);
+                const rowBusy = busyCell === `week:${selectedAthlete.id}`;
                 return (
                   <div
-                    key={day.iso}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={() => {
-                      if (draggingWorkout) handleMoveWorkout(draggingWorkout.workoutId, selectedAthlete.id, day.iso);
-                    }}
-                    className={cn(
-                      "min-h-[132px] border-b border-r border-white/10 bg-white/[0.025] p-1.5 transition-colors",
-                      !day.inMonth && "bg-black/15 opacity-50",
-                      day.isToday && "bg-primary/10 ring-1 ring-inset ring-primary/35",
-                      draggingWorkout && "bg-primary/10"
-                    )}
+                    key={`${rowWeekStart}-${rowIndex}`}
+                    className="grid grid-cols-[repeat(7,minmax(0,1fr))_48px]"
                   >
-                    <div className="mb-1 flex items-center justify-between">
-                      <span className={cn("text-xs font-bold", day.isToday ? "text-primary" : "text-text-muted")}>{day.dayNum}</span>
-                      <button
-                        onClick={() => setQuickPrescribe({ athleteId: selectedAthlete.id, athleteName: selectedAthlete.name, date: day.iso })}
-                        className="rounded p-0.5 text-text-muted transition-colors hover:bg-card-hover hover:text-primary"
-                        title="Prescrever"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                    <div className="space-y-1">
-                      {isBusy && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-                      {dayWorkouts.map((workout) => {
+                    {row.map((day) => {
+                      const dayWorkouts = selectedWorkouts.filter((workout) => workout.date === day.iso);
+                      const isBusy = busyCell === `${selectedAthlete.id}:${day.iso}`;
+                      return (
+                        <div
+                          key={day.iso}
+                          onDragOver={(event) => event.preventDefault()}
+                          onDrop={() => {
+                            if (draggingWorkout) handleMoveWorkout(draggingWorkout.workoutId, selectedAthlete.id, day.iso);
+                          }}
+                          className={cn(
+                            "min-h-[132px] border-b border-r border-white/10 bg-white/[0.025] p-1.5 transition-colors",
+                            !day.inMonth && "bg-black/15 opacity-50",
+                            day.isToday && "bg-primary/10 ring-1 ring-inset ring-primary/35",
+                            draggingWorkout && "bg-primary/10"
+                          )}
+                        >
+                          <div className="mb-1 flex items-center justify-between">
+                            <span className={cn("text-xs font-bold", day.isToday ? "text-primary" : "text-text-muted")}>{day.dayNum}</span>
+                            <button
+                              onClick={() => setQuickPrescribe({ athleteId: selectedAthlete.id, athleteName: selectedAthlete.name, date: day.iso })}
+                              className="rounded p-0.5 text-text-muted transition-colors hover:bg-card-hover hover:text-primary"
+                              title="Prescrever"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          <div className="space-y-1">
+                            {isBusy && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+                            {dayWorkouts.map((workout) => {
                         return (
                           <div
                             key={workout.id}
@@ -2236,16 +2228,47 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                             </button>
                           </div>
                         );
-                      })}
-                      {dayWorkouts.length === 0 && workoutClipboard && (
-                        <button
-                          onClick={() => handlePasteWorkout(selectedAthlete, day.iso)}
-                          className="flex w-full items-center justify-center gap-1 rounded border border-dashed border-success/40 px-2 py-4 text-[11px] font-semibold text-success hover:bg-success/10"
-                        >
-                          <ClipboardPaste className="h-3 w-3" />
-                          Colar
-                        </button>
-                      )}
+                            })}
+                            {dayWorkouts.length === 0 && workoutClipboard && (
+                              <button
+                                onClick={() => handlePasteWorkout(selectedAthlete, day.iso)}
+                                className="flex w-full items-center justify-center gap-1 rounded border border-dashed border-success/40 px-2 py-4 text-[11px] font-semibold text-success hover:bg-success/10"
+                              >
+                                <ClipboardPaste className="h-3 w-3" />
+                                Colar
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div className="flex min-h-[132px] flex-col items-center justify-center gap-2 border-b border-white/10 bg-white/[0.035] px-1">
+                      <button
+                        type="button"
+                        disabled={rowWorkoutCount === 0}
+                        onClick={() => setWeekClipboard({
+                          athlete: selectedAthlete,
+                          weekStart: rowWeekStart,
+                          workoutCount: rowWorkoutCount,
+                        })}
+                        title={rowWorkoutCount > 0 ? `Copiar semana (${rowWorkoutCount} treino${rowWorkoutCount !== 1 ? "s" : ""})` : "Semana sem treinos"}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-text-muted transition-colors hover:border-primary/50 hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!canPasteWeek || rowBusy}
+                        onClick={() => handlePasteWeek(selectedAthlete, rowWeekStart)}
+                        title={weekClipboard ? `Colar semana de ${weekClipboard.athlete.name}` : "Copie uma semana primeiro"}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-text-muted transition-colors hover:border-success/50 hover:bg-success/10 hover:text-success disabled:cursor-not-allowed disabled:opacity-30"
+                      >
+                        {rowBusy ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <ClipboardPaste className="h-3.5 w-3.5" />
+                        )}
+                      </button>
                     </div>
                   </div>
                 );
