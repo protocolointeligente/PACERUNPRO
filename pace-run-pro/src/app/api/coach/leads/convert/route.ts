@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   const existingUser = await prisma.user.findUnique({
     where: { email: lead.email },
-    select: { id: true, athlete: { select: { id: true } } },
+    select: { id: true, athlete: { select: { id: true, coachId: true } } },
   });
 
   let athleteId: string;
@@ -38,10 +38,22 @@ export async function POST(req: NextRequest) {
   if (existingUser) {
     if (existingUser.athlete) {
       // Athlete exists — just link to this coach if not already linked
-      await prisma.athlete.update({
-        where: { id: existingUser.athlete.id },
-        data: { coachId: coach.id },
-      });
+      if (existingUser.athlete.coachId && existingUser.athlete.coachId !== coach.id) {
+        return NextResponse.json(
+          {
+            error:
+              "Este e-mail ja pertence a um atleta vinculado a outro treinador. Convide o atleta a solicitar transferencia antes de converter.",
+          },
+          { status: 409 },
+        );
+      }
+
+      if (!existingUser.athlete.coachId) {
+        await prisma.athlete.update({
+          where: { id: existingUser.athlete.id },
+          data: { coachId: coach.id },
+        });
+      }
       athleteId = existingUser.athlete.id;
     } else {
       // User exists but no athlete record yet
