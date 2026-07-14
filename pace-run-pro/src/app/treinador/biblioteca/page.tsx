@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   BookOpen,
+  Bike,
   ChevronDown,
   ChevronUp,
   Copy,
@@ -16,6 +17,7 @@ import {
   Search,
   Trash2,
   Users,
+  Waves,
   X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +28,8 @@ import { cn } from "@/lib/utils";
 // ── types ─────────────────────────────────────────────────────────────────────
 
 type TemplateScope = "PERSONAL" | "TEAM";
-type TemplateCategory = "CORRIDA" | "FORCA" | "MOBILIDADE" | "FUNCIONAL";
+type DbTemplateCategory = "CORRIDA" | "FORCA" | "MOBILIDADE" | "FUNCIONAL";
+type TemplateCategory = DbTemplateCategory | "CICLISMO" | "NATACAO";
 
 interface Template {
   id: string;
@@ -56,26 +59,34 @@ interface Template {
 const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
 
-const CATEGORY_LABELS: Record<TemplateCategory, string> = {
+const CATEGORY_LABELS: Record<string, string> = {
   CORRIDA: "Corrida",
+  CICLISMO: "Ciclismo",
+  NATACAO: "Natacao",
   FORCA: "Força",
   MOBILIDADE: "Mobilidade",
   FUNCIONAL: "Funcional",
 };
 
-const CATEGORY_COLORS: Record<TemplateCategory, string> = {
+const CATEGORY_COLORS: Record<string, string> = {
   CORRIDA: "text-sky-400 bg-sky-400/10",
+  CICLISMO: "text-lime-400 bg-lime-400/10",
+  NATACAO: "text-cyan-400 bg-cyan-400/10",
   FORCA: "text-violet-400 bg-violet-400/10",
   MOBILIDADE: "text-lime-400 bg-lime-400/10",
   FUNCIONAL: "text-orange-400 bg-orange-400/10",
 };
 
-const CATEGORY_ICONS: Record<TemplateCategory, React.ElementType> = {
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
   CORRIDA: Flame,
+  CICLISMO: Bike,
+  NATACAO: Waves,
   FORCA: Dumbbell,
   MOBILIDADE: RotateCcw,
   FUNCIONAL: Globe,
 };
+
+const DB_TEMPLATE_CATEGORIES: DbTemplateCategory[] = ["CORRIDA", "FORCA", "MOBILIDADE", "FUNCIONAL"];
 
 function formatPace(sec: number) {
   const m = Math.floor(sec / 60);
@@ -104,6 +115,275 @@ const EMPTY_FORM = {
   targetDurationMin: "",
 };
 
+const systemCoach = { user: { name: "Pace Run Pro", avatarUrl: null } };
+
+const SYSTEM_TEMPLATES: Template[] = [
+  {
+    id: "system-run-z2",
+    name: "Corrida Z2 base aerobica",
+    description: "Rodagem leve para construir base sem excesso de fadiga.",
+    category: "CORRIDA",
+    workoutType: "RODAGEM_LEVE",
+    scope: "TEAM",
+    tags: ["sistema", "corrida", "z2", "base"],
+    objective: "Base aerobica e eficiencia mecanica.",
+    warmup: "10 min trote leve + mobilidade dinamica.",
+    mainSet: "35-50 min em Z2 / RPE 3-4.",
+    cooldown: "5-10 min leve.",
+    notes: "Manter conversa confortavel.",
+    targetPaceSecPerKm: null,
+    targetHrZone: "Z2",
+    targetRpe: 4,
+    targetDistanceKm: null,
+    targetDurationMin: 50,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-run-vo2",
+    name: "Intervalado VO2 6x800m",
+    description: "Sessao de VO2 para fase especifica.",
+    category: "CORRIDA",
+    workoutType: "INTERVALADO_LONGO",
+    scope: "TEAM",
+    tags: ["sistema", "corrida", "vo2", "intervalado"],
+    objective: "Elevar potencia aerobica mantendo tecnica.",
+    warmup: "15 min leve + 4 educativos + 4 aceleracoes.",
+    mainSet: "6x800m em ritmo 5k com 2 min trote leve.",
+    cooldown: "10 min leve.",
+    notes: "Cortar repeticoes se a tecnica cair.",
+    targetPaceSecPerKm: null,
+    targetHrZone: "Z4-Z5",
+    targetRpe: 8,
+    targetDistanceKm: 8,
+    targetDurationMin: 60,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-run-long",
+    name: "Longao progressivo",
+    description: "Longo com fechamento controlado.",
+    category: "CORRIDA",
+    workoutType: "LONGAO",
+    scope: "TEAM",
+    tags: ["sistema", "corrida", "longao"],
+    objective: "Resistencia especifica e economia.",
+    warmup: "10 min leve.",
+    mainSet: "70% Z2 + 20% Z3 + 10% ritmo alvo.",
+    cooldown: "5 min leve.",
+    notes: "Nao transformar em prova.",
+    targetPaceSecPerKm: null,
+    targetHrZone: "Z2-Z3",
+    targetRpe: 6,
+    targetDistanceKm: null,
+    targetDurationMin: 90,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-bike-z2",
+    name: "Bike endurance Z2",
+    description: "Pedal de base por potencia ou FC.",
+    category: "CICLISMO",
+    workoutType: "RODAGEM_LEVE",
+    scope: "TEAM",
+    tags: ["sistema", "ciclismo", "ftp", "z2"],
+    objective: "Base aerobica e tolerancia ao volume.",
+    warmup: "10 min progressivo.",
+    mainSet: "60-90 min em 60-70% FTP ou Z2 FC.",
+    cooldown: "10 min leve.",
+    notes: "Cadencia 85-95 rpm.",
+    targetPaceSecPerKm: null,
+    targetHrZone: "Z2 / 60-70% FTP",
+    targetRpe: 4,
+    targetDistanceKm: null,
+    targetDurationMin: 90,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-bike-sweet",
+    name: "Sweet spot 3x12min",
+    description: "Controle de carga em zona sweet spot.",
+    category: "CICLISMO",
+    workoutType: "TEMPO_RUN",
+    scope: "TEAM",
+    tags: ["sistema", "ciclismo", "sweet spot"],
+    objective: "Sustentar alto tempo em intensidade sub-limiar.",
+    warmup: "15 min progressivo + 3x30s alta cadencia.",
+    mainSet: "3x12 min a 88-94% FTP com 5 min leve.",
+    cooldown: "10 min leve.",
+    notes: "Estavel, sem sprintar.",
+    targetPaceSecPerKm: null,
+    targetHrZone: "88-94% FTP",
+    targetRpe: 7,
+    targetDistanceKm: null,
+    targetDurationMin: 70,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-bike-vo2",
+    name: "VO2 bike 5x4min",
+    description: "Bloco curto de potencia aerobica.",
+    category: "CICLISMO",
+    workoutType: "INTERVALADO_LONGO",
+    scope: "TEAM",
+    tags: ["sistema", "ciclismo", "vo2"],
+    objective: "Elevar teto aerobico e tolerancia ao desconforto.",
+    warmup: "20 min com 3 aceleracoes.",
+    mainSet: "5x4 min a 106-115% FTP com 4 min leve.",
+    cooldown: "10 min leve.",
+    notes: "Parar se nao sustentar potencia.",
+    targetPaceSecPerKm: null,
+    targetHrZone: "106-115% FTP",
+    targetRpe: 9,
+    targetDistanceKm: null,
+    targetDurationMin: 65,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-swim-tech",
+    name: "Natacao tecnica + educativo",
+    description: "Sessao tecnica para eficiencia.",
+    category: "NATACAO",
+    workoutType: "TECNICA",
+    scope: "TEAM",
+    tags: ["sistema", "natacao", "tecnica"],
+    objective: "Melhorar alinhamento, respiracao e pegada.",
+    warmup: "300m livre leve.",
+    mainSet: "8x50m educativos + 8x100m Z2 com 20s pausa.",
+    cooldown: "200m solto.",
+    notes: "Priorizar qualidade tecnica.",
+    targetPaceSecPerKm: null,
+    targetHrZone: "CSS + 10-15s/100m",
+    targetRpe: 4,
+    targetDistanceKm: 1.8,
+    targetDurationMin: 45,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-swim-css",
+    name: "CSS curto 16x100m",
+    description: "Ritmo CSS com pausas curtas.",
+    category: "NATACAO",
+    workoutType: "INTERVALADO_CURTO",
+    scope: "TEAM",
+    tags: ["sistema", "natacao", "css"],
+    objective: "Sustentar ritmo critico com controle tecnico.",
+    warmup: "400m leve + 4x50m progressivo.",
+    mainSet: "16x100m em CSS com 15-20s pausa.",
+    cooldown: "200m solto.",
+    notes: "Manter mesma saida em todas.",
+    targetPaceSecPerKm: null,
+    targetHrZone: "CSS",
+    targetRpe: 7,
+    targetDistanceKm: 2.4,
+    targetDurationMin: 55,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-swim-aerobic",
+    name: "Aerobio continuo 2.000m",
+    description: "Volume continuo para triathlon e aguas abertas.",
+    category: "NATACAO",
+    workoutType: "RODAGEM_LEVE",
+    scope: "TEAM",
+    tags: ["sistema", "natacao", "aerobio"],
+    objective: "Construir resistencia na agua.",
+    warmup: "300m leve.",
+    mainSet: "3x500m Z2 com 45s pausa.",
+    cooldown: "200m solto.",
+    notes: "Respiracao bilateral quando possivel.",
+    targetPaceSecPerKm: null,
+    targetHrZone: "Z2 agua",
+    targetRpe: 5,
+    targetDistanceKm: 2,
+    targetDurationMin: 50,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-strength-full",
+    name: "Forca full body RPE 7",
+    description: "Sessao geral de forca para endurance.",
+    category: "FORCA",
+    workoutType: "FORCA",
+    scope: "TEAM",
+    tags: ["sistema", "forca", "full body"],
+    objective: "Desenvolver forca geral com fadiga controlada.",
+    warmup: "Mobilidade + ativacao 8 min.",
+    mainSet: "Agachamento 3x6, supino 3x8, remada 3x8, stiff 3x8.",
+    cooldown: "Mobilidade leve.",
+    notes: "RPE 7, deixar 2-3 repeticoes na reserva.",
+    targetPaceSecPerKm: null,
+    targetHrZone: null,
+    targetRpe: 7,
+    targetDistanceKm: null,
+    targetDurationMin: 50,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-strength-lower",
+    name: "Forca inferior corredores",
+    description: "Inferiores com foco em corrida.",
+    category: "FORCA",
+    workoutType: "FORCA",
+    scope: "TEAM",
+    tags: ["sistema", "forca", "corrida"],
+    objective: "Forca e resiliencia de quadril, joelho e tornozelo.",
+    warmup: "Ativacao gluteos + mobilidade tornozelo.",
+    mainSet: "Agachamento 4x5, avanco 3x8, panturrilha 4x10, prancha 3x40s.",
+    cooldown: "Alongamento leve.",
+    notes: "Descanso 90-150s.",
+    targetPaceSecPerKm: null,
+    targetHrZone: null,
+    targetRpe: 8,
+    targetDistanceKm: null,
+    targetDurationMin: 45,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-strength-core",
+    name: "Core + mobilidade funcional",
+    description: "Sessao curta para manutencao.",
+    category: "FORCA",
+    workoutType: "FUNCIONAL",
+    scope: "TEAM",
+    tags: ["sistema", "forca", "core", "mobilidade"],
+    objective: "Controle de tronco e mobilidade sem gerar fadiga alta.",
+    warmup: "Respiracao + mobilidade coluna.",
+    mainSet: "Dead bug 3x10, prancha 3x45s, ponte 3x12, mobilidade quadril 8 min.",
+    cooldown: "Soltura leve.",
+    notes: "Ideal em semanas de maior volume.",
+    targetPaceSecPerKm: null,
+    targetHrZone: null,
+    targetRpe: 5,
+    targetDistanceKm: null,
+    targetDurationMin: 30,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+];
+
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function BibliotecaPage() {
@@ -122,10 +402,16 @@ export default function BibliotecaPage() {
   const load = useCallback(() => {
     setLoading(true);
     const params = new URLSearchParams({ tab });
-    if (category) params.set("category", category);
+    if (category && DB_TEMPLATE_CATEGORIES.includes(category as DbTemplateCategory)) params.set("category", category);
     fetch(`/api/coach/biblioteca?${params}`)
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.templates) setTemplates(d.templates); })
+      .then((d) => {
+        if (d?.templates) {
+          const systemTemplates = tab === "equipe" ? SYSTEM_TEMPLATES : [];
+          const merged = [...systemTemplates, ...d.templates];
+          setTemplates(category ? merged.filter((template) => template.category === category) : merged);
+        }
+      })
       .catch(() => null)
       .finally(() => setLoading(false));
   }, [tab, category]);
@@ -193,7 +479,9 @@ export default function BibliotecaPage() {
   }
 
   async function handleUse(t: Template) {
-    await fetch(`/api/coach/biblioteca/${t.id}/usar`, { method: "POST" });
+    if (!t.id.startsWith("system-")) {
+      await fetch(`/api/coach/biblioteca/${t.id}/usar`, { method: "POST" });
+    }
     // Copy main workout content to clipboard
     const text = [
       t.name,
@@ -243,7 +531,7 @@ export default function BibliotecaPage() {
           ))}
         </div>
 
-        {(["", "CORRIDA", "FORCA", "MOBILIDADE", "FUNCIONAL"] as const).map((c) => (
+        {(["", "CORRIDA", "CICLISMO", "NATACAO", "FORCA", "MOBILIDADE", "FUNCIONAL"] as const).map((c) => (
           <button
             key={c}
             onClick={() => setCategory(c)}

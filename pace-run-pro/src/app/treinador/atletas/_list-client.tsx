@@ -561,6 +561,63 @@ const QUICK_TYPES = [
   { value: "MOBILIDADE",        label: "Mobilidade"        },
 ] as const;
 
+const QUICK_TYPES_BY_SPORT: Record<string, { value: string; label: string }[]> = {
+  Corrida: [
+    { value: "RODAGEM_LEVE", label: "Rodagem leve" },
+    { value: "REGENERATIVO", label: "Regenerativo" },
+    { value: "PROGRESSIVO", label: "Progressivo" },
+    { value: "TEMPO_RUN", label: "Tempo Run" },
+    { value: "FARTLEK", label: "Fartlek" },
+    { value: "INTERVALADO_LONGO", label: "Intervalado longo" },
+    { value: "INTERVALADO_CURTO", label: "Intervalado curto" },
+    { value: "LONGAO", label: "Longao" },
+  ],
+  Ciclismo: [
+    { value: "RODAGEM_LEVE", label: "Bike endurance" },
+    { value: "TEMPO_RUN", label: "Sweet spot 88-94% FTP" },
+    { value: "INTERVALADO_LONGO", label: "VO2 bike 5x4min" },
+    { value: "REGENERATIVO", label: "Giro regenerativo" },
+    { value: "PROGRESSIVO", label: "Cadencia progressiva" },
+  ],
+  Natacao: [
+    { value: "TECNICA", label: "Natacao tecnica" },
+    { value: "RODAGEM_LEVE", label: "Aerobio continuo" },
+    { value: "INTERVALADO_CURTO", label: "CSS curto" },
+    { value: "INTERVALADO_LONGO", label: "CSS longo" },
+    { value: "REGENERATIVO", label: "Soltura regenerativa" },
+  ],
+  Forca: [
+    { value: "FORCA", label: "Forca full body" },
+    { value: "FORCA", label: "Forca inferior" },
+    { value: "FORCA", label: "Forca superior" },
+    { value: "FUNCIONAL", label: "Core funcional" },
+    { value: "MOBILIDADE", label: "Mobilidade" },
+  ],
+  Trilha: [
+    { value: "RODAGEM_LEVE", label: "Trilha leve" },
+    { value: "PROGRESSIVO", label: "Subida progressiva" },
+    { value: "TEMPO_RUN", label: "Subida sustentada" },
+    { value: "LONGAO", label: "Longao trail" },
+  ],
+};
+
+const DEFAULT_INTENSITY_BY_SPORT: Record<string, { zone: string; rpe: string; load: string; pace?: string; ftp?: string; heartRate?: string }> = {
+  Corrida: { zone: "Z2 Leve", rpe: "4", load: "45", pace: "Z2 / VDOT", heartRate: "Z2 por FCmax" },
+  Ciclismo: { zone: "Z2 56-75% FTP", rpe: "4", load: "50", ftp: "56-75% FTP", heartRate: "Z2 por FC" },
+  Natacao: { zone: "CSS +10-15s/100m", rpe: "4", load: "40", pace: "CSS +10-15s/100m" },
+  Forca: { zone: "RPE 7 / RIR 3", rpe: "7", load: "50" },
+  Trilha: { zone: "Z2 subida leve", rpe: "5", load: "50", heartRate: "Z2 por FCmax" },
+};
+
+function suggestedZoneForWorkout(sport: string, workout?: WorkoutEntry) {
+  if (!workout?.targetRpe) return DEFAULT_INTENSITY_BY_SPORT[sport]?.zone ?? DEFAULT_INTENSITY_BY_SPORT.Corrida.zone;
+  const zones = TRAINING_ZONES[sport] ?? TRAINING_ZONES.Corrida;
+  if (workout.targetRpe <= 3) return zones[0] ?? DEFAULT_INTENSITY_BY_SPORT[sport]?.zone;
+  if (workout.targetRpe <= 5) return zones[1] ?? DEFAULT_INTENSITY_BY_SPORT[sport]?.zone;
+  if (workout.targetRpe <= 7) return zones[2] ?? DEFAULT_INTENSITY_BY_SPORT[sport]?.zone;
+  return zones[3] ?? zones[zones.length - 1] ?? DEFAULT_INTENSITY_BY_SPORT[sport]?.zone;
+}
+
 type LibraryModality = "corrida" | "ciclismo" | "natacao" | "forca";
 
 const LIBRARY_MODALITIES: { value: LibraryModality; label: string; icon: ComponentType<{ className?: string }> }[] = [
@@ -618,6 +675,14 @@ const STRENGTH_LIBRARY = [
   "Prancha",
 ];
 
+const TRAINING_ZONES: Record<string, string[]> = {
+  Corrida: ["Z1 Recuperacao", "Z2 Leve", "Z3 Moderado", "Z4 Limiar", "Z5 VO2 max", "RPE livre"],
+  Ciclismo: ["Z1 <55% FTP", "Z2 56-75% FTP", "Z3 76-90% FTP", "Sweet spot 88-94% FTP", "Z4 91-105% FTP", "Z5 106-120% FTP"],
+  Natacao: ["Tecnica leve", "CSS +10-15s/100m", "CSS +5s/100m", "CSS", "CSS -3s/100m", "Sprint"],
+  Forca: ["RPE 5-6 / RIR 4", "RPE 7 / RIR 3", "RPE 8 / RIR 2", "RPE 9 / RIR 1", "Potencia", "Mobilidade"],
+  Trilha: ["Z1 Recuperacao", "Z2 subida leve", "Z3 sustentado", "Z4 subida forte", "Tecnico"],
+};
+
 const FALLBACK_STRENGTH_EXERCISES: StrengthExerciseOption[] = STRENGTH_LIBRARY.map((name, index) => ({
   id: `fallback-${index}`,
   name,
@@ -665,7 +730,7 @@ function LegacyDisabledPrescriptionForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const dateLabel = new Date(payload.date + "T12:00:00").toLocaleDateString("pt-BR", {
+    const dateLabel = new Date(payload.date + "T12:00:00").toLocaleDateString("pt-BR", {
     weekday: "long", day: "2-digit", month: "long",
   });
 
@@ -806,12 +871,11 @@ export function IntervalsPrescribeModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const seedWorkout = payload.workout;
-  const editingWorkout = seedWorkout && !seedWorkout.id.startsWith("periodizacao-") ? seedWorkout : undefined;
-  const [category, setCategory] = useState("Treino");
-  const [sport, setSport] = useState(
-    seedWorkout?.type === "FORCA" ? "Forca" : "Corrida"
-  );
+    const seedWorkout = payload.workout;
+    const editingWorkout = seedWorkout && !seedWorkout.id.startsWith("periodizacao-") ? seedWorkout : undefined;
+    const [category, setCategory] = useState("Treino");
+    const initialSport = seedWorkout?.type === "FORCA" ? "Forca" : "Corrida";
+    const [sport, setSport] = useState(initialSport);
   const [type, setType] = useState(seedWorkout?.type ?? "RODAGEM_LEVE");
   const [title, setTitle] = useState(seedWorkout?.title ?? "Rodagem leve");
   const [durationMin, setDurationMin] = useState(seedWorkout?.targetDurationMin ? String(seedWorkout.targetDurationMin) : "");
@@ -821,6 +885,7 @@ export function IntervalsPrescribeModal({
   const [ftp, setFtp] = useState("");
   const [heartRate, setHeartRate] = useState("");
   const [pace, setPace] = useState("");
+  const [trainingZone, setTrainingZone] = useState(suggestedZoneForWorkout(initialSport, seedWorkout));
   const [poolDistance, setPoolDistance] = useState("25");
   const [strengthExercise, setStrengthExercise] = useState("Agachamento");
   const [exerciseQuery, setExerciseQuery] = useState("Agachamento");
@@ -848,10 +913,14 @@ export function IntervalsPrescribeModal({
     month: "short",
     year: "numeric",
   });
-  const exerciseSuggestions = exerciseDb
-    .filter((exercise) => exercise.name.toLowerCase().includes(exerciseQuery.toLowerCase()))
-    .slice(0, 5);
-  const selectedExercise = exerciseDb.find((exercise) => exercise.name === strengthExercise);
+    const exerciseSuggestions = exerciseDb
+      .filter((exercise) => exercise.name.toLowerCase().includes(exerciseQuery.toLowerCase()))
+      .slice(0, 5);
+    const selectedExercise = exerciseDb.find((exercise) => exercise.name === strengthExercise);
+    const typeOptions = QUICK_TYPES_BY_SPORT[sport] ?? QUICK_TYPES_BY_SPORT.Corrida;
+    const periodizationWeekMatch = seedWorkout?.id.match(/^periodizacao-(\d+)-/);
+    const periodizationWeek = periodizationWeekMatch ? Number(periodizationWeekMatch[1]) : null;
+    const showPeriodizationChart = periodizationWeek !== null;
 
   useEffect(() => {
     fetch("/exercises.json")
@@ -864,22 +933,23 @@ export function IntervalsPrescribeModal({
 
   function handleTypeChange(value: string) {
     setType(value);
-    const selected = QUICK_TYPES.find((item) => item.value === value);
+    const selected = typeOptions.find((item) => item.value === value) ?? QUICK_TYPES.find((item) => item.value === value);
     if (selected) setTitle(selected.label);
   }
 
   function handleSportChange(value: string) {
     setSport(value);
-    if (value === "Forca") {
-      setType("FORCA");
-      setTitle("Treino de forca");
-    } else if (value === "Ciclismo") {
-      setType("RODAGEM_LEVE");
-      setTitle("Bike endurance");
-    } else if (value === "Natacao") {
-      setType("TECNICA");
-      setTitle("Natacao tecnica");
-    }
+    const suggested = DEFAULT_INTENSITY_BY_SPORT[value] ?? DEFAULT_INTENSITY_BY_SPORT.Corrida;
+    const options = QUICK_TYPES_BY_SPORT[value] ?? QUICK_TYPES_BY_SPORT.Corrida;
+    const firstType = options[0];
+    setType(firstType.value);
+    setTitle(firstType.label);
+    setTrainingZone(suggested.zone);
+    setRpe(suggested.rpe);
+    setLoad(suggested.load);
+    setPace(suggested.pace ?? "");
+    setFtp(suggested.ftp ?? "");
+    setHeartRate(suggested.heartRate ?? "");
   }
 
   function addStrengthExercise() {
@@ -918,9 +988,10 @@ export function IntervalsPrescribeModal({
           date: payload.date,
           title: title.trim(),
           type,
-          objective: [
-            description,
-            sport === "Corrida" && (pace || heartRate || load) ? `Pace ${pace || "-"} / FC ${heartRate || "-"}${load ? ` / carga ${load}` : ""}` : "",
+            objective: [
+              description,
+              trainingZone ? `Zona: ${trainingZone}` : "",
+              sport === "Corrida" && (pace || heartRate || load) ? `Pace ${pace || "-"} / FC ${heartRate || "-"}${load ? ` / carga ${load}` : ""}` : "",
             sport === "Ciclismo" && (ftp || heartRate) ? `FTP ${ftp || "-"} / FC ${heartRate || "-"}` : "",
             sport === "Natacao" ? `Piscina ${poolDistance}m${pace ? ` / ritmo ${pace}` : ""}` : "",
             sport === "Forca" ? strengthSummary : "",
@@ -987,12 +1058,12 @@ export function IntervalsPrescribeModal({
                 ))}
               </select>
             </label>
-            <label className="block space-y-1">
-              <span className="text-[11px] font-medium text-text-muted">Tipo de treino</span>
-              <select value={type} onChange={(event) => handleTypeChange(event.target.value)} className={inputClass}>
-                {QUICK_TYPES.map((item) => <option key={item.value} value={item.value} className={optionClass}>{item.label}</option>)}
-              </select>
-            </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] font-medium text-text-muted">Tipo de treino</span>
+                <select value={type} onChange={(event) => handleTypeChange(event.target.value)} className={inputClass}>
+                {typeOptions.map((item) => <option key={`${item.value}-${item.label}`} value={item.value} className={optionClass}>{item.label}</option>)}
+                </select>
+              </label>
             <label className="block space-y-1">
               <span className="text-[11px] font-medium text-text-muted">Data</span>
               <input value={dateLabel} readOnly className={cn(inputClass, "text-text-muted")} />
@@ -1004,6 +1075,14 @@ export function IntervalsPrescribeModal({
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <label className="col-span-2 block space-y-1 sm:col-span-2">
+              <span className="text-[11px] font-medium text-text-muted">Zona / intensidade sugerida</span>
+              <select value={trainingZone} onChange={(event) => setTrainingZone(event.target.value)} className={inputClass}>
+                {(TRAINING_ZONES[sport] ?? TRAINING_ZONES.Corrida).map((zone) => (
+                  <option key={zone} value={zone} className={optionClass}>{zone}</option>
+                ))}
+              </select>
+            </label>
             <label className="block space-y-1">
               <span className="text-[11px] font-medium text-text-muted">Duracao</span>
               <input type="number" min={1} placeholder="min" value={durationMin} onChange={(event) => setDurationMin(event.target.value)} className={inputClass} />
@@ -1200,15 +1279,33 @@ export function IntervalsPrescribeModal({
               onChange={(event) => setSteps(event.target.value)}
               className="w-full resize-none bg-transparent px-3 py-2 font-mono text-xs text-slate-900 outline-none dark:text-text"
             />
-            <div className="grid h-20 grid-cols-12 items-end gap-1 border-t border-slate-200 px-3 py-2 dark:border-border">
-              {Array.from({ length: 12 }, (_, index) => (
-                <span
-                  key={index}
-                  className="rounded-t bg-gradient-to-t from-[#5b2df5] to-[#ff6b1a] opacity-70 dark:from-info/60 dark:to-primary/70"
-                  style={{ height: `${18 + ((index % 5) + Number(rpe || 3)) * 5}px` }}
-                />
-              ))}
-            </div>
+            {showPeriodizationChart && (
+              <div className="border-t border-slate-200 px-3 py-2 dark:border-border">
+                <div className="mb-2 flex items-center justify-between text-[10px] text-text-muted">
+                  <span>Periodizacao planejada</span>
+                  <span>Semana {periodizationWeek}</span>
+                </div>
+                <div className="grid h-20 items-end gap-1" style={{ gridTemplateColumns: "repeat(16, minmax(0, 1fr))" }}>
+                  {Array.from({ length: 16 }, (_, index) => {
+                    const week = index + 1;
+                    const highlighted = week === periodizationWeek;
+                    return (
+                      <span
+                        key={week}
+                        className={cn(
+                          "rounded-t transition-all",
+                          highlighted
+                            ? "bg-gradient-to-t from-[#ff6b1a] to-[#5b2df5] ring-2 ring-[#ff6b1a]/40"
+                            : "bg-slate-300/70 dark:bg-white/15"
+                        )}
+                        style={{ height: `${22 + ((index % 4) + Number(rpe || 3)) * 5}px` }}
+                        title={`Semana ${week}`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {error && <p className="mt-3 text-xs text-danger">{error}</p>}
@@ -1502,9 +1599,10 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   const [draggingWorkout, setDraggingWorkout] = useState<DragPayload | null>(null);
   const [busyCell, setBusyCell] = useState<string | null>(null);
   const [savingLibrary, setSavingLibrary] = useState<string | null>(null); // workoutId being saved
-  const [savedLibrary, setSavedLibrary] = useState<Set<string>>(new Set());
-  const [libraryModality, setLibraryModality] = useState<LibraryModality>("corrida");
+    const [savedLibrary, setSavedLibrary] = useState<Set<string>>(new Set());
+    const [libraryModality, setLibraryModality] = useState<LibraryModality>("corrida");
   const [calendarView, setCalendarView] = useState<"Semana" | "Mes" | "Lista">("Mes");
+  const [athletePickerOpen, setAthletePickerOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/coach/action-center")
@@ -1605,17 +1703,18 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   }
 
   async function handlePasteWeek(athlete: AthleteWeekly) {
-    if (!weekClipboard || weekClipboard.athlete.id === athlete.id) return;
+    if (!weekClipboard) return;
     setBusyCell(`week:${athlete.id}`);
     try {
       const res = await fetch("/api/coach/workouts/copy-week", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sourceAthleteId: weekClipboard.athlete.id,
-          weekStart: weekClipboard.weekStart,
-          targetAthleteIds: [athlete.id],
-        }),
+          body: JSON.stringify({
+            sourceAthleteId: weekClipboard.athlete.id,
+            weekStart: weekClipboard.weekStart,
+            targetWeekStart: toISODate(weekStart),
+            targetAthleteIds: [athlete.id],
+          }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
@@ -1659,11 +1758,20 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   });
 
   // Days in the current week (Mon → Sun)
+  const weekStart = getMondayOf(monthStart);
   const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const d = addDays(getMondayOf(new Date()), i);
+    const d = addDays(weekStart, i);
     return { date: toISODate(d), dayLabel: DAYS_PT[i], dayNum: d.getDate() };
   });
   const monthDays = getCalendarMonthDays(monthStart);
+  const calendarGridDays = calendarView === "Semana"
+    ? weekDays.map((day) => ({
+        iso: day.date,
+        dayNum: day.dayNum,
+        inMonth: true,
+        isToday: day.date === toISODate(new Date()),
+      }))
+    : monthDays;
 
   // Use weekly API data if loaded, fall back to static athletes for empty state
   const athletes: AthleteWeekly[] = weeklyData?.athletes ?? staticAthletes.map((a) => ({
@@ -1683,6 +1791,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   const selectedAthlete = athletes.find((athlete) => athlete.id === selectedAthleteId) ?? filtered[0] ?? athletes[0] ?? null;
   const selectedWorkouts = selectedAthlete?.workouts ?? [];
   const visibleWorkouts = selectedWorkouts;
+  const listWorkouts = [...visibleWorkouts].sort((a, b) => a.date.localeCompare(b.date));
+  const selectedWeekWorkoutCount = selectedWorkouts.filter((workout) => weekDays.some((day) => day.date === workout.date)).length;
   const visibleTss = visibleWorkouts.reduce((sum, workout) => sum + workout.tss, 0);
   const visibleDistance = visibleWorkouts.reduce((sum, workout) => sum + (workout.targetDistanceKm ?? 0), 0);
   const completedWorkouts = visibleWorkouts.filter((workout) => workout.status === "CONCLUIDO").length;
@@ -1721,17 +1831,57 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
       {/* Week navigation */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-        <select
-          value={selectedAthlete?.id ?? ""}
-          onChange={(event) => setSelectedAthleteId(event.target.value)}
-          className="min-h-10 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-text outline-none focus:border-primary/60"
-        >
-          {athletes.map((athlete) => (
-            <option key={athlete.id} value={athlete.id}>
-              {athlete.name}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setAthletePickerOpen((open) => !open)}
+            className="flex min-h-10 min-w-[230px] items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-left text-sm font-semibold text-text outline-none transition-colors hover:border-primary/50"
+          >
+            <Avatar className="h-7 w-7 shrink-0">
+              <AvatarFallback className="text-[10px]">
+                {(selectedAthlete?.name ?? "Atleta").split(" ").map((n) => n[0]).slice(0, 2).join("")}
+              </AvatarFallback>
+              {selectedAthlete?.avatarUrl && <AvatarImage src={selectedAthlete.avatarUrl} alt="" />}
+            </Avatar>
+            <span className="min-w-0 flex-1 truncate">{selectedAthlete?.name ?? "Selecionar atleta"}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-text-muted" />
+          </button>
+          {athletePickerOpen && (
+            <div className="absolute left-0 top-full z-40 mt-2 max-h-72 w-72 overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-2xl shadow-black/30">
+              {athletes.map((athlete) => {
+                const statusCfg = STATUS_BADGE[athlete.status] ?? STATUS_BADGE.ativo;
+                return (
+                  <button
+                    key={athlete.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedAthleteId(athlete.id);
+                      setAthletePickerOpen(false);
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors",
+                      athlete.id === selectedAthlete?.id ? "bg-primary/15 text-primary" : "text-text hover:bg-card-hover"
+                    )}
+                  >
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarFallback className="text-xs">
+                        {athlete.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                      </AvatarFallback>
+                      {athlete.avatarUrl && <AvatarImage src={athlete.avatarUrl} alt="" />}
+                    </Avatar>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">{athlete.name}</span>
+                      <span className="flex items-center gap-1 text-[10px] text-text-muted">
+                        <Badge variant={statusCfg.variant} className="px-1.5 py-0 text-[9px]">{statusCfg.label}</Badge>
+                        {athlete.workouts.length} treinos
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-2 py-1.5">
           <button
             onClick={prevWeek}
@@ -1951,27 +2101,53 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
               <p className="text-xs text-text-muted">{selectedAthlete?.name ?? "Selecione um atleta"} · Visualizacao {calendarView}</p>
             </div>
             {selectedAthlete && (
-              <Button
-                size="sm"
-                onClick={() => setQuickPrescribe({
-                  athleteId: selectedAthlete.id,
-                  athleteName: selectedAthlete.name,
-                  date: toISODate(new Date()),
-                })}
-              >
-                <Plus className="h-4 w-4" />
-                Novo treino
-              </Button>
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={selectedWeekWorkoutCount === 0}
+                  onClick={() => setWeekClipboard({
+                    athlete: selectedAthlete,
+                    weekStart: toISODate(weekStart),
+                    workoutCount: selectedWeekWorkoutCount,
+                  })}
+                >
+                  <Clipboard className="h-4 w-4" />
+                  Copiar semana
+                </Button>
+                {weekClipboard && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handlePasteWeek(selectedAthlete)}
+                    disabled={busyCell === `week:${selectedAthlete.id}`}
+                  >
+                    {busyCell === `week:${selectedAthlete.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardPaste className="h-4 w-4" />}
+                    Colar semana
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  onClick={() => setQuickPrescribe({
+                    athleteId: selectedAthlete.id,
+                    athleteName: selectedAthlete.name,
+                    date: toISODate(new Date()),
+                  })}
+                >
+                  <Plus className="h-4 w-4" />
+                  Novo treino
+                </Button>
+              </div>
             )}
           </div>
-          <div className="grid grid-cols-7 border-b border-white/10 bg-white/[0.03]">
+          <div className={cn("grid grid-cols-7 border-b border-white/10 bg-white/[0.03]", calendarView === "Lista" && "hidden")}>
             {DAYS_PT.map((day) => (
               <div key={day} className="px-2 py-2 text-center text-[11px] font-semibold uppercase text-text-muted">
                 {day}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7">
+          <div className={cn("grid grid-cols-7", calendarView === "Lista" && "hidden")}>
             {loading ? (
               <div className="col-span-7 flex items-center justify-center py-16">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -1979,7 +2155,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
             ) : !selectedAthlete ? (
               <div className="col-span-7 py-16 text-center text-sm text-text-muted">Selecione um atleta.</div>
             ) : (
-              monthDays.map((day) => {
+              calendarGridDays.map((day) => {
                 const dayWorkouts = selectedWorkouts.filter((workout) => workout.date === day.iso);
                 const isBusy = busyCell === `${selectedAthlete.id}:${day.iso}`;
                 return (
@@ -2066,6 +2242,56 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
               })
             )}
           </div>
+          {calendarView === "Lista" && (
+            <div className="divide-y divide-white/10">
+              {loading ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                </div>
+              ) : !selectedAthlete ? (
+                <div className="py-16 text-center text-sm text-text-muted">Selecione um atleta.</div>
+              ) : listWorkouts.length === 0 ? (
+                <div className="py-16 text-center text-sm text-text-muted">Nenhum treino neste periodo.</div>
+              ) : (
+                listWorkouts.map((workout) => (
+                  <div key={workout.id} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setQuickPrescribe({
+                        athleteId: selectedAthlete.id,
+                        athleteName: selectedAthlete.name,
+                        date: workout.date,
+                        workout,
+                      })}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    >
+                      <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border", workoutCardClass(workout.type, workout.title))}>
+                        <WorkoutIcon type={`${workout.type} ${workout.title}`} className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-text">{workout.title}</span>
+                        <span className="block text-xs text-text-muted">
+                          {new Date(`${workout.date}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
+                          {workout.targetDurationMin ? ` · ${workout.targetDurationMin} min` : ""}
+                          {workout.targetDistanceKm ? ` · ${workout.targetDistanceKm} km` : ""}
+                        </span>
+                      </span>
+                    </button>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setWorkoutClipboard({ workout })}>
+                        <Copy className="h-4 w-4" />
+                        Copiar
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleDeleteWorkout(workout)}>
+                        <Trash2 className="h-4 w-4" />
+                        Excluir
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </Card>
 
         <aside className="overflow-hidden rounded-xl border border-white/10 bg-[#07111c]/85 shadow-2xl shadow-black/20 backdrop-blur-xl">

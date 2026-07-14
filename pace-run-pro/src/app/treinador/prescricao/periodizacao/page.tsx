@@ -778,9 +778,11 @@ export default function PeriodizacaoPage() {
           open={builderOpen}
           settings={periodizationSettings}
           events={trainingEvents}
+          trainingDays={trainingDays}
           onClose={() => setBuilderOpen(false)}
           onSettingsChange={setPeriodizationSettings}
           onEventsChange={setTrainingEvents}
+          onToggleDay={toggleDay}
           onGenerate={handleGenerate}
         />
 
@@ -1905,17 +1907,21 @@ function PeriodizationBuilderModal({
   open,
   settings,
   events,
+  trainingDays,
   onClose,
   onSettingsChange,
   onEventsChange,
+  onToggleDay,
   onGenerate,
 }: {
   open: boolean;
   settings: PeriodizationSettings;
   events: TrainingEvent[];
+  trainingDays: string[];
   onClose: () => void;
   onSettingsChange: (settings: PeriodizationSettings) => void;
   onEventsChange: (events: TrainingEvent[]) => void;
+  onToggleDay: (day: string) => void;
   onGenerate: () => void;
 }) {
   if (!open) return null;
@@ -1958,7 +1964,39 @@ function PeriodizationBuilderModal({
                   <label className="space-y-1"><span className="text-xs font-medium text-text-muted">Data de inicio</span><input type="date" className={inputClass} value={settings.startDate} onChange={(e) => update("startDate", e.target.value)} /></label>
                   <label className="space-y-1"><span className="text-xs font-medium text-text-muted">Data de fim</span><input type="date" className={inputClass} value={settings.endDate} onChange={(e) => update("endDate", e.target.value)} /></label>
                   <label className="space-y-1"><span className="text-xs font-medium text-text-muted">Construcao</span><select className={selectClass} value={settings.buildMode} onChange={(e) => update("buildMode", e.target.value as BuildMode)}><option value="automatica">Automatica</option><option value="revisao">Automatica com revisao</option><option value="manual">Manual</option></select></label>
-                  <label className="space-y-1"><span className="text-xs font-medium text-text-muted">Ciclo de recuperacao</span><select className={selectClass} value={settings.recoveryCycle} onChange={(e) => update("recoveryCycle", e.target.value as RecoveryCycle)}><option value="4">A cada 4 semanas</option><option value="6">A cada 6 semanas</option><option value="8">A cada 8 semanas</option><option value="manual">Manual</option></select></label>
+                    <label className="space-y-1"><span className="text-xs font-medium text-text-muted">Ciclo de recuperacao</span><select className={selectClass} value={settings.recoveryCycle} onChange={(e) => update("recoveryCycle", e.target.value as RecoveryCycle)}><option value="4">A cada 4 semanas</option><option value="6">A cada 6 semanas</option><option value="8">A cada 8 semanas</option><option value="manual">Manual</option></select></label>
+                    <div className="space-y-2 sm:col-span-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">Dias de treino por semana</span>
+                        <span className="text-xs font-semibold text-primary">{trainingDays.length}x/semana</span>
+                      </div>
+                      <div className="grid grid-cols-7 gap-1">
+                        {ALL_DAYS.map((day) => {
+                          const selected = trainingDays.includes(day);
+                          return (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => onToggleDay(day)}
+                              title={day}
+                              className={cn(
+                                "rounded-lg border py-2 text-[10px] font-bold transition-all",
+                                selected
+                                  ? "border-primary/60 bg-primary/15 text-primary"
+                                  : "border-border bg-background text-text-muted hover:border-primary/30 hover:text-text"
+                              )}
+                            >
+                              {DAY_ABBR[day]}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {trainingDays.length === 0 ? (
+                        <p className="text-[11px] text-warning">Selecione pelo menos 1 dia para gerar sessoes.</p>
+                      ) : (
+                        <p className="text-[10px] leading-relaxed text-text-muted">{trainingDays.join(", ")}</p>
+                      )}
+                    </div>
                 </CardContent>
               </Card>
               <Card>

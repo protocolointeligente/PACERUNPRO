@@ -73,9 +73,10 @@ export async function POST(req: NextRequest) {
   const coachAthleteIds = new Set(coach.athletes.map((a) => a.id));
 
   const body = await req.json();
-  const { sourceAthleteId, weekStart: weekStartStr, targetAthleteIds } = body as {
+  const { sourceAthleteId, weekStart: weekStartStr, targetWeekStart: targetWeekStartStr, targetAthleteIds } = body as {
     sourceAthleteId: string;
     weekStart: string;
+    targetWeekStart?: string;
     targetAthleteIds: string[];
   };
 
@@ -91,6 +92,11 @@ export async function POST(req: NextRequest) {
   const weekEnd = new Date(weekStart);
   weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
   weekEnd.setUTCHours(23, 59, 59, 999);
+  const targetWeekStart = new Date((targetWeekStartStr ?? weekStartStr) + "T00:00:00Z");
+  const targetWeekEnd = new Date(targetWeekStart);
+  targetWeekEnd.setUTCDate(targetWeekEnd.getUTCDate() + 6);
+  targetWeekEnd.setUTCHours(23, 59, 59, 999);
+  const dayOffset = Math.round((targetWeekStart.getTime() - weekStart.getTime()) / (24 * 60 * 60 * 1000));
 
   const sourceWorkouts = await prisma.workout.findMany({
     where: {
@@ -120,9 +126,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Nenhum treino na semana do atleta fonte" }, { status: 400 });
   }
 
-  const validTargets = targetAthleteIds.filter(
-    (id) => coachAthleteIds.has(id) && id !== sourceAthleteId
-  );
+  const validTargets = targetAthleteIds.filter((id) => {
+    if (!coachAthleteIds.has(id)) return false;
+    return id !== sourceAthleteId || targetWeekStart.toISOString() !== weekStart.toISOString();
+  });
   if (validTargets.length === 0) {
     return NextResponse.json({ error: "Nenhum atleta-alvo válido" }, { status: 400 });
   }
@@ -132,19 +139,21 @@ export async function POST(req: NextRequest) {
   for (const athleteId of validTargets) {
     // Collect dates already occupied for this athlete in the target week
     const occupiedWorkouts = await prisma.workout.findMany({
-      where: { date: { gte: weekStart, lte: weekEnd }, week: { plan: { athleteId, coachId: coach.id } } },
+      where: { date: { gte: targetWeekStart, lte: targetWeekEnd }, week: { plan: { athleteId, coachId: coach.id } } },
       select: { date: true },
     });
     const occupiedDates = new Set(occupiedWorkouts.map((w) => w.date.toISOString()));
 
     for (const wo of sourceWorkouts) {
-      if (occupiedDates.has(wo.date.toISOString())) { skipped++; continue; }
+      const targetDate = new Date(wo.date);
+      targetDate.setUTCDate(targetDate.getUTCDate() + dayOffset);
+      if (occupiedDates.has(targetDate.toISOString())) { skipped++; continue; }
 
-      const week = await findOrCreatePlanAndWeek(athleteId, coach.id, wo.date);
+      const week = await findOrCreatePlanAndWeek(athleteId, coach.id, targetDate);
       await prisma.workout.create({
         data: {
           weekId: week.id,
-          date: wo.date,
+          date: targetDate,
           type: wo.type as WorkoutType,
           title: wo.title,
           status: "LIBERADO",
