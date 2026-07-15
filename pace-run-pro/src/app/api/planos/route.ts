@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import type { CyclePhase, Goal, WorkoutType } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
 const GOAL_MAP: Record<string, Goal> = {
   "5k": "CINCO_KM",
   "10k": "DEZ_KM",
@@ -253,6 +255,7 @@ export async function POST(req: NextRequest) {
                 const dayNum = FULL_DAY_MAP[s.dayLabel] ?? 1; // default Mon
                 const offsetFromMonday = dayNum === 0 ? 6 : dayNum - 1;
                 const workoutDate = new Date(weekStart.getTime() + offsetFromMonday * 24 * 60 * 60 * 1000);
+                workoutDate.setHours(12, 0, 0, 0);
                 return {
                   date: workoutDate,
                   type: SUBTYPE_MAP[s.subtype] ?? "RODAGEM_LEVE",

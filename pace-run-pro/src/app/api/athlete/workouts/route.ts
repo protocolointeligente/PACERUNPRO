@@ -3,6 +3,15 @@ import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { inferWorkoutModality } from "@/lib/workout-normalization";
 
+export const dynamic = "force-dynamic";
+
+function dateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 const TYPE_SHORT: Record<string, string> = {
   RODAGEM_LEVE: "corrida",
   INTERVALADO_CURTO: "corrida",
@@ -119,7 +128,7 @@ export async function GET(req: NextRequest) {
     const color = TYPE_COLORS[typeShort] ?? "#38bdf8";
     return {
       id: w.id,
-      date: w.date.toISOString(),
+      date: dateKey(w.date),
       type: typeShort,
       subtype: SUBTYPE_LABEL[rawType],
       title: w.title,

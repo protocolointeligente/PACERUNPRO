@@ -4,10 +4,16 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { modalityNote, normalizeWorkoutType } from "@/lib/workout-normalization";
 
+export const dynamic = "force-dynamic";
+
 async function resolveCoachWorkout(userId: string, workoutId: string) {
   const coach = await prisma.coach.findUnique({
     where: { userId },
-    select: { id: true, athletes: { select: { id: true } } },
+    select: {
+      id: true,
+      athletes: { select: { id: true } },
+      trainingPlans: { distinct: ["athleteId"], select: { athleteId: true } },
+    },
   });
   if (!coach) return null;
 
@@ -25,7 +31,10 @@ async function resolveCoachWorkout(userId: string, workoutId: string) {
         workoutId: workout.id,
         athleteId: workout.week.plan.athleteId,
         date: workout.date,
-        athleteIds: coach.athletes.map((a) => a.id),
+        athleteIds: [
+          ...coach.athletes.map((a) => a.id),
+          ...coach.trainingPlans.map((plan) => plan.athleteId),
+        ],
       }
     : null;
 }
@@ -36,7 +45,13 @@ async function findOrCreatePlanAndWeek(
   workoutDate: Date
 ) {
   let plan = await prisma.trainingPlan.findFirst({
-    where: { athleteId, coachId, endDate: { gte: new Date() } },
+    where: {
+      athleteId,
+      coachId,
+      startDate: { lte: workoutDate },
+      endDate: { gte: workoutDate },
+    },
+    orderBy: { createdAt: "desc" },
   });
   if (!plan) {
     const athlete = await prisma.athlete.findUnique({
@@ -50,8 +65,8 @@ async function findOrCreatePlanAndWeek(
         name: "Plano de Treinamento",
         goal: athlete?.goal ?? "PERFORMANCE",
         phase: "BASE",
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+        startDate: workoutDate,
+        endDate: new Date(workoutDate.getTime() + 90 * 24 * 60 * 60 * 1000),
       },
     });
   }
@@ -66,7 +81,11 @@ async function findOrCreatePlanAndWeek(
   weekEnd.setHours(23, 59, 59, 999);
 
   let week = await prisma.trainingWeek.findFirst({
-    where: { planId: plan.id, startDate: weekStart },
+    where: {
+      planId: plan.id,
+      startDate: { lte: workoutDate },
+      endDate: { gte: workoutDate },
+    },
   });
   if (!week) {
     const weekCount = await prisma.trainingWeek.count({ where: { planId: plan.id } });
@@ -116,7 +135,7 @@ export async function PATCH(
   const data: Prisma.WorkoutUncheckedUpdateInput = {};
   let targetDate: Date | null = null;
   if (body.date) {
-    const d = new Date(body.date);
+    const d = new Date(`${body.date}T12:00:00`);
     if (isNaN(d.getTime())) {
       return NextResponse.json({ error: "Data inválida" }, { status: 400 });
     }

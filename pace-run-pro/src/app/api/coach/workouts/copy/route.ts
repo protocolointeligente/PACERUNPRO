@@ -3,13 +3,28 @@ import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { WorkoutType } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
+function dateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 async function findOrCreatePlanAndWeek(
   athleteId: string,
   coachId: string,
   workoutDate: Date
 ) {
   let plan = await prisma.trainingPlan.findFirst({
-    where: { athleteId, coachId, endDate: { gte: new Date() } },
+    where: {
+      athleteId,
+      coachId,
+      startDate: { lte: workoutDate },
+      endDate: { gte: workoutDate },
+    },
+    orderBy: { createdAt: "desc" },
   });
   if (!plan) {
     const athlete = await prisma.athlete.findUnique({
@@ -23,8 +38,8 @@ async function findOrCreatePlanAndWeek(
         name: "Plano de Treinamento",
         goal: athlete?.goal ?? "PERFORMANCE",
         phase: "BASE",
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+        startDate: workoutDate,
+        endDate: new Date(workoutDate.getTime() + 90 * 24 * 60 * 60 * 1000),
       },
     });
   }
@@ -39,7 +54,11 @@ async function findOrCreatePlanAndWeek(
   weekEnd.setHours(23, 59, 59, 999);
 
   let week = await prisma.trainingWeek.findFirst({
-    where: { planId: plan.id, startDate: weekStart },
+    where: {
+      planId: plan.id,
+      startDate: { lte: workoutDate },
+      endDate: { gte: workoutDate },
+    },
   });
   if (!week) {
     const weekCount = await prisma.trainingWeek.count({ where: { planId: plan.id } });
@@ -66,11 +85,18 @@ export async function POST(req: NextRequest) {
 
   const coach = await prisma.coach.findUnique({
     where: { userId: session.user.id },
-    select: { id: true, athletes: { select: { id: true } } },
+    select: {
+      id: true,
+      athletes: { select: { id: true } },
+      trainingPlans: { distinct: ["athleteId"], select: { athleteId: true } },
+    },
   });
   if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
 
-  const coachAthleteIds = new Set(coach.athletes.map((a) => a.id));
+  const coachAthleteIds = new Set([
+    ...coach.athletes.map((a) => a.id),
+    ...coach.trainingPlans.map((plan) => plan.athleteId),
+  ]);
 
   const body = await req.json();
   const { workoutId, targetAthleteIds } = body as {
@@ -120,8 +146,17 @@ export async function POST(req: NextRequest) {
   let skipped = 0;
   for (const athleteId of validTargets) {
     // Skip if this athlete already has a workout on the same date
+    const sourceDay = dateKey(source.date);
     const existing = await prisma.workout.findFirst({
-      where: { date: source.date, week: { plan: { athleteId, coachId: coach.id } } },
+      where: {
+        date: {
+          gte: new Date(`${sourceDay}T00:00:00`),
+          lte: new Date(`${sourceDay}T23:59:59`),
+        },
+        type: source.type,
+        title: source.title,
+        week: { plan: { athleteId, coachId: coach.id } },
+      },
       select: { id: true },
     });
     if (existing) { skipped++; continue; }

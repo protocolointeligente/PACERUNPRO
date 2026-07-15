@@ -7,12 +7,25 @@ import { displayWorkoutType, inferWorkoutModality } from "@/lib/workout-normaliz
 export const dynamic = "force-dynamic";
 
 function getMondayOf(dateStr?: string | null): Date {
-  const d = dateStr ? new Date(dateStr + "T12:00:00Z") : new Date();
-  d.setUTCHours(0, 0, 0, 0);
-  const day = d.getUTCDay();
+  const d = dateStr ? new Date(dateStr + "T12:00:00") : new Date();
+  d.setHours(0, 0, 0, 0);
+  const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
-  d.setUTCDate(d.getUTCDate() + diff);
+  d.setDate(d.getDate() + diff);
   return d;
+}
+
+function parseCalendarBoundary(date: string, endOfDay = false): Date {
+  const d = new Date(`${date}T12:00:00`);
+  d.setHours(endOfDay ? 23 : 0, endOfDay ? 59 : 0, endOfDay ? 59 : 0, endOfDay ? 999 : 0);
+  return d;
+}
+
+function dateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function deriveAthleteStatus(adherenceRate?: number | null): "ativo" | "risco" | "inativo" {
@@ -31,11 +44,14 @@ export async function GET(req: NextRequest) {
   const fromParam = req.nextUrl.searchParams.get("from");
   const toParam = req.nextUrl.searchParams.get("to");
   const weekStartParam = req.nextUrl.searchParams.get("weekStart");
-  const weekStart = fromParam ? new Date(fromParam + "T00:00:00Z") : getMondayOf(weekStartParam);
-  const weekEnd = toParam ? new Date(toParam + "T23:59:59Z") : new Date(weekStart);
+  const weekStart = fromParam ? parseCalendarBoundary(fromParam) : getMondayOf(weekStartParam);
+  const weekEnd = toParam ? parseCalendarBoundary(toParam, true) : new Date(weekStart);
+  if (toParam) {
+    weekEnd.setTime(parseCalendarBoundary(toParam, true).getTime());
+  }
   if (!toParam) {
-    weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
-    weekEnd.setUTCHours(23, 59, 59, 999);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
   }
 
   const coach = await prisma.coach.findUnique({
@@ -171,7 +187,7 @@ export async function GET(req: NextRequest) {
         const actualTss = log ? estimateActualTSS(log, loadParamsMap.get(athlete.id), wo.targetRpe ?? 6) : null;
         return {
           id: wo.id,
-          date: wo.date.toISOString().slice(0, 10),
+          date: dateKey(wo.date),
           type: displayWorkoutType(wo.type as string, modality),
           rawType: wo.type as string,
           modality,
@@ -196,8 +212,8 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json({
-    weekStart: weekStart.toISOString().slice(0, 10),
-    weekEnd: weekEnd.toISOString().slice(0, 10),
+    weekStart: dateKey(weekStart),
+    weekEnd: dateKey(weekEnd),
     athletes,
   });
 }
