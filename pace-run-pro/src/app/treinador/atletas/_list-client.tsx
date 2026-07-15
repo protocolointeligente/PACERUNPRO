@@ -1637,6 +1637,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   const [monthStart, setMonthStart] = useState<Date>(() => getMonthStart(new Date()));
   const [weeklyData, setWeeklyData] = useState<WeeklyData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [calendarError, setCalendarError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<Tab>("Todos");
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(staticAthletes[0]?.id ?? null);
@@ -1866,9 +1867,22 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
     const from = calendarDays[0].iso;
     const to = calendarDays[calendarDays.length - 1].iso;
     fetch(`/api/coach/athletes/week?from=${from}&to=${to}&t=${Date.now()}`, { cache: "no-store" })
-      .then((r) => r.ok ? r.json() : null)
-      .then((d: WeeklyData | null) => setWeeklyData(d))
-      .catch(() => null)
+      .then(async (r) => {
+        if (!r.ok) {
+          const data = await r.json().catch(() => null) as { error?: string } | null;
+          throw new Error(data?.error ?? "Nao foi possivel carregar o calendario.");
+        }
+        return r.json() as Promise<WeeklyData>;
+      })
+      .then((d) => {
+        setCalendarError(null);
+        setWeeklyData(d);
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "Nao foi possivel carregar o calendario.";
+        console.error("[calendar] fetchWeek failed", error);
+        setCalendarError(message);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -1976,6 +1990,11 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
       <Header total={staticAthletes.length} />
 
       {actionCenter && <ActionBanner data={actionCenter} />}
+      {calendarError && (
+        <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          Nao foi possivel atualizar o calendario agora. O treino recem-criado foi mantido na tela; atualize novamente em instantes.
+        </div>
+      )}
 
       {/* Week navigation */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

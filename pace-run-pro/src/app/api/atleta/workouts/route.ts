@@ -111,7 +111,6 @@ export async function GET(req: NextRequest) {
     ? await prisma.trainingWeek.findMany({
         where: {
           planId: { in: planIds },
-          workouts: { some: { date: dateFilter, status: { in: ["LIBERADO", "AGENDADO"] } } },
         },
         select: { id: true },
       })
