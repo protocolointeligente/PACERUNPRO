@@ -228,10 +228,17 @@ const modalityLabels: Record<Modality, string> = {
   hibrido: "Endurance + forca",
 };
 
+function toCalendarDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 const defaultPeriodizationSettings: PeriodizationSettings = {
   name: "Macrociclo principal",
-  startDate: new Date().toISOString().slice(0, 10),
-  endDate: new Date(Date.now() + 16 * 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+  startDate: toCalendarDate(new Date()),
+  endDate: toCalendarDate(new Date(Date.now() + 16 * 7 * 24 * 60 * 60 * 1000)),
   loadMethod: "horas",
   modality: "corrida",
   buildMode: "automatica",
@@ -617,7 +624,7 @@ export default function PeriodizacaoPage() {
       ? ALL_DAYS.indexOf(dayLabel as (typeof ALL_DAYS)[number])
       : 0;
     start.setDate(start.getDate() + ((weekNum - 1) * 7) + dayIndex);
-    return start.toISOString().slice(0, 10);
+    return toCalendarDate(start);
   }
 
   function openPrescriptionModal(weekNum: number, workout: GeneratedWorkout, sessionIdx: number) {

@@ -3,13 +3,32 @@ import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { WorkoutType } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
+function parseCalendarDate(date: string) {
+  return new Date(`${date}T12:00:00`);
+}
+
+function dateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 async function findOrCreatePlanAndWeek(
   athleteId: string,
   coachId: string,
   workoutDate: Date
 ) {
   let plan = await prisma.trainingPlan.findFirst({
-    where: { athleteId, coachId, endDate: { gte: new Date() } },
+    where: {
+      athleteId,
+      coachId,
+      startDate: { lte: workoutDate },
+      endDate: { gte: workoutDate },
+    },
+    orderBy: { createdAt: "desc" },
   });
   if (!plan) {
     const athlete = await prisma.athlete.findUnique({
@@ -23,8 +42,8 @@ async function findOrCreatePlanAndWeek(
         name: "Plano de Treinamento",
         goal: athlete?.goal ?? "PERFORMANCE",
         phase: "BASE",
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+        startDate: workoutDate,
+        endDate: new Date(workoutDate.getTime() + 90 * 24 * 60 * 60 * 1000),
       },
     });
   }
@@ -39,7 +58,11 @@ async function findOrCreatePlanAndWeek(
   weekEnd.setHours(23, 59, 59, 999);
 
   let week = await prisma.trainingWeek.findFirst({
-    where: { planId: plan.id, startDate: weekStart },
+    where: {
+      planId: plan.id,
+      startDate: { lte: workoutDate },
+      endDate: { gte: workoutDate },
+    },
   });
   if (!week) {
     const weekCount = await prisma.trainingWeek.count({ where: { planId: plan.id } });
@@ -96,14 +119,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Atleta fonte inválido" }, { status: 403 });
   }
 
-  const weekStart = new Date(weekStartStr + "T00:00:00Z");
+  const weekStart = parseCalendarDate(weekStartStr);
+  weekStart.setHours(0, 0, 0, 0);
   const weekEnd = new Date(weekStart);
-  weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
-  weekEnd.setUTCHours(23, 59, 59, 999);
-  const targetWeekStart = new Date((targetWeekStartStr ?? weekStartStr) + "T00:00:00Z");
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+  const targetWeekStart = parseCalendarDate(targetWeekStartStr ?? weekStartStr);
+  targetWeekStart.setHours(0, 0, 0, 0);
   const targetWeekEnd = new Date(targetWeekStart);
-  targetWeekEnd.setUTCDate(targetWeekEnd.getUTCDate() + 6);
-  targetWeekEnd.setUTCHours(23, 59, 59, 999);
+  targetWeekEnd.setDate(targetWeekEnd.getDate() + 6);
+  targetWeekEnd.setHours(23, 59, 59, 999);
   const dayOffset = Math.round((targetWeekStart.getTime() - weekStart.getTime()) / (24 * 60 * 60 * 1000));
 
   const sourceWorkouts = await prisma.workout.findMany({
@@ -150,13 +175,13 @@ export async function POST(req: NextRequest) {
       select: { date: true, title: true, type: true },
     });
     const occupiedKeys = new Set(
-      occupiedWorkouts.map((w) => `${w.date.toISOString().slice(0, 10)}|${w.type}|${w.title.toLowerCase()}`),
+      occupiedWorkouts.map((w) => `${dateKey(w.date)}|${w.type}|${w.title.toLowerCase()}`),
     );
 
     for (const wo of sourceWorkouts) {
       const targetDate = new Date(wo.date);
-      targetDate.setUTCDate(targetDate.getUTCDate() + dayOffset);
-      const duplicateKey = `${targetDate.toISOString().slice(0, 10)}|${wo.type}|${wo.title.toLowerCase()}`;
+      targetDate.setDate(targetDate.getDate() + dayOffset);
+      const duplicateKey = `${dateKey(targetDate)}|${wo.type}|${wo.title.toLowerCase()}`;
       if (occupiedKeys.has(duplicateKey)) { skipped++; continue; }
 
       const week = await findOrCreatePlanAndWeek(athleteId, coach.id, targetDate);
