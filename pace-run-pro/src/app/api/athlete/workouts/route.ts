@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { inferWorkoutModality } from "@/lib/workout-normalization";
 
 const TYPE_SHORT: Record<string, string> = {
   RODAGEM_LEVE: "corrida",
@@ -35,6 +36,9 @@ const SUBTYPE_LABEL: Record<string, string> = {
 
 const TYPE_COLORS: Record<string, string> = {
   corrida: "#38bdf8",
+  ciclismo: "#84cc16",
+  natacao: "#0ea5e9",
+  triathlon: "#f97316",
   forca: "#8b5cf6",
   funcional: "#a855f7",
   mobilidade: "#84cc16",
@@ -96,12 +100,22 @@ export async function GET(req: NextRequest) {
       targetRpe: true,
       targetHrZone: true,
       imageUrl: true,
+      notes: true,
     },
   });
 
   const result = workouts.map((w) => {
     const rawType = w.type as string;
-    const typeShort = TYPE_SHORT[rawType] ?? "corrida";
+    const modality = inferWorkoutModality({
+      type: rawType,
+      title: w.title,
+      objective: w.objective,
+      notes: w.notes,
+    });
+    const typeShort =
+      modality === "forca"
+        ? TYPE_SHORT[rawType] ?? "forca"
+        : modality;
     const color = TYPE_COLORS[typeShort] ?? "#38bdf8";
     return {
       id: w.id,

@@ -149,6 +149,12 @@ export async function GET(req: NextRequest) {
       level: athlete.level,
       adherence: athlete.adherenceRate,
       workouts: athleteWorkouts.map((wo) => {
+        const modality = inferWorkoutModality({
+          type: wo.type as string,
+          title: wo.title,
+          objective: wo.objective,
+          notes: wo.notes,
+        });
         const plannedTss = estimateTSS(
           {
             type: wo.type as string,
@@ -164,10 +170,9 @@ export async function GET(req: NextRequest) {
         return {
           id: wo.id,
           date: wo.date.toISOString().slice(0, 10),
-          type: displayWorkoutType(
-            wo.type as string,
-            inferWorkoutModality({ type: wo.type as string, title: wo.title, objective: wo.objective, notes: wo.notes }),
-          ),
+          type: displayWorkoutType(wo.type as string, modality),
+          rawType: wo.type as string,
+          modality,
           title: wo.title,
           status: wo.status as string,
           targetDistanceKm: wo.targetDistanceKm,

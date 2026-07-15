@@ -27,6 +27,10 @@ export interface N1Detection {
 }
 
 export class N1Detector {
+  private static timestampMs(timestamp: QueryMetric['timestamp']): number {
+    return timestamp instanceof Date ? timestamp.getTime() : Number(timestamp);
+  }
+
   /**
    * Detecta padrões N+1 em um conjunto de métricas
    * @param metrics - Array de QueryMetric da execução
@@ -57,7 +61,7 @@ export class N1Detector {
       let clustered = 0;
       for (let i = 1; i < queries.length; i++) {
         const timeDiff = Math.abs(
-          queries[i].timestamp.getTime() - queries[i - 1].timestamp.getTime()
+          this.timestampMs(queries[i].timestamp) - this.timestampMs(queries[i - 1].timestamp)
         );
         if (timeDiff <= timeWindowMs) clustered++;
       }

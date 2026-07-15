@@ -248,7 +248,7 @@ export function evaluateCheckInRules(history: CheckInRecord[]): CheckInRuleResul
 
   if (latest.pain >= 8) {
     results.push({
-      action: "bloquear_treino",
+      action: "bloquear_intenso",
       severity: "critical",
       title: "Dor intensa — interrompa os treinos",
       message: `Dor intensa (${latest.pain}/10): recomendamos interromper os treinos e consultar um profissional de saúde antes de retornar.`,

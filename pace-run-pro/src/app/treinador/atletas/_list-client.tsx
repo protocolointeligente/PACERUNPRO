@@ -92,6 +92,8 @@ interface WorkoutEntry {
   id: string;
   date: string;
   type: string;
+  rawType?: string;
+  modality?: LibraryModality;
   title: string;
   status: string;
   targetDistanceKm: number | null;
@@ -668,6 +670,25 @@ const LIBRARY_TEMPLATES: Record<LibraryModality, { value: string; label: string 
   ],
 };
 
+function sportFromModality(modality?: string | null) {
+  if (modality === "ciclismo") return "Ciclismo";
+  if (modality === "natacao") return "Natacao";
+  if (modality === "forca") return "Forca";
+  return "Corrida";
+}
+
+function modalityFromWorkout(workout?: WorkoutEntry | null): LibraryModality {
+  const key = `${workout?.modality ?? ""} ${workout?.type ?? ""} ${workout?.title ?? ""}`.toLowerCase();
+  if (key.includes("forca") || key.includes("funcional") || key.includes("mobil")) return "forca";
+  if (key.includes("natacao") || key.includes("nata") || key.includes("swim")) return "natacao";
+  if (key.includes("ciclismo") || key.includes("bike") || key.includes("ftp")) return "ciclismo";
+  return "corrida";
+}
+
+function rawWorkoutType(type: string) {
+  return type.replace(/^(CICLISMO|NATACAO|TRIATHLON|TRIATLO)_/, "");
+}
+
 const STRENGTH_LIBRARY = [
   "Agachamento livre",
   "Levantamento terra",
@@ -881,9 +902,9 @@ export function IntervalsPrescribeModal({
     const seedWorkout = payload.workout;
     const editingWorkout = seedWorkout && !seedWorkout.id.startsWith("periodizacao-") ? seedWorkout : undefined;
     const [category, setCategory] = useState("Treino");
-    const initialSport = seedWorkout?.type === "FORCA" ? "Forca" : "Corrida";
+    const initialSport = sportFromModality(modalityFromWorkout(seedWorkout));
     const [sport, setSport] = useState(initialSport);
-  const [type, setType] = useState(seedWorkout?.type ?? "RODAGEM_LEVE");
+  const [type, setType] = useState(seedWorkout?.rawType ?? rawWorkoutType(seedWorkout?.type ?? "RODAGEM_LEVE"));
   const [title, setTitle] = useState(seedWorkout?.title ?? "Rodagem leve");
   const [durationMin, setDurationMin] = useState(seedWorkout?.targetDurationMin ? String(seedWorkout.targetDurationMin) : "");
   const [distanceKm, setDistanceKm] = useState(seedWorkout?.targetDistanceKm ? String(seedWorkout.targetDistanceKm) : "");
@@ -994,7 +1015,7 @@ export function IntervalsPrescribeModal({
           athleteId: payload.athleteId,
           date: payload.date,
           title: title.trim(),
-          type,
+          type: rawWorkoutType(type),
           sport,
             objective: [
               description,
@@ -1691,8 +1712,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           athleteId: athlete.id,
           date,
           title: workout.title,
-          type: workout.type,
-          sport: libraryModality === "ciclismo" ? "Ciclismo" : libraryModality === "natacao" ? "Natacao" : libraryModality === "forca" ? "Forca" : "Corrida",
+          type: workout.rawType ?? workout.type,
+          sport: sportFromModality(workout.modality ?? libraryModality),
           targetDistanceKm: workout.targetDistanceKm,
           targetDurationMin: workout.targetDurationMin,
           targetPaceSecPerKm: workout.targetPaceSecPerKm,
@@ -2101,6 +2122,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                         id: `template-${template.value}`,
                         date: toISODate(monthStart),
                         type: template.value,
+                        rawType: template.value,
+                        modality: libraryModality,
                         title: template.label,
                         status: "PLANEJADO",
                         targetDistanceKm: null,
@@ -2396,6 +2419,8 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                         id: `template-${template.value}`,
                         date: toISODate(monthStart),
                         type: template.value,
+                        rawType: template.value,
+                        modality: libraryModality,
                         title: template.label,
                         status: "PLANEJADO",
                         targetDistanceKm: null,

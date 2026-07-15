@@ -27,8 +27,12 @@ function fold(value?: string | null) {
     .toUpperCase();
 }
 
+function stripDisplayPrefix(value: string) {
+  return value.replace(/^(CICLISMO|NATACAO|TRIATHLON|TRIATLO)_/, "");
+}
+
 export function normalizeWorkoutType(input?: string | null, sport?: string | null): WorkoutType {
-  const raw = fold(input);
+  const raw = stripDisplayPrefix(fold(input));
   if (VALID_WORKOUT_TYPES.has(raw)) return raw as WorkoutType;
 
   const key = `${raw} ${fold(sport)}`;

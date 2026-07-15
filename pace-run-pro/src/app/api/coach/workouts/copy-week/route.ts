@@ -145,17 +145,19 @@ export async function POST(req: NextRequest) {
   let created = 0;
   let skipped = 0;
   for (const athleteId of validTargets) {
-    // Collect dates already occupied for this athlete in the target week
     const occupiedWorkouts = await prisma.workout.findMany({
       where: { date: { gte: targetWeekStart, lte: targetWeekEnd }, week: { plan: { athleteId, coachId: coach.id } } },
-      select: { date: true },
+      select: { date: true, title: true, type: true },
     });
-    const occupiedDates = new Set(occupiedWorkouts.map((w) => w.date.toISOString()));
+    const occupiedKeys = new Set(
+      occupiedWorkouts.map((w) => `${w.date.toISOString().slice(0, 10)}|${w.type}|${w.title.toLowerCase()}`),
+    );
 
     for (const wo of sourceWorkouts) {
       const targetDate = new Date(wo.date);
       targetDate.setUTCDate(targetDate.getUTCDate() + dayOffset);
-      if (occupiedDates.has(targetDate.toISOString())) { skipped++; continue; }
+      const duplicateKey = `${targetDate.toISOString().slice(0, 10)}|${wo.type}|${wo.title.toLowerCase()}`;
+      if (occupiedKeys.has(duplicateKey)) { skipped++; continue; }
 
       const week = await findOrCreatePlanAndWeek(athleteId, coach.id, targetDate);
       await prisma.workout.create({
