@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Building2, Dumbbell, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
-import { getRecommendedB2BPlan } from "@/lib/mock-data";
+import { b2bPlans, getRecommendedB2BPlan } from "@/lib/mock-data";
 import { formatBRL } from "@/lib/utils";
 
 const inputClass =
@@ -53,7 +53,12 @@ function CadastroContent() {
   const searchParams = useSearchParams();
 
   const perfilParam = searchParams.get("perfil");
+  const planParam = searchParams.get("plano");
   const coachId = searchParams.get("coach");
+  const selectedB2BPlan =
+    planParam && b2bPlans.some((plan) => plan.id === planParam)
+      ? b2bPlans.find((plan) => plan.id === planParam)
+      : null;
   const initialProfile: ProfileType | null =
     perfilParam === "treinador" || perfilParam === "assessoria"
       ? perfilParam
@@ -78,7 +83,7 @@ function CadastroContent() {
 
   const isAthlete = profileType === "atleta_independente" || profileType === "atleta_com_treinador";
   const role: "ATHLETE" | "COACH" = isAthlete ? "ATHLETE" : "COACH";
-  const recommendedPlan = role === "COACH" ? getRecommendedB2BPlan(studentCount) : null;
+  const recommendedPlan = role === "COACH" ? selectedB2BPlan ?? getRecommendedB2BPlan(studentCount) : null;
 
   function selectProfile(type: ProfileType) {
     setProfileType(type);
@@ -112,6 +117,7 @@ function CadastroContent() {
           password: senha,
           role,
           studentCount: role === "COACH" ? studentCount : undefined,
+          planId: role === "COACH" ? recommendedPlan?.id : undefined,
           coachId: profileType === "atleta_com_treinador" ? coachId : undefined,
         }),
       });
@@ -135,10 +141,10 @@ function CadastroContent() {
         router.push("/onboarding?tipo=independente");
       } else if (role === "ATHLETE") {
         router.push("/onboarding");
-      } else if (data.recommendedPlanId === "b2b-free") {
+      } else if (recommendedPlan?.id === "b2b-free" || data.recommendedPlanId === "b2b-free") {
         router.push("/treinador/dashboard");
       } else {
-        router.push(`/onboarding/assessoria?plano=${data.recommendedPlanId}`);
+        router.push(`/onboarding/assessoria?plano=${recommendedPlan?.id ?? data.recommendedPlanId}`);
       }
     } catch {
       setError("Não foi possível criar sua conta. Tente novamente.");

@@ -49,12 +49,21 @@
 }
 
 .light {
-  --bg: #F4F3EE;
-  --card: #FFFFFF;
-  --card-hover: #ECEAE3;
-  --border: #E2E0D8;
-  --text: #14171C;
-  --text-muted: #5C636B;
+  --bg: #EEF1E8;
+  --card: #F8F8F2;
+  --card-hover: #ECEFDF;
+  --border: #D8DDCF;
+  --text: #151A1C;
+  --text-muted: #586166;
+  --primary: #8BCB16;
+  --secondary: #6FA812;
+  --accent: #159C8E;
+  --violet: #8BCB16;
+  --success: #138C5A;
+  --warning: #B87300;
+  --danger: #D33B32;
+  --info: #0B73C9;
+  --on-primary: #0A0C0F;
 }
 
 @keyframes pulse-soft {
@@ -108,7 +117,10 @@ body {
 }
 
 .light body {
-  background: var(--color-background);
+  background:
+    radial-gradient(ellipse 1000px 520px at 50% -12%, rgba(139, 203, 22, 0.16), transparent 58%),
+    radial-gradient(ellipse 700px 420px at 100% 24%, rgba(21, 156, 142, 0.08), transparent 58%),
+    var(--color-background);
 }
 
 ::selection {
@@ -142,8 +154,48 @@ body {
 }
 
 .light .glass {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(226, 224, 216, 0.9);
+  background: rgba(248, 248, 242, 0.88);
+  border: 1px solid rgba(216, 221, 207, 0.95);
+}
+
+.light .marketing-page {
+  background: #eef1e8 !important;
+  color: #151a1c !important;
+}
+
+.light .marketing-page nav {
+  background: rgba(238, 241, 232, 0.92) !important;
+  border-color: rgba(120, 132, 112, 0.24) !important;
+}
+
+.light .marketing-page section,
+.light .marketing-page footer {
+  background: #eef1e8 !important;
+  border-color: rgba(120, 132, 112, 0.22) !important;
+}
+
+.light .marketing-page [class*="bg-[#05090f]"],
+.light .marketing-page [class*="bg-[#07111d]"],
+.light .marketing-page [class*="bg-[#0b121a]"],
+.light .marketing-page [class*="bg-white/[0.03]"],
+.light .marketing-page [class*="bg-white/[0.04]"],
+.light .marketing-page [class*="bg-white/[0.025]"] {
+  background: #f8f8f2 !important;
+}
+
+.light .marketing-page .text-white,
+.light .marketing-page .text-slate-300,
+.light .marketing-page .text-slate-400 {
+  color: #151a1c !important;
+}
+
+.light .marketing-page .text-slate-500 {
+  color: #586166 !important;
+}
+
+.light .marketing-page .border-white\/10,
+.light .marketing-page .border-white\/15 {
+  border-color: rgba(120, 132, 112, 0.24) !important;
 }
 
 .gradient-text {

@@ -23,28 +23,28 @@ import { Card, CardContent } from "@/components/ui/card";
 const features = [
   {
     icon: CalendarDays,
-    title: "Calendario Dinamico",
-    text: "Organize treinos por atleta, semana, mes ou lista. Copie, cole, edite e acompanhe tudo por modalidade.",
+    title: "Calendário Dinâmico",
+    text: "Organize treinos por atleta, semana, mês ou lista. Copie, cole, edite e acompanhe tudo por modalidade.",
   },
   {
     icon: Brain,
-    title: "Periodizacao Inteligente",
-    text: "Crie macrociclos visuais com volume, intensidade, fases, provas e sugestoes de sessoes para revisar antes de enviar.",
+    title: "Periodização Inteligente",
+    text: "Crie macrociclos visuais com volume, intensidade, fases, provas e sugestões de sessões para revisar antes de enviar.",
   },
   {
     icon: ClipboardList,
-    title: "Prescricao Otimizada",
-    text: "Um unico modal para corrida, ciclismo, natacao, triathlon e forca, com zonas, carga e biblioteca de exercicios.",
+    title: "Prescrição Otimizada",
+    text: "Um único modal para corrida, ciclismo, natação, triatlo, funcional e musculação, com zonas, carga e biblioteca de exercícios.",
   },
 ];
 
 const differentiators = [
-  "Treinos por modalidade com icones, cores e leitura rapida para treinador e atleta.",
+  "Treinos por modalidade com ícones, cores e leitura rápida para treinador e atleta.",
   "Biblioteca com modelos prontos para acelerar a rotina da assessoria.",
-  "Forca integrada ao mesmo fluxo de prescricao, com exercicios e GIFs no celular.",
-  "Alertas para risco, aderencia, carga planejada versus realizada e check-ins.",
+  "Força integrada ao mesmo fluxo de prescrição, com exercícios e GIFs no celular.",
+  "Alertas para risco, aderência, carga planejada versus realizada e check-ins.",
   "CRM simples para convites, atletas, planos e acompanhamento da carteira.",
-  "PWA responsivo para o atleta acessar os treinos com experiencia premium no mobile.",
+  "PWA responsivo para o atleta acessar os treinos com experiência premium no mobile.",
 ];
 
 const steps = [
@@ -56,34 +56,34 @@ const steps = [
   {
     icon: MailPlus,
     title: "Convide atletas",
-    text: "Envie convites individuais e acompanhe quem entrou, quem precisa ativar e quem ja esta pronto para treinar.",
+    text: "Envie convites individuais e acompanhe quem entrou, quem precisa ativar e quem já está pronto para treinar.",
   },
   {
     icon: CalendarDays,
     title: "Prescreva",
-    text: "Monte a semana no calendario ou gere uma periodizacao com sugestoes para aceitar, editar ou recusar.",
+    text: "Monte a semana no calendário ou gere uma periodização com sugestões para aceitar, editar ou recusar.",
   },
   {
     icon: Send,
     title: "Envie e acompanhe",
-    text: "Libere os treinos para o atleta e acompanhe execucao, feedbacks, carga e progresso em um unico painel.",
+    text: "Libere os treinos para o atleta e acompanhe execução, feedbacks, carga e progresso em um único painel.",
   },
 ];
 
 const screenshots = [
   {
     title: "Painel do treinador",
-    text: "Acoes rapidas, indicadores da assessoria e atalhos para prescrever sem perder tempo.",
+    text: "Ações rápidas, indicadores da assessoria e atalhos para prescrever sem perder tempo.",
     src: "/marketing/trainer-dashboard.png",
   },
   {
-    title: "Calendario visual",
-    text: "Selecao de atleta, modalidades, biblioteca lateral e prescricao direta no calendario.",
+    title: "Calendário visual",
+    text: "Seleção de atleta, modalidades, biblioteca lateral e prescrição direta no calendário.",
     src: "/marketing/coach-calendar.png",
   },
   {
-    title: "Periodizacao Intelligence",
-    text: "Macrociclo com volume, intensidade e sugestoes de sessoes antes de liberar para o atleta.",
+    title: "Periodização Intelligence",
+    text: "Macrociclo com volume, intensidade e sugestões de sessões antes de liberar para o atleta.",
     src: "/marketing/periodization.png",
   },
   {
@@ -95,31 +95,42 @@ const screenshots = [
 
 const plans = [
   {
-    name: "Starter",
-    price: "R$ 97",
-    description: "Para treinadores iniciando a gestao digital dos atletas.",
-    features: ["Calendario e prescricao", "Biblioteca de treinos", "Alertas essenciais", "App do atleta"],
+    id: "b2b-free",
+    name: "Grátis",
+    price: "R$ 0",
+    description: "Para testar a plataforma com um atleta e sentir o fluxo completo.",
+    features: ["1 atleta", "Calendário básico", "Prescrição simples", "App do atleta"],
     highlight: false,
   },
   {
+    id: "b2b-starter",
+    name: "Starter",
+    price: "R$ 97",
+    description: "Para treinadores iniciando a gestão digital dos atletas.",
+    features: ["Calendário e prescrição", "Biblioteca de treinos", "Alertas essenciais", "App do atleta"],
+    highlight: false,
+  },
+  {
+    id: "b2b-pro",
     name: "Pro",
     price: "R$ 197",
     description: "Para treinadores que querem escalar a rotina com mais controle.",
-    features: ["Periodizacao Intelligence", "Modelos por modalidade", "Gestao de grupos", "Relatorios e evolucao"],
+    features: ["Periodização Intelligence", "Modelos por modalidade", "Gestão de grupos", "Relatórios e evolução"],
     highlight: true,
   },
   {
+    id: "b2b-assessoria",
     name: "Assessoria",
     price: "R$ 397",
-    description: "Para equipes com operacao, carteira de atletas e planos ativos.",
-    features: ["CRM da assessoria", "Planos para atletas", "Equipe e permissao", "Suporte prioritario"],
+    description: "Para equipes com operação, carteira de atletas e planos ativos.",
+    features: ["CRM da assessoria", "Planos para atletas", "Equipe e permissão", "Suporte prioritário"],
     highlight: false,
   },
 ];
 
 export default function LandingPage() {
   return (
-    <main className="min-h-dvh bg-[#05090f] text-white">
+    <main className="marketing-page min-h-dvh bg-[#05090f] text-white">
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#05090f]/92 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
           <Link href="/" className="flex items-center gap-3" aria-label="Pace Run Pro">
@@ -143,9 +154,9 @@ export default function LandingPage() {
             <Link href="/login" className="hidden text-sm font-semibold text-slate-300 hover:text-white sm:block">
               Entrar
             </Link>
-            <Link href="/cadastro?perfil=treinador">
+            <Link href="#planos">
               <Button size="sm" className="bg-[#c6ff3d] text-black shadow-lg shadow-[#c6ff3d]/20 hover:bg-[#aef12f]">
-                Comecar agora <ArrowRight className="h-4 w-4" />
+                Começar agora <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
@@ -160,16 +171,16 @@ export default function LandingPage() {
               SaaS para treinadores e assessorias
             </Badge>
             <h1 className="font-display text-4xl font-black leading-tight sm:text-6xl">
-              Receba, gerencie, prescreva e controle tudo em um unico lugar.
+              Receba, gerencie, prescreva e controle tudo em um único lugar.
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-300">
-              O Pace Run Pro centraliza calendario, periodizacao, biblioteca, alertas, CRM e experiencia do atleta
-              em uma plataforma feita para treinadores que querem vender melhor e entregar treino com excelencia.
+              O Pace Run Pro centraliza calendário, periodização, biblioteca, alertas, CRM e experiência do atleta
+              em uma plataforma feita para treinadores que querem vender melhor e entregar treino com excelência.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/cadastro?perfil=treinador">
+              <Link href="#planos">
                 <Button size="lg" className="bg-[#c6ff3d] text-black shadow-xl shadow-[#c6ff3d]/20 hover:bg-[#aef12f]">
-                  Comecar agora <ArrowRight className="h-4 w-4" />
+                  Começar agora <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <Link href="#telas">
@@ -180,8 +191,8 @@ export default function LandingPage() {
             </div>
             <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
               <Metric icon={Users} label="Atletas" value="Carteira em um painel" />
-              <Metric icon={Dumbbell} label="Modalidades" value="Endurance e forca" />
-              <Metric icon={Bell} label="Alertas" value="Risco e aderencia" />
+              <Metric icon={Dumbbell} label="Modalidades" value="Corrida, ciclismo, natação, triatlo, funcional e musculação" />
+              <Metric icon={Bell} label="Alertas" value="Risco e aderência" />
             </div>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 shadow-2xl shadow-black/40">
@@ -209,7 +220,7 @@ export default function LandingPage() {
             Produto
           </Badge>
           <h2 className="font-display text-3xl font-black sm:text-5xl">
-            Tres pilares para uma rotina de treino mais profissional.
+            Três pilares para uma rotina de treino mais profissional.
           </h2>
           <p className="mt-4 text-slate-300">
             Menos planilhas soltas, menos mensagens perdidas e mais clareza para transformar planejamento em treino entregue.
@@ -238,11 +249,11 @@ export default function LandingPage() {
                 Plataforma real
               </Badge>
               <h2 className="font-display text-3xl font-black sm:text-5xl">
-                O treinador ve exatamente onde cada atleta esta.
+                O treinador vê exatamente onde cada atleta está.
               </h2>
             </div>
             <p className="max-w-md text-sm leading-relaxed text-slate-400">
-              Prints reais da plataforma para mostrar a experiencia que o treinador usa no dia a dia.
+              Prints reais da plataforma para mostrar a experiência que o treinador usa no dia a dia.
             </p>
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
@@ -297,7 +308,7 @@ export default function LandingPage() {
               Diferenciais
             </Badge>
             <h2 className="font-display text-3xl font-black sm:text-5xl">
-              Uma operacao mais clara para o treinador e mais premium para o atleta.
+              Uma operação mais clara para o treinador e mais premium para o atleta.
             </h2>
             <p className="mt-4 text-slate-300">
               A plataforma foi pensada para entregar treino com contexto, visual forte e menos retrabalho na rotina da assessoria.
@@ -323,10 +334,10 @@ export default function LandingPage() {
             Escolha o plano ideal para sua assessoria crescer.
           </h2>
           <p className="mt-4 text-slate-300">
-            Comece simples e evolua conforme sua carteira de atletas, equipe e necessidade de gestao.
+            Comece simples e evolua conforme sua carteira de atletas, equipe e necessidade de gestão.
           </p>
         </div>
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 lg:grid-cols-4">
           {plans.map((plan) => (
             <div
               key={plan.name}
@@ -345,7 +356,7 @@ export default function LandingPage() {
               </div>
               <div className="mt-6">
                 <span className="font-display text-4xl font-black">{plan.price}</span>
-                <span className="ml-1 text-sm text-slate-400">/mes</span>
+                <span className="ml-1 text-sm text-slate-400">/mês</span>
               </div>
               <div className="mt-6 space-y-3">
                 {plan.features.map((item) => (
@@ -355,7 +366,7 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <Link href="/cadastro?perfil=treinador" className="mt-7 block">
+              <Link href={`/cadastro?perfil=treinador&plano=${plan.id}`} className="mt-7 block">
                 <Button
                   className={`w-full ${
                     plan.highlight
@@ -364,7 +375,7 @@ export default function LandingPage() {
                   }`}
                   variant={plan.highlight ? "primary" : "outline"}
                 >
-                  Comecar com {plan.name}
+                  Começar com {plan.name}
                 </Button>
               </Link>
             </div>
@@ -379,12 +390,12 @@ export default function LandingPage() {
               Pronto para profissionalizar sua entrega?
             </Badge>
             <h2 className="font-display text-3xl font-black sm:text-5xl">
-              Transforme sua assessoria em uma experiencia digital completa.
+              Transforme sua assessoria em uma experiência digital completa.
             </h2>
           </div>
-          <Link href="/cadastro?perfil=treinador">
+          <Link href="#planos">
             <Button size="lg" className="bg-[#c6ff3d] text-black shadow-xl shadow-[#c6ff3d]/20 hover:bg-[#aef12f]">
-              Comecar agora <Sparkles className="h-4 w-4" />
+              Começar agora <Sparkles className="h-4 w-4" />
             </Button>
           </Link>
         </div>

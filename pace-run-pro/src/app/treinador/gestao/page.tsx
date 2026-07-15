@@ -38,12 +38,6 @@ function initials(name: string) {
     .join("");
 }
 
-type BillingSettingsSummary = {
-  cpfCnpj?: string | null;
-  pixKey?: string | null;
-  bankName?: string | null;
-};
-
 type PlanPurchaseSummary = {
   status: string;
   pricePaidCents: number | null;
@@ -85,7 +79,6 @@ export default async function GestaoPage() {
   const session = await getSession();
   if (!session?.user?.id) redirect("/login");
 
-  let loadError = false;
   const coach = await prisma.coach.findUnique({
     where: { userId: session.user.id },
     select: {
@@ -96,15 +89,6 @@ export default async function GestaoPage() {
         select: {
           name: true,
           email: true,
-          billingSettings: {
-            select: {
-              cpfCnpj: true,
-              pixKey: true,
-              bankName: true,
-              receivingMethod: true,
-              autoChargeEnabled: true,
-            },
-          },
         },
       },
       athletes: {
@@ -121,95 +105,17 @@ export default async function GestaoPage() {
               avatarUrl: true,
             },
           },
-          planPurchases: {
-            orderBy: { createdAt: "desc" },
-            take: 1,
-            select: {
-              status: true,
-              pricePaidCents: true,
-              product: {
-                select: {
-                  title: true,
-                  priceCents: true,
-                },
-              },
-            },
-          },
-        },
-      },
-      planProducts: {
-        orderBy: { updatedAt: "desc" },
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          sport: true,
-          level: true,
-          priceCents: true,
-          published: true,
-          purchases: true,
-        },
-      },
-      leads: {
-        orderBy: { updatedAt: "desc" },
-        take: 6,
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          stage: true,
-          source: true,
-          monthlyFeeCents: true,
         },
       },
     },
-  }).catch(async () => {
-    loadError = true;
-    return prisma.coach.findUnique({
-      where: { userId: session.user.id },
-      select: {
-        id: true,
-        slug: true,
-        whatsapp: true,
-        user: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-        athletes: {
-          orderBy: { createdAt: "desc" },
-          select: {
-            id: true,
-            status: true,
-            adherenceRate: true,
-            createdAt: true,
-            user: {
-              select: {
-                name: true,
-                email: true,
-                avatarUrl: true,
-              },
-            },
-          },
-        },
-      },
-    });
   });
-
-  if (loadError) {
-    console.warn("Gestao CRM carregada em modo fallback: rode as migrations para habilitar leads, produtos e billing.");
-  }
 
   if (!coach) redirect("/login");
 
   const origin = process.env.NEXT_PUBLIC_APP_URL ?? "https://pacerunpro.com.br";
   const inviteUrl = `${origin}/convite/${coach.slug ?? coach.id}`;
-  const billingSettings =
-    "billingSettings" in coach.user ? (coach.user.billingSettings as BillingSettingsSummary | null) : null;
-  const planProducts = "planProducts" in coach ? readArray<PlanProductSummary>(coach.planProducts) : [];
-  const leads = "leads" in coach ? readArray<LeadSummary>(coach.leads) : [];
+  const planProducts: PlanProductSummary[] = [];
+  const leads: LeadSummary[] = [];
   const activeAthletes = coach.athletes.filter((athlete) => athlete.status !== "inativo");
   const paidAthletes = coach.athletes.filter((athlete) =>
     readPlanPurchases(athlete).some((purchase) => purchase.status === "paid")
@@ -220,10 +126,7 @@ export default async function GestaoPage() {
   }, 0);
   const platformFee = Math.round(monthlyRevenue * 0.1);
   const coachNet = monthlyRevenue - platformFee;
-  const asaasReady = Boolean(
-    billingSettings?.cpfCnpj &&
-      (billingSettings.pixKey || billingSettings.bankName)
-  );
+  const asaasReady = false;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">

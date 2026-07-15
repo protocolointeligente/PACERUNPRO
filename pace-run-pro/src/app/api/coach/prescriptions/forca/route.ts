@@ -3,6 +3,16 @@ import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import type { ExerciseCategory, StrengthSplit } from "@prisma/client";
 
+function dayIndex(label: string) {
+  const key = String(label ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .slice(0, 3)
+    .toLowerCase();
+  const folded: Record<string, number> = { dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
+  return folded[key] ?? DAY_MAP[label] ?? 1;
+}
+
 const DAY_MAP: Record<string, number> = {
   Dom: 0, Seg: 1, Ter: 2, Qua: 3, Qui: 4, Sex: 5, Sáb: 6,
 };
@@ -146,13 +156,13 @@ export async function POST(req: NextRequest) {
     // Create one workout per selected day
     const days = Array.isArray(s.dayLabels) && s.dayLabels.length > 0 ? s.dayLabels : ["Seg"];
     for (const dayLabel of days) {
-      const dayOffset = DAY_MAP[dayLabel] ?? 1;
+      const dayOffset = dayIndex(dayLabel);
       const offset = dayOffset === 0 ? 6 : dayOffset - 1;
       const workoutDate = new Date(weekStart.getTime() + offset * 24 * 60 * 60 * 1000);
 
       // Skip if a FORCA workout already exists on this exact day
       const existing = await prisma.workout.findFirst({
-        where: { weekId: week.id, date: workoutDate, type: "FORCA" },
+        where: { weekId: week.id, date: workoutDate, type: "FORCA", title: s.label },
         select: { id: true },
       });
       if (existing) continue;
@@ -165,6 +175,7 @@ export async function POST(req: NextRequest) {
           title: s.label,
           status: "LIBERADO",
           objective: `Treino de força — ${s.label}`,
+          notes: "Modalidade: forca",
           strengthWorkout: {
             create: {
               split: strengthSplit,

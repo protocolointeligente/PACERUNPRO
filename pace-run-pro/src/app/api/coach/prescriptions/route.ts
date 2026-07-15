@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
+import { modalityNote, normalizeWorkoutType } from "@/lib/workout-normalization";
 import { CyclePhase, Goal, WorkoutType } from "@prisma/client";
 
 const DAY_MAP: Record<string, number> = {
@@ -21,10 +22,25 @@ const ZONE_TYPE_MAP: Record<string, string> = {
   R: "INTERVALADO_CURTO",
 };
 
+function dayIndex(label: string) {
+  const normalized = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").slice(0, 3).toLowerCase();
+  const map: Record<string, number> = {
+    dom: 0,
+    seg: 1,
+    ter: 2,
+    qua: 3,
+    qui: 4,
+    sex: 5,
+    sab: 6,
+  };
+  return map[normalized] ?? DAY_MAP[label] ?? 1;
+}
+
 interface Session {
   dayLabel: string;
   title: string;
-  type: "corrida" | "forca" | "descanso";
+  type: string;
+  sport?: string;
   zone?: string;
   distanceKm?: number;
   description?: string;
@@ -141,16 +157,21 @@ export async function POST(req: NextRequest) {
     for (const s of sessions) {
       if (s.type === "descanso") continue;
 
-      const dayOffset = DAY_MAP[s.dayLabel] ?? 0;
+      const dayOffset = dayIndex(s.dayLabel);
       // startDate is Monday (day 1). Calculate offset from Monday:
       const offset = dayOffset === 0 ? 6 : dayOffset - 1; // Mon=0, Tue=1, ..., Sun=6
       const workoutDate = new Date(weekStart.getTime() + offset * 24 * 60 * 60 * 1000);
 
-      const workoutType =
-        (ZONE_TYPE_MAP[s.zone ?? "E"] ?? "RODAGEM_LEVE") as WorkoutType;
+      const sport = s.sport ?? s.type;
+      const baseType =
+        s.type === "forca" || s.type === "musculacao" || s.type === "funcional"
+          ? s.type
+          : ZONE_TYPE_MAP[s.zone ?? "E"] ?? s.type ?? "RODAGEM_LEVE";
+      const workoutType = normalizeWorkoutType(baseType, sport) as WorkoutType;
+      const notes = [modalityNote(sport), `Template: ${templateName}`].filter(Boolean).join("\n");
 
       const existing = await prisma.workout.findFirst({
-        where: { weekId: week.id, date: workoutDate },
+        where: { weekId: week.id, date: workoutDate, title: s.title, type: workoutType },
         select: { id: true },
       });
 
@@ -165,7 +186,7 @@ export async function POST(req: NextRequest) {
             objective: s.description ?? "",
             mainSet: s.intervals ?? "",
             targetDistanceKm: s.distanceKm,
-            notes: `Template: ${templateName}`,
+            notes,
             structured: s.structured ?? false,
             ...(s.blocks ? { blocks: s.blocks } : {}),
           },

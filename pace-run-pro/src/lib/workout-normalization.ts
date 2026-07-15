@@ -20,11 +20,19 @@ const VALID_WORKOUT_TYPES = new Set<string>([
 
 export type WorkoutModality = "corrida" | "ciclismo" | "natacao" | "triathlon" | "forca";
 
+function fold(value?: string | null) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
+}
+
 export function normalizeWorkoutType(input?: string | null, sport?: string | null): WorkoutType {
-  const raw = String(input ?? "").toUpperCase();
+  const raw = fold(input);
   if (VALID_WORKOUT_TYPES.has(raw)) return raw as WorkoutType;
-  const key = `${raw} ${sport ?? ""}`.toUpperCase();
-  if (key.includes("FORCA") || key.includes("STRENGTH")) return "FORCA";
+
+  const key = `${raw} ${fold(sport)}`;
+  if (key.includes("FORCA") || key.includes("MUSCUL") || key.includes("STRENGTH")) return "FORCA";
   if (key.includes("MOBIL")) return "MOBILIDADE";
   if (key.includes("FUNCIONAL")) return "FUNCIONAL";
   if (key.includes("NAT") || key.includes("SWIM")) return "TECNICA";
@@ -39,9 +47,9 @@ export function inferWorkoutModality(input: {
   objective?: string | null;
   notes?: string | null;
 }): WorkoutModality {
-  const key = [input.sport, input.type, input.title, input.objective, input.notes].filter(Boolean).join(" ").toUpperCase();
+  const key = fold([input.sport, input.type, input.title, input.objective, input.notes].filter(Boolean).join(" "));
   if (key.includes("TRI")) return "triathlon";
-  if (key.includes("FORCA") || key.includes("FORÇA") || key.includes("FUNCIONAL") || key.includes("MOBILIDADE")) return "forca";
+  if (key.includes("FORCA") || key.includes("MUSCUL") || key.includes("FUNCIONAL") || key.includes("MOBIL")) return "forca";
   if (key.includes("NAT") || key.includes("SWIM") || key.includes("PISCINA") || key.includes("CSS")) return "natacao";
   if (key.includes("CICL") || key.includes("BIKE") || key.includes("FTP") || key.includes("WATTS")) return "ciclismo";
   return "corrida";
