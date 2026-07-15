@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { displayWorkoutType, inferWorkoutModality, modalityNote, normalizeWorkoutType } from "@/lib/workout-normalization";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "COACH") {

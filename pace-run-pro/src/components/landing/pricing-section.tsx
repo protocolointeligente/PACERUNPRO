@@ -6,6 +6,22 @@ import { formatBRL } from "@/lib/utils";
 
 const B2B_PLANS = [
   {
+    id: "b2b-free",
+    name: "Grátis",
+    price: 0,
+    maxAthletes: 1,
+    badge: "Comece aqui",
+    highlight: false,
+    features: [
+      "1 atleta",
+      "1 treinador",
+      "Calendário básico",
+      "Biblioteca inicial de treinos",
+      "Convite por link",
+      "Teste sem cartão",
+    ],
+  },
+  {
     id: "b2b-starter",
     name: "Starter",
     price: 97,
@@ -15,7 +31,7 @@ const B2B_PLANS = [
     features: [
       "Até 20 atletas",
       "1 treinador",
-      "Prescrição de corrida com VDOT",
+      "Prescrição por modalidade",
       "Periodização automática",
       "Calendário do atleta",
       "Check-in semanal",
@@ -34,11 +50,11 @@ const B2B_PLANS = [
       "Até 80 atletas",
       "Até 3 treinadores",
       "Tudo do Starter",
-      "Treino de força para corredores",
-      "Check-ins com IA e alertas automáticos",
+      "Treino de força integrado",
+      "Alertas automáticos",
       "Central de alertas inteligentes",
       "Relatórios PDF profissionais",
-      "Painel financeiro do roster",
+      "Gestão de atletas e planos",
       "Suporte WhatsApp",
     ],
   },
@@ -61,32 +77,12 @@ const B2B_PLANS = [
       "Suporte prioritário",
     ],
   },
-  {
-    id: "b2b-unlimited",
-    name: "White Label",
-    price: 997,
-    maxAthletes: null,
-    badge: "Sob consulta",
-    highlight: false,
-    features: [
-      "Atletas ilimitados",
-      "Treinadores ilimitados",
-      "Tudo do Assessoria",
-      "Marca própria (logo e domínio)",
-      "App com a identidade da sua assessoria",
-      "API completa",
-      "SLA 99,9% com suporte 24 h",
-      "Onboarding dedicado",
-      "Contrato anual com desconto",
-    ],
-  },
 ];
 
 export function PricingSection() {
   return (
     <section id="precos" className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6">
-        {/* Header */}
         <div className="mb-12 text-center">
           <Badge variant="warning" className="mb-4">Preços</Badge>
           <h2 className="font-display text-4xl font-extrabold sm:text-5xl">
@@ -99,7 +95,6 @@ export function PricingSection() {
           </p>
         </div>
 
-        {/* Plans grid */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {B2B_PLANS.map((plan) => (
             <div
@@ -115,7 +110,7 @@ export function PricingSection() {
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <Badge
                     variant={plan.highlight ? "primary" : "default"}
-                    className="shadow-lg whitespace-nowrap"
+                    className="whitespace-nowrap shadow-lg"
                   >
                     {plan.badge}
                   </Badge>
@@ -125,20 +120,17 @@ export function PricingSection() {
               <div className="mb-4">
                 <h4 className="font-display text-lg font-bold text-text">{plan.name}</h4>
                 <p className="mt-1 text-xs text-text-muted">
-                  {plan.maxAthletes === null ? "Atletas ilimitados" : `até ${plan.maxAthletes} atletas`}
+                  até {plan.maxAthletes} atletas
                 </p>
               </div>
 
               <div className="mb-6">
                 <div className="flex items-end gap-1">
                   <span className="font-display text-3xl font-extrabold text-text">
-                    R$ {formatBRL(plan.price)}
+                    {plan.price === 0 ? "R$ 0" : `R$ ${formatBRL(plan.price)}`}
                   </span>
                   <span className="mb-1 text-sm text-text-muted">/mês</span>
                 </div>
-                {plan.id === "white-label" && (
-                  <p className="mt-1 text-xs text-text-muted">A partir de — consulte plano anual</p>
-                )}
               </div>
 
               <ul className="mb-6 flex-1 space-y-2">
@@ -156,7 +148,7 @@ export function PricingSection() {
                   size="md"
                   className="w-full"
                 >
-                  {plan.id === "b2b-unlimited" ? "Solicitar proposta" : "Começar agora"}
+                  {plan.price === 0 ? "Criar conta grátis" : "Começar agora"}
                 </Button>
               </Link>
             </div>

@@ -7,8 +7,7 @@ function recommendPlanId(athleteCount: number): string {
   if (athleteCount <= 1) return "b2b-free";
   if (athleteCount <= 20) return "b2b-starter";
   if (athleteCount <= 80) return "b2b-pro";
-  if (athleteCount <= 250) return "b2b-assessoria";
-  return "b2b-unlimited";
+  return "b2b-assessoria";
 }
 
 export async function POST(req: NextRequest) {

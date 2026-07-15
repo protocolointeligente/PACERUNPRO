@@ -114,6 +114,13 @@ const DISTANCES = [
 const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted/50 outline-none focus:border-primary/60 transition-colors";
 
+function toLocalISODate(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export default function CalendarPage() {
   const [monthOffset, setMonthOffset] = useState(0);
   const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
@@ -140,9 +147,9 @@ export default function CalendarPage() {
   useEffect(() => {
     const year = reference.getFullYear();
     const month = reference.getMonth();
-    const from = new Date(year, month, -6).toISOString().slice(0, 10);
-    const to = new Date(year, month + 1, 7).toISOString().slice(0, 10);
-    fetch(`/api/atleta/workouts?from=${from}&to=${to}`)
+    const from = toLocalISODate(new Date(year, month, -6));
+    const to = toLocalISODate(new Date(year, month + 1, 7));
+    fetch(`/api/atleta/workouts?from=${from}&to=${to}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : []))
       .then((data: WorkoutRow[]) => setWorkouts(Array.isArray(data) ? data : []))
       .catch(() => null);
@@ -431,9 +438,9 @@ export default function CalendarPage() {
               </div>
               <div className="grid grid-cols-7 gap-1.5">
                 {grid.map((day, i) => {
-                  const key = day?.toISOString().slice(0, 10);
+                  const key = day ? toLocalISODate(day) : undefined;
                   const dayEvents = key ? eventsByDate.get(key) ?? [] : [];
-                  const isToday = key === new Date().toISOString().slice(0, 10);
+                  const isToday = key === toLocalISODate(new Date());
                   return (
                     <div
                       key={i}

@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { displayWorkoutType, inferWorkoutModality } from "@/lib/workout-normalization";
 
+export const dynamic = "force-dynamic";
+
 const TYPE_SHORT: Record<string, string> = {
   CICLISMO_RODAGEM_LEVE: "ciclismo",
   CICLISMO_INTERVALADO_CURTO: "ciclismo",

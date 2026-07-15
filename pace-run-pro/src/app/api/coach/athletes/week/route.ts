@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { estimateActualTSS, estimateTSS } from "@/lib/training-load";
 import { displayWorkoutType, inferWorkoutModality } from "@/lib/workout-normalization";
 
+export const dynamic = "force-dynamic";
+
 function getMondayOf(dateStr?: string | null): Date {
   const d = dateStr ? new Date(dateStr + "T12:00:00Z") : new Date();
   d.setUTCHours(0, 0, 0, 0);

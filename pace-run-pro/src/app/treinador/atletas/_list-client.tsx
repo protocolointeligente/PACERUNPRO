@@ -177,7 +177,10 @@ function addDays(d: Date, n: number): Date {
 }
 
 function toISODate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 const DAYS_PT = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -1763,7 +1766,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
     const calendarDays = getCalendarMonthDays(month);
     const from = calendarDays[0].iso;
     const to = calendarDays[calendarDays.length - 1].iso;
-    fetch(`/api/coach/athletes/week?from=${from}&to=${to}`)
+    fetch(`/api/coach/athletes/week?from=${from}&to=${to}`, { cache: "no-store" })
       .then((r) => r.ok ? r.json() : null)
       .then((d: WeeklyData | null) => setWeeklyData(d))
       .catch(() => null)
