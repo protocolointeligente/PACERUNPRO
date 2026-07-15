@@ -48,29 +48,43 @@ export default async function AthleteListPage() {
   const session = await getSession();
   if (!session?.user?.id) redirect("/login");
 
+  const athleteSelect = {
+    id: true,
+    adherenceRate: true,
+    goal: true,
+    level: true,
+    raceDate: true,
+    user: { select: { name: true, avatarUrl: true } },
+    checkins: {
+      orderBy: { date: "desc" as const },
+      take: 1,
+      select: { date: true },
+    },
+  };
+
   const coach = await prisma.coach.findUnique({
     where: { userId: session.user.id },
     select: {
-      athletes: {
-        select: {
-          id: true,
-          adherenceRate: true,
-          goal: true,
-          level: true,
-          raceDate: true,
-          user: { select: { name: true, avatarUrl: true } },
-          checkins: {
-            orderBy: { date: "desc" },
-            take: 1,
-            select: { date: true },
-          },
-        },
-        orderBy: { user: { name: "asc" } },
-      },
+      id: true,
+      athletes: { select: athleteSelect, orderBy: { user: { name: "asc" } } },
     },
   });
 
-  const athletes: AthleteRow[] = (coach?.athletes ?? []).map((a) => ({
+  const planAthleteLinks = coach
+    ? await prisma.trainingPlan.findMany({
+        where: { coachId: coach.id },
+        distinct: ["athleteId"],
+        select: { athlete: { select: athleteSelect } },
+        orderBy: { athlete: { user: { name: "asc" } } },
+      })
+    : [];
+
+  type CoachAthlete = NonNullable<typeof coach>["athletes"][number];
+  const athletesById = new Map<string, CoachAthlete>();
+  for (const athlete of coach?.athletes ?? []) athletesById.set(athlete.id, athlete);
+  for (const { athlete } of planAthleteLinks) athletesById.set(athlete.id, athlete);
+
+  const athletes: AthleteRow[] = Array.from(athletesById.values()).sort((a, b) => a.user.name.localeCompare(b.user.name)).map((a) => ({
     id: a.id,
     name: a.user.name,
     avatarUrl: a.user.avatarUrl,

@@ -5,6 +5,13 @@ import { displayWorkoutType, inferWorkoutModality, modalityNote, normalizeWorkou
 
 export const dynamic = "force-dynamic";
 
+function dateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "COACH") {
@@ -73,12 +80,21 @@ export async function POST(req: NextRequest) {
   const modality = inferWorkoutModality({ sport, type, title, objective });
   const note = modalityNote(sport);
 
+  const dow = workoutDate.getDay();
+  const diffToMon = (dow + 6) % 7;
+  const weekStart = new Date(workoutDate);
+  weekStart.setDate(workoutDate.getDate() - diffToMon);
+  weekStart.setHours(0, 0, 0, 0);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
   // Find or create active plan
   let plan = await prisma.trainingPlan.findFirst({
     where: {
       athleteId,
       coachId: coach.id,
-      startDate: { lte: workoutDate },
+      startDate: { lte: weekEnd },
       endDate: { gte: workoutDate },
     },
     orderBy: { createdAt: "desc" },
@@ -91,22 +107,13 @@ export async function POST(req: NextRequest) {
         name: "Plano de Treinamento",
         goal: athlete?.goal ?? "PERFORMANCE",
         phase: "BASE",
-        startDate: workoutDate,
-        endDate: new Date(workoutDate.getTime() + 90 * 24 * 60 * 60 * 1000),
+        startDate: weekStart,
+        endDate: new Date(weekStart.getTime() + 90 * 24 * 60 * 60 * 1000),
       },
     });
   }
 
   // Week boundaries (Mon–Sun) for the workout date
-  const dow = workoutDate.getDay(); // 0=Sun
-  const diffToMon = (dow + 6) % 7;
-  const weekStart = new Date(workoutDate);
-  weekStart.setDate(workoutDate.getDate() - diffToMon);
-  weekStart.setHours(0, 0, 0, 0);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
-
   let week = await prisma.trainingWeek.findFirst({
     where: {
       planId: plan.id,
@@ -144,11 +151,40 @@ export async function POST(req: NextRequest) {
       ...(targetPaceSecPerKm != null ? { targetPaceSecPerKm } : {}),
       ...(targetRpe != null ? { targetRpe } : {}),
     },
-    select: { id: true, date: true, title: true, type: true, status: true, structured: true, objective: true, notes: true },
+    select: {
+      id: true,
+      date: true,
+      title: true,
+      type: true,
+      status: true,
+      structured: true,
+      objective: true,
+      notes: true,
+      targetDistanceKm: true,
+      targetDurationMin: true,
+      targetPaceSecPerKm: true,
+      targetRpe: true,
+    },
   });
 
   return NextResponse.json({
-    ...workout,
+    id: workout.id,
+    date: dateKey(workout.date),
     type: displayWorkoutType(workout.type as string, modality),
+    rawType: workout.type,
+    modality,
+    title: workout.title,
+    status: workout.status,
+    structured: workout.structured,
+    objective: workout.objective,
+    notes: workout.notes,
+    targetDistanceKm: workout.targetDistanceKm,
+    targetDurationMin: workout.targetDurationMin,
+    targetPaceSecPerKm: workout.targetPaceSecPerKm,
+    targetRpe: workout.targetRpe,
+    tss: 0,
+    plannedTss: 0,
+    actualTss: null,
+    released: true,
   }, { status: 201 });
 }

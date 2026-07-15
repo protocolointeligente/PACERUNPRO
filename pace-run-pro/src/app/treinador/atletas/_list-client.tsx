@@ -733,6 +733,24 @@ interface QuickPrescribePayload {
   workout?: WorkoutEntry;
 }
 
+interface SavedWorkoutResponse {
+  id: string;
+  date?: string;
+  type?: string;
+  rawType?: string;
+  modality?: LibraryModality;
+  title?: string;
+  status?: string;
+  targetDistanceKm?: number | null;
+  targetDurationMin?: number | null;
+  targetPaceSecPerKm?: number | null;
+  targetRpe?: number | null;
+  tss?: number;
+  plannedTss?: number;
+  actualTss?: number | null;
+  released?: boolean;
+}
+
 interface StrengthExerciseOption {
   id: string;
   name: string;
@@ -750,7 +768,7 @@ function LegacyDisabledPrescriptionForm({
 }: {
   payload: QuickPrescribePayload;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (workout?: SavedWorkoutResponse | null) => void;
 }) {
   return null;
   const [type, setType] = useState("RODAGEM_LEVE");
@@ -900,7 +918,7 @@ export function IntervalsPrescribeModal({
 }: {
   payload: QuickPrescribePayload;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (workout?: SavedWorkoutResponse | null) => void;
 }) {
     const seedWorkout = payload.workout;
     const editingWorkout = seedWorkout && !seedWorkout.id.startsWith("periodizacao-") ? seedWorkout : undefined;
@@ -1042,7 +1060,8 @@ export function IntervalsPrescribeModal({
         setError(data?.error ?? "Erro ao salvar treino.");
         return;
       }
-      onSaved();
+      const savedWorkout = await res.json().catch(() => null) as SavedWorkoutResponse | null;
+      onSaved(savedWorkout);
       onClose();
     } catch {
       setError("Erro de conexao.");
@@ -1761,12 +1780,92 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
     }
   }
 
+  function mergeSavedWorkoutIntoCalendar(payload: QuickPrescribePayload | null, saved: SavedWorkoutResponse | null) {
+    if (!payload || !saved?.id) return;
+
+    const rawType = saved.rawType ?? rawWorkoutType(saved.type ?? payload.workout?.rawType ?? payload.workout?.type ?? "RODAGEM_LEVE");
+    const modality = saved.modality ?? payload.workout?.modality ?? modalityFromWorkout({
+      id: saved.id,
+      date: saved.date ?? payload.date,
+      type: rawType,
+      title: saved.title ?? payload.workout?.title ?? "Treino",
+      status: saved.status ?? "LIBERADO",
+      targetDistanceKm: saved.targetDistanceKm ?? null,
+      targetDurationMin: saved.targetDurationMin ?? null,
+      targetPaceSecPerKm: saved.targetPaceSecPerKm ?? null,
+      targetRpe: saved.targetRpe ?? null,
+      tss: saved.tss ?? 0,
+      released: saved.released ?? true,
+    });
+    const workout: WorkoutEntry = {
+      id: saved.id,
+      date: (saved.date ?? payload.date).slice(0, 10),
+      type: saved.type ?? rawType,
+      rawType,
+      modality,
+      title: saved.title ?? payload.workout?.title ?? "Treino",
+      status: saved.status ?? "LIBERADO",
+      targetDistanceKm: saved.targetDistanceKm ?? payload.workout?.targetDistanceKm ?? null,
+      targetDurationMin: saved.targetDurationMin ?? payload.workout?.targetDurationMin ?? null,
+      targetPaceSecPerKm: saved.targetPaceSecPerKm ?? payload.workout?.targetPaceSecPerKm ?? null,
+      targetRpe: saved.targetRpe ?? payload.workout?.targetRpe ?? null,
+      tss: saved.tss ?? saved.plannedTss ?? payload.workout?.tss ?? 0,
+      plannedTss: saved.plannedTss ?? payload.workout?.plannedTss ?? 0,
+      actualTss: saved.actualTss ?? null,
+      released: saved.released ?? true,
+    };
+
+    setWeeklyData((prev) => {
+      const baseAthletes = prev?.athletes ?? staticAthletes.map((athlete) => ({
+        id: athlete.id,
+        name: athlete.name,
+        avatarUrl: athlete.avatarUrl ?? null,
+        status: athlete.status,
+        goal: athlete.goal,
+        level: athlete.level,
+        adherence: athlete.adherence,
+        workouts: [],
+      }));
+      let foundAthlete = false;
+      const athletesWithWorkout = baseAthletes.map((athlete) => {
+        if (athlete.id !== payload.athleteId) return athlete;
+        foundAthlete = true;
+        return {
+          ...athlete,
+          workouts: [
+            ...athlete.workouts.filter((item) => item.id !== workout.id),
+            workout,
+          ].sort((a, b) => a.date.localeCompare(b.date)),
+        };
+      });
+      if (!foundAthlete) {
+        athletesWithWorkout.push({
+          id: payload.athleteId,
+          name: payload.athleteName,
+          avatarUrl: null,
+          status: "ativo",
+          goal: null,
+          level: "",
+          adherence: 0,
+          workouts: [workout],
+        });
+      }
+
+      return {
+        weekStart: prev?.weekStart ?? toISODate(getMondayOf(monthStart)),
+        weekEnd: prev?.weekEnd ?? toISODate(addDays(getMondayOf(monthStart), 41)),
+        athletes: athletesWithWorkout,
+      };
+    });
+    setSelectedAthleteId(payload.athleteId);
+  }
+
   const fetchWeek = useCallback((month: Date) => {
     setLoading(true);
     const calendarDays = getCalendarMonthDays(month);
     const from = calendarDays[0].iso;
     const to = calendarDays[calendarDays.length - 1].iso;
-    fetch(`/api/coach/athletes/week?from=${from}&to=${to}`, { cache: "no-store" })
+    fetch(`/api/coach/athletes/week?from=${from}&to=${to}&t=${Date.now()}`, { cache: "no-store" })
       .then((r) => r.ok ? r.json() : null)
       .then((d: WeeklyData | null) => setWeeklyData(d))
       .catch(() => null)
@@ -2697,7 +2796,10 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
         <IntervalsPrescribeModal
           payload={quickPrescribe}
           onClose={() => setQuickPrescribe(null)}
-          onSaved={() => fetchWeek(monthStart)}
+          onSaved={(savedWorkout) => {
+            mergeSavedWorkoutIntoCalendar(quickPrescribe, savedWorkout ?? null);
+            fetchWeek(monthStart);
+          }}
         />
       )}
 
