@@ -101,20 +101,44 @@ export async function GET(req: NextRequest) {
   );
   const athleteIds = visibleAthletes.map((a) => a.id);
 
-  const workouts = await prisma.workout.findMany({
+  const visiblePlans = await prisma.trainingPlan.findMany({
+    where: {
+      OR: [
+        { coachId: coach.id },
+        { athleteId: { in: athleteIds } },
+      ],
+    },
+    select: { id: true, athleteId: true },
+  });
+  const planIds = visiblePlans.map((plan) => plan.id);
+  const athleteIdByPlanId = new Map(visiblePlans.map((plan) => [plan.id, plan.athleteId]));
+
+  const visibleWeeks = planIds.length
+    ? await prisma.trainingWeek.findMany({
+        where: {
+          planId: { in: planIds },
+          workouts: { some: { date: { gte: weekStart, lte: weekEnd } } },
+        },
+        select: { id: true, planId: true, released: true },
+      })
+    : [];
+  const weekIds = visibleWeeks.map((week) => week.id);
+  const weekMetaById = new Map(visibleWeeks.map((week) => [
+    week.id,
+    {
+      athleteId: athleteIdByPlanId.get(week.planId),
+      released: week.released,
+    },
+  ]));
+
+  const workouts = weekIds.length ? await prisma.workout.findMany({
     where: {
       date: { gte: weekStart, lte: weekEnd },
-      week: {
-        plan: {
-          OR: [
-            { coachId: coach.id },
-            { athleteId: { in: athleteIds } },
-          ],
-        },
-      },
+      weekId: { in: weekIds },
     },
     select: {
       id: true,
+      weekId: true,
       date: true,
       type: true,
       title: true,
@@ -138,18 +162,13 @@ export async function GET(req: NextRequest) {
           rpe: true,
         },
       },
-      week: {
-        select: {
-          released: true,
-          plan: { select: { athleteId: true } },
-        },
-      },
     },
-  });
+  }) : [];
 
   const workoutsByAthlete = new Map<string, typeof workouts>();
   for (const wo of workouts) {
-    const athleteId = wo.week.plan.athleteId;
+    const athleteId = weekMetaById.get(wo.weekId)?.athleteId;
+    if (!athleteId) continue;
     if (!workoutsByAthlete.has(athleteId)) workoutsByAthlete.set(athleteId, []);
     workoutsByAthlete.get(athleteId)!.push(wo);
   }
@@ -205,7 +224,7 @@ export async function GET(req: NextRequest) {
           actualDurationMin: log?.durationSec ? Math.round(log.durationSec / 60) : null,
           actualAvgPaceSecPerKm: log?.avgPaceSecPerKm ?? null,
           actualAvgHr: log?.avgHr ?? null,
-          released: wo.week.released,
+          released: weekMetaById.get(wo.weekId)?.released ?? false,
         };
       }),
     };

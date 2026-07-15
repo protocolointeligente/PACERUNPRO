@@ -89,9 +89,25 @@ export async function GET(req: NextRequest) {
     };
   }
 
-  const workouts = await prisma.workout.findMany({
+  const plans = await prisma.trainingPlan.findMany({
+    where: { athleteId: athlete.id },
+    select: { id: true },
+  });
+  const planIds = plans.map((plan) => plan.id);
+  const weeks = planIds.length
+    ? await prisma.trainingWeek.findMany({
+        where: {
+          planId: { in: planIds },
+          workouts: { some: { date: dateFilter, status: { in: ["LIBERADO", "AGENDADO"] } } },
+        },
+        select: { id: true },
+      })
+    : [];
+  const weekIds = weeks.map((week) => week.id);
+
+  const workouts = weekIds.length ? await prisma.workout.findMany({
     where: {
-      week: { plan: { athleteId: athlete.id } },
+      weekId: { in: weekIds },
       date: dateFilter,
       status: { in: ["LIBERADO", "AGENDADO"] },
     },
@@ -111,7 +127,7 @@ export async function GET(req: NextRequest) {
       imageUrl: true,
       notes: true,
     },
-  });
+  }) : [];
 
   const result = workouts.map((w) => {
     const rawType = w.type as string;
