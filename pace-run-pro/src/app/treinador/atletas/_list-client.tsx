@@ -1797,6 +1797,51 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
     }
   }
 
+  async function handleDeleteWeek(athlete: AthleteWeekly, targetWeekStart: string, workoutCount: number) {
+    if (workoutCount === 0) return;
+    if (!confirm(`Excluir todos os ${workoutCount} treino(s) desta semana de ${athlete.name}?`)) return;
+    setBusyCell(`week:${athlete.id}:${targetWeekStart}`);
+    try {
+      const res = await fetch(`/api/coach/athletes/${athlete.id}/weeks?weekStart=${targetWeekStart}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Nao foi possivel excluir a semana.");
+      }
+      fetchWeek(monthStart);
+      setWeekClipboard((prev) => prev?.athlete.id === athlete.id && prev.weekStart === targetWeekStart ? null : prev);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Nao foi possivel excluir a semana.");
+    } finally {
+      setBusyCell(null);
+    }
+  }
+
+  async function handleDeletePeriodization(athlete: AthleteWeekly) {
+    const ok = confirm(
+      `Excluir a periodizacao de ${athlete.name}?\n\nIsso remove os planos e treinos gerados para este atleta. Use quando precisar refazer a periodizacao do zero.`
+    );
+    if (!ok) return;
+    setBusyCell(`periodization:${athlete.id}`);
+    try {
+      const res = await fetch(`/api/coach/athletes/${athlete.id}/periodization`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Nao foi possivel excluir a periodizacao.");
+      }
+      fetchWeek(monthStart);
+      setWeekClipboard((prev) => prev?.athlete.id === athlete.id ? null : prev);
+      setWorkoutClipboard(null);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Nao foi possivel excluir a periodizacao.");
+    } finally {
+      setBusyCell(null);
+    }
+  }
+
   function mergeSavedWorkoutIntoCalendar(payload: QuickPrescribePayload | null, saved: SavedWorkoutResponse | null) {
     if (!payload || !saved?.id) return;
 
@@ -2320,6 +2365,20 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                   </Button>
                 </Link>
                 <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={busyCell === `periodization:${selectedAthlete.id}`}
+                  onClick={() => handleDeletePeriodization(selectedAthlete)}
+                  title="Excluir periodizacao e treinos gerados deste atleta"
+                >
+                  {busyCell === `periodization:${selectedAthlete.id}` ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  Periodizacao
+                </Button>
+                <Button
                   size="sm"
                   onClick={() => setQuickPrescribe({
                     athleteId: selectedAthlete.id,
@@ -2356,6 +2415,7 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                 const rowWorkoutCount = selectedWorkouts.filter((workout) => row.some((day) => day.iso === workout.date)).length;
                 const canPasteWeek = Boolean(weekClipboard);
                 const rowBusy = busyCell === `week:${selectedAthlete.id}`;
+                const rowDeleteBusy = busyCell === `week:${selectedAthlete.id}:${rowWeekStart}`;
                 return (
                   <div
                     key={`${rowWeekStart}-${rowIndex}`}
@@ -2434,10 +2494,15 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                           </div>
                         );
                             })}
-                            {dayWorkouts.length === 0 && workoutClipboard && (
+                            {workoutClipboard && (
                               <button
                                 onClick={() => handlePasteWorkout(selectedAthlete, day.iso)}
-                                className="flex w-full items-center justify-center gap-1 rounded border border-dashed border-success/40 px-2 py-4 text-[11px] font-semibold text-success hover:bg-success/10"
+                                disabled={isBusy}
+                                className={cn(
+                                  "flex w-full items-center justify-center gap-1 rounded border border-dashed border-success/40 px-2 text-[11px] font-semibold text-success hover:bg-success/10 disabled:cursor-not-allowed disabled:opacity-50",
+                                  dayWorkouts.length === 0 ? "py-4" : "py-1.5"
+                                )}
+                                title={`Colar ${workoutClipboard.workout.title} em ${day.iso}`}
                               >
                                 <ClipboardPaste className="h-3 w-3" />
                                 Colar
@@ -2472,6 +2537,19 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         ) : (
                           <ClipboardPaste className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={rowWorkoutCount === 0 || rowDeleteBusy}
+                        onClick={() => handleDeleteWeek(selectedAthlete, rowWeekStart, rowWorkoutCount)}
+                        title={rowWorkoutCount > 0 ? `Excluir semana (${rowWorkoutCount} treino${rowWorkoutCount !== 1 ? "s" : ""})` : "Semana sem treinos"}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-text-muted transition-colors hover:border-danger/50 hover:bg-danger/10 hover:text-danger disabled:cursor-not-allowed disabled:opacity-30"
+                      >
+                        {rowDeleteBusy ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5" />
                         )}
                       </button>
                     </div>
