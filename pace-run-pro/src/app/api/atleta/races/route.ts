@@ -7,7 +7,10 @@ export async function GET() {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "ATHLETE") return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
-  const athlete = await prisma.athlete.findUnique({ where: { userId: session.user.id } });
+  const athlete = await prisma.athlete.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
   if (!athlete) return NextResponse.json([]);
 
   const races = await prisma.race.findMany({
@@ -22,7 +25,10 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session?.user?.id || session.user.role !== "ATHLETE") return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
-  const athlete = await prisma.athlete.findUnique({ where: { userId: session.user.id } });
+  const athlete = await prisma.athlete.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
   if (!athlete) return NextResponse.json({ error: "Atleta não encontrado" }, { status: 404 });
 
   const body = (await req.json()) as {
@@ -42,7 +48,7 @@ export async function POST(req: NextRequest) {
     data: {
       athleteId: athlete.id,
       name: body.name,
-      date: new Date(body.date),
+      date: new Date(`${body.date}T12:00:00`),
       distanceKm: body.distanceKm,
       goalTime: body.goalTime ?? null,
       resultTime: body.resultTime ?? null,

@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AreaTrend, LineTrend } from "@/components/charts/trend-chart";
+import { AreaTrend, BarTrend, LineTrend } from "@/components/charts/trend-chart";
 import { WeeklyReleaseDialog } from "@/components/coach/weekly-release-dialog";
 import { DeleteWorkoutButton, DeletePlanButton, EditWorkoutButton } from "@/components/coach/delete-buttons";
 import { TrainingLoadPanel } from "@/components/coach/training-load-panel";
@@ -16,6 +16,7 @@ import { AthleteCalendar, type CalWorkout } from "@/components/coach/athlete-cal
 import { WorkoutLogComments } from "@/components/workout-log-comments";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-guard";
+import { computeLoadSeries, estimateActualTSS, estimateTSS } from "@/lib/training-load";
 
 const GOAL_LABELS: Record<string, string> = {
   CINCO_KM: "5 km",
@@ -43,6 +44,20 @@ function deriveAthleteStatus(adherenceRate?: number | null): "ativo" | "risco" |
   if (adherenceRate >= 0.8) return "ativo";
   if (adherenceRate >= 0.5) return "risco";
   return "inativo";
+}
+
+function average(values: Array<number | null | undefined>): number | null {
+  const valid = values.filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  if (valid.length === 0) return null;
+  return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+}
+
+function formatPct(value: number | null): string {
+  return value == null ? "—" : `${Math.round(value * 100)}%`;
+}
+
+function formatMetric(value: number | null, suffix = "", decimals = 0): string {
+  return value == null ? "—" : `${value.toFixed(decimals)}${suffix}`;
 }
 
 export default async function AthleteFullViewPage({ params }: { params: Promise<{ id: string }> }) {
@@ -80,7 +95,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
     where: { athleteId: dbAthlete.id },
     orderBy: { date: "desc" },
     take: 10,
-    select: { date: true, rpe: true, pain: true, sleep: true, fatigue: true, mood: true },
+    select: { date: true, rpe: true, pain: true, sleep: true, fatigue: true, mood: true, stress: true, flagged: true },
   });
   const checkInHistory = rawCheckins.map((c) => ({
     date: c.date.toISOString().split("T")[0],
@@ -89,16 +104,20 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
     sleep: c.sleep ?? 0,
     fatigue: c.fatigue ?? 0,
     mood: c.mood ?? 0,
+    stress: c.stress ?? 0,
+    flagged: c.flagged,
   }));
 
-  // Fetch recent workout sessions (last 5 completed)
+  const loadParams = await prisma.athleteLoadParams.findUnique({ where: { athleteId: dbAthlete.id } });
+
+  // Fetch recent workout sessions and imported/manual execution data.
   const rawLogs = await prisma.workoutLog.findMany({
     where: { athleteId: dbAthlete.id },
     include: { workout: { select: { date: true, title: true } } },
-    orderBy: { workout: { date: "desc" } },
-    take: 5,
+    orderBy: [{ startedAt: "desc" }, { createdAt: "desc" }],
+    take: 80,
   });
-  const recentSessions = rawLogs.filter((log) => log.workout).map((log) => ({
+  const recentSessions = rawLogs.filter((log) => log.workout).slice(0, 5).map((log) => ({
     id: log.id,
     title: log.workout!.title,
     date: new Date(log.workout!.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
@@ -139,6 +158,20 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
               targetPaceSecPerKm: true,
               targetRpe: true,
               structured: true,
+              logs: {
+                orderBy: { startedAt: "desc" },
+                take: 1,
+                select: {
+                  startedAt: true,
+                  durationSec: true,
+                  distanceKm: true,
+                  avgPaceSecPerKm: true,
+                  avgHr: true,
+                  maxHr: true,
+                  rpe: true,
+                  source: true,
+                },
+              },
             },
           },
         },
@@ -221,6 +254,84 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
     }))
   ) ?? [];
 
+  const plannedWorkouts = activePlan?.weeks.flatMap((week) => week.workouts) ?? [];
+  const now = new Date();
+  const analysisStart = new Date(now.getTime() - 28 * 86400_000);
+  const plannedWindow = plannedWorkouts.filter((workout) => workout.date >= analysisStart && workout.date <= now);
+  const logsByWorkoutId = new Map(rawLogs.filter((log) => log.workoutId).map((log) => [log.workoutId!, log]));
+  const completedPlannedCount = plannedWindow.filter((workout) => logsByWorkoutId.has(workout.id) || workout.status === "CONCLUIDO").length;
+  const adherenceBySession = plannedWindow.length > 0 ? completedPlannedCount / plannedWindow.length : null;
+
+  const plannedLoad28 = plannedWindow.reduce(
+    (sum, workout) =>
+      sum +
+      estimateTSS(
+        {
+          type: workout.type as string,
+          targetDistanceKm: workout.targetDistanceKm,
+          targetDurationMin: workout.targetDurationMin,
+          targetPaceSecPerKm: workout.targetPaceSecPerKm,
+          targetRpe: workout.targetRpe,
+        },
+        loadParams,
+      ),
+    0,
+  );
+  const actualWindowLogs = rawLogs.filter((log) => (log.startedAt ?? log.createdAt) >= analysisStart && (log.startedAt ?? log.createdAt) <= now);
+  const actualLoad28 = actualWindowLogs.reduce((sum, log) => sum + estimateActualTSS(log, loadParams, log.rpe ?? 6), 0);
+  const loadCompliance = plannedLoad28 > 0 ? actualLoad28 / plannedLoad28 : null;
+
+  const dailyTss = new Map<string, number>();
+  for (const workout of plannedWorkouts.filter((item) => item.date >= new Date(now.getTime() - 120 * 86400_000))) {
+    const log = logsByWorkoutId.get(workout.id) ?? workout.logs[0] ?? null;
+    const tss = log
+      ? estimateActualTSS(log, loadParams, workout.targetRpe ?? 6)
+      : estimateTSS(
+          {
+            type: workout.type as string,
+            targetDistanceKm: workout.targetDistanceKm,
+            targetDurationMin: workout.targetDurationMin,
+            targetPaceSecPerKm: workout.targetPaceSecPerKm,
+            targetRpe: workout.targetRpe,
+          },
+          loadParams,
+        );
+    const day = (log?.startedAt ?? workout.date).toISOString().slice(0, 10);
+    dailyTss.set(day, (dailyTss.get(day) ?? 0) + tss);
+  }
+  const loadSeries = computeLoadSeries(dailyTss, 90);
+  const latestLoad = loadSeries[loadSeries.length - 1] ?? null;
+  const avgHr28 = average(actualWindowLogs.map((log) => log.avgHr));
+  const maxHr28 = average(actualWindowLogs.map((log) => log.maxHr));
+  const avgRpe28 = average([...actualWindowLogs.map((log) => log.rpe), ...rawCheckins.map((checkin) => checkin.rpe)]);
+  const avgSleep = average(rawCheckins.map((checkin) => checkin.sleep));
+  const avgStress = average(rawCheckins.map((checkin) => checkin.stress));
+  const avgFatigue = average(rawCheckins.map((checkin) => checkin.fatigue));
+  const avgPain = average(rawCheckins.map((checkin) => checkin.pain));
+  const readinessScore =
+    avgSleep == null && avgStress == null && avgFatigue == null && avgPain == null
+      ? null
+      : Math.max(
+          0,
+          Math.min(
+            100,
+            ((avgSleep ?? 5) + (10 - (avgStress ?? 5)) + (10 - (avgFatigue ?? 5)) + (10 - (avgPain ?? 0))) * 2.5,
+          ),
+        );
+  const sourceCounts = actualWindowLogs.reduce<Record<string, number>>((acc, log) => {
+    acc[log.source] = (acc[log.source] ?? 0) + 1;
+    return acc;
+  }, {});
+  const dataSourceSeries = Object.entries(sourceCounts).map(([label, value]) => ({ label, value }));
+  const keySignals = [
+    adherenceBySession != null && adherenceBySession < 0.7 ? "Baixa aderência por sessão nos últimos 28 dias." : null,
+    loadCompliance != null && loadCompliance > 1.25 ? "Carga realizada acima da planejada." : null,
+    loadCompliance != null && loadCompliance < 0.75 ? "Carga realizada abaixo da planejada." : null,
+    avgSleep != null && avgSleep < 6 ? "Sono médio baixo nos check-ins recentes." : null,
+    avgStress != null && avgStress >= 7 ? "Stress percebido elevado." : null,
+    latestLoad && latestLoad.tsb < -20 ? "TSB negativo: fadiga acumulada merece atenção." : null,
+  ].filter(Boolean) as string[];
+
   const status = deriveAthleteStatus(dbAthlete.adherenceRate);
 
   const athlete = {
@@ -286,6 +397,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
           <TabsTrigger value="fisico">Dados físicos &amp; testes</TabsTrigger>
           <TabsTrigger value="treinos">Treinos &amp; histórico</TabsTrigger>
           <TabsTrigger value="calendario">Calendário</TabsTrigger>
+          <TabsTrigger value="metricas">Métricas</TabsTrigger>
           <TabsTrigger value="carga">Carga de treino</TabsTrigger>
           <TabsTrigger value="checkins">Check-ins</TabsTrigger>
         </TabsList>
@@ -299,9 +411,16 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
             <Metric
               icon={Activity}
               label="Carga semanal"
-              value="—"
-              tooltip="UA = Unidades Arbitrárias. Será calculada automaticamente a partir dos check-ins."
+              value={latestLoad ? latestLoad.tss.toFixed(0) : "—"}
+              tooltip="Carga estimada por TSS/TRIMP quando há dados realizados; caso contrário usa a prescrição."
             />
+          </div>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Metric icon={Activity} label="CTL · Fitness" value={latestLoad ? latestLoad.ctl.toFixed(0) : "—"} />
+            <Metric icon={AlertTriangle} label="ATL · Fadiga" value={latestLoad ? latestLoad.atl.toFixed(0) : "—"} />
+            <Metric icon={TrendingUp} label="TSB · Forma" value={latestLoad ? `${latestLoad.tsb >= 0 ? "+" : ""}${latestLoad.tsb.toFixed(0)}` : "—"} />
+            <Metric icon={HeartPulse} label="Prontidão" value={readinessScore == null ? "—" : `${Math.round(readinessScore)}%`} />
           </div>
 
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
@@ -329,7 +448,7 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
           <div className="grid gap-4 sm:grid-cols-3">
             <Metric icon={Weight} label="Peso" value={athlete.weightKg ? `${athlete.weightKg} kg` : "—"} />
             <Metric icon={Ruler} label="Altura" value={athlete.heightCm ? `${athlete.heightCm} cm` : "—"} />
-            <Metric icon={HeartPulse} label="FC máxima" value="—" />
+            <Metric icon={HeartPulse} label="FC máxima" value={loadParams?.hrMax ? `${loadParams.hrMax} bpm` : formatMetric(maxHr28, " bpm")} />
           </div>
           <div className="mt-5">
             <h3 className="mb-3 font-display text-sm font-semibold text-text">Avaliações &amp; testes recentes</h3>
@@ -495,6 +614,74 @@ export default async function AthleteFullViewPage({ params }: { params: Promise<
           <AthleteCalendar athleteId={dbAthlete.id} initialWorkouts={calWorkouts} />
         </TabsContent>
 
+        <TabsContent value="metricas">
+          <div className="space-y-5">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Metric icon={CheckCircle2} label="Sessões realizadas" value={formatPct(adherenceBySession)} />
+              <Metric icon={Activity} label="Carga real / planejada" value={formatPct(loadCompliance)} />
+              <Metric icon={HeartPulse} label="FC média" value={formatMetric(avgHr28, " bpm")} />
+              <Metric icon={Moon} label="Sono médio" value={formatMetric(avgSleep, "/10", 1)} />
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
+              <Card>
+                <CardContent className="p-5">
+                  <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-display text-base font-bold text-text">Painel de decisão do treinador</h3>
+                      <p className="text-sm text-text-muted">
+                        Últimos 28 dias: carga, aderência, resposta fisiológica e wellness em uma leitura única.
+                      </p>
+                    </div>
+                    <Badge variant={readinessScore != null && readinessScore < 60 ? "warning" : "success"}>
+                      {readinessScore == null ? "Dados insuficientes" : readinessScore < 60 ? "Atenção" : "Estável"}
+                    </Badge>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <Signal label="Planejado" value={plannedLoad28.toFixed(0)} hint="TSS previsto" />
+                    <Signal label="Realizado" value={actualLoad28.toFixed(0)} hint="TSS/TRIMP estimado" />
+                    <Signal label="RPE médio" value={formatMetric(avgRpe28, "/10", 1)} hint="logs + check-ins" />
+                    <Signal label="Stress" value={formatMetric(avgStress, "/10", 1)} hint="check-ins recentes" />
+                    <Signal label="Fadiga" value={formatMetric(avgFatigue, "/10", 1)} hint="check-ins recentes" />
+                    <Signal label="Dor" value={formatMetric(avgPain, "/10", 1)} hint="check-ins recentes" />
+                  </div>
+                  <div className="mt-5 rounded-xl border border-border bg-card-hover/30 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Sinais de atenção</p>
+                    {keySignals.length === 0 ? (
+                      <p className="mt-2 text-sm text-text-muted">Sem alerta crítico com os dados disponíveis.</p>
+                    ) : (
+                      <ul className="mt-2 space-y-2 text-sm text-text-muted">
+                        {keySignals.map((signal) => (
+                          <li key={signal} className="flex gap-2">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                            <span>{signal}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-5">
+                  <h3 className="mb-3 font-display text-sm font-semibold text-text">Origem dos dados</h3>
+                  {dataSourceSeries.length > 0 ? (
+                    <BarTrend data={dataSourceSeries} dataKey="value" color="#2563eb" formatValue={(value) => `${value}`} />
+                  ) : (
+                    <p className="py-8 text-center text-sm text-text-muted">
+                      Nenhum dado realizado importado ou digitado nos últimos 28 dias.
+                    </p>
+                  )}
+                  <p className="mt-3 text-xs text-text-muted">
+                    A camada de métricas já aceita registros manuais e fontes como Strava/Garmin/Polar/Coros quando sincronizadas em logs.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
         {/* Training load (CTL/ATL/TSB) */}
         <TabsContent value="carga">
           <TrainingLoadPanel athleteId={dbAthlete.id} />
@@ -588,5 +775,15 @@ function Metric({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function Signal({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-background/40 p-3">
+      <p className="text-[10px] uppercase tracking-wider text-text-muted">{label}</p>
+      <p className="mt-1 font-display text-lg font-bold text-text">{value}</p>
+      <p className="text-[11px] text-text-muted">{hint}</p>
+    </div>
   );
 }

@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bike, ChevronLeft, ChevronRight, Clock, Dumbbell, Footprints, Loader2, Plus, Trophy, Waves, X } from "lucide-react";
+import { Bike, CalendarDays, ChevronLeft, ChevronRight, Clock, Dumbbell, Footprints, Loader2, Plus, Trophy, Waves, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { WorkoutCard } from "@/components/dashboard/workout-card";
 import { cn } from "@/lib/utils";
-import type { WorkoutSummary } from "@/lib/types";
 
 interface CalendarEvent {
+  id?: string;
   date: string;
   type: string;
   title: string;
@@ -101,8 +99,6 @@ function EventIcon({ type, title, className, style }: { type: string; title?: st
   return <Footprints className={className} style={style} />;
 }
 
-const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-
 const DISTANCES = [
   { label: "5K", value: 5 },
   { label: "10K", value: 10 },
@@ -119,6 +115,23 @@ function toLocalISODate(d: Date): string {
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function eventHref(event: CalendarEvent): string | undefined {
+  if (!event.id || event.type === "prova") return undefined;
+  return event.type === "forca" ? `/atleta/forca/treino/${event.id}` : `/atleta/treino/${event.id}`;
+}
+
+function formatDateHeading(date: string) {
+  return new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+}
+
+function formatDateBadge(date: string) {
+  const d = new Date(`${date}T12:00:00`);
+  return {
+    weekday: d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", ""),
+    day: d.toLocaleDateString("pt-BR", { day: "2-digit" }),
+  };
 }
 
 export default function CalendarPage() {
@@ -142,7 +155,6 @@ export default function CalendarPage() {
   }, [monthOffset]);
 
   const monthLabel = reference.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-  const grid = useMemo(() => buildMonthGrid(reference), [reference]);
 
   useEffect(() => {
     const year = reference.getFullYear();
@@ -165,6 +177,7 @@ export default function CalendarPage() {
 
   const workoutEvents = useMemo((): CalendarEvent[] =>
     workouts.map((w) => ({
+      id: w.id,
       date: w.date.slice(0, 10),
       type: w.type,
       title: w.title,
@@ -175,6 +188,7 @@ export default function CalendarPage() {
 
   const raceEvents = useMemo((): CalendarEvent[] =>
     races.map((r) => ({
+      id: r.id,
       date: r.date.slice(0, 10),
       type: "prova" as const,
       title: `🍅 ${r.name}`,
@@ -195,31 +209,16 @@ export default function CalendarPage() {
     return map;
   }, [allEvents]);
 
-  const currentWeekWorkouts = useMemo((): WorkoutSummary[] => {
-    const now = new Date();
-    const dow = (now.getDay() + 6) % 7;
-    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow);
-    const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
-    return workouts
-      .filter((w) => {
-        const d = new Date(w.date);
-        return d >= weekStart && d < weekEnd;
-      })
-      .map((w) => ({
-        id: w.id,
-        date: w.date,
-        type: w.type as WorkoutSummary["type"],
-        subtype: w.subtype,
-        title: w.title,
-        status: w.status,
-        distanceKm: w.distanceKm ?? undefined,
-        durationMin: w.durationMin ?? undefined,
-        targetPaceSecPerKm: w.targetPaceSecPerKm ?? undefined,
-        targetRpe: w.targetRpe ?? undefined,
-        targetHrZone: w.targetHrZone ?? undefined,
-        color: w.color,
-      }));
-  }, [workouts]);
+  const visibleEntries = useMemo(() => {
+    const monthKey = `${reference.getFullYear()}-${String(reference.getMonth() + 1).padStart(2, "0")}`;
+    return Array.from(eventsByDate.entries())
+      .filter(([date]) => date.startsWith(monthKey))
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, items]) => [date, [...items].sort((a, b) => (a.type === "prova" ? 1 : 0) - (b.type === "prova" ? 1 : 0))] as const);
+  }, [eventsByDate, reference]);
+
+  const monthWorkoutsCount = visibleEntries.reduce((sum, [, items]) => sum + items.filter((item) => item.type !== "prova").length, 0);
+  const monthRacesCount = visibleEntries.reduce((sum, [, items]) => sum + items.filter((item) => item.type === "prova").length, 0);
 
   const upcomingRaces = races.filter((r) => new Date(r.date) >= new Date());
   const modalitySummary = useMemo(() => {
@@ -421,155 +420,99 @@ export default function CalendarPage() {
         </div>
       )}
 
-      <Tabs defaultValue="semana">
-        <TabsList>
-          <TabsTrigger value="mes">Mensal</TabsTrigger>
-          <TabsTrigger value="semana">Semanal</TabsTrigger>
-          <TabsTrigger value="agenda">Agenda</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="mes">
-          <Card className="border-white/10 bg-card/75 shadow-xl shadow-black/10 backdrop-blur-xl">
-            <CardContent className="p-3 sm:p-5">
-              <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] uppercase tracking-wider text-text-muted">
-                {WEEKDAYS.map((d) => (
-                  <div key={d} className="py-1.5">{d}</div>
-                ))}
+      <Card className="border-white/10 bg-card/75 shadow-xl shadow-black/10 backdrop-blur-xl">
+        <CardContent className="p-4 sm:p-5">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <CalendarDays className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-display text-base font-bold text-text">Agenda de treinos</p>
+                <p className="text-xs text-text-muted">{monthWorkoutsCount} treino(s) · {monthRacesCount} prova(s)</p>
               </div>
-              <div className="grid grid-cols-7 gap-1.5">
-                {grid.map((day, i) => {
-                  const key = day ? toLocalISODate(day) : undefined;
-                  const dayEvents = key ? eventsByDate.get(key) ?? [] : [];
-                  const isToday = key === toLocalISODate(new Date());
-                  return (
-                    <div
-                      key={i}
-                      className={cn(
-                        "flex min-h-[78px] flex-col gap-1 rounded-xl border p-1.5 backdrop-blur-sm sm:min-h-[96px] sm:p-2",
-                        day ? "border-white/10 bg-white/[0.04]" : "border-transparent",
-                        isToday && "border-primary/60 bg-primary/10 ring-1 ring-primary/30"
-                      )}
-                    >
-                      {day && (
-                        <>
-                          <span className={cn("text-xs font-medium", isToday ? "text-primary" : "text-text-muted")}>
-                            {day.getDate()}
-                          </span>
-                          <div className="flex flex-1 flex-col gap-1 overflow-hidden">
-                            {dayEvents.slice(0, 2).map((e, idx) => {
-                              const isRace = e.type === "prova" && e.title.startsWith("🍅");
-                              const color = isRace ? "#f97316" : getSubtypeColor(e.type, e.subtype);
-                              return (
-                                <span
-                                  key={idx}
-                                  className="flex items-center gap-1 truncate rounded-md border px-1.5 py-0.5 text-[10px] font-medium leading-tight"
-                                  style={{ backgroundColor: `${color}22`, color }}
-                                >
-                                  <EventIcon type={e.type} title={e.title} className="h-3 w-3 shrink-0" />
-                                  <span className="truncate">{e.title}</span>
-                                </span>
-                              );
-                            })}
-                            {dayEvents.length > 2 && (
-                              <span className="text-[10px] text-text-muted">+{dayEvents.length - 2} mais</span>
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="semana">
-          <div className="space-y-3">
-            {currentWeekWorkouts.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <p className="text-sm font-semibold text-text">Nenhum treino nesta semana</p>
-                  <p className="mt-1 text-xs text-text-muted">Seu treinador ainda não liberou treinos para esta semana.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              currentWeekWorkouts.map((w) => (
-                <WorkoutCard key={w.id} workout={w} href={`/atleta/treino/${w.id}`} />
-              ))
-            )}
+            </div>
           </div>
-        </TabsContent>
 
-        <TabsContent value="agenda">
-          <div className="space-y-5">
-            {allEvents.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <p className="text-sm font-semibold text-text">Nenhum evento neste mês</p>
-                  <p className="mt-1 text-xs text-text-muted">Os treinos liberados pelo treinador aparecerão aqui.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              Array.from(eventsByDate.entries())
-                .sort(([a], [b]) => a.localeCompare(b))
-                .map(([date, items]) => (
-                  <div key={date}>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
-                      {new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
-                    </p>
-                    <div className="space-y-2">
-                      {items.map((e, idx) => {
-                        const isRace = e.type === "prova" && e.title.startsWith("🍅");
-                        const color = isRace ? "#f97316" : getSubtypeColor(e.type, e.subtype);
-                        return (
-                          <Card key={idx}>
-                            <CardContent className="flex items-center gap-3 p-3.5">
-                              <span className="h-9 w-9 shrink-0 rounded-lg" style={{ backgroundColor: `${color}22` }}>
-                                <span className="flex h-full w-full items-center justify-center">
-                                  <EventIcon type={e.type} title={e.title} className="h-4 w-4" style={{ color }} />
-                                </span>
+          {visibleEntries.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border p-10 text-center">
+              <p className="text-sm font-semibold text-text">Nenhum treino neste mês</p>
+              <p className="mt-1 text-xs text-text-muted">Os treinos liberados pelo treinador aparecerão aqui.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {visibleEntries.map(([date, items]) => {
+                const badge = formatDateBadge(date);
+                const isToday = date === toLocalISODate(new Date());
+                return (
+                  <section key={date} className="grid gap-3 sm:grid-cols-[76px_1fr]">
+                    <div className="sm:sticky sm:top-24 sm:self-start">
+                      <div
+                        className={cn(
+                          "flex h-[76px] w-[76px] flex-col items-center justify-center rounded-2xl border bg-background/70 text-center",
+                          isToday ? "border-primary/70 text-primary ring-1 ring-primary/30" : "border-border text-text"
+                        )}
+                      >
+                        <span className="text-[11px] font-semibold uppercase text-text-muted">{badge.weekday}</span>
+                        <span className="font-display text-2xl font-bold leading-none">{badge.day}</span>
+                      </div>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
+                        {formatDateHeading(date)}
+                      </p>
+                      <div className="grid gap-2">
+                        {items.map((event, idx) => {
+                          const isRace = event.type === "prova" && event.title.startsWith("🍅");
+                          const color = isRace ? "#f97316" : getSubtypeColor(event.type, event.subtype);
+                          const href = eventHref(event);
+                          const body = (
+                            <div
+                              className={cn(
+                                "group flex items-center gap-3 rounded-2xl border bg-background/70 p-3.5 transition-colors",
+                                href ? "hover:border-primary/50 hover:bg-card-hover" : "border-border",
+                                !href && "border-orange-500/30 bg-orange-500/5"
+                              )}
+                              style={href ? { borderColor: `${color}33` } : undefined}
+                            >
+                              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${color}22` }}>
+                                <EventIcon type={event.type} title={event.title} className="h-5 w-5" style={{ color }} />
                               </span>
                               <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-text">{e.title.replace("🍅 ", "")}</p>
-                                <span className="flex items-center gap-1 text-xs text-text-muted">
-                                  <Clock className="h-3 w-3" /> {isRace ? "Prova" : TYPE_LABELS[e.type]}
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <p className="truncate text-sm font-bold text-text">{event.title.replace("🍅 ", "")}</p>
+                                  <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="border">
+                                    {event.subtype ?? (isRace ? "Prova" : TYPE_LABELS[event.type])}
+                                  </Badge>
+                                </div>
+                                <span className="mt-1 flex items-center gap-1 text-xs text-text-muted">
+                                  <Clock className="h-3 w-3" /> {isRace ? "Prova" : TYPE_LABELS[event.type] ?? "Treino"}
                                 </span>
                               </div>
-                              <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="border">
-                                {e.subtype ?? (isRace ? "Prova" : TYPE_LABELS[e.type])}
-                              </Badge>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
+                              {href && (
+                                <span className="hidden rounded-lg border border-border px-3 py-2 text-xs font-semibold text-text-muted transition-colors group-hover:border-primary/50 group-hover:text-primary sm:block">
+                                  Abrir
+                                </span>
+                              )}
+                            </div>
+                          );
+                          return href ? (
+                            <a key={`${event.id ?? event.title}-${idx}`} href={href}>
+                              {body}
+                            </a>
+                          ) : (
+                            <div key={`${event.id ?? event.title}-${idx}`}>{body}</div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+                  </section>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-}
-
-function buildMonthGrid(reference: Date) {
-  const year = reference.getFullYear();
-  const month = reference.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const startWeekday = (firstDay.getDay() + 6) % 7;
-  const totalCells = Math.ceil((startWeekday + lastDay.getDate()) / 7) * 7;
-
-  const grid: (Date | null)[] = [];
-  for (let i = 0; i < totalCells; i++) {
-    const dayNumber = i - startWeekday + 1;
-    if (dayNumber < 1 || dayNumber > lastDay.getDate()) {
-      grid.push(null);
-    } else {
-      grid.push(new Date(year, month, dayNumber));
-    }
-  }
-  return grid;
 }

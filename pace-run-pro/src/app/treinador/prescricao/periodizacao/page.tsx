@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
@@ -71,6 +71,7 @@ type Level = "Iniciante" | "Intermediário" | "Avançado";
 type ViewTab = "macro" | "treinos";
 type LoadMethod = "horas" | "distancia" | "series" | "tonelagem" | "srpe";
 type Modality = "corrida" | "ciclismo" | "natacao" | "triathlon" | "forca" | "hibrido";
+type PeriodizationSport = "corrida" | "ciclismo" | "natacao" | "forca";
 type BuildMode = "automatica" | "manual" | "revisao";
 type RecoveryCycle = "4" | "6" | "8" | "manual";
 type EventPriority = "A" | "B" | "C";
@@ -79,6 +80,7 @@ type SuggestionStatus = "pending" | "accepted" | "declined";
 interface SavedPlan {
   id: string;
   name: string;
+  goal: string;
   macrocycle: string | null;
   startDate: string;
   endDate: string;
@@ -89,6 +91,32 @@ interface SavedPlan {
     id: string;
     user: { name: string; avatarUrl: string | null };
   };
+  weeks: Array<{
+    id: string;
+    weekNumber: number;
+    mesocycle: string | null;
+    phase: string;
+    startDate: string;
+    endDate: string;
+    released: boolean;
+    targetVolumeKm: number | null;
+    workouts: Array<{
+      id: string;
+      title: string;
+      date: string;
+      type: string;
+      status: string;
+      objective: string | null;
+      warmup: string | null;
+      mainSet: string | null;
+      cooldown: string | null;
+      notes: string | null;
+      targetPaceSecPerKm: number | null;
+      targetDurationMin: number | null;
+      targetDistanceKm: number | null;
+      targetRpe: number | null;
+    }>;
+  }>;
 }
 
 interface TrainingEvent {
@@ -208,6 +236,54 @@ const PHASE_BAR: Record<Phase, string> = {
   Taper: "bg-success",
 };
 
+const PHASE_FROM_API: Record<string, Phase> = {
+  BASE: "Base",
+  CONSTRUCAO: "Construção",
+  ESPECIFICO: "Específico",
+  POLIMENTO: "Taper",
+  COMPETICAO: "Taper",
+  RECUPERACAO: "Base",
+};
+
+const GOAL_FROM_API: Record<string, Goal> = {
+  CINCO_KM: "5k",
+  DEZ_KM: "10k",
+  VINTE_E_UM_KM: "Meia-maratona",
+  QUARENTA_E_DOIS_KM: "Maratona",
+  ULTRAMARATONA: "Trail",
+  PERFORMANCE: "Personalizado",
+};
+
+const SUBTYPE_FROM_API: Record<string, WorkoutSubtype> = {
+  RODAGEM_LEVE: "Rodagem leve",
+  INTERVALADO_CURTO: "Intervalado curto",
+  INTERVALADO_LONGO: "Intervalado longo",
+  TEMPO_RUN: "Tempo Run",
+  FARTLEK: "Fartlek",
+  PROGRESSIVO: "Progressivo",
+  LONGAO: "Longão",
+  REGENERATIVO: "Regenerativo",
+  FORCA: "Força",
+  FUNCIONAL: "Funcional",
+  MOBILIDADE: "Mobilidade",
+  RECUPERACAO: "Recuperação",
+};
+
+const WORKOUT_TYPE_FROM_SUBTYPE: Record<WorkoutSubtype, string> = {
+  "Rodagem leve": "RODAGEM_LEVE",
+  "Intervalado curto": "INTERVALADO_CURTO",
+  "Intervalado longo": "INTERVALADO_LONGO",
+  "Tempo Run": "TEMPO_RUN",
+  Fartlek: "FARTLEK",
+  Progressivo: "PROGRESSIVO",
+  Longão: "LONGAO",
+  Regenerativo: "REGENERATIVO",
+  "Força": "FORCA",
+  Funcional: "FUNCIONAL",
+  Mobilidade: "MOBILIDADE",
+  "Recuperação": "RECUPERACAO",
+};
+
 const goals: Goal[] = ["5k", "10k", "Meia-maratona", "Maratona", "Trail", "Personalizado"];
 const levels: Level[] = ["Iniciante", "Intermediário", "Avançado"];
 
@@ -222,11 +298,172 @@ const loadMethodLabels: Record<LoadMethod, string> = {
 const modalityLabels: Record<Modality, string> = {
   corrida: "Corrida",
   ciclismo: "Ciclismo",
-  natacao: "Natacao",
+  natacao: "Natação",
   triathlon: "Triathlon",
-  forca: "Forca",
-  hibrido: "Endurance + forca",
+  forca: "Força",
+  hibrido: "Endurance + força",
 };
+
+const sportLabels: Record<PeriodizationSport, string> = {
+  corrida: "Corrida",
+  ciclismo: "Ciclismo",
+  natacao: "Natação",
+  forca: "Força",
+};
+
+const SPORT_DISTRIBUTION: Record<Modality, PeriodizationSport[]> = {
+  corrida: ["corrida"],
+  ciclismo: ["ciclismo"],
+  natacao: ["natacao"],
+  forca: ["forca"],
+  hibrido: ["corrida", "forca"],
+  triathlon: ["natacao", "ciclismo", "corrida"],
+};
+
+function sportForSession(modality: Modality, index: number, sessions: number, includeStrength: boolean): PeriodizationSport {
+  if (includeStrength && modality !== "forca" && sessions >= 4 && index === sessions - 1) return "forca";
+  const distribution = SPORT_DISTRIBUTION[modality] ?? SPORT_DISTRIBUTION.corrida;
+  return distribution[index % distribution.length];
+}
+
+function convertWorkoutToSport(workout: GeneratedWorkout, sport: PeriodizationSport, index: number, level: Level): GeneratedWorkout {
+  if (sport === "corrida") return { ...workout, sport };
+
+  const easy = workout.subtype === "Rodagem leve" || workout.subtype === "Regenerativo" || workout.subtype === "Longão";
+  const quality = workout.subtype === "Fartlek" || workout.subtype === "Tempo Run" || workout.subtype === "Progressivo";
+  const intensityLabel = easy ? "base aeróbica" : quality ? "limiar" : "VO2";
+  const rpe = sport === "forca" ? (level === "Iniciante" ? 6 : level === "Intermediário" ? 7 : 8) : workout.targetRpe;
+
+  if (sport === "ciclismo") {
+    const durationMin = Math.max(30, Math.round(workout.durationMin * 1.45));
+    const distanceKm = Math.max(12, Math.round(durationMin * (level === "Avançado" ? 0.62 : level === "Intermediário" ? 0.48 : 0.36)));
+    const title = easy
+      ? `Bike endurance — ${durationMin} min`
+      : quality
+      ? `Bike ${intensityLabel} — ${durationMin} min`
+      : `Bike intervalado — ${durationMin} min`;
+    return {
+      ...workout,
+      sport,
+      title,
+      distanceKm,
+      durationMin,
+      targetPaceSecPerKm: 0,
+      targetRpe: rpe,
+      objective: `Ciclismo: desenvolver ${intensityLabel} com controle por RPE/FC/FTP.`,
+      warmup: "10 min girando leve em Z1-Z2, cadência 85-95 rpm + 3 acelerações de 30 s.",
+      mainSet: easy
+        ? `${durationMin - 15} min em Z2 contínuo, cadência confortável e pressão constante nos pedais.`
+        : quality
+        ? `3-5 blocos de 6-8 min em Z3/Z4 com 3 min leves entre blocos. Ajuste por FTP, FC ou RPE ${rpe}.`
+        : `6-10 tiros de 1-2 min forte em Z5 com recuperação igual ao estímulo. Técnica antes de potência.`,
+      cooldown: "5-10 min muito leve, soltando pernas. Alongamento breve de quadríceps, glúteos e panturrilha.",
+    };
+  }
+
+  if (sport === "natacao") {
+    const durationMin = Math.max(25, Math.round(workout.durationMin * 0.85));
+    const meters = Math.round(Math.max(800, durationMin * (level === "Avançado" ? 55 : level === "Intermediário" ? 42 : 30)) / 50) * 50;
+    const title = easy
+      ? `Natação técnica — ${meters} m`
+      : quality
+      ? `Natação limiar — ${meters} m`
+      : `Natação intervalada — ${meters} m`;
+    return {
+      ...workout,
+      sport,
+      title,
+      distanceKm: meters / 1000,
+      durationMin,
+      targetPaceSecPerKm: 0,
+      targetRpe: rpe,
+      objective: `Natação: consolidar ${intensityLabel}, eficiência de braçada e controle respiratório.`,
+      warmup: "200 m solto + 4 x 50 m educativos alternando técnica e nado completo.",
+      mainSet: easy
+        ? `${Math.max(4, Math.round(meters / 200))} x 200 m confortável com 20 s pausa, foco em alinhamento e respiração.`
+        : quality
+        ? `${Math.max(6, Math.round(meters / 150))} x 100 m em ritmo CSS/RPE ${rpe}, pausa 15-25 s.`
+        : `${Math.max(8, Math.round(meters / 100))} x 50 m forte controlado, pausa 25-35 s. Manter técnica limpa.`,
+      cooldown: "100-200 m solto, alternando costas leve e crawl fácil.",
+    };
+  }
+
+  const title = index % 2 === 0 ? "Força full body" : "Força estabilidade e core";
+  return {
+    ...workout,
+    sport,
+    subtype: "Força" as WorkoutSubtype,
+    title,
+    distanceKm: 0,
+    durationMin: Math.max(35, Math.min(60, Math.round(workout.durationMin * 0.85))),
+    targetPaceSecPerKm: 0,
+    targetRpe: rpe,
+    objective: "Musculação: força geral, estabilidade articular e prevenção de lesões para sustentar a modalidade principal.",
+    warmup: "8 min de mobilidade dinâmica: tornozelo, quadril, coluna torácica, ativação de glúteos e core.",
+    mainSet: "3 séries: agachamento ou leg press 8-10 rep; remada 8-12 rep; levantamento terra romeno 8-10 rep; supino ou flexão 8-12 rep; prancha 30-45 s. Carga técnica, RPE controlado.",
+    cooldown: "5 min de mobilidade leve para quadril, posterior, peitoral e panturrilha.",
+  };
+}
+
+function workoutTypeForGenerated(workout: GeneratedWorkout): string {
+  if (workout.sport === "forca") return "FORCA";
+  return WORKOUT_TYPE_FROM_SUBTYPE[workout.subtype] ?? "RODAGEM_LEVE";
+}
+
+function modalTypeForGenerated(workout: GeneratedWorkout): string {
+  const title = workout.title.toLowerCase();
+  if (workout.sport === "forca") {
+    if (title.includes("core") || title.includes("estabilidade")) return "FUNCIONAL";
+    if (title.includes("inferior")) return "FORCA_INFERIOR";
+    if (title.includes("superior")) return "FORCA_SUPERIOR";
+    return "FORCA_FULL_BODY";
+  }
+  if (workout.sport === "natacao") {
+    if (title.includes("técnica") || title.includes("tecnica")) return "NATACAO_TECNICA";
+    if (title.includes("limiar") || title.includes("css")) return "NATACAO_CSS_LONGO";
+    if (title.includes("interval")) return "NATACAO_CSS_CURTO";
+    if (title.includes("regener")) return "NATACAO_REGENERATIVA";
+    return "NATACAO_AEROBIO";
+  }
+  return workoutTypeForGenerated(workout);
+}
+
+function metricLabelForWorkout(workout: GeneratedWorkout): string {
+  if (workout.sport === "forca") return `${workout.durationMin} min · RPE ${workout.targetRpe}`;
+  if (workout.sport === "natacao") return `${Math.round(workout.distanceKm * 1000)} m · ${workout.durationMin} min · RPE ${workout.targetRpe}`;
+  if (workout.sport === "ciclismo") return `${workout.distanceKm} km · ${workout.durationMin} min · RPE ${workout.targetRpe}`;
+  return `${workout.distanceKm} km · ${workout.durationMin} min · RPE ${workout.targetRpe}`;
+}
+
+function weeklyMetricForWorkouts(workouts: GeneratedWorkout[]): string {
+  if (workouts.length === 0) return "sem treinos";
+  const sports = new Set(workouts.map((workout) => workout.sport ?? "corrida"));
+  const totalMin = workouts.reduce((sum, workout) => sum + workout.durationMin, 0);
+  const totalKm = workouts.reduce((sum, workout) => sum + workout.distanceKm, 0);
+  if (sports.size === 1 && sports.has("forca")) return `${totalMin} min`;
+  if (sports.size === 1 && sports.has("natacao")) return `${Math.round(totalKm * 1000)} m`;
+  if (sports.size === 1 && sports.has("ciclismo")) return `${totalKm.toFixed(1)} km bike`;
+  if (sports.size === 1 && sports.has("corrida")) return `${totalKm.toFixed(1)} km`;
+  return `${Math.round(totalMin / 60 * 10) / 10} h · ${Array.from(sports).map((sport) => sportLabels[sport]).join("/")}`;
+}
+
+function displayTitleForWorkout(workout: GeneratedWorkout): string {
+  if (workout.sport && workout.sport !== "corrida") return workout.title;
+  return workout.subtype;
+}
+
+function inferSportFromSavedWorkout(workout: { type?: string; title?: string | null; notes?: string | null; objective?: string | null }): PeriodizationSport {
+  const key = `${workout.type ?? ""} ${workout.title ?? ""} ${workout.notes ?? ""} ${workout.objective ?? ""}`.toLowerCase();
+  if (key.includes("modalidade: forca") || key.includes("esporte planejado: forca") || key.includes("força") || key.includes("forca") || key.includes("full body") || key.includes("core")) return "forca";
+  if (key.includes("modalidade: natacao") || key.includes("esporte planejado: natacao") || key.includes("natação") || key.includes("natacao") || key.includes("css") || key.includes("piscina")) return "natacao";
+  if (key.includes("modalidade: ciclismo") || key.includes("esporte planejado: ciclismo") || key.includes("ciclismo") || key.includes("bike") || key.includes("ftp")) return "ciclismo";
+  return "corrida";
+}
+
+function initialsFromName(name?: string | null): string {
+  const parts = (name ?? "Atleta").trim().split(/\s+/).filter(Boolean);
+  return `${parts[0]?.[0] ?? "A"}${parts[1]?.[0] ?? ""}`.toUpperCase();
+}
 
 function toCalendarDate(date: Date): string {
   const year = date.getFullYear();
@@ -364,27 +601,34 @@ export default function PeriodizacaoPage() {
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
   const [suggestionStatus, setSuggestionStatus] = useState<Record<string, SuggestionStatus>>({});
   const [savedPlans, setSavedPlans] = useState<SavedPlan[]>([]);
+  const [athletePickerOpen, setAthletePickerOpen] = useState(false);
+  const selectedAthleteId = selectedAthletes[0] ?? "";
+  const selectedAthlete = athletes.find((athlete) => athlete.id === selectedAthleteId) ?? athletes[0] ?? null;
 
-  async function refreshSavedPlans() {
+  const refreshSavedPlans = useCallback(async () => {
     try {
-      const response = await fetch("/api/planos", { cache: "no-store" });
+      if (!selectedAthlete?.id) {
+        setSavedPlans([]);
+        return;
+      }
+      const response = await fetch(`/api/planos?athleteId=${encodeURIComponent(selectedAthlete.id)}`, { cache: "no-store" });
       if (!response.ok) return;
       const data = await response.json() as { plans?: SavedPlan[] };
       setSavedPlans(data.plans ?? []);
     } catch {
       // Keep periodization usable even if history cannot be loaded.
     }
-  }
-
-  useEffect(() => {
-    refreshSavedPlans();
-  }, []);
+  }, [selectedAthlete?.id]);
 
   useEffect(() => {
     if (selectedAthletes.length === 0 && athletes[0]?.id) {
       setSelectedAthletes([athletes[0].id]);
     }
   }, [athletes, selectedAthletes.length]);
+
+  useEffect(() => {
+    refreshSavedPlans();
+  }, [refreshSavedPlans]);
   // Training days — default Mon/Wed/Sat
   const [trainingDays, setTrainingDays] = useState<string[]>([
     "Segunda-feira",
@@ -411,6 +655,8 @@ export default function PeriodizacaoPage() {
       id: string;
       date: string;
       type: string;
+      rawType?: string;
+      modality?: PeriodizationSport;
       title: string;
       status: string;
       targetDistanceKm: number | null;
@@ -418,11 +664,16 @@ export default function PeriodizacaoPage() {
       targetPaceSecPerKm: number | null;
       targetRpe: number | null;
       tss: number;
+      objective?: string;
+      warmup?: string;
+      mainSet?: string;
+      cooldown?: string;
       released: boolean;
     };
   } | null>(null);
   const [liberating, setLiberating] = useState(false);
   const [liberated, setLiberated] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
 
   // Computed VDOT from race result
@@ -466,6 +717,10 @@ export default function PeriodizacaoPage() {
         goal?: Goal; level?: Level; totalWeeks?: number; trainingDays?: string[];
         weeks?: Week[]; vdotValue?: string; raceDistId?: string; raceTime?: string;
         workoutsMap?: Record<number, GeneratedWorkout[]>;
+        suggestionStatus?: Record<string, SuggestionStatus>;
+        periodizationSettings?: PeriodizationSettings;
+        trainingEvents?: TrainingEvent[];
+        selectedAthletes?: string[];
       };
       if (!draft.weeks?.length) return;
       setGoal(draft.goal ?? "Meia-maratona");
@@ -478,12 +733,15 @@ export default function PeriodizacaoPage() {
       setVdotValue(draft.vdotValue ?? "");
       setRaceDistId(draft.raceDistId ?? "5000");
       setRaceTime(draft.raceTime ?? "");
+      setSuggestionStatus(draft.suggestionStatus ?? {});
+      if (draft.periodizationSettings) setPeriodizationSettings(draft.periodizationSettings);
+      if (draft.trainingEvents) setTrainingEvents(draft.trainingEvents);
+      if (draft.selectedAthletes?.length) setSelectedAthletes(draft.selectedAthletes);
       if (draft.workoutsMap && Object.keys(draft.workoutsMap).length > 0) {
         setWorkoutsMap(draft.workoutsMap);
       }
       setDraftRestored(true);
     } catch { /* storage unavailable */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-save draft whenever key state changes (1.5s debounce)
@@ -493,26 +751,69 @@ export default function PeriodizacaoPage() {
       try {
         localStorage.setItem(DRAFT_KEY, JSON.stringify({
           goal, level, totalWeeks, trainingDays, weeks, vdotValue, raceDistId, raceTime, workoutsMap,
+          suggestionStatus, periodizationSettings, trainingEvents, selectedAthletes,
         }));
       } catch { /* storage unavailable */ }
     }, 1500);
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weeks, workoutsMap, goal, level, totalWeeks, trainingDays, vdotValue, raceDistId, raceTime, generated]);
+  }, [weeks, workoutsMap, goal, level, totalWeeks, trainingDays, vdotValue, raceDistId, raceTime, generated, suggestionStatus, periodizationSettings, trainingEvents, selectedAthletes]);
 
   function handleWeekChange(weekNum: number, field: keyof Week, value: string | number | boolean) {
     setWeeks((prev) => prev.map((w) => (w.week === weekNum ? { ...w, [field]: value } : w)));
     setSaved(false);
   }
 
-  function handleSave() {
+  async function persistPlanForAthletes(liberar: boolean) {
+    const athleteId = selectedAthlete?.id ?? selectedAthleteId;
+    if (!athleteId) {
+      throw new Error("Selecione um atleta.");
+    }
+    if (weeks.length === 0 || totalWorkouts === 0) {
+      throw new Error("Gere os treinos antes de salvar ou liberar.");
+    }
+    const response = await fetch("/api/planos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        athleteId,
+        periodizationName: periodizationSettings.name,
+        startDate: periodizationSettings.startDate,
+        endDate: periodizationSettings.endDate,
+        goal,
+        level,
+        totalWeeks,
+        trainingDays,
+        periodizationSettings,
+        liberar,
+        weeks,
+        workoutsMap: Object.fromEntries(
+          Object.entries(workoutsMap).map(([k, v]) => [k, v])
+        ),
+      }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => null) as { error?: string } | null;
+      throw new Error(data?.error ?? "Nao foi possivel persistir a periodizacao.");
+    }
+  }
+
+  async function handleSave() {
+    if (savingDraft) return;
+    setSavingDraft(true);
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({
         goal, level, totalWeeks, trainingDays, weeks, vdotValue, raceDistId, raceTime, workoutsMap,
+        suggestionStatus, periodizationSettings, trainingEvents, selectedAthletes,
       }));
     } catch { /* storage unavailable */ }
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    try {
+      await persistPlanForAthletes(false);
+      setSaved(true);
+      await refreshSavedPlans();
+      setTimeout(() => setSaved(false), 2500);
+    } finally {
+      setSavingDraft(false);
+    }
   }
 
   function handleDiscardDraft() {
@@ -531,7 +832,7 @@ export default function PeriodizacaoPage() {
   function buildWorkoutsMapFromWeeks(sourceWeeks: Week[]): Record<number, GeneratedWorkout[]> {
     const map: Record<number, GeneratedWorkout[]> = {};
     for (const w of sourceWeeks) {
-      map[w.week] = generateWorkoutsForWeek({
+      const baseWorkouts = generateWorkoutsForWeek({
         phase: w.phase as PhaseType,
         sessionsPerWeek: w.sessions,
         trainingDays,
@@ -541,6 +842,14 @@ export default function PeriodizacaoPage() {
         level: level as LevelType,
         isDeload: w.isDeload,
       });
+      map[w.week] = baseWorkouts.map((workout, index) =>
+        convertWorkoutToSport(
+          workout,
+          sportForSession(periodizationSettings.modality, index, baseWorkouts.length, periodizationSettings.includeStrength),
+          index,
+          level,
+        )
+      );
     }
     return map;
   }
@@ -560,49 +869,89 @@ export default function PeriodizacaoPage() {
     setWorkoutsMap(buildWorkoutsMap());
   }
 
-  function toggleAthlete(id: string) {
-    setSelectedAthletes((prev) =>
-      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
-    );
+  function selectAthlete(id: string) {
+    setSelectedAthletes([id]);
+    setAthletePickerOpen(false);
+    setLiberated(false);
   }
 
   async function handleLiberar() {
     if (selectedAthletes.length === 0 || totalWorkouts === 0) return;
     setLiberating(true);
     try {
-      await Promise.all(
-        selectedAthletes.map(async (athleteId) => {
-          const response = await fetch("/api/planos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              athleteId,
-              periodizationName: periodizationSettings.name,
-              startDate: periodizationSettings.startDate,
-              endDate: periodizationSettings.endDate,
-              goal,
-              level,
-              totalWeeks,
-              trainingDays,
-              liberar: true,
-              weeks,
-              workoutsMap: Object.fromEntries(
-                Object.entries(workoutsMap).map(([k, v]) => [k, v])
-              ),
-            }),
-          });
-          if (!response.ok) {
-            const data = await response.json().catch(() => null) as { error?: string } | null;
-            throw new Error(data?.error ?? "Nao foi possivel liberar a periodizacao.");
-          }
-        })
-      );
+      if (!allSuggestionsAccepted) setAllSuggestions("accepted");
+      await persistPlanForAthletes(true);
       setLiberated(true);
       await refreshSavedPlans();
       try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
     } finally {
       setLiberating(false);
     }
+  }
+
+  function loadSavedPlan(plan: SavedPlan) {
+    const nextWeeks: Week[] = plan.weeks.map((week) => ({
+      week: week.weekNumber,
+      phase: PHASE_FROM_API[week.phase] ?? "Base",
+      mesocycle: Number(week.mesocycle) || Math.ceil(week.weekNumber / 4),
+      isDeload: (week.workouts.length || 0) < Math.max(1, trainingDays.length),
+      volume: Math.min(100, Math.max(40, Math.round((week.targetVolumeKm ?? 0) * 10))),
+      intensity: PHASE_FROM_API[week.phase] === "Taper" ? 45 : PHASE_FROM_API[week.phase] === "Específico" ? 78 : 62,
+      notes: "",
+      km: week.targetVolumeKm ?? 0,
+      sessions: week.workouts.length,
+    }));
+    const nextWorkoutsMap: Record<number, GeneratedWorkout[]> = {};
+    plan.weeks.forEach((week) => {
+      nextWorkoutsMap[week.weekNumber] = week.workouts.map((workout, index) => {
+        const subtype = SUBTYPE_FROM_API[workout.type] ?? "Rodagem leve";
+        const sport = inferSportFromSavedWorkout(workout);
+        return {
+          sessionIndex: index + 1,
+          dayLabel: new Date(workout.date).toLocaleDateString("pt-BR", { weekday: "long" }).replace(/^\w/, (c) => c.toUpperCase()),
+          sport,
+          subtype,
+          title: workout.title,
+          zone: subtype === "Intervalado curto" || subtype === "Intervalado longo" ? "I" : subtype === "Fartlek" || subtype === "Tempo Run" ? "T" : subtype === "Progressivo" ? "M" : "E",
+          distanceKm: workout.targetDistanceKm ?? 0,
+          durationMin: workout.targetDurationMin ?? 0,
+          targetPaceSecPerKm: workout.targetPaceSecPerKm ?? 0,
+          paceRangeStr: workout.targetPaceSecPerKm ? formatPace(workout.targetPaceSecPerKm) : "",
+          targetRpe: workout.targetRpe ?? 5,
+          objective: workout.objective ?? "",
+          warmup: workout.warmup ?? "",
+          mainSet: workout.mainSet ?? workout.notes ?? "",
+          cooldown: workout.cooldown ?? "",
+        };
+      });
+    });
+    setGoal(GOAL_FROM_API[plan.goal] ?? "Personalizado");
+    setTotalWeeks(plan.weeksCount || nextWeeks.length);
+    setSelectedAthletes([plan.athlete.id]);
+    setPeriodizationSettings((prev) => ({
+      ...prev,
+      name: plan.name.replace(/\s+—\s+\d+\s+semanas$/, ""),
+      startDate: toCalendarDate(new Date(plan.startDate)),
+      endDate: toCalendarDate(new Date(plan.endDate)),
+    }));
+    setWeeks(nextWeeks);
+    setWorkoutsMap(nextWorkoutsMap);
+    setSuggestionStatus(() => {
+      const next: Record<string, SuggestionStatus> = {};
+      plan.weeks.forEach((week) => {
+        week.workouts.forEach((_, index) => {
+          next[`${week.weekNumber}-${index}`] = week.released ? "accepted" : "pending";
+        });
+      });
+      return next;
+    });
+    setGenerated(true);
+    setSaved(false);
+    setLiberated(plan.releasedWeeksCount > 0);
+    setDraftRestored(false);
+    setView("macro");
+    setSelectedWeek(1);
+    setExpandedWeek(null);
   }
 
   function handleUpdateWorkout(
@@ -628,9 +977,9 @@ export default function PeriodizacaoPage() {
   }
 
   function openPrescriptionModal(weekNum: number, workout: GeneratedWorkout, sessionIdx: number) {
-    const athleteId = selectedAthletes[0] ?? athletes[0]?.id;
+    const athleteId = selectedAthlete?.id ?? selectedAthleteId ?? athletes[0]?.id;
     if (!athleteId) return;
-    const athleteName = athletes.find((athlete) => athlete.id === athleteId)?.name ?? "Atleta";
+    const athleteName = athletes.find((athlete) => athlete.id === athleteId)?.name ?? selectedAthlete?.name ?? "Atleta";
     const date = dateForSuggestedWorkout(weekNum, workout.dayLabel);
     setPrescriptionModal({
       athleteId,
@@ -639,14 +988,20 @@ export default function PeriodizacaoPage() {
       workout: {
         id: `periodizacao-${weekNum}-${sessionIdx}`,
         date,
-        type: "RODAGEM_LEVE",
+        type: workoutTypeForGenerated(workout),
+        rawType: modalTypeForGenerated(workout),
+        modality: workout.sport ?? "corrida",
         title: workout.title,
         status: "PLANEJADO",
-        targetDistanceKm: workout.distanceKm,
+        targetDistanceKm: workout.sport === "forca" ? null : workout.distanceKm,
         targetDurationMin: workout.durationMin,
-        targetPaceSecPerKm: workout.targetPaceSecPerKm,
+        targetPaceSecPerKm: workout.sport && workout.sport !== "corrida" ? null : workout.targetPaceSecPerKm,
         targetRpe: workout.targetRpe,
         tss: Math.round(workout.durationMin * workout.targetRpe),
+        objective: workout.objective,
+        warmup: workout.warmup,
+        mainSet: workout.mainSet,
+        cooldown: workout.cooldown,
         released: false,
       },
     });
@@ -783,25 +1138,60 @@ export default function PeriodizacaoPage() {
               <p className="mt-1 text-sm text-text-muted">
                 Crie o macrociclo com ATR/blocos, tapering automatico, provas A/B/C e sugestoes de sessoes baseadas em ciencia do treinamento.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {athletes.slice(0, 8).map((athlete) => {
-                  const selected = selectedAthletes.includes(athlete.id);
-                  return (
-                    <button
-                      key={athlete.id}
-                      type="button"
-                      onClick={() => toggleAthlete(athlete.id)}
-                      className={cn(
-                        "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
-                        selected
-                          ? "border-primary/60 bg-primary/15 text-primary"
-                          : "border-border bg-background/60 text-text-muted hover:border-primary/40 hover:text-text"
+              <div className="relative mt-3 max-w-md">
+                <button
+                  type="button"
+                  onClick={() => setAthletePickerOpen((open) => !open)}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-background/70 px-3 py-2 text-left transition-colors hover:border-primary/40"
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-xs font-bold text-primary">
+                      {selectedAthlete?.avatarUrl ? (
+                        <img src={selectedAthlete.avatarUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        initialsFromName(selectedAthlete?.name)
                       )}
-                    >
-                      {athlete.name}
-                    </button>
-                  );
-                })}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-text">
+                        {selectedAthlete?.name ?? "Selecione um atleta"}
+                      </span>
+                      <span className="block text-xs text-text-muted">Periodização carregada apenas deste atleta</span>
+                    </span>
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 shrink-0 text-text-muted transition-transform", athletePickerOpen && "rotate-180")} />
+                </button>
+                {athletePickerOpen && (
+                  <div className="absolute z-30 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-border bg-card p-2 shadow-xl shadow-black/20">
+                    {athletes.map((athlete) => {
+                      const selected = athlete.id === selectedAthlete?.id;
+                      return (
+                        <button
+                          key={athlete.id}
+                          type="button"
+                          onClick={() => selectAthlete(athlete.id)}
+                          className={cn(
+                            "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors",
+                            selected ? "bg-primary/15 text-primary" : "text-text hover:bg-card-hover"
+                          )}
+                        >
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-[11px] font-bold text-primary">
+                            {athlete.avatarUrl ? (
+                              <img src={athlete.avatarUrl} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              initialsFromName(athlete.name)
+                            )}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold">{athlete.name}</span>
+                            <span className="block truncate text-[11px] text-text-muted">{athlete.goal ?? "Sem meta definida"}</span>
+                          </span>
+                          {selected && <Check className="ml-auto h-4 w-4 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               {generated && (
                 <p className="mt-2 text-xs text-text-muted">
@@ -862,6 +1252,10 @@ export default function PeriodizacaoPage() {
                       <p className="truncate font-semibold text-text">{new Date(plan.startDate).toLocaleDateString("pt-BR", { month: "short", day: "2-digit" })}</p>
                     </div>
                   </div>
+                  <Button variant="outline" size="sm" className="mt-3 w-full" onClick={() => loadSavedPlan(plan)}>
+                    <RefreshCw className="h-4 w-4" />
+                    Carregar
+                  </Button>
                 </div>
               ))}
             </div>
@@ -913,7 +1307,7 @@ export default function PeriodizacaoPage() {
                           <input
                             type="checkbox"
                             checked={selected}
-                            onChange={() => toggleAthlete(a.id)}
+                            onChange={() => selectAthlete(a.id)}
                             className="accent-primary h-3.5 w-3.5"
                           />
                           <span className="text-xs font-medium">{a.name}</span>
@@ -1240,9 +1634,7 @@ export default function PeriodizacaoPage() {
                       </h2>
                       <p className="text-sm text-text-muted mt-0.5">
                         {goal} · {level} · {trainingDays.length}×/semana
-                        {selectedAthletes.length > 0
-                          ? ` · ${selectedAthletes.map((id) => athletes.find((a) => a.id === id)?.name ?? "").filter(Boolean).join(", ")}`
-                          : ""}
+                        {selectedAthlete ? ` · ${selectedAthlete.name}` : ""}
                         {vdotNum ? ` · VDOT ${vdotNum}` : ""}
                       </p>
                     </div>
@@ -1256,23 +1648,24 @@ export default function PeriodizacaoPage() {
                           variant={saved ? "success" : "secondary"}
                           size="sm"
                           onClick={handleSave}
+                          disabled={savingDraft || !selectedAthlete || totalWorkouts === 0}
                         >
                           <Save className="h-4 w-4" />
-                          {saved ? "Rascunho salvo!" : "Salvar rascunho"}
+                          {savingDraft ? "Salvando..." : saved ? "Rascunho salvo!" : "Salvar rascunho"}
                         </Button>
                       )}
                       {totalWorkouts > 0 && (
                         <Button
                           variant={liberated ? "success" : "primary"}
                           size="sm"
-                          disabled={selectedAthletes.length === 0 || liberating}
+                          disabled={!selectedAthlete || liberating}
                           onClick={handleLiberar}
-                          title={selectedAthletes.length === 0 ? "Selecione pelo menos um atleta" : ""}
+                          title={!selectedAthlete ? "Selecione um atleta" : ""}
                         >
                           {liberated ? (
                             <><CheckCircle2 className="h-4 w-4" /> Liberado!</>
                           ) : (
-                            <><Send className="h-4 w-4" /> {liberating ? "Liberando…" : `Liberar para ${selectedAthletes.length > 1 ? `${selectedAthletes.length} atletas` : "atleta"}`}</>
+                            <><Send className="h-4 w-4" /> {liberating ? "Liberando…" : "Liberar para atleta"}</>
                           )}
                         </Button>
                       )}
@@ -1287,7 +1680,7 @@ export default function PeriodizacaoPage() {
                         goal={goal}
                         level={level}
                         totalWeeks={totalWeeks}
-                        athleteName={selectedAthletes.length === 1 ? (athletes.find((a) => a.id === selectedAthletes[0])?.name) : selectedAthletes.length > 1 ? `${selectedAthletes.length} atletas` : undefined}
+                        athleteName={selectedAthlete?.name}
                       />
                       <div className="space-y-4 print:hidden">
                         <MacrocycleScienceChart
@@ -1698,7 +2091,7 @@ function WeekWorkoutsCard({
   ) => void;
   onOpenPrescription: (weekNum: number, workout: GeneratedWorkout, sessionIdx: number) => void;
 }) {
-  const totalKm = workouts.reduce((s, w) => s + w.distanceKm, 0);
+  const weeklyMetric = weeklyMetricForWorkouts(workouts);
 
   return (
     <div
@@ -1731,7 +2124,7 @@ function WeekWorkoutsCard({
             </Badge>
           )}
           <span className="text-xs text-text truncate">
-            Meso {week.mesocycle} · {workouts.length} sessões · {totalKm.toFixed(1)} km
+            Meso {week.mesocycle} · {workouts.length} sessões · {weeklyMetric}
           </span>
         </div>
         <span className="text-[10px] text-text-muted hidden sm:block shrink-0">
@@ -1801,6 +2194,8 @@ function WorkoutSessionRow({
   const zoneColor = ZONE_COLORS[workout.zone];
   const dayAbbr =
     DAY_ABBR[workout.dayLabel] ?? workout.dayLabel.slice(0, 3).toUpperCase();
+  const isRun = !workout.sport || workout.sport === "corrida";
+  const isStrength = workout.sport === "forca";
 
   return (
     <div className={cn("bg-background/30", !isLast && "border-b border-border/20")}>
@@ -1809,22 +2204,21 @@ function WorkoutSessionRow({
         <span className="text-[10px] font-bold text-text-muted w-8 shrink-0">{dayAbbr}</span>
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: zoneColor }} />
-          <span className="text-xs font-semibold text-text truncate">{workout.subtype}</span>
+          <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-semibold text-text-muted">
+            {sportLabels[workout.sport ?? "corrida"]}
+          </span>
+          <span className="text-xs font-semibold text-text truncate">{displayTitleForWorkout(workout)}</span>
           <span className="text-[10px] text-text-muted shrink-0 hidden sm:block">
-            {workout.distanceKm} km
+            {metricLabelForWorkout(workout)}
           </span>
-          <span
-            className="text-[10px] font-mono font-semibold shrink-0 hidden md:block"
-            style={{ color: zoneColor }}
-          >
-            {formatPaceSec(workout.targetPaceSecPerKm)}/km
-          </span>
-          <span className="text-[10px] text-text-muted shrink-0 hidden lg:block">
-            {workout.durationMin} min
-          </span>
-          <span className="text-[10px] text-text-muted shrink-0 hidden lg:block">
-            RPE {workout.targetRpe}
-          </span>
+          {isRun && (
+            <span
+              className="text-[10px] font-mono font-semibold shrink-0 hidden md:block"
+              style={{ color: zoneColor }}
+            >
+              {formatPaceSec(workout.targetPaceSecPerKm)}/km
+            </span>
+          )}
           <span
             className="ml-auto text-[10px] font-bold shrink-0 hidden sm:block"
             style={{ color: zoneColor }}
@@ -1859,10 +2253,21 @@ function WorkoutSessionRow({
           >
             <div className="px-4 py-4 space-y-3">
               {/* Tipo + Título + métricas */}
-              <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr_6rem_8rem_6rem] gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-[9rem_10rem_1fr_7rem_8rem_6rem] gap-2">
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-                    Tipo de treino
+                    Modalidade
+                  </label>
+                  <input
+                    type="text"
+                    value={sportLabels[workout.sport ?? "corrida"]}
+                    readOnly
+                    className={cn(smallInput, "w-full text-text-muted")}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    {isRun ? "Tipo de treino" : "Foco"}
                   </label>
                   <select
                     value={workout.subtype}
@@ -1887,19 +2292,20 @@ function WorkoutSessionRow({
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-                    Distância (km)
+                    {workout.sport === "natacao" ? "Distância (m)" : isStrength ? "Carga" : "Distância (km)"}
                   </label>
                   <input
                     type="number"
-                    min={1}
-                    max={60}
+                    min={isStrength ? 0 : 1}
+                    max={workout.sport === "natacao" ? 10000 : 200}
                     step={0.5}
-                    value={workout.distanceKm}
-                    onChange={(e) => onChange("distanceKm", Number(e.target.value))}
+                    value={workout.sport === "natacao" ? Math.round(workout.distanceKm * 1000) : workout.distanceKm}
+                    onChange={(e) => onChange("distanceKm", workout.sport === "natacao" ? Number(e.target.value) / 1000 : Number(e.target.value))}
+                    disabled={isStrength}
                     className={cn(smallInput, "w-full text-center")}
                   />
                 </div>
-                <div className="space-y-1">
+                <div className={cn("space-y-1", !isRun && "opacity-45")}>
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
                     Pace (min:seg/km)
                   </label>
@@ -1910,6 +2316,7 @@ function WorkoutSessionRow({
                     onBlur={commitPace}
                     onKeyDown={(e) => { if (e.key === "Enter") commitPace(); }}
                     placeholder="6:50"
+                    disabled={!isRun}
                     className={cn(smallInput, "w-full text-center font-mono")}
                   />
                 </div>
@@ -1981,8 +2388,12 @@ function WorkoutSessionRow({
               </div>
 
               <p className="text-[10px] text-text-muted">
-                Faixa de pace:{" "}
-                <span className="font-mono text-text">{workout.paceRangeStr}</span> · Zona{" "}
+                {isRun ? (
+                  <>
+                    Faixa de pace: <span className="font-mono text-text">{workout.paceRangeStr}</span> ·{" "}
+                  </>
+                ) : null}
+                Métrica: <span className="font-medium text-text">{metricLabelForWorkout(workout)}</span> · Zona{" "}
                 <span className="font-semibold" style={{ color: ZONE_COLORS[workout.zone] }}>
                   {workout.zone}
                 </span>
@@ -2141,7 +2552,7 @@ function IntelligencePanel({ weeks, selectedWeek, workoutsMap, suggestionStatus,
   return (
     <Card>
       <div className="flex flex-col gap-3 border-b border-border px-4 py-3 lg:flex-row lg:items-center lg:justify-between"><div><p className="flex items-center gap-2 text-sm font-semibold text-text"><Brain className="h-4 w-4 text-primary" />Intelligence de sessoes</p><p className="text-xs text-text-muted">Aceite, recuse ou edite as sugestoes sem perder o macrociclo de vista.</p></div>{week && <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => onEditWeek(week.week)}><Pencil className="h-4 w-4" />Editar semana {week.week}</Button><Button variant="secondary" size="sm" onClick={() => onAcceptWeek(week.week)}><CheckCheck className="h-4 w-4" />Aceitar semana</Button><Button variant="outline" size="sm" onClick={() => onAcceptMeso(week.mesocycle)}>Aceitar mesociclo</Button><Button variant={allAccepted ? "success" : "primary"} size="sm" onClick={onAcceptAll}>{allAccepted ? "Tudo aceito" : "Aceitar tudo"}</Button></div>}</div>
-      <CardContent className="grid gap-3 pt-4 lg:grid-cols-[1fr_260px]"><div className="space-y-2">{workouts.length === 0 ? <p className="rounded-xl border border-dashed border-border py-8 text-center text-sm text-text-muted">Selecione uma semana no grafico.</p> : workouts.map((workout, index) => { const key = `${week.week}-${index}`; const status = suggestionStatus[key] ?? "pending"; return <div key={key} className={cn("rounded-xl border p-3", status === "accepted" ? "border-success/40 bg-success/10" : status === "declined" ? "border-danger/40 bg-danger/10 opacity-70" : "border-border bg-background/50")}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-sm font-semibold text-text">{workout.dayLabel} · {workout.title}</p><p className="mt-1 text-xs text-text-muted">{workout.objective}</p><p className="mt-1 text-[11px] text-text-muted">Zona {workout.zone} · {workout.distanceKm} km · {workout.durationMin} min · RPE {workout.targetRpe}</p></div><div className="flex gap-1.5"><button onClick={() => onAccept(key)} className="rounded-lg border border-success/40 px-2 py-1 text-xs font-semibold text-success hover:bg-success/10"><Check className="inline h-3 w-3" /> Aceitar</button><button onClick={() => onDecline(key)} className="rounded-lg border border-danger/40 px-2 py-1 text-xs font-semibold text-danger hover:bg-danger/10"><Ban className="inline h-3 w-3" /> Recusar</button></div></div></div>; })}</div><div className="rounded-xl border border-primary/25 bg-primary/10 p-3"><p className="flex items-center gap-2 text-sm font-semibold text-text"><Sparkles className="h-4 w-4 text-primary" />Racional cientifico</p><p className="mt-2 text-xs leading-relaxed text-text-muted">As sessoes foram distribuidas pelo foco do microciclo, fase do mesociclo, volume alvo e intensidade. Em tapering, o volume cai e a intensidade vira ativacao curta.</p>{week && <button onClick={() => onDeclineWeek(week.week)} className="mt-3 w-full rounded-lg border border-danger/30 px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10">Recusar sugestoes da semana</button>}</div></CardContent>
+      <CardContent className="grid gap-3 pt-4 lg:grid-cols-[1fr_260px]"><div className="space-y-2">{workouts.length === 0 ? <p className="rounded-xl border border-dashed border-border py-8 text-center text-sm text-text-muted">Selecione uma semana no grafico.</p> : workouts.map((workout, index) => { const key = `${week.week}-${index}`; const status = suggestionStatus[key] ?? "pending"; return <div key={key} className={cn("rounded-xl border p-3", status === "accepted" ? "border-success/40 bg-success/10" : status === "declined" ? "border-danger/40 bg-danger/10 opacity-70" : "border-border bg-background/50")}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><span className="rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-semibold text-text-muted">{sportLabels[workout.sport ?? "corrida"]}</span><p className="text-sm font-semibold text-text">{workout.dayLabel} · {workout.title}</p></div><p className="mt-1 text-xs text-text-muted">{workout.objective}</p><p className="mt-1 text-[11px] text-text-muted">Zona {workout.zone} · {metricLabelForWorkout(workout)}</p></div><div className="flex gap-1.5"><button onClick={() => onAccept(key)} className="rounded-lg border border-success/40 px-2 py-1 text-xs font-semibold text-success hover:bg-success/10"><Check className="inline h-3 w-3" /> Aceitar</button><button onClick={() => onDecline(key)} className="rounded-lg border border-danger/40 px-2 py-1 text-xs font-semibold text-danger hover:bg-danger/10"><Ban className="inline h-3 w-3" /> Recusar</button></div></div></div>; })}</div><div className="rounded-xl border border-primary/25 bg-primary/10 p-3"><p className="flex items-center gap-2 text-sm font-semibold text-text"><Sparkles className="h-4 w-4 text-primary" />Racional cientifico</p><p className="mt-2 text-xs leading-relaxed text-text-muted">As sessoes foram distribuidas pelo foco do microciclo, fase do mesociclo, volume alvo, intensidade e modalidade escolhida. No triathlon, a semana alterna natação, ciclismo e corrida.</p>{week && <button onClick={() => onDeclineWeek(week.week)} className="mt-3 w-full rounded-lg border border-danger/30 px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10">Recusar sugestoes da semana</button>}</div></CardContent>
     </Card>
   );
 }

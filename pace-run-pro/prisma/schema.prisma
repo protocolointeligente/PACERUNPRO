@@ -45,6 +45,35 @@ enum ExperienceLevel {
   PRO
 }
 
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  PUBLISH
+  UNPUBLISH
+  MOVE
+  PAYMENT
+  ACCESS
+  AI_GENERATION
+  APPROVAL
+}
+
+enum MetricScope {
+  DAILY
+  WEEKLY
+  MONTHLY
+  CYCLE
+}
+
+enum MetricSource {
+  MANUAL
+  WORKOUT
+  FEEDBACK
+  STRAVA
+  SYSTEM
+  INTELLIGENCE
+}
+
 model User {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -78,6 +107,7 @@ model User {
   vouchersCreated     Voucher[] @relation("VouchersCreated")
   billingSettings     BillingSettings?
   workoutLogComments  WorkoutLogComment[]
+  auditLogs            AuditLog[]
 
   @@index([deletedAt])
   @@map("users")
@@ -177,7 +207,12 @@ model Athlete {
   teamMemberships    TeamMember[]
   loadParams         AthleteLoadParams?
   planPurchases      PlanPurchase[]
+  coachPlanPurchases CoachPlanPurchase[]
   recoveryLogs       RecoveryLog[]
+  workoutFeedbacks   WorkoutFeedback[]
+  derivedMetrics     DerivedMetric[]
+  generationBatches  GenerationBatch[]
+  auditLogs          AuditLog[]
 
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -210,6 +245,8 @@ model Coach {
   zoneModels        CoachZoneModel[]
   planProducts      PlanProduct[]
   sharedTemplates   SharedWorkoutTemplate[]
+  generationBatches GenerationBatch[]
+  auditLogs         AuditLog[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -269,8 +306,12 @@ model TrainingPlan {
   phase       CyclePhase @default(BASE)
   startDate   DateTime
   endDate     DateTime
+  modality    String?
+  source      String   @default("manual")
+  version     Int      @default(1)
 
   weeks       TrainingWeek[]
+  generationBatches GenerationBatch[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -290,6 +331,8 @@ model TrainingWeek {
   endDate      DateTime
   targetLoad   Float?     // carga semanal planejada (TRIMP/UA)
   targetVolumeKm Float?
+  targetDurationMin Int?
+  targetTss     Float?
   released     Boolean    @default(false) // liberação semanal pelo treinador
   releasedAt   DateTime?
 
@@ -298,6 +341,32 @@ model TrainingWeek {
   @@unique([planId, weekNumber])
   @@index([planId, weekNumber])
   @@map("training_weeks")
+}
+
+model GenerationBatch {
+  id          String        @id @default(cuid())
+  coachId     String
+  coach       Coach         @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId   String
+  athlete     Athlete       @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  planId      String?
+  plan        TrainingPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  source      String        @default("periodization")
+  modality    String
+  status      String        @default("draft")
+  rationale   String?
+  confidence  Float?
+  payload     Json?
+
+  workouts    Workout[]
+  createdAt   DateTime      @default(now())
+  acceptedAt  DateTime?
+  publishedAt DateTime?
+
+  @@index([coachId, createdAt])
+  @@index([athleteId, createdAt])
+  @@map("generation_batches")
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -339,6 +408,14 @@ model Workout {
   type          WorkoutType
   title         String
   status        WorkoutStatus @default(AGENDADO)
+  modality      String?
+  source        String        @default("manual")
+  generationBatchId String?
+  generationBatch   GenerationBatch? @relation(fields: [generationBatchId], references: [id], onDelete: SetNull)
+  confidence    Float?
+  rationale     String?
+  trainerModified Boolean     @default(false)
+  publishedAt   DateTime?
 
   objective     String?
   warmup        String?
@@ -357,15 +434,107 @@ model Workout {
 
   videoUrl      String?
   imageUrl      String?
+  modalityData  Json?
 
   strengthWorkout StrengthWorkout?
   logs            WorkoutLog[]
+  feedbacks       WorkoutFeedback[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@index([weekId, date])
+  @@index([modality, date])
+  @@index([source])
+  @@index([generationBatchId])
   @@map("workouts")
+}
+
+model WorkoutFeedback {
+  id             String   @id @default(cuid())
+  workoutId      String
+  workout        Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  athleteId      String
+  athlete        Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  status         String   @default("realizado")
+  source         String   @default("manual")
+  durationSec    Int?
+  distanceKm     Float?
+  volume         Float?
+  avgHr          Int?
+  maxHr          Int?
+  rpe            Int?
+  sessionRpeLoad Float?
+  feeling        String?
+  fatigue        Int?
+  recovery       Int?
+  sleepHours     Float?
+  stress         Int?
+  pain           Boolean  @default(false)
+  painLocation   String?
+  painIntensity  Int?
+  notes          String?
+  raw            Json?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([workoutId, athleteId])
+  @@index([athleteId, createdAt])
+  @@map("workout_feedbacks")
+}
+
+model DerivedMetric {
+  id          String       @id @default(cuid())
+  athleteId   String
+  athlete     Athlete      @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  key         String
+  label       String
+  value       Float?
+  textValue   String?
+  unit        String?
+  scope       MetricScope  @default(WEEKLY)
+  source      MetricSource @default(SYSTEM)
+  confidence  Float?
+  periodStart DateTime
+  periodEnd   DateTime
+  metadata    Json?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([athleteId, key, scope, periodStart, periodEnd])
+  @@index([athleteId, key])
+  @@map("derived_metrics")
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  actorUserId String?
+  actor       User?       @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  coachId     String?
+  coach       Coach?      @relation(fields: [coachId], references: [id], onDelete: SetNull)
+  athleteId   String?
+  athlete     Athlete?    @relation(fields: [athleteId], references: [id], onDelete: SetNull)
+
+  action      AuditAction
+  entity      String
+  entityId    String?
+  message     String?
+  before      Json?
+  after       Json?
+  ip          String?
+  userAgent   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([actorUserId, createdAt])
+  @@index([coachId, createdAt])
+  @@index([athleteId, createdAt])
+  @@index([entity, entityId])
+  @@map("audit_logs")
 }
 
 model WorkoutLog {
@@ -827,10 +996,34 @@ model CoachPlan {
   usedSlots   Int        @default(0)
   sortOrder   Int        @default(0)
 
+  purchases   CoachPlanPurchase[]
+
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
   @@map("coach_plans")
+}
+
+model CoachPlanPurchase {
+  id             String    @id @default(cuid())
+  coachPlanId    String
+  plan           CoachPlan @relation(fields: [coachPlanId], references: [id], onDelete: Cascade)
+  athleteId      String
+  athlete        Athlete   @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  pricePaidCents Int       @default(0)
+  currency       String    @default("BRL")
+  status         String    @default("pending") // pending | paid | canceled | refunded
+  asaasChargeId  String?
+  paidAt         DateTime?
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([coachPlanId, athleteId])
+  @@index([athleteId])
+  @@index([coachPlanId, status])
+  @@map("coach_plan_purchases")
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -839,6 +1032,7 @@ model CoachPlan {
 
 enum ReceivingMethod {
   PIX
+  ASAAS
   PAGBANK
   MERCADOPAGO
   STRIPE
@@ -861,6 +1055,10 @@ model BillingSettings {
   bankAgency      String?
   bankAccount     String?
   bankAccountType String?          // corrente | poupanca
+  asaasAccountId  String?
+  asaasWalletId   String?
+  asaasApiKeyLast4 String?
+  asaasOnboardingStatus String @default("pending") // pending | ready | review
 
   // Status de conexão com gateways externos
   pagbankConnected      Boolean @default(false)

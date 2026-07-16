@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { name, email, password, phone, city, goal, role, studentCount, coachId } = await req.json();
+    const { name, email, password, phone, city, goal, role, studentCount, coachId, salesPlanId } = await req.json();
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Campos obrigatórios faltando." }, { status: 400 });
     }
@@ -54,6 +54,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const salesPlan =
+      !isCoach && coachRecord && salesPlanId
+        ? await prisma.coachPlan.findFirst({
+            where: { id: salesPlanId, coachId: coachRecord.id, active: true },
+            select: { id: true, priceCents: true },
+          })
+        : null;
+
     const user = await prisma.user.create({
       data: {
         name,
@@ -66,8 +74,24 @@ export async function POST(req: NextRequest) {
           ? { coach: { create: { specialties: [] } } }
           : { athlete: { create: { goal: goal ?? null, ...(coachRecord ? { coachId: coachRecord.id } : {}) } } }),
       },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, athlete: { select: { id: true } } },
     });
+
+    if (!isCoach && user.athlete && salesPlan) {
+      await prisma.coachPlanPurchase.create({
+        data: {
+          coachPlanId: salesPlan.id,
+          athleteId: user.athlete.id,
+          pricePaidCents: salesPlan.priceCents,
+          status: salesPlan.priceCents > 0 ? "pending" : "paid",
+        },
+      }).then(() =>
+        prisma.coachPlan.update({
+          where: { id: salesPlan.id },
+          data: { usedSlots: { increment: 1 } },
+        }),
+      ).catch(() => null);
+    }
 
     const recommendedPlanId = isCoach ? recommendPlanId(Number(studentCount) || 1) : null;
 

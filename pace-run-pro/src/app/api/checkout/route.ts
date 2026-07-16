@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth-guard";
 import { createPixOrder, createCreditCardOrder } from "@/lib/pagbank";
 import { checkoutLimiter } from "@/lib/rate-limit";
 import { b2cPlans } from "@/lib/mock-data";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   const rl = checkoutLimiter(req);
@@ -38,12 +39,55 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Faça login antes de prosseguir com o pagamento." }, { status: 401 });
   }
   const userId = session.user.id;
-  const plan = b2cPlans.find((item) => item.id === planId);
-  if (!plan) {
+  const mockPlan = b2cPlans.find((item) => item.id === planId);
+  const marketplacePlan = mockPlan ? null : await prisma.planProduct.findFirst({
+    where: { id: planId, published: true },
+    select: {
+      id: true,
+      title: true,
+      priceCents: true,
+      currency: true,
+      coachId: true,
+    },
+  });
+  if (!mockPlan && !marketplacePlan) {
     return NextResponse.json({ error: "Plano invalido." }, { status: 400 });
   }
-  const planName = plan.name;
-  const amountCents = Math.round(plan.totalPrice * 100);
+  const planName = mockPlan?.name ?? marketplacePlan!.title;
+  const amountCents = mockPlan ? Math.round(mockPlan.totalPrice * 100) : marketplacePlan!.priceCents;
+  let purchaseId: string | null = null;
+
+  if (marketplacePlan) {
+    const athlete = await prisma.athlete.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    if (!athlete) {
+      return NextResponse.json({ error: "Cadastro de atleta não encontrado para esta compra." }, { status: 400 });
+    }
+
+    const purchase = await prisma.planPurchase.upsert({
+      where: {
+        productId_athleteId: {
+          productId: marketplacePlan.id,
+          athleteId: athlete.id,
+        },
+      },
+      update: {
+        pricePaidCents: amountCents,
+        currency: marketplacePlan.currency,
+        status: "pending",
+      },
+      create: {
+        productId: marketplacePlan.id,
+        athleteId: athlete.id,
+        pricePaidCents: amountCents,
+        currency: marketplacePlan.currency,
+        status: "pending",
+      },
+    });
+    purchaseId = purchase.id;
+  }
 
   const origin =
     req.headers.get("origin") ??
@@ -51,7 +95,7 @@ export async function POST(req: NextRequest) {
     "https://www.pacerunpro.com.br";
   const notificationUrl = `${origin}/api/webhooks/pagbank`;
 
-  const referenceId = `${userId}_${planId}_${Date.now()}`;
+  const referenceId = [userId, planId, purchaseId, Date.now()].filter(Boolean).join("_");
 
   try {
     if (method === "pix") {
@@ -70,7 +114,7 @@ export async function POST(req: NextRequest) {
         planName,
         notificationUrl,
       });
-      return NextResponse.json(result);
+      return NextResponse.json({ ...result, purchaseId });
     }
 
     if (method === "cartao") {
@@ -96,7 +140,7 @@ export async function POST(req: NextRequest) {
         cardHolderName: cardName,
         notificationUrl,
       });
-      return NextResponse.json(result);
+      return NextResponse.json({ ...result, purchaseId });
     }
 
     return NextResponse.json(

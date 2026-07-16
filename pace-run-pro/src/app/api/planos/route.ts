@@ -30,6 +30,12 @@ const SUBTYPE_MAP: Record<string, WorkoutType> = {
   "Progressivo": "PROGRESSIVO",
   "Longão": "LONGAO",
   "Regenerativo": "REGENERATIVO",
+  "Força": "FORCA",
+  "Forca": "FORCA",
+  "Funcional": "FUNCIONAL",
+  "Mobilidade": "MOBILIDADE",
+  "Recuperação": "RECUPERACAO",
+  "Recuperacao": "RECUPERACAO",
 };
 
 // Maps full Portuguese day names → 0 (Sun) … 6 (Sat)
@@ -93,6 +99,7 @@ export async function GET(req: NextRequest) {
         select: {
           id: true,
           weekNumber: true,
+          mesocycle: true,
           phase: true,
           startDate: true,
           endDate: true,
@@ -106,6 +113,12 @@ export async function GET(req: NextRequest) {
               date: true,
               type: true,
               status: true,
+              objective: true,
+              warmup: true,
+              mainSet: true,
+              cooldown: true,
+              notes: true,
+              targetPaceSecPerKm: true,
               targetDurationMin: true,
               targetDistanceKm: true,
               targetRpe: true,
@@ -152,6 +165,12 @@ export async function POST(req: NextRequest) {
     level: string;
     totalWeeks: number;
     trainingDays: string[];
+    periodizationSettings?: {
+      modality?: string;
+      loadMethod?: string;
+      buildMode?: string;
+      includeStrength?: boolean;
+    };
     liberar: boolean;
     weeks: Array<{
       week: number;
@@ -167,6 +186,7 @@ export async function POST(req: NextRequest) {
     workoutsMap: Record<string, Array<{
       sessionIndex: number;
       dayLabel: string;
+      sport?: string;
       subtype: string;
       title: string;
       distanceKm: number;
@@ -195,6 +215,7 @@ export async function POST(req: NextRequest) {
         { trainingPlans: { some: { coachId: coach.id } } },
       ],
     },
+    select: { id: true },
   });
   if (!athlete) {
     return NextResponse.json({ error: "Atleta não encontrado" }, { status: 404 });
@@ -219,7 +240,33 @@ export async function POST(req: NextRequest) {
   const goalEnum = GOAL_MAP[goal] ?? "PERFORMANCE";
   const now = new Date();
 
-  const plan = await prisma.trainingPlan.create({
+  const selectedModality = body.periodizationSettings?.modality ?? "corrida";
+  const source = "periodization";
+  const batchStatus = liberar ? "published" : "draft";
+
+  const plan = await prisma.$transaction(async (tx) => {
+    const generationBatch = await tx.generationBatch.create({
+      data: {
+        coachId: coach.id,
+        athleteId,
+        source,
+        modality: selectedModality,
+        status: batchStatus,
+        confidence: 0.72,
+        rationale: "Sessões geradas a partir da periodização, modalidade escolhida, frequência semanal, fase do ciclo e volume planejado.",
+        payload: {
+          goal,
+          level: body.level,
+          totalWeeks: body.totalWeeks,
+          trainingDays: body.trainingDays,
+          settings: body.periodizationSettings ?? null,
+        },
+        acceptedAt: liberar ? now : undefined,
+        publishedAt: liberar ? now : undefined,
+      },
+    });
+
+    const createdPlan = await tx.trainingPlan.create({
     data: {
       athleteId,
       coachId: coach.id,
@@ -228,6 +275,8 @@ export async function POST(req: NextRequest) {
       startDate,
       endDate,
       macrocycle: goal,
+      modality: selectedModality,
+      source,
       weeks: {
         create: weeks.map((w) => {
           const weekStart = new Date(startDate);
@@ -239,6 +288,8 @@ export async function POST(req: NextRequest) {
           const weekReleased = Boolean(liberar);
 
           const sessionList = workoutsMap[String(w.week)] ?? [];
+          const weekDurationMin = sessionList.reduce((sum, session) => sum + (session.durationMin ?? 0), 0);
+          const weekTss = sessionList.reduce((sum, session) => sum + Math.round(((session.durationMin ?? 0) * (session.targetRpe ?? 5)) / 10), 0);
 
           return {
             weekNumber: w.week,
@@ -247,6 +298,8 @@ export async function POST(req: NextRequest) {
             startDate: weekStart,
             endDate: weekEnd,
             targetVolumeKm: w.km,
+            targetDurationMin: weekDurationMin,
+            targetTss: weekTss,
             released: weekReleased,
             releasedAt: weekReleased ? now : undefined,
             workouts: {
@@ -256,19 +309,39 @@ export async function POST(req: NextRequest) {
                 const offsetFromMonday = dayNum === 0 ? 6 : dayNum - 1;
                 const workoutDate = new Date(weekStart.getTime() + offsetFromMonday * 24 * 60 * 60 * 1000);
                 workoutDate.setHours(12, 0, 0, 0);
+                const isStrength = s.sport === "forca";
+                const isNonRunEndurance = s.sport === "natacao" || s.sport === "ciclismo";
+                const workoutType = isStrength ? "FORCA" : (SUBTYPE_MAP[s.subtype] ?? "RODAGEM_LEVE");
+                const modality = s.sport ?? selectedModality;
                 return {
                   date: workoutDate,
-                  type: SUBTYPE_MAP[s.subtype] ?? "RODAGEM_LEVE",
+                  type: workoutType,
                   title: s.title,
                   status: weekReleased ? ("LIBERADO" as const) : ("AGENDADO" as const),
+                  modality,
+                  source,
+                  generationBatchId: generationBatch.id,
+                  confidence: 0.72,
+                  rationale: `Gerado pela periodização: ${goal}, fase ${w.phase}, semana ${w.week}, modalidade ${modality}.`,
+                  publishedAt: weekReleased ? now : null,
                   objective: s.objective,
                   warmup: s.warmup,
                   mainSet: s.mainSet,
                   cooldown: s.cooldown,
-                  targetPaceSecPerKm: s.targetPaceSecPerKm,
+                  targetPaceSecPerKm: isNonRunEndurance || isStrength ? null : s.targetPaceSecPerKm,
                   targetRpe: s.targetRpe,
-                  targetDistanceKm: s.distanceKm,
+                  targetDistanceKm: isStrength ? null : s.distanceKm,
                   targetDurationMin: s.durationMin,
+                  modalityData: {
+                    sport: modality,
+                    subtype: s.subtype,
+                    dayLabel: s.dayLabel,
+                    metricUnit: modality === "natacao" ? "m" : modality === "forca" ? "min" : "km",
+                  },
+                  notes: [
+                    modality && modality !== "corrida" ? `Modalidade: ${modality}` : null,
+                    modality ? `Esporte planejado: ${modality}` : null,
+                  ].filter(Boolean).join("\n") || undefined,
                 };
               }),
             },
@@ -276,6 +349,34 @@ export async function POST(req: NextRequest) {
         }),
       },
     },
+    });
+
+    await tx.generationBatch.update({
+      where: { id: generationBatch.id },
+      data: { planId: createdPlan.id },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        coachId: coach.id,
+        athleteId,
+        action: liberar ? "PUBLISH" : "CREATE",
+        entity: "TrainingPlan",
+        entityId: createdPlan.id,
+        message: liberar
+          ? "Periodização gerada e liberada para o atleta."
+          : "Periodização salva como rascunho editável.",
+        after: {
+          modality: selectedModality,
+          source,
+          weeks: weeks.length,
+          workouts: Object.values(workoutsMap).reduce((sum, list) => sum + list.length, 0),
+        },
+      },
+    });
+
+    return createdPlan;
   });
 
   return NextResponse.json({ planId: plan.id, liberated: liberar, autoReleaseEnabled: true });

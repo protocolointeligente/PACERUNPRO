@@ -18,7 +18,7 @@ const PLAN_MRR: Record<string, number> = {
 
 const STATUS_MAP: Record<string, string> = {
   ACTIVE: "ativo",
-  TRIAL: "pendente",
+  TRIAL: "ativo",
   PAST_DUE: "pendente",
   CANCELED: "suspenso",
 };
@@ -107,7 +107,7 @@ export async function GET() {
   const result = coaches.map((coach) => {
     const sub = subscriptionsByUserId.get(coach.user.id);
     const plan = sub ? (PLAN_MAP[sub.plan] ?? "starter") : "starter";
-    const status = sub ? (STATUS_MAP[sub.status] ?? "pendente") : "pendente";
+    const status = sub ? (STATUS_MAP[sub.status] ?? "ativo") : "ativo";
 
     const athleteCount = coach.athletes.length;
     const activeAthletes = coach.athletes.filter((a) => a.status === "ativo").length;

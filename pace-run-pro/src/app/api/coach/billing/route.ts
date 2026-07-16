@@ -32,6 +32,10 @@ export async function PUT(req: NextRequest) {
     bankAgency?: string;
     bankAccount?: string;
     bankAccountType?: string;
+    asaasAccountId?: string;
+    asaasWalletId?: string;
+    asaasApiKey?: string;
+    asaasOnboardingStatus?: string;
     autoChargeEnabled?: boolean;
     autoChargeDayOfMonth?: number;
     gracePeriodDays?: number;
@@ -52,6 +56,10 @@ export async function PUT(req: NextRequest) {
     bankAgency: body.bankAgency ?? null,
     bankAccount: body.bankAccount ?? null,
     bankAccountType: body.bankAccountType ?? null,
+    asaasAccountId: body.asaasAccountId ?? null,
+    asaasWalletId: body.asaasWalletId ?? null,
+    asaasApiKeyLast4: body.asaasApiKey ? body.asaasApiKey.slice(-4) : undefined,
+    asaasOnboardingStatus: body.asaasOnboardingStatus ?? "pending",
     autoChargeEnabled: body.autoChargeEnabled ?? false,
     autoChargeDayOfMonth: body.autoChargeDayOfMonth ?? 5,
     gracePeriodDays: body.gracePeriodDays ?? 3,

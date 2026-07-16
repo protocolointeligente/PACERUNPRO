@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { BillingSettingsForm, CreateCoachPlanForm, RemoveManagedAthleteButton } from "./_management-forms";
 
 export const dynamic = "force-dynamic";
 
@@ -41,8 +42,12 @@ function initials(name: string) {
 type PlanPurchaseSummary = {
   status: string;
   pricePaidCents: number | null;
-  product: {
+  product?: {
     title: string;
+    priceCents: number;
+  };
+  plan?: {
+    name: string;
     priceCents: number;
   };
 };
@@ -55,6 +60,7 @@ type PlanProductSummary = {
   priceCents: number;
   published: boolean;
   purchases: number;
+  active?: boolean;
 };
 
 type LeadSummary = {
@@ -72,7 +78,23 @@ function readArray<T>(value: unknown): T[] {
 }
 
 function readPlanPurchases(athlete: object): PlanPurchaseSummary[] {
+  if ("coachPlanPurchases" in athlete) {
+    const purchases = readArray<PlanPurchaseSummary>(athlete.coachPlanPurchases);
+    if (purchases.length > 0) return purchases;
+  }
   return "planPurchases" in athlete ? readArray<PlanPurchaseSummary>(athlete.planPurchases) : [];
+}
+
+function isBillingReady(settings: object | null | undefined) {
+  if (!settings) return false;
+  const data = settings as {
+    receivingMethod?: string | null;
+    cpfCnpj?: string | null;
+    pixKey?: string | null;
+    asaasAccountId?: string | null;
+    asaasWalletId?: string | null;
+  };
+  return Boolean(data.receivingMethod === "ASAAS" && data.cpfCnpj && data.pixKey && data.asaasAccountId && data.asaasWalletId);
 }
 
 export default async function GestaoPage() {
@@ -89,6 +111,31 @@ export default async function GestaoPage() {
         select: {
           name: true,
           email: true,
+          billingSettings: true,
+        },
+      },
+      plans: {
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+        select: {
+          id: true,
+          name: true,
+          priceCents: true,
+          period: true,
+          active: true,
+          usedSlots: true,
+        },
+      },
+      leads: {
+        orderBy: { createdAt: "desc" },
+        take: 6,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          stage: true,
+          source: true,
+          monthlyFeeCents: true,
         },
       },
       athletes: {
@@ -105,6 +152,34 @@ export default async function GestaoPage() {
               avatarUrl: true,
             },
           },
+          planPurchases: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: {
+              status: true,
+              pricePaidCents: true,
+              product: {
+                select: {
+                  title: true,
+                  priceCents: true,
+                },
+              },
+            },
+          },
+          coachPlanPurchases: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: {
+              status: true,
+              pricePaidCents: true,
+              plan: {
+                select: {
+                  name: true,
+                  priceCents: true,
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -114,19 +189,28 @@ export default async function GestaoPage() {
 
   const origin = process.env.NEXT_PUBLIC_APP_URL ?? "https://pacerunpro.com.br";
   const inviteUrl = `${origin}/convite/${coach.slug ?? coach.id}`;
-  const planProducts: PlanProductSummary[] = [];
-  const leads: LeadSummary[] = [];
+  const planProducts: PlanProductSummary[] = coach.plans.map((plan) => ({
+    id: plan.id,
+    title: plan.name,
+    sport: "Assessoria",
+    level: plan.period,
+    priceCents: plan.priceCents,
+    published: plan.active,
+    active: plan.active,
+    purchases: plan.usedSlots,
+  }));
+  const leads: LeadSummary[] = coach.leads;
   const activeAthletes = coach.athletes.filter((athlete) => athlete.status !== "inativo");
   const paidAthletes = coach.athletes.filter((athlete) =>
     readPlanPurchases(athlete).some((purchase) => purchase.status === "paid")
   );
   const monthlyRevenue = paidAthletes.reduce((sum, athlete) => {
     const purchase = readPlanPurchases(athlete)[0];
-    return sum + (purchase?.pricePaidCents || purchase?.product.priceCents || 0);
+    return sum + (purchase?.pricePaidCents || purchase?.plan?.priceCents || purchase?.product?.priceCents || 0);
   }, 0);
   const platformFee = Math.round(monthlyRevenue * 0.1);
   const coachNet = monthlyRevenue - platformFee;
-  const asaasReady = false;
+  const asaasReady = isBillingReady(coach.user.billingSettings);
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -145,10 +229,10 @@ export default async function GestaoPage() {
             <UserPlus className="h-4 w-4" />
             Inscrever manualmente
           </Link>
-          <Link href="/treinador/gestao#planos" className={cn(buttonVariants({ variant: "primary", size: "sm" }))}>
+          <a href="#planos" className={cn(buttonVariants({ variant: "primary", size: "sm" }))}>
             <CreditCard className="h-4 w-4" />
             Criar plano
-          </Link>
+          </a>
         </div>
       </div>
 
@@ -189,7 +273,7 @@ export default async function GestaoPage() {
                       </div>
                       <div>
                         <p className="text-xs uppercase tracking-wide text-text-muted">Plano</p>
-                        <p className="text-sm font-semibold text-text">{purchase?.product.title ?? "Sem plano"}</p>
+                        <p className="text-sm font-semibold text-text">{purchase?.plan?.name ?? purchase?.product?.title ?? "Sem plano"}</p>
                       </div>
                       <div>
                         <p className="text-xs uppercase tracking-wide text-text-muted">Pagamento</p>
@@ -197,9 +281,12 @@ export default async function GestaoPage() {
                           {purchase?.status === "paid" ? "Pago" : purchase?.status ?? "Aguardando"}
                         </Badge>
                       </div>
-                      <Link href={`/treinador/atletas?athlete=${athlete.id}`} className="text-sm font-semibold text-primary">
-                        Abrir <ArrowRight className="inline h-4 w-4" />
-                      </Link>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link href={`/treinador/atletas?athlete=${athlete.id}`} className="text-sm font-semibold text-primary">
+                          Abrir <ArrowRight className="inline h-4 w-4" />
+                        </Link>
+                        <RemoveManagedAthleteButton athleteId={athlete.id} athleteName={athlete.user.name} />
+                      </div>
                     </div>
                   );
                 })
@@ -251,8 +338,9 @@ export default async function GestaoPage() {
               </div>
               <div className="flex items-start gap-2 text-xs leading-relaxed text-text-muted">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                Na proxima fase, gravar IDs Asaas de cliente/subconta/cobranca por coach e validar webhooks por assinatura.
+                O split previsto é 90% treinador e 10% plataforma. O checkout usa estes dados para manter cobranças isoladas por coach.
               </div>
+              <BillingSettingsForm initialSettings={coach.user.billingSettings} />
             </CardContent>
           </Card>
         </div>
@@ -268,6 +356,7 @@ export default async function GestaoPage() {
               </div>
               <CreditCard className="h-5 w-5 text-primary" />
             </div>
+            <CreateCoachPlanForm />
             <div className="space-y-3">
               {planProducts.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-border p-5 text-sm text-text-muted">
@@ -279,11 +368,11 @@ export default async function GestaoPage() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-text">{plan.title}</p>
-                        <p className="text-xs text-text-muted">{plan.sport} · {plan.level} · {plan.purchases} vendas</p>
+                        <p className="text-xs text-text-muted">{plan.sport} · {plan.level} · {plan.purchases} contratação(ões)</p>
                       </div>
                       <div className="text-right">
                         <p className="font-display text-lg font-bold text-text">{money(plan.priceCents)}</p>
-                        <Badge variant={plan.published ? "success" : "outline"}>{plan.published ? "Publicado" : "Rascunho"}</Badge>
+                        <Badge variant={plan.active ? "success" : "outline"}>{plan.active ? "Ativo" : "Inativo"}</Badge>
                       </div>
                     </div>
                   </div>

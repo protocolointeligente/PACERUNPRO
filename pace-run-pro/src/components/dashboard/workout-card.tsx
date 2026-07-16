@@ -14,9 +14,15 @@ const statusConfig: Record<WorkoutSummary["status"], { label: string; variant: "
   perdido: { label: "Perdido", variant: "danger" },
 };
 
+function parseLocalDate(date: string) {
+  const [year, month, day] = date.slice(0, 10).split("-").map(Number);
+  if (year && month && day) return new Date(year, month - 1, day);
+  return new Date(date);
+}
+
 export function WorkoutCard({ workout, href }: { workout: WorkoutSummary; href?: string }) {
   const status = statusConfig[workout.status];
-  const date = new Date(workout.date);
+  const date = parseLocalDate(workout.date);
   const weekday = date.toLocaleDateString("pt-BR", { weekday: "short" });
   const day = date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 

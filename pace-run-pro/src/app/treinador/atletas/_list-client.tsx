@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type ComponentType } from "react";
 import Link from "next/link";
 import {
+  Activity,
   ChevronDown, ChevronLeft, ChevronRight, Search, Users, X,
   Clock, Ruler, Zap, CheckCircle2, CircleAlert, Circle,
   Flame, ShieldAlert, CalendarCheck,
@@ -71,7 +72,7 @@ function RunIcon({ className }: { className?: string }) {
 function workoutCardClass(type: string, title = "") {
   const key = `${type} ${title}`.toUpperCase();
   if (key.includes("FORCA") || key.includes("FUNCIONAL")) return "border-violet-400/40 bg-violet-500/20 text-violet-50 shadow-violet-950/20";
-  if (key.includes("BIKE") || key.includes("CICL")) return "border-lime-400/40 bg-lime-500/20 text-lime-50 shadow-lime-950/20";
+  if (key.includes("BIKE") || key.includes("CICL")) return "border-teal-400/40 bg-teal-500/20 text-teal-50 shadow-teal-950/20";
   if (key.includes("NAT") || key.includes("SWIM")) return "border-sky-400/40 bg-sky-500/20 text-sky-50 shadow-sky-950/20";
   if (key.includes("RECUP") || key.includes("MOBIL")) return "border-slate-300/25 bg-slate-400/20 text-slate-100 shadow-slate-950/20";
   if (key.includes("TEMPO") || key.includes("INTERVAL") || key.includes("FARTLEK")) return "border-orange-400/35 bg-orange-500/20 text-orange-50 shadow-orange-950/20";
@@ -96,6 +97,10 @@ interface WorkoutEntry {
   modality?: LibraryModality;
   title: string;
   status: string;
+  objective?: string | null;
+  warmup?: string | null;
+  mainSet?: string | null;
+  cooldown?: string | null;
   targetDistanceKm: number | null;
   targetDurationMin: number | null;
   targetPaceSecPerKm: number | null;
@@ -592,16 +597,16 @@ const QUICK_TYPES_BY_SPORT: Record<string, { value: string; label: string }[]> =
     { value: "PROGRESSIVO", label: "Cadencia progressiva" },
   ],
   Natacao: [
-    { value: "TECNICA", label: "Natacao tecnica" },
-    { value: "RODAGEM_LEVE", label: "Aerobio continuo" },
-    { value: "INTERVALADO_CURTO", label: "CSS curto" },
-    { value: "INTERVALADO_LONGO", label: "CSS longo" },
-    { value: "REGENERATIVO", label: "Soltura regenerativa" },
+    { value: "NATACAO_TECNICA", label: "Natacao tecnica" },
+    { value: "NATACAO_AEROBIO", label: "Aerobio continuo" },
+    { value: "NATACAO_CSS_CURTO", label: "CSS curto" },
+    { value: "NATACAO_CSS_LONGO", label: "CSS longo" },
+    { value: "NATACAO_REGENERATIVA", label: "Soltura regenerativa" },
   ],
   Forca: [
-    { value: "FORCA", label: "Forca full body" },
-    { value: "FORCA", label: "Forca inferior" },
-    { value: "FORCA", label: "Forca superior" },
+    { value: "FORCA_FULL_BODY", label: "Forca full body" },
+    { value: "FORCA_INFERIOR", label: "Forca inferior" },
+    { value: "FORCA_SUPERIOR", label: "Forca superior" },
     { value: "FUNCIONAL", label: "Core funcional" },
     { value: "MOBILIDADE", label: "Mobilidade" },
   ],
@@ -658,16 +663,16 @@ const LIBRARY_TEMPLATES: Record<LibraryModality, { value: string; label: string 
     { value: "PROGRESSIVO", label: "Cadencia progressiva" },
   ],
   natacao: [
-    { value: "TECNICA", label: "Natacao tecnica" },
-    { value: "RODAGEM_LEVE", label: "Aerobio continuo" },
-    { value: "INTERVALADO_CURTO", label: "CSS curto" },
-    { value: "INTERVALADO_LONGO", label: "CSS longo" },
-    { value: "REGENERATIVO", label: "Soltura regenerativa" },
+    { value: "NATACAO_TECNICA", label: "Natacao tecnica" },
+    { value: "NATACAO_AEROBIO", label: "Aerobio continuo" },
+    { value: "NATACAO_CSS_CURTO", label: "CSS curto" },
+    { value: "NATACAO_CSS_LONGO", label: "CSS longo" },
+    { value: "NATACAO_REGENERATIVA", label: "Soltura regenerativa" },
   ],
   forca: [
-    { value: "FORCA", label: "Forca superior" },
-    { value: "FORCA", label: "Forca inferior" },
-    { value: "FORCA", label: "Full body" },
+    { value: "FORCA_SUPERIOR", label: "Forca superior" },
+    { value: "FORCA_INFERIOR", label: "Forca inferior" },
+    { value: "FORCA_FULL_BODY", label: "Full body" },
     { value: "FUNCIONAL", label: "Core funcional" },
     { value: "MOBILIDADE", label: "Mobilidade" },
   ],
@@ -689,6 +694,10 @@ function modalityFromWorkout(workout?: WorkoutEntry | null): LibraryModality {
 }
 
 function rawWorkoutType(type: string) {
+  if (type === "NATACAO_TECNICA" || type === "NATACAO_AEROBIO" || type === "NATACAO_REGENERATIVA") return "RODAGEM_LEVE";
+  if (type === "NATACAO_CSS_CURTO") return "INTERVALADO_CURTO";
+  if (type === "NATACAO_CSS_LONGO") return "INTERVALADO_LONGO";
+  if (type.startsWith("FORCA_")) return "FORCA";
   return type.replace(/^(CICLISMO|NATACAO|TRIATHLON|TRIATLO)_/, "");
 }
 
@@ -922,10 +931,16 @@ export function IntervalsPrescribeModal({
 }) {
     const seedWorkout = payload.workout;
     const editingWorkout = seedWorkout && !seedWorkout.id.startsWith("periodizacao-") ? seedWorkout : undefined;
-    const [category, setCategory] = useState("Treino");
-    const initialSport = sportFromModality(modalityFromWorkout(seedWorkout));
-    const [sport, setSport] = useState(initialSport);
-  const [type, setType] = useState(seedWorkout?.rawType ?? rawWorkoutType(seedWorkout?.type ?? "RODAGEM_LEVE"));
+  const [category, setCategory] = useState("Treino");
+  const initialSport = sportFromModality(modalityFromWorkout(seedWorkout));
+  const seedRawType = seedWorkout?.rawType ?? rawWorkoutType(seedWorkout?.type ?? "RODAGEM_LEVE");
+  const seedStructuredSteps = [
+    seedWorkout?.warmup,
+    seedWorkout?.mainSet,
+    seedWorkout?.cooldown,
+  ].filter(Boolean).join("\n");
+  const [sport, setSport] = useState(initialSport);
+  const [type, setType] = useState(seedRawType);
   const [title, setTitle] = useState(seedWorkout?.title ?? "Rodagem leve");
   const [durationMin, setDurationMin] = useState(seedWorkout?.targetDurationMin ? String(seedWorkout.targetDurationMin) : "");
   const [distanceKm, setDistanceKm] = useState(seedWorkout?.targetDistanceKm ? String(seedWorkout.targetDistanceKm) : "");
@@ -944,12 +959,13 @@ export function IntervalsPrescribeModal({
   const [loadKg, setLoadKg] = useState("");
   const [rir, setRir] = useState("");
   const [restSec, setRestSec] = useState("90");
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(seedWorkout?.objective ?? "");
   const [strengthExercises, setStrengthExercises] = useState<string[]>([]);
   const [steps, setSteps] = useState(
-    editingWorkout?.type === "FORCA"
+    seedStructuredSteps ||
+    (rawWorkoutType(seedRawType) === "FORCA"
       ? "Agachamento 3x10 carga moderada RPE 7 descanso 90s\nRemada 3x12 RIR 2 descanso 75s"
-      : "Aquecimento 10min Z1\nPrincipal 30min Z2\nVolta a calma 5min"
+      : "Aquecimento 10min Z1\nPrincipal 30min Z2\nVolta a calma 5min")
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -1960,6 +1976,21 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
   const visibleDistance = visibleWorkouts.reduce((sum, workout) => sum + (workout.targetDistanceKm ?? 0), 0);
   const completedWorkouts = visibleWorkouts.filter((workout) => workout.status === "CONCLUIDO").length;
   const plannedWorkouts = visibleWorkouts.filter((workout) => workout.status !== "CONCLUIDO").length;
+  const modalityDistribution: { key: LibraryModality; label: string; color: string }[] = [
+    { key: "corrida", label: "Corrida", color: "#f97316" },
+    { key: "ciclismo", label: "Ciclismo", color: "#0f766e" },
+    { key: "natacao", label: "Natacao", color: "#0ea5e9" },
+    { key: "forca", label: "Forca", color: "#8b5cf6" },
+  ];
+  const distributionRows = modalityDistribution.map((item) => {
+    const count = visibleWorkouts.filter((workout) => modalityFromWorkout(workout) === item.key).length;
+    return {
+      ...item,
+      count,
+      percent: visibleWorkouts.length > 0 ? Math.round((count / visibleWorkouts.length) * 100) : 0,
+    };
+  });
+  const maxDistributionCount = Math.max(1, ...distributionRows.map((item) => item.count));
   const libraryTemplates = LIBRARY_TEMPLATES[libraryModality];
 
   const isThisWeek = toISODate(monthStart) === toISODate(getMonthStart(new Date()));
@@ -2052,6 +2083,14 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
             </div>
           )}
         </div>
+        {selectedAthlete && (
+          <Link href={`/treinador/atletas/${selectedAthlete.id}`}>
+            <Button variant="secondary" size="sm">
+              <Activity className="h-4 w-4" />
+              Metricas
+            </Button>
+          </Link>
+        )}
         <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-2 py-1.5">
           <button
             onClick={prevWeek}
@@ -2274,6 +2313,12 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
             </div>
             {selectedAthlete && (
               <div className="flex flex-wrap justify-end gap-2">
+                <Link href={`/treinador/atletas/${selectedAthlete.id}`}>
+                  <Button variant="secondary" size="sm">
+                    <Activity className="h-4 w-4" />
+                    Metricas
+                  </Button>
+                </Link>
                 <Button
                   size="sm"
                   onClick={() => setQuickPrescribe({
@@ -2506,12 +2551,23 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
             <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Distribuicao</p>
               <div className="space-y-2">
-                {["Corrida", "Ciclismo", "Natacao", "Forca"].map((label, index) => (
-                  <div key={label} className="flex items-center gap-2 text-[11px] text-text-muted">
-                    <span className={cn("h-2.5 w-2.5 rounded-full", index === 0 && "bg-orange-500", index === 1 && "bg-lime-500", index === 2 && "bg-sky-500", index === 3 && "bg-violet-500")} />
-                    <span className="w-14">{label}</span>
-                    <span className="h-1.5 flex-1 rounded-full bg-white/10">
-                      <span className={cn("block h-full rounded-full", index === 0 && "w-3/5 bg-orange-500", index === 1 && "w-2/5 bg-lime-500", index === 2 && "w-1/4 bg-sky-500", index === 3 && "w-1/3 bg-violet-500")} />
+                {distributionRows.map((item) => (
+                  <div key={item.key} className="space-y-1 text-[11px] text-text-muted">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                        <span className="truncate">{item.label}</span>
+                      </span>
+                      <span className="font-semibold text-text">{item.count} · {item.percent}%</span>
+                    </div>
+                    <span className="block h-1.5 rounded-full bg-white/10">
+                      <span
+                        className="block h-full rounded-full transition-all"
+                        style={{
+                          backgroundColor: item.color,
+                          width: item.count > 0 ? `${Math.max(8, (item.count / maxDistributionCount) * 100)}%` : "0%",
+                        }}
+                      />
                     </span>
                   </div>
                 ))}
@@ -2816,7 +2872,10 @@ export default function AthleteListClient({ athletes: staticAthletes }: Props) {
           payload={quickPrescribe}
           onClose={() => setQuickPrescribe(null)}
           onSaved={(savedWorkout) => {
-            mergeSavedWorkoutIntoCalendar(quickPrescribe, savedWorkout ?? null);
+            if (savedWorkout?.id) {
+              mergeSavedWorkoutIntoCalendar(quickPrescribe, savedWorkout);
+              return;
+            }
             fetchWeek(monthStart);
           }}
         />
@@ -2849,10 +2908,10 @@ function Header({ total }: { total: number }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <Badge variant="primary" className="mb-2">Prescricao principal</Badge>
-        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Calendario de prescricao</h1>
+        <Badge variant="primary" className="mb-2">Atletas & metricas</Badge>
+        <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">Atletas e calendario</h1>
         <p className="mt-1 text-sm text-text-muted">
-          Clique em qualquer dia vazio para prescrever. {total} {total === 1 ? "atleta" : "atletas"} nesta semana.
+          Selecione um atleta para prescrever, revisar calendario e abrir metricas de performance. {total} {total === 1 ? "atleta" : "atletas"} nesta semana.
         </p>
       </div>
       <div className="flex items-center gap-2">

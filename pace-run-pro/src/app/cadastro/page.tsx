@@ -55,6 +55,7 @@ function CadastroContent() {
   const perfilParam = searchParams.get("perfil");
   const planParam = searchParams.get("plano");
   const coachId = searchParams.get("coach");
+  const salesPlanId = searchParams.get("planoVenda");
   const selectedB2BPlan =
     planParam && b2bPlans.some((plan) => plan.id === planParam)
       ? b2bPlans.find((plan) => plan.id === planParam)
@@ -119,6 +120,7 @@ function CadastroContent() {
           studentCount: role === "COACH" ? studentCount : undefined,
           planId: role === "COACH" ? recommendedPlan?.id : undefined,
           coachId: profileType === "atleta_com_treinador" ? coachId : undefined,
+          salesPlanId: profileType === "atleta_com_treinador" ? salesPlanId : undefined,
         }),
       });
       const data = await res.json();

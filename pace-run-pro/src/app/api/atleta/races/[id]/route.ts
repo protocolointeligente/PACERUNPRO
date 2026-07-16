@@ -8,7 +8,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!session?.user?.id || session.user.role !== "ATHLETE")
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
-  const athlete = await prisma.athlete.findUnique({ where: { userId: session.user.id } });
+  const athlete = await prisma.athlete.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
   if (!athlete) return NextResponse.json({ error: "Atleta não encontrado" }, { status: 404 });
 
   const { id } = await params;
@@ -55,7 +58,10 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
   const { id } = await params;
-  const athlete = await prisma.athlete.findUnique({ where: { userId: session.user.id } });
+  const athlete = await prisma.athlete.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
   if (!athlete) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
 
   await prisma.race.deleteMany({ where: { id, athleteId: athlete.id } });

@@ -8,11 +8,16 @@ export type WorkoutSubtype =
   | "Fartlek"
   | "Progressivo"
   | "Longão"
-  | "Regenerativo";
+  | "Regenerativo"
+  | "Força"
+  | "Funcional"
+  | "Mobilidade"
+  | "Recuperação";
 
 export interface GeneratedWorkout {
   sessionIndex: number;
   dayLabel: string;
+  sport?: "corrida" | "ciclismo" | "natacao" | "forca";
   subtype: WorkoutSubtype;
   title: string;
   zone: TrainingZoneId;
@@ -95,6 +100,10 @@ const SUBTYPE_ZONE: Record<WorkoutSubtype, TrainingZoneId> = {
   "Tempo Run":         "T",
   "Intervalado curto": "I",
   "Intervalado longo": "I",
+  "Força":             "E",
+  "Funcional":         "M",
+  "Mobilidade":        "E",
+  "Recuperação":       "E",
 };
 
 export const ZONE_COLORS: Record<TrainingZoneId, string> = {
@@ -173,6 +182,11 @@ function buildWarmup(subtype: WorkoutSubtype): string {
       return "2 km de corrida leve (ritmo E) + mobilidade dinâmica + 3 × 100 m de strides progressivos com 1 min de trote entre cada. Total ≈ 12–15 min.";
     case "Intervalado longo":
       return "2 km em ritmo E + mobilidade de quadril e panturrilha + 2 × 200 m de acelerações suaves abaixo do ritmo I. Total ≈ 12–15 min.";
+    case "Força":
+    case "Funcional":
+    case "Mobilidade":
+    case "Recuperação":
+      return "8 min de mobilidade dinâmica e ativação técnica antes do bloco principal.";
   }
 }
 
@@ -196,6 +210,11 @@ function buildCooldown(subtype: WorkoutSubtype): string {
       return "1 km de trote muito leve + 5 min de caminhada + alongamento estático completo (8–10 min). Foam roller em panturrilha e quadríceps se disponível.";
     case "Intervalado longo":
       return "1–2 km de trote regenerativo (ritmo E−) + 5–8 min de caminhada + alongamento estático completo. Priorize reposição proteica e de carboidratos nos 30 min seguintes.";
+    case "Força":
+    case "Funcional":
+    case "Mobilidade":
+    case "Recuperação":
+      return "5 min de desaquecimento, respiração controlada e mobilidade leve nas regiões trabalhadas.";
   }
 }
 
@@ -219,6 +238,14 @@ function buildMainSet(subtype: WorkoutSubtype, distanceKm: number, paceRangeStr:
       return `6–10 × 400–600 m em ritmo I (${paceRangeStr}) com 60–90 s de recuperação ativa (trote leve) entre cada. Mantenha o ritmo constante em todas as repetições — interrompa se o pace cair >10 s/km.`;
     case "Intervalado longo":
       return `4–5 × 1000–1200 m em ritmo I (${paceRangeStr}) com 2–3 min de trote entre cada. Concentre-se em manter forma técnica e o mesmo pace em todas as repetições. Última repetição com esforço máximo controlado.`;
+    case "Força":
+      return "Bloco principal de força técnica com padrões de agachar, puxar, empurrar, dobradiça de quadril e core.";
+    case "Funcional":
+      return "Circuito funcional com controle técnico, alternando membros inferiores, superiores e core.";
+    case "Mobilidade":
+      return "Sequência de mobilidade ativa com foco em amplitude, controle motor e respiração.";
+    case "Recuperação":
+      return "Sessão leve com baixa carga, priorizando circulação, mobilidade e percepção corporal.";
   }
 }
 
@@ -232,6 +259,10 @@ function buildObjective(subtype: WorkoutSubtype): string {
     "Progressivo":       "Adaptação ao ritmo de prova e eficiência a velocidades crescentes",
     "Intervalado curto": "Desenvolvimento da potência aeróbica e VO2máx",
     "Intervalado longo": "Maximização do VO2máx e sustentação de alta intensidade",
+    "Força":             "Desenvolvimento de força geral, estabilidade e suporte ao gesto esportivo",
+    "Funcional":         "Integração de padrões motores, resistência localizada e controle corporal",
+    "Mobilidade":        "Melhora de amplitude, controle motor e recuperação",
+    "Recuperação":       "Recuperação ativa e redução de carga fisiológica",
   };
   return map[subtype];
 }
@@ -293,6 +324,10 @@ export function generateWorkoutsForWeek(params: WorkoutGeneratorParams): Generat
       "Progressivo":       `Progressivo — ${distanceKm} km`,
       "Intervalado curto": `Intervalado curto — ${distanceKm} km`,
       "Intervalado longo": `Intervalado longo — ${distanceKm} km`,
+      "Força":             "Força full body",
+      "Funcional":         "Funcional integrado",
+      "Mobilidade":        "Mobilidade",
+      "Recuperação":       "Recuperação ativa",
     };
 
     return {

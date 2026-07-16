@@ -135,7 +135,19 @@ export async function POST(req: NextRequest) {
 
   const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ reply: getMockReply(messages[messages.length - 1]?.content ?? "") });
+    return NextResponse.json({
+      reply:
+        "A inteligência está temporariamente indisponível porque o provedor de IA não está configurado. Com os dados disponíveis, consigo registrar sua pergunta, mas não vou gerar uma recomendação simulada. Peça ao treinador para revisar seus últimos treinos, check-ins e carga antes de ajustar o plano.",
+      dataQuality: {
+        confidence: "baixa",
+        reason: "GOOGLE_AI_API_KEY ausente",
+        contextAvailable: {
+          checkins: recentCheckIns.length,
+          logs: recentLogs.length,
+          loadSeries: series.length,
+        },
+      },
+    });
   }
 
   const systemPrompt = `Você é a IA Treinadora do PACE RUN PRO, uma assistente especializada em corrida de rua e triathlon para atletas brasileiros. Você tem acesso ao contexto real do atleta, obtido diretamente da plataforma:
@@ -163,29 +175,41 @@ Responda sempre em português brasileiro. Seja objetiva, prática e motivadora. 
   );
 
   if (!resp.ok) {
-    return NextResponse.json({ reply: getMockReply(messages[messages.length - 1]?.content ?? "") });
+    return NextResponse.json({
+      reply:
+        "Não consegui consultar a inteligência agora. Não vou substituir isso por uma resposta pronta. Os dados reais do atleta foram carregados, mas a recomendação deve ser revisada pelo treinador quando o serviço voltar.",
+      dataQuality: {
+        confidence: "baixa",
+        reason: `provedor respondeu ${resp.status}`,
+        contextAvailable: {
+          checkins: recentCheckIns.length,
+          logs: recentLogs.length,
+          loadSeries: series.length,
+        },
+      },
+    });
   }
 
   const data = await resp.json();
   const reply =
     (data.candidates?.[0]?.content?.parts?.[0]?.text as string | undefined) ??
     "Não consegui processar sua pergunta agora.";
-  return NextResponse.json({ reply });
-}
+  await prisma.auditLog.create({
+    data: {
+      actorUserId: session.user.id,
+      athleteId: athlete.id,
+      action: "AI_GENERATION",
+      entity: "AthleteInsight",
+      message: "Resposta da IA Treinadora gerada com contexto real do atleta.",
+      after: {
+        contextAvailable: {
+          checkins: recentCheckIns.length,
+          logs: recentLogs.length,
+          loadSeries: series.length,
+        },
+      },
+    },
+  });
 
-function getMockReply(question: string): string {
-  const q = question.toLowerCase();
-  if (q.includes("pace") || q.includes("ritmo")) {
-    return "Baseado no seu histórico, seu pace atual está adequado para a fase de base. Para a próxima semana, sugiro manter o volume com 80% das corridas em Z2 (conversacional). Seu pace de treino longo deve ficar entre 6:20–6:40 min/km para garantir recuperação adequada.\n\nLembre-se: consistência supera intensidade na fase de construção de base aeróbica!";
-  }
-  if (q.includes("lesão") || q.includes("dor")) {
-    return "Qualquer dor persistente merece atenção de um profissional de saúde. Para dores musculares típicas pós-treino, o protocolo RICE (repouso, gelo, compressão, elevação) nas primeiras 48h é eficaz.\n\nNão treine com dor aguda — prefira cruzamento (natação, bike) até a avaliação médica. Posso ajustar seu plano para o período de recuperação se precisar.";
-  }
-  if (q.includes("prova") || q.includes("corrida")) {
-    return "Ótima pergunta sobre preparação para prova! Baseado no seu plano atual, você está em boa trajetória. Na semana da prova, reduza o volume em 40–50% mas mantenha algumas acelerações curtas para manter a agilidade neuromuscular.\n\nNa véspera: refeição rica em carboidratos, hidratação adequada e sono de qualidade. No dia: café leve 2–3h antes, aquecimento de 10–15 minutos em ritmo fácil.";
-  }
-  if (q.includes("nutri") || q.includes("aliment") || q.includes("carboidrato")) {
-    return "A nutrição para corredores é simples na essência: carboidratos são o combustível principal. Para treinos acima de 1h, consuma 30–60g de carboidratos por hora durante o esforço.\n\nNa janela pós-treino (até 30 min após): proteína + carboidrato (proporção 1:3) para recuperação muscular. Para provas longas, treine seu intestino com géis nos treinos longos antes de usar em prova.";
-  }
-  return "Baseado no seu perfil e histórico de treinos, você está progredindo bem! Minha recomendação é manter a regularidade e respeitar os dias de recuperação.\n\nSe tiver uma dúvida mais específica sobre pace, nutrição, periodização ou preparação para provas, estarei aqui para ajudar. Qual aspecto do seu treino você quer explorar?";
+  return NextResponse.json({ reply });
 }

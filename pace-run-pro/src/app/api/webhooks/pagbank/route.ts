@@ -78,16 +78,52 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true });
   }
 
-  // referenceId formato: userId_planId_timestamp
+  // referenceId formatos:
+  // - legado: userId_planId_timestamp
+  // - marketplace: userId_planProductId_planPurchaseId_timestamp
   const parts = paymentReferenceId.split("_");
   if (parts.length < 3) {
     console.warn("[pagbank] referenceId inesperado:", paymentReferenceId);
     return NextResponse.json({ received: true });
   }
 
-  const [userId, planId] = parts;
+  const [userId, planId, maybePurchaseId] = parts;
 
   try {
+    if (parts.length >= 4 && maybePurchaseId) {
+      const purchase = await prisma.planPurchase.update({
+        where: { id: maybePurchaseId },
+        data: { status: "paid", pricePaidCents: amountCents || undefined },
+        select: {
+          id: true,
+          productId: true,
+          athleteId: true,
+          product: { select: { coachId: true } },
+        },
+      });
+
+      await prisma.planProduct.update({
+        where: { id: purchase.productId },
+        data: { purchases: { increment: 1 } },
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          actorUserId: userId,
+          coachId: purchase.product.coachId,
+          athleteId: purchase.athleteId,
+          action: "PAYMENT",
+          entity: "PlanPurchase",
+          entityId: purchase.id,
+          message: "Compra de plano marketplace confirmada pelo PagBank.",
+          after: { status: "paid", amountCents },
+        },
+      });
+
+      console.log("[pagbank] compra marketplace paga:", purchase.id);
+      return NextResponse.json({ received: true });
+    }
+
     const plan = planIdToEnum(planId);
     const renewsAt = new Date();
     renewsAt.setDate(renewsAt.getDate() + 30);

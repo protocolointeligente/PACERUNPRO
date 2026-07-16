@@ -19,13 +19,33 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === "approve") {
-    await prisma.subscription.updateMany({
-      where: {
-        user: { role: "COACH", coach: { id: assessoriaId } },
-        status: "TRIAL",
-      },
-      data: { status: "ACTIVE" },
+    const coach = await prisma.coach.findUnique({
+      where: { id: assessoriaId },
+      select: { userId: true },
     });
+    if (!coach) return NextResponse.json({ error: "Assessoria não encontrada" }, { status: 404 });
+
+    const existingSub = await prisma.subscription.findFirst({
+      where: { userId: coach.userId },
+      orderBy: { startedAt: "desc" },
+      select: { id: true, plan: true },
+    });
+
+    if (existingSub) {
+      await prisma.subscription.update({
+        where: { id: existingSub.id },
+        data: { status: "ACTIVE" },
+      });
+    } else {
+      await prisma.subscription.create({
+        data: {
+          userId: coach.userId,
+          plan: "COACH",
+          status: "ACTIVE",
+          renewsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        },
+      });
+    }
     return NextResponse.json({ ok: true, message: "Assessoria aprovada" });
   }
 
