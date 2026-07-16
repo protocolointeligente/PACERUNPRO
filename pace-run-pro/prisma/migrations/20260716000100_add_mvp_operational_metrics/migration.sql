@@ -1,42 +1,54 @@
 -- Add MVP operational traceability without destructive changes.
 
-CREATE TYPE "AuditAction" AS ENUM (
-  'CREATE',
-  'UPDATE',
-  'DELETE',
-  'PUBLISH',
-  'UNPUBLISH',
-  'MOVE',
-  'PAYMENT',
-  'ACCESS',
-  'AI_GENERATION',
-  'APPROVAL'
-);
+DO $$ BEGIN
+  CREATE TYPE "AuditAction" AS ENUM (
+    'CREATE',
+    'UPDATE',
+    'DELETE',
+    'PUBLISH',
+    'UNPUBLISH',
+    'MOVE',
+    'PAYMENT',
+    'ACCESS',
+    'AI_GENERATION',
+    'APPROVAL'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE "MetricScope" AS ENUM (
-  'DAILY',
-  'WEEKLY',
-  'MONTHLY',
-  'CYCLE'
-);
+DO $$ BEGIN
+  CREATE TYPE "MetricScope" AS ENUM (
+    'DAILY',
+    'WEEKLY',
+    'MONTHLY',
+    'CYCLE'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE "MetricSource" AS ENUM (
-  'MANUAL',
-  'WORKOUT',
-  'FEEDBACK',
-  'STRAVA',
-  'SYSTEM',
-  'INTELLIGENCE'
-);
+DO $$ BEGIN
+  CREATE TYPE "MetricSource" AS ENUM (
+    'MANUAL',
+    'WORKOUT',
+    'FEEDBACK',
+    'STRAVA',
+    'SYSTEM',
+    'INTELLIGENCE'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 ALTER TABLE "training_plans"
-  ADD COLUMN "modality" TEXT,
-  ADD COLUMN "source" TEXT NOT NULL DEFAULT 'manual',
-  ADD COLUMN "version" INTEGER NOT NULL DEFAULT 1;
+  ADD COLUMN IF NOT EXISTS "modality" TEXT,
+  ADD COLUMN IF NOT EXISTS "source" TEXT NOT NULL DEFAULT 'manual',
+  ADD COLUMN IF NOT EXISTS "version" INTEGER NOT NULL DEFAULT 1;
 
 ALTER TABLE "training_weeks"
-  ADD COLUMN "targetDurationMin" INTEGER,
-  ADD COLUMN "targetTss" DOUBLE PRECISION;
+  ADD COLUMN IF NOT EXISTS "targetDurationMin" INTEGER,
+  ADD COLUMN IF NOT EXISTS "targetTss" DOUBLE PRECISION;
 
 CREATE TABLE "generation_batches" (
   "id" TEXT NOT NULL,
@@ -72,14 +84,14 @@ CREATE INDEX "generation_batches_coachId_createdAt_idx" ON "generation_batches"(
 CREATE INDEX "generation_batches_athleteId_createdAt_idx" ON "generation_batches"("athleteId", "createdAt");
 
 ALTER TABLE "workouts"
-  ADD COLUMN "modality" TEXT,
-  ADD COLUMN "source" TEXT NOT NULL DEFAULT 'manual',
-  ADD COLUMN "generationBatchId" TEXT,
-  ADD COLUMN "confidence" DOUBLE PRECISION,
-  ADD COLUMN "rationale" TEXT,
-  ADD COLUMN "trainerModified" BOOLEAN NOT NULL DEFAULT false,
-  ADD COLUMN "publishedAt" TIMESTAMP(3),
-  ADD COLUMN "modalityData" JSONB;
+  ADD COLUMN IF NOT EXISTS "modality" TEXT,
+  ADD COLUMN IF NOT EXISTS "source" TEXT NOT NULL DEFAULT 'manual',
+  ADD COLUMN IF NOT EXISTS "generationBatchId" TEXT,
+  ADD COLUMN IF NOT EXISTS "confidence" DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "rationale" TEXT,
+  ADD COLUMN IF NOT EXISTS "trainerModified" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS "publishedAt" TIMESTAMP(3),
+  ADD COLUMN IF NOT EXISTS "modalityData" JSONB;
 
 ALTER TABLE "workouts"
   ADD CONSTRAINT "workouts_generationBatchId_fkey"
