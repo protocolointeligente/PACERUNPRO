@@ -50,7 +50,7 @@ ALTER TABLE "training_weeks"
   ADD COLUMN IF NOT EXISTS "targetDurationMin" INTEGER,
   ADD COLUMN IF NOT EXISTS "targetTss" DOUBLE PRECISION;
 
-CREATE TABLE "generation_batches" (
+CREATE TABLE IF NOT EXISTS "generation_batches" (
   "id" TEXT NOT NULL,
   "coachId" TEXT NOT NULL,
   "athleteId" TEXT NOT NULL,
@@ -68,20 +68,29 @@ CREATE TABLE "generation_batches" (
   CONSTRAINT "generation_batches_pkey" PRIMARY KEY ("id")
 );
 
-ALTER TABLE "generation_batches"
-  ADD CONSTRAINT "generation_batches_coachId_fkey"
-  FOREIGN KEY ("coachId") REFERENCES "coaches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "generation_batches"
+    ADD CONSTRAINT "generation_batches_coachId_fkey"
+    FOREIGN KEY ("coachId") REFERENCES "coaches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-ALTER TABLE "generation_batches"
-  ADD CONSTRAINT "generation_batches_athleteId_fkey"
-  FOREIGN KEY ("athleteId") REFERENCES "athletes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "generation_batches"
+    ADD CONSTRAINT "generation_batches_athleteId_fkey"
+    FOREIGN KEY ("athleteId") REFERENCES "athletes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-ALTER TABLE "generation_batches"
-  ADD CONSTRAINT "generation_batches_planId_fkey"
-  FOREIGN KEY ("planId") REFERENCES "training_plans"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "generation_batches"
+    ADD CONSTRAINT "generation_batches_planId_fkey"
+    FOREIGN KEY ("planId") REFERENCES "training_plans"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE INDEX "generation_batches_coachId_createdAt_idx" ON "generation_batches"("coachId", "createdAt");
-CREATE INDEX "generation_batches_athleteId_createdAt_idx" ON "generation_batches"("athleteId", "createdAt");
+CREATE INDEX IF NOT EXISTS "generation_batches_coachId_createdAt_idx" ON "generation_batches"("coachId", "createdAt");
+CREATE INDEX IF NOT EXISTS "generation_batches_athleteId_createdAt_idx" ON "generation_batches"("athleteId", "createdAt");
 
 ALTER TABLE "workouts"
   ADD COLUMN IF NOT EXISTS "modality" TEXT,
@@ -93,15 +102,18 @@ ALTER TABLE "workouts"
   ADD COLUMN IF NOT EXISTS "publishedAt" TIMESTAMP(3),
   ADD COLUMN IF NOT EXISTS "modalityData" JSONB;
 
-ALTER TABLE "workouts"
-  ADD CONSTRAINT "workouts_generationBatchId_fkey"
-  FOREIGN KEY ("generationBatchId") REFERENCES "generation_batches"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "workouts"
+    ADD CONSTRAINT "workouts_generationBatchId_fkey"
+    FOREIGN KEY ("generationBatchId") REFERENCES "generation_batches"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE INDEX "workouts_modality_date_idx" ON "workouts"("modality", "date");
-CREATE INDEX "workouts_source_idx" ON "workouts"("source");
-CREATE INDEX "workouts_generationBatchId_idx" ON "workouts"("generationBatchId");
+CREATE INDEX IF NOT EXISTS "workouts_modality_date_idx" ON "workouts"("modality", "date");
+CREATE INDEX IF NOT EXISTS "workouts_source_idx" ON "workouts"("source");
+CREATE INDEX IF NOT EXISTS "workouts_generationBatchId_idx" ON "workouts"("generationBatchId");
 
-CREATE TABLE "workout_feedbacks" (
+CREATE TABLE IF NOT EXISTS "workout_feedbacks" (
   "id" TEXT NOT NULL,
   "workoutId" TEXT NOT NULL,
   "athleteId" TEXT NOT NULL,
@@ -130,18 +142,24 @@ CREATE TABLE "workout_feedbacks" (
   CONSTRAINT "workout_feedbacks_pkey" PRIMARY KEY ("id")
 );
 
-ALTER TABLE "workout_feedbacks"
-  ADD CONSTRAINT "workout_feedbacks_workoutId_fkey"
-  FOREIGN KEY ("workoutId") REFERENCES "workouts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "workout_feedbacks"
+    ADD CONSTRAINT "workout_feedbacks_workoutId_fkey"
+    FOREIGN KEY ("workoutId") REFERENCES "workouts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-ALTER TABLE "workout_feedbacks"
-  ADD CONSTRAINT "workout_feedbacks_athleteId_fkey"
-  FOREIGN KEY ("athleteId") REFERENCES "athletes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "workout_feedbacks"
+    ADD CONSTRAINT "workout_feedbacks_athleteId_fkey"
+    FOREIGN KEY ("athleteId") REFERENCES "athletes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE UNIQUE INDEX "workout_feedbacks_workoutId_athleteId_key" ON "workout_feedbacks"("workoutId", "athleteId");
-CREATE INDEX "workout_feedbacks_athleteId_createdAt_idx" ON "workout_feedbacks"("athleteId", "createdAt");
+CREATE UNIQUE INDEX IF NOT EXISTS "workout_feedbacks_workoutId_athleteId_key" ON "workout_feedbacks"("workoutId", "athleteId");
+CREATE INDEX IF NOT EXISTS "workout_feedbacks_athleteId_createdAt_idx" ON "workout_feedbacks"("athleteId", "createdAt");
 
-CREATE TABLE "derived_metrics" (
+CREATE TABLE IF NOT EXISTS "derived_metrics" (
   "id" TEXT NOT NULL,
   "athleteId" TEXT NOT NULL,
   "key" TEXT NOT NULL,
@@ -161,15 +179,18 @@ CREATE TABLE "derived_metrics" (
   CONSTRAINT "derived_metrics_pkey" PRIMARY KEY ("id")
 );
 
-ALTER TABLE "derived_metrics"
-  ADD CONSTRAINT "derived_metrics_athleteId_fkey"
-  FOREIGN KEY ("athleteId") REFERENCES "athletes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "derived_metrics"
+    ADD CONSTRAINT "derived_metrics_athleteId_fkey"
+    FOREIGN KEY ("athleteId") REFERENCES "athletes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE UNIQUE INDEX "derived_metrics_athleteId_key_scope_periodStart_periodEnd_key"
+CREATE UNIQUE INDEX IF NOT EXISTS "derived_metrics_athleteId_key_scope_periodStart_periodEnd_key"
   ON "derived_metrics"("athleteId", "key", "scope", "periodStart", "periodEnd");
-CREATE INDEX "derived_metrics_athleteId_key_idx" ON "derived_metrics"("athleteId", "key");
+CREATE INDEX IF NOT EXISTS "derived_metrics_athleteId_key_idx" ON "derived_metrics"("athleteId", "key");
 
-CREATE TABLE "audit_logs" (
+CREATE TABLE IF NOT EXISTS "audit_logs" (
   "id" TEXT NOT NULL,
   "actorUserId" TEXT,
   "coachId" TEXT,
@@ -187,19 +208,28 @@ CREATE TABLE "audit_logs" (
   CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id")
 );
 
-ALTER TABLE "audit_logs"
-  ADD CONSTRAINT "audit_logs_actorUserId_fkey"
-  FOREIGN KEY ("actorUserId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "audit_logs"
+    ADD CONSTRAINT "audit_logs_actorUserId_fkey"
+    FOREIGN KEY ("actorUserId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-ALTER TABLE "audit_logs"
-  ADD CONSTRAINT "audit_logs_coachId_fkey"
-  FOREIGN KEY ("coachId") REFERENCES "coaches"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "audit_logs"
+    ADD CONSTRAINT "audit_logs_coachId_fkey"
+    FOREIGN KEY ("coachId") REFERENCES "coaches"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-ALTER TABLE "audit_logs"
-  ADD CONSTRAINT "audit_logs_athleteId_fkey"
-  FOREIGN KEY ("athleteId") REFERENCES "athletes"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "audit_logs"
+    ADD CONSTRAINT "audit_logs_athleteId_fkey"
+    FOREIGN KEY ("athleteId") REFERENCES "athletes"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE INDEX "audit_logs_actorUserId_createdAt_idx" ON "audit_logs"("actorUserId", "createdAt");
-CREATE INDEX "audit_logs_coachId_createdAt_idx" ON "audit_logs"("coachId", "createdAt");
-CREATE INDEX "audit_logs_athleteId_createdAt_idx" ON "audit_logs"("athleteId", "createdAt");
-CREATE INDEX "audit_logs_entity_entityId_idx" ON "audit_logs"("entity", "entityId");
+CREATE INDEX IF NOT EXISTS "audit_logs_actorUserId_createdAt_idx" ON "audit_logs"("actorUserId", "createdAt");
+CREATE INDEX IF NOT EXISTS "audit_logs_coachId_createdAt_idx" ON "audit_logs"("coachId", "createdAt");
+CREATE INDEX IF NOT EXISTS "audit_logs_athleteId_createdAt_idx" ON "audit_logs"("athleteId", "createdAt");
+CREATE INDEX IF NOT EXISTS "audit_logs_entity_entityId_idx" ON "audit_logs"("entity", "entityId");
