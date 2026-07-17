@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, ChevronUp, ChevronDown, Repeat2, Timer, Ruler } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Repeat2, Timer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   WorkoutBlock, BlockType, ZoneKey, ZONE_OPTIONS, BLOCK_TYPE_STYLE,
-  defaultBlocks, makeBlockId, calcBlocksDuration, calcBlocksTSS, blocksSummary,
+  makeBlockId, calcBlocksDuration, calcBlocksTSS, blocksSummary,
 } from "@/lib/workout-blocks";
 
 const inputClass =

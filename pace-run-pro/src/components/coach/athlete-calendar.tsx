@@ -7,8 +7,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 // ── Workout type config ───────────────────────────────────────────────────────
 
@@ -181,7 +179,7 @@ function WorkoutModal({ wo, onClose }: { wo: CalWorkout; onClose: () => void }) 
 
 // ── Calendar Grid ─────────────────────────────────────────────────────────────
 
-export function AthleteCalendar({ athleteId, initialWorkouts }: Props) {
+export function AthleteCalendar({ initialWorkouts }: Props) {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());

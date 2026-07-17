@@ -363,7 +363,7 @@ export default function GruposPage() {
                         groupId={group.id}
                         groupMemberIds={memberIds}
                         allAthletes={athletes}
-                        onAdd={(athleteId, name) => addMemberLocally(group.id, athleteId)}
+                        onAdd={(athleteId) => addMemberLocally(group.id, athleteId)}
                       />
                     </div>
                   </CardContent>

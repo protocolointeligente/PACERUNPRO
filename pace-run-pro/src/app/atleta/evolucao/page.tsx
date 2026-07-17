@@ -38,7 +38,7 @@ export default function EvolutionPage() {
     trainingLoad: [], weightHistory: [], vo2History: [], races: [], hasData: false,
   });
   const [peakPace, setPeakPace] = useState<{ label: string; paceSec: number; paceStr: string }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/atleta/evolucao")
