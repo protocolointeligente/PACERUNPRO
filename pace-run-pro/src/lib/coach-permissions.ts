@@ -3,6 +3,7 @@ import {
   Bell,
   BarChart2,
   CalendarDays,
+  GraduationCap,
   User,
   BookOpen,
   Layers,
@@ -50,6 +51,7 @@ const workflowNav: NavItem[] = [
 
 const businessNav: NavItem[] = [
   { href: "/treinador/gestao", label: "Gestao", icon: BriefcaseBusiness },
+  { href: "/treinador/university", label: "Pace University", icon: GraduationCap },
   { href: "/treinador/glossario", label: "Glossario", icon: BookOpen },
   { href: "/treinador/perfil", label: "Meu perfil", icon: User },
 ];

@@ -136,6 +136,7 @@ function formatDateBadge(date: string) {
 
 export default function CalendarPage() {
   const [monthOffset, setMonthOffset] = useState(0);
+  const [selectedType, setSelectedType] = useState("todos");
   const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
   const [races, setRaces] = useState<RaceRow[]>([]);
   const [loadingRaces, setLoadingRaces] = useState(true);
@@ -199,15 +200,20 @@ export default function CalendarPage() {
 
   const allEvents = useMemo(() => [...workoutEvents, ...raceEvents], [workoutEvents, raceEvents]);
 
+  const filteredEvents = useMemo(() => {
+    if (selectedType === "todos") return allEvents;
+    return allEvents.filter((event) => event.type === selectedType);
+  }, [allEvents, selectedType]);
+
   const eventsByDate = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
-    for (const e of allEvents) {
+    for (const e of filteredEvents) {
       const list = map.get(e.date) ?? [];
       list.push(e);
       map.set(e.date, list);
     }
     return map;
-  }, [allEvents]);
+  }, [filteredEvents]);
 
   const visibleEntries = useMemo(() => {
     const monthKey = `${reference.getFullYear()}-${String(reference.getMonth() + 1).padStart(2, "0")}`;
@@ -217,8 +223,8 @@ export default function CalendarPage() {
       .map(([date, items]) => [date, [...items].sort((a, b) => (a.type === "prova" ? 1 : 0) - (b.type === "prova" ? 1 : 0))] as const);
   }, [eventsByDate, reference]);
 
-  const monthWorkoutsCount = visibleEntries.reduce((sum, [, items]) => sum + items.filter((item) => item.type !== "prova").length, 0);
-  const monthRacesCount = visibleEntries.reduce((sum, [, items]) => sum + items.filter((item) => item.type === "prova").length, 0);
+  const monthWorkoutsCount = allEvents.filter((item) => item.type !== "prova" && item.date.startsWith(`${reference.getFullYear()}-${String(reference.getMonth() + 1).padStart(2, "0")}`)).length;
+  const monthRacesCount = allEvents.filter((item) => item.type === "prova" && item.date.startsWith(`${reference.getFullYear()}-${String(reference.getMonth() + 1).padStart(2, "0")}`)).length;
 
   const upcomingRaces = races.filter((r) => new Date(r.date) >= new Date());
   const modalitySummary = useMemo(() => {
@@ -294,7 +300,14 @@ export default function CalendarPage() {
         {modalitySummary.map((item) => {
           const Icon = item.icon;
           return (
-            <Card key={item.type}>
+            <Card
+              key={item.type}
+              className={cn(
+                "cursor-pointer transition hover:border-primary/35 hover:bg-card-hover",
+                selectedType === item.type && "border-primary/50 bg-primary/5"
+              )}
+              onClick={() => setSelectedType((current) => (current === item.type ? "todos" : item.type))}
+            >
               <CardContent className="flex items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -311,7 +324,7 @@ export default function CalendarPage() {
                   </p>
                 </div>
                 {item.next ? (
-                  <a href={item.type === "forca" ? `/atleta/forca/treino/${item.next.id}` : `/atleta/treino/${item.next.id}`} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-text hover:border-primary/50 hover:text-primary">
+                  <a href={item.type === "forca" ? `/atleta/forca/treino/${item.next.id}` : `/atleta/treino/${item.next.id}`} onClick={(event) => event.stopPropagation()} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-text hover:border-primary/50 hover:text-primary">
                     Abrir
                   </a>
                 ) : null}
@@ -322,16 +335,41 @@ export default function CalendarPage() {
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setSelectedType("todos")}
+          className={cn(
+            "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition",
+            selectedType === "todos" ? "border-primary/45 bg-primary/10 text-primary" : "border-border bg-card text-text-muted hover:border-primary/35 hover:text-text"
+          )}
+        >
+          Todos
+        </button>
         {calendarLegend.map((l) => (
-          <span key={l.type} className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs text-text-muted">
+          <button
+            key={l.type}
+            type="button"
+            onClick={() => setSelectedType((current) => (current === l.type ? "todos" : l.type))}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition",
+              selectedType === l.type ? "border-primary/45 bg-primary/10 text-primary" : "border-border bg-card text-text-muted hover:border-primary/35 hover:text-text"
+            )}
+          >
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: l.color }} />
             {l.label}
-          </span>
+          </button>
         ))}
-        <span className="flex items-center gap-1.5 rounded-full border border-orange-500/40 bg-orange-500/10 px-3 py-1 text-xs text-orange-400">
+        <button
+          type="button"
+          onClick={() => setSelectedType((current) => (current === "prova" ? "todos" : "prova"))}
+          className={cn(
+            "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition",
+            selectedType === "prova" ? "border-orange-500/60 bg-orange-500/15 text-orange-500" : "border-orange-500/40 bg-orange-500/10 text-orange-400"
+          )}
+        >
           <span className="h-2 w-2 rounded-full bg-orange-400" />
           Prova
-        </span>
+        </button>
       </div>
 
       {showModal && (
@@ -429,15 +467,33 @@ export default function CalendarPage() {
               </span>
               <div>
                 <p className="font-display text-base font-bold text-text">Agenda de treinos</p>
-                <p className="text-xs text-text-muted">{monthWorkoutsCount} treino(s) · {monthRacesCount} prova(s)</p>
+                <p className="text-xs text-text-muted">
+                  {monthWorkoutsCount} treino(s) · {monthRacesCount} prova(s)
+                  {selectedType !== "todos" ? ` · filtro: ${TYPE_LABELS[selectedType] ?? "Prova"}` : ""}
+                </p>
               </div>
             </div>
+            {selectedType !== "todos" ? (
+              <button
+                type="button"
+                onClick={() => setSelectedType("todos")}
+                className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-text-muted hover:border-primary/40 hover:text-primary"
+              >
+                Limpar filtro
+              </button>
+            ) : null}
           </div>
 
           {visibleEntries.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border p-10 text-center">
-              <p className="text-sm font-semibold text-text">Nenhum treino neste mês</p>
-              <p className="mt-1 text-xs text-text-muted">Os treinos liberados pelo treinador aparecerão aqui.</p>
+              <p className="text-sm font-semibold text-text">
+                {selectedType === "todos" ? "Nenhum treino neste mês" : "Nada encontrado neste filtro"}
+              </p>
+              <p className="mt-1 text-xs text-text-muted">
+                {selectedType === "todos"
+                  ? "Os treinos liberados pelo treinador aparecerão aqui."
+                  : "Limpe o filtro para ver todas as modalidades deste mês."}
+              </p>
             </div>
           ) : (
             <div className="space-y-6">

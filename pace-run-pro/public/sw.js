@@ -1,10 +1,10 @@
 // Pace Run Pro — Service Worker
 // Push notifications + offline-first cache strategies.
 
-const CACHE_STATIC = "prp-static-v5";
-const CACHE_PAGES  = "prp-pages-v5";
-const CACHE_RSC    = "prp-rsc-v5";
-const CACHE_API    = "prp-api-v5";
+const CACHE_STATIC = "prp-static-v6";
+const CACHE_PAGES  = "prp-pages-v6";
+const CACHE_RSC    = "prp-rsc-v6";
+const CACHE_API    = "prp-api-v6";
 
 // Static assets to precache on install
 const PRECACHE_URLS = [
@@ -12,7 +12,10 @@ const PRECACHE_URLS = [
   "/offline.html",
   "/atleta/dashboard",
   "/atleta/calendario",
+  "/atleta/checkin",
+  "/atleta/atividade",
   "/atleta/forca",
+  "/atleta/university",
   "/manifest.webmanifest",
   "/favicon-32.png",
   "/exercises.json",

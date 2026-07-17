@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Activity, BarChart3, Dumbbell, HeartPulse, Target, Trophy } from "lucide-react";
+import { Activity, BarChart3, Dumbbell, HeartPulse, Smartphone, Target, Trophy, Watch } from "lucide-react";
 
 export type PaceCourseAudience = "athlete" | "coach" | "both";
 
@@ -115,6 +115,39 @@ export const paceUniversityCourses: PaceCourse[] = [
       { title: "Controle de ritmo no dia", durationMin: 12, objective: "Evitar largada agressiva e quebra." },
       { title: "Feedback pos-prova", durationMin: 8, objective: "Transformar resultado em aprendizagem." },
       { title: "Retorno seguro", durationMin: 5, objective: "Retomar rotina sem acumular dano." },
+    ],
+  },
+  {
+    id: "execucao-app-mobile",
+    title: "Como usar Meus Treinos no celular",
+    description: "Fluxo pratico para abrir o treino certo, filtrar por modalidade, executar forca com GIFs e registrar feedback util.",
+    level: "Base",
+    durationMin: 36,
+    audience: "athlete",
+    icon: Smartphone,
+    lessons: [
+      { title: "Encontrar o treino do dia", durationMin: 7, objective: "Usar a agenda unica e filtros por modalidade sem se perder em abas." },
+      { title: "Abrir treino e entender objetivo", durationMin: 8, objective: "Ler zona, RPE, duracao e observacoes antes de comecar." },
+      { title: "Forca com GIF e carga", durationMin: 9, objective: "Executar exercicios com referencia visual e registrar carga, reps e RPE." },
+      { title: "Feedback que ajuda o treinador", durationMin: 7, objective: "Enviar sensacao, dor, fadiga e comentario objetivo." },
+      { title: "Uso offline de emergencia", durationMin: 5, objective: "Abrir a ultima sessao carregada quando a conexao cair." },
+    ],
+  },
+  {
+    id: "dados-relogio-strava",
+    title: "Dados de relogio, Strava e lancamento manual",
+    description: "Como transformar distancia, tempo, FC, pace, potencia, sono e stress em informacao confiavel de treino.",
+    level: "Intermediario",
+    durationMin: 52,
+    audience: "both",
+    icon: Watch,
+    lessons: [
+      { title: "O que sincronizar", durationMin: 8, objective: "Priorizar dados que realmente mudam a prescricao." },
+      { title: "Planejado x realizado", durationMin: 10, objective: "Comparar duracao, distancia, TSS e intensidade por modalidade." },
+      { title: "FC, pace e potencia", durationMin: 11, objective: "Entender quando cada metrica e confiavel." },
+      { title: "Sono, stress e dor", durationMin: 9, objective: "Usar sinais de recuperacao como freio ou permissao de carga." },
+      { title: "Quando digitar manualmente", durationMin: 7, objective: "Completar dados que relogio ou Strava nao capturaram." },
+      { title: "Auditoria semanal", durationMin: 7, objective: "Fechar a semana com decisao simples: manter, ajustar ou recuperar." },
     ],
   },
 ];
