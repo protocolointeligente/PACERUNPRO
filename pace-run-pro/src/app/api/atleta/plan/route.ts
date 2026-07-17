@@ -15,7 +15,10 @@ export async function GET() {
   if (!athlete) return NextResponse.json({ plan: null });
 
   const plan = await prisma.trainingPlan.findFirst({
-    where: { athleteId: athlete.id },
+    where: {
+      athleteId: athlete.id,
+      coachId: { not: null },
+    },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,

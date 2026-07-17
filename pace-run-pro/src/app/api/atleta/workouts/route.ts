@@ -103,7 +103,10 @@ export async function GET(req: NextRequest) {
   }
 
   const plans = await prisma.trainingPlan.findMany({
-    where: { athleteId: athlete.id },
+    where: {
+      athleteId: athlete.id,
+      coachId: { not: null },
+    },
     select: { id: true },
   });
   const planIds = plans.map((plan) => plan.id);

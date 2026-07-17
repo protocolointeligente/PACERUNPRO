@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BookOpen,
   CheckCircle2,
@@ -17,6 +17,10 @@ import { cn } from "@/lib/utils";
 
 interface PaceUniversityPageProps {
   audience: "athlete" | "coach";
+}
+
+function lessonKey(courseId: string, lessonTitle: string) {
+  return `${courseId}:${lessonTitle}`;
 }
 
 function audienceCopy(audience: "athlete" | "coach") {
@@ -41,14 +45,70 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
   const copy = audienceCopy(audience);
   const [selectedCourseId, setSelectedCourseId] = useState(courses[0]?.id ?? "");
   const [selectedLessonKey, setSelectedLessonKey] = useState("");
+  const [completedLessonKeys, setCompletedLessonKeys] = useState<Set<string>>(() => new Set());
+  const storageKey = `pace-university:${audience}:completed-lessons`;
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(storageKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) setCompletedLessonKeys(new Set(parsed.filter((item) => typeof item === "string")));
+    } catch {
+      setCompletedLessonKeys(new Set());
+    }
+  }, [storageKey]);
+
+  function persistCompleted(next: Set<string>) {
+    setCompletedLessonKeys(next);
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
+    } catch {
+      // Local progress is a convenience; the course remains usable if storage is unavailable.
+    }
+  }
 
   const selectedCourse = useMemo(
     () => courses.find((course) => course.id === selectedCourseId) ?? courses[0],
     [courses, selectedCourseId]
   );
+  const selectedCourseLessons = selectedCourse?.lessons ?? [];
+  const resolvedLessonKey = selectedLessonKey || lessonKey(selectedCourse?.id ?? "", selectedCourseLessons[0]?.title ?? "");
   const selectedLesson =
-    selectedCourse?.lessons.find((lesson) => `${selectedCourse.id}:${lesson.title}` === selectedLessonKey) ??
-    selectedCourse?.lessons[0];
+    selectedCourseLessons.find((lesson) => lessonKey(selectedCourse?.id ?? "", lesson.title) === resolvedLessonKey) ??
+    selectedCourseLessons[0];
+  const selectedLessonIndex = selectedCourseLessons.findIndex((lesson) => lesson.title === selectedLesson?.title);
+  const selectedLessonDone = selectedCourse && selectedLesson ? completedLessonKeys.has(lessonKey(selectedCourse.id, selectedLesson.title)) : false;
+  const selectedCourseDoneCount = selectedCourse ? selectedCourse.lessons.filter((lesson) =>
+    completedLessonKeys.has(lessonKey(selectedCourse.id, lesson.title))
+  ).length : 0;
+  const totalDoneCount = courses.reduce(
+    (sum, course) => sum + course.lessons.filter((lesson) => completedLessonKeys.has(lessonKey(course.id, lesson.title))).length,
+    0
+  );
+
+  function toggleSelectedLesson() {
+    if (!selectedLesson) return;
+    const key = lessonKey(selectedCourse.id, selectedLesson.title);
+    const next = new Set(completedLessonKeys);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    persistCompleted(next);
+  }
+
+  function goToNextLesson() {
+    if (!selectedCourse || !selectedLesson) return;
+    const nextLesson = selectedCourse.lessons[selectedLessonIndex + 1];
+    if (nextLesson) {
+      setSelectedLessonKey(lessonKey(selectedCourse.id, nextLesson.title));
+      return;
+    }
+
+    const courseIndex = courses.findIndex((course) => course.id === selectedCourse.id);
+    const nextCourse = courses[courseIndex + 1] ?? courses[0];
+    setSelectedCourseId(nextCourse.id);
+    setSelectedLessonKey(lessonKey(nextCourse.id, nextCourse.lessons[0]?.title ?? ""));
+  }
 
   if (!selectedCourse) {
     return (
@@ -73,9 +133,10 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
           <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">{copy.title}</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-text-muted">{copy.subtitle}</p>
         </div>
-        <div className="grid min-w-48 grid-cols-2 gap-2 rounded-2xl border border-border bg-card p-3 text-sm">
+        <div className="grid min-w-48 grid-cols-2 gap-2 rounded-2xl border border-border bg-card p-3 text-sm sm:grid-cols-3">
           <Metric value={String(courses.length)} label="trilhas" />
           <Metric value={`${Math.round(totalMinutes / 60)}h`} label="conteudo" />
+          <Metric value={String(totalDoneCount)} label="aulas feitas" />
         </div>
       </div>
 
@@ -92,8 +153,9 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
               selected={course.id === selectedCourse.id}
               onSelect={() => {
                 setSelectedCourseId(course.id);
-                setSelectedLessonKey(`${course.id}:${course.lessons[0]?.title ?? ""}`);
+                setSelectedLessonKey(lessonKey(course.id, course.lessons[0]?.title ?? ""));
               }}
+              completedCount={course.lessons.filter((lesson) => completedLessonKeys.has(lessonKey(course.id, lesson.title))).length}
             />
           ))}
         </div>
@@ -116,9 +178,15 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
                   </div>
                   <h2 className="mt-3 font-display text-2xl font-bold text-text">{selectedCourse.title}</h2>
                   <p className="mt-2 text-sm leading-relaxed text-text-muted">{selectedCourse.description}</p>
+                  <p className="mt-3 text-xs font-semibold text-text-muted">
+                    {selectedCourseDoneCount} de {selectedCourse.lessons.length} aulas estudadas nesta trilha
+                  </p>
                 </div>
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <selectedCourse.icon className="h-5 w-5" />
+                  {(() => {
+                    const SelectedIcon = selectedCourse.icon;
+                    return <SelectedIcon className="h-5 w-5" />;
+                  })()}
                 </span>
               </div>
             </div>
@@ -126,13 +194,14 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
             <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
               <div className="border-b border-border lg:border-b-0 lg:border-r">
                 {selectedCourse.lessons.map((lesson, index) => {
-                  const lessonKey = `${selectedCourse.id}:${lesson.title}`;
+                  const key = lessonKey(selectedCourse.id, lesson.title);
                   const active = selectedLesson?.title === lesson.title;
+                  const done = completedLessonKeys.has(key);
                   return (
                     <button
-                      key={lessonKey}
+                      key={key}
                       type="button"
-                      onClick={() => setSelectedLessonKey(lessonKey)}
+                      onClick={() => setSelectedLessonKey(key)}
                       className={cn(
                         "flex w-full items-start gap-3 border-b border-border px-4 py-3 text-left transition last:border-b-0 hover:bg-card-hover/50",
                         active && "bg-primary/10"
@@ -145,7 +214,10 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
                         {String(index + 1).padStart(2, "0")}
                       </span>
                       <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-text">{lesson.title}</span>
+                        <span className="flex items-center gap-2 text-sm font-semibold text-text">
+                          {lesson.title}
+                          {done ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" /> : null}
+                        </span>
                         <span className="mt-1 block text-xs leading-relaxed text-text-muted">{lesson.objective}</span>
                       </span>
                     </button>
@@ -173,12 +245,17 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
                     </div>
                     <div className="grid gap-2 sm:grid-cols-2">
                       <Info label="Duracao" value={`${selectedLesson.durationMin} min`} />
-                      <Info label="Status" value="Disponivel" />
+                      <Info label="Status" value={selectedLessonDone ? "Estudada" : "Disponivel"} />
                     </div>
-                    <Button type="button" variant="secondary" size="sm" className="w-full sm:w-auto">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Marcar como estudada
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant={selectedLessonDone ? "secondary" : "primary"} size="sm" onClick={toggleSelectedLesson} className="w-full sm:w-auto">
+                        <CheckCircle2 className="h-4 w-4" />
+                        {selectedLessonDone ? "Aula estudada" : "Marcar como estudada"}
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={goToNextLesson} className="w-full sm:w-auto">
+                        Proxima aula
+                      </Button>
+                    </div>
                   </>
                 ) : null}
               </div>
@@ -194,10 +271,12 @@ function CourseButton({
   course,
   selected,
   onSelect,
+  completedCount,
 }: {
   course: PaceCourse;
   selected: boolean;
   onSelect: () => void;
+  completedCount: number;
 }) {
   const Icon = course.icon;
   return (
@@ -218,6 +297,7 @@ function CourseButton({
         <span className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-text-muted">
           <span className="rounded-full border border-border px-2 py-0.5">{course.level}</span>
           <span className="rounded-full border border-border px-2 py-0.5">{course.lessons.length} aulas</span>
+          <span className="rounded-full border border-border px-2 py-0.5">{completedCount}/{course.lessons.length} feitas</span>
         </span>
       </span>
     </button>

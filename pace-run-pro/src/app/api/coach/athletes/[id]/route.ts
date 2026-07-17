@@ -60,7 +60,36 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
     return acc;
   }, {});
 
+  let archivedWorkoutCount = 0;
+  let archivedPlanCount = 0;
+
   await prisma.$transaction(async (tx) => {
+    const coachTrainingPlans = await tx.trainingPlan.findMany({
+      where: {
+        athleteId: athlete.id,
+        coachId: coach.id,
+      },
+      select: { id: true },
+    });
+    const coachTrainingPlanIds = coachTrainingPlans.map((plan) => plan.id);
+    archivedPlanCount = coachTrainingPlanIds.length;
+
+    if (coachTrainingPlanIds.length > 0) {
+      const archivedWorkouts = await tx.workout.updateMany({
+        where: {
+          week: {
+            planId: { in: coachTrainingPlanIds },
+          },
+          status: { in: ["AGENDADO", "LIBERADO", "AJUSTADO"] },
+        },
+        data: {
+          status: "PERDIDO",
+          publishedAt: null,
+        },
+      });
+      archivedWorkoutCount = archivedWorkouts.count;
+    }
+
     await tx.athlete.update({
       where: { id: athlete.id },
       data: {
@@ -121,6 +150,8 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
           coachId: null,
           status: "inativo",
           releasedSlots: Object.values(slotReleasesByPlan).reduce((sum, count) => sum + count, 0),
+          archivedPlanCount,
+          archivedWorkoutCount,
         },
       },
     });
@@ -129,5 +160,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   return NextResponse.json({
     ok: true,
     releasedSlots: Object.values(slotReleasesByPlan).reduce((sum, count) => sum + count, 0),
+    archivedPlanCount,
+    archivedWorkoutCount,
   });
 }
