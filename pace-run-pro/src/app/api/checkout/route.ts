@@ -4,6 +4,28 @@ import { createPixOrder, createCreditCardOrder } from "@/lib/pagbank";
 import { checkoutLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 
+function canonicalAppOrigin() {
+  const candidates = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.NEXTAUTH_URL,
+    "https://www.pacerunpro.com.br",
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    try {
+      const url = new URL(candidate);
+      if (url.protocol === "https:" || url.protocol === "http:") {
+        return url.origin;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return "https://www.pacerunpro.com.br";
+}
+
 export async function POST(req: NextRequest) {
   const rl = checkoutLimiter(req);
   if (!rl.ok) {
@@ -108,11 +130,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "PAID", purchaseId });
   }
 
-  const origin =
-    req.headers.get("origin") ??
-    process.env.NEXTAUTH_URL ??
-    "https://www.pacerunpro.com.br";
-  const notificationUrl = `${origin}/api/webhooks/pagbank`;
+  const notificationUrl = `${canonicalAppOrigin()}/api/webhooks/pagbank`;
 
   const referenceId = [userId, planId, purchaseId, Date.now()].filter(Boolean).join("_");
 

@@ -1,59 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  Activity,
-  AlertTriangle,
-  ArrowLeft,
-  Award,
-  Filter,
-  Heart,
-  MapPin,
-  Shirt,
-  Star,
-  TrendingUp,
-  Zap,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import {
-  timelineEvents,
-  type TimelineEvent,
-  type TimelineEventType,
-} from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
+import { Activity, ArrowLeft, Clock, Filter, HeartPulse, MapPin } from "lucide-react";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
+type TimelineEventType = "treino" | "prova" | "feedback";
 type FilterValue = TimelineEventType | "todos";
+
+interface AthleteLog {
+  id: string;
+  source: string | null;
+  distanceKm: number | null;
+  durationSec: number | null;
+  avgPaceSecPerKm: number | null;
+  rpe: number | null;
+  finishedAt: string | null;
+  createdAt: string;
+  workout: {
+    title: string | null;
+    type: string;
+    date: string;
+  } | null;
+  _count?: { comments: number };
+}
+
+interface TimelineEvent {
+  id: string;
+  type: TimelineEventType;
+  date: string;
+  title: string;
+  subtitle?: string;
+  detail?: string;
+  badge?: string;
+}
 
 const filterOptions: { label: string; value: FilterValue }[] = [
   { label: "Todos", value: "todos" },
   { label: "Treinos", value: "treino" },
   { label: "Provas", value: "prova" },
-  { label: "Testes", value: "teste" },
-  { label: "Conquistas", value: "conquista" },
-  { label: "Avaliações", value: "avaliacao" },
+  { label: "Feedbacks", value: "feedback" },
 ];
 
 function getIcon(type: TimelineEventType) {
-  switch (type) {
-    case "treino":
-      return Activity;
-    case "checkin":
-      return Heart;
-    case "teste":
-      return TrendingUp;
-    case "prova":
-      return MapPin;
-    case "conquista":
-      return Award;
-    case "avaliacao":
-      return Zap;
-    case "lesao":
-      return AlertTriangle;
-    case "tenis":
-      return Shirt;
-  }
+  if (type === "prova") return MapPin;
+  if (type === "feedback") return HeartPulse;
+  return Activity;
 }
 
 function formatMonthYear(dateStr: string): string {
@@ -66,38 +60,73 @@ function groupByMonth(events: TimelineEvent[]): [string, TimelineEvent[]][] {
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
   const grouped = sorted.reduce<Record<string, TimelineEvent[]>>((acc, ev) => {
-    const key = ev.date.slice(0, 7); // YYYY-MM
-    if (!acc[key]) acc[key] = [];
+    const key = ev.date.slice(0, 7);
+    acc[key] ??= [];
     acc[key].push(ev);
     return acc;
   }, {});
   return Object.entries(grouped).sort((a, b) => (a[0] < b[0] ? 1 : -1));
 }
 
-function getBadgeVariant(ev: TimelineEvent) {
-  if (ev.type === "conquista" || ev.highlight) return "warning" as const;
-  if (ev.type === "prova") return "success" as const;
-  if (ev.type === "teste") return "primary" as const;
-  return "outline" as const;
+function formatDuration(sec: number | null) {
+  if (!sec) return null;
+  const min = Math.round(sec / 60);
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${h}h${String(m).padStart(2, "0")}`;
+}
+
+function formatPace(sec: number | null) {
+  if (!sec) return null;
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}/km`;
+}
+
+function eventFromLog(log: AthleteLog): TimelineEvent {
+  const date = (log.finishedAt ?? log.createdAt).slice(0, 10);
+  const title = log.workout?.title ?? "Treino registrado";
+  const isRace = log.workout?.type === "PROVA";
+  const details = [
+    log.distanceKm ? `${log.distanceKm.toFixed(1)} km` : null,
+    formatDuration(log.durationSec),
+    formatPace(log.avgPaceSecPerKm),
+    log.rpe ? `RPE ${log.rpe}` : null,
+  ].filter(Boolean);
+
+  return {
+    id: log.id,
+    type: isRace ? "prova" : "treino",
+    date,
+    title,
+    subtitle: details.join(" · ") || "Execução registrada",
+    detail: log.source ? `Origem: ${log.source}` : undefined,
+    badge: log._count?.comments ? `${log._count.comments} comentário(s)` : undefined,
+  };
 }
 
 export default function TimelinePage() {
   const [filter, setFilter] = useState<FilterValue>("todos");
+  const [logs, setLogs] = useState<AthleteLog[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered =
-    filter === "todos"
-      ? timelineEvents
-      : timelineEvents.filter((ev) => ev.type === filter);
+  useEffect(() => {
+    fetch("/api/atleta/logs")
+      .then((res) => (res.ok ? res.json() : { logs: [] }))
+      .then((data: { logs?: AthleteLog[] }) => setLogs(data.logs ?? []))
+      .catch(() => setLogs([]))
+      .finally(() => setLoading(false));
+  }, []);
 
+  const events = useMemo(() => logs.map(eventFromLog), [logs]);
+  const filtered = filter === "todos" ? events : events.filter((ev) => ev.type === filter);
   const grouped = groupByMonth(filtered);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      {/* Header */}
       <div className="space-y-3">
         <Link
           href="/atleta/dashboard"
-          className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-text"
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar ao dashboard
@@ -109,13 +138,11 @@ export default function TimelinePage() {
             Sua jornada esportiva
           </h1>
           <p className="max-w-lg text-sm text-text-muted">
-            Todo o histórico da sua carreira — treinos, provas, testes,
-            conquistas e marcos — em uma única linha do tempo.
+            Histórico real de treinos e provas registrados por você ou importados das integrações.
           </p>
         </div>
       </div>
 
-      {/* Filter chips */}
       <div className="flex flex-wrap gap-2">
         <Filter className="h-4 w-4 shrink-0 self-center text-text-muted" />
         {filterOptions.map((opt) => (
@@ -134,29 +161,31 @@ export default function TimelinePage() {
         ))}
       </div>
 
-      {/* Timeline body */}
       <div className="max-w-2xl">
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center text-text-muted">
-            Nenhum evento deste tipo.
+        {loading ? (
+          <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-text-muted">
+            Carregando histórico...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card/70 p-8 text-center">
+            <Clock className="mx-auto mb-3 h-8 w-8 text-text-muted" />
+            <p className="font-semibold text-text">Ainda não há histórico real para mostrar.</p>
+            <p className="mt-1 text-sm text-text-muted">
+              Quando você concluir treinos, registrar feedbacks ou sincronizar atividades, eles aparecerão aqui.
+            </p>
           </div>
         ) : (
-          grouped.map(([monthKey, events]) => (
+          grouped.map(([monthKey, monthEvents]) => (
             <div key={monthKey}>
-              {/* Month header */}
-              <div className="mb-4 mt-8 first:mt-0 text-xs font-semibold uppercase tracking-widest text-text-muted capitalize">
-                {formatMonthYear(events[0].date)}
+              <div className="mb-4 mt-8 text-xs font-semibold uppercase tracking-widest text-text-muted first:mt-0">
+                {formatMonthYear(monthEvents[0].date)}
               </div>
 
-              {/* Events for this month */}
               <div className="relative">
-                {/* Vertical line */}
-                <div className="absolute left-5 top-0 bottom-0 w-px bg-border" />
-
+                <div className="absolute bottom-0 left-5 top-0 w-px bg-border" />
                 <div className="space-y-3">
-                  {events.map((ev, i) => {
+                  {monthEvents.map((ev, i) => {
                     const Icon = getIcon(ev.type);
-
                     return (
                       <motion.div
                         key={ev.id}
@@ -165,71 +194,28 @@ export default function TimelinePage() {
                         transition={{ delay: i * 0.04 }}
                       >
                         <div className="flex gap-4">
-                          {/* Icon dot */}
                           <div
                             className={cn(
                               "relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2",
-                              ev.type === "treino" &&
-                                "bg-info/15 border-info/40 text-info",
-                              ev.type === "checkin" &&
-                                "bg-primary/15 border-primary/40 text-primary",
-                              ev.type === "teste" &&
-                                "bg-warning/15 border-warning/40 text-warning",
-                              ev.type === "prova" &&
-                                "bg-success/15 border-success/40 text-success",
-                              ev.type === "conquista" &&
-                                "bg-yellow-500/15 border-yellow-500/40 text-yellow-400",
-                              ev.type === "avaliacao" &&
-                                "bg-primary/15 border-primary/40 text-primary",
-                              ev.type === "lesao" &&
-                                "bg-danger/15 border-danger/40 text-danger",
-                              ev.type === "tenis" &&
-                                "bg-card-hover border-border text-text-muted",
-                              ev.highlight &&
-                                "ring-2 ring-offset-1 ring-offset-background ring-yellow-400/50"
+                              ev.type === "treino" && "border-info/40 bg-info/15 text-info",
+                              ev.type === "prova" && "border-success/40 bg-success/15 text-success",
+                              ev.type === "feedback" && "border-primary/40 bg-primary/15 text-primary"
                             )}
                           >
                             <Icon className="h-4 w-4" />
                           </div>
 
-                          {/* Content card */}
-                          <div
-                            className={cn(
-                              "flex-1 rounded-2xl border p-3.5 mb-1",
-                              ev.highlight
-                                ? "border-yellow-400/30 bg-yellow-400/5"
-                                : "border-border bg-card"
-                            )}
-                          >
+                          <div className="mb-1 flex-1 rounded-2xl border border-border bg-card p-3.5">
                             <div className="flex items-start justify-between gap-2">
                               <div className="min-w-0">
-                                <p className="text-sm font-semibold text-text">
-                                  {ev.title}
-                                </p>
-                                {ev.subtitle && (
-                                  <p className="mt-0.5 text-xs text-text-muted">
-                                    {ev.subtitle}
-                                  </p>
-                                )}
-                                {ev.detail && (
-                                  <p className="mt-1 text-xs text-text-muted italic">
-                                    {ev.detail}
-                                  </p>
-                                )}
+                                <p className="text-sm font-semibold text-text">{ev.title}</p>
+                                {ev.subtitle && <p className="mt-0.5 text-xs text-text-muted">{ev.subtitle}</p>}
+                                {ev.detail && <p className="mt-1 text-xs italic text-text-muted">{ev.detail}</p>}
                               </div>
-                              <div className="flex flex-col items-end gap-1 shrink-0">
-                                {ev.badge && (
-                                  <Badge variant={getBadgeVariant(ev)}>
-                                    {(ev.type === "conquista" || ev.highlight) && (
-                                      <Star className="h-3 w-3" />
-                                    )}
-                                    {ev.badge}
-                                  </Badge>
-                                )}
+                              <div className="flex shrink-0 flex-col items-end gap-1">
+                                {ev.badge && <Badge variant="outline">{ev.badge}</Badge>}
                                 <span className="text-[10px] text-text-muted">
-                                  {new Date(
-                                    ev.date + "T12:00:00"
-                                  ).toLocaleDateString("pt-BR", {
+                                  {new Date(ev.date + "T12:00:00").toLocaleDateString("pt-BR", {
                                     day: "2-digit",
                                     month: "short",
                                   })}

@@ -1,85 +1,76 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { motion } from "framer-motion";
+import { AlertTriangle, BarChart2, CheckCircle2, Clock, TrendingUp } from "lucide-react";
 import {
-  AlertTriangle,
-  BarChart2,
-  CheckCircle2,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
-import {
-  BarChart,
   Bar,
+  BarChart,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
 } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
-import { weeklyAnalyses } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
-const myAnalysis = weeklyAnalyses[0];
+interface AthleteLog {
+  id: string;
+  distanceKm: number | null;
+  durationSec: number | null;
+  avgPaceSecPerKm: number | null;
+  avgHr?: number | null;
+  rpe: number | null;
+  finishedAt: string | null;
+  createdAt: string;
+}
 
-const dailyVolume = [
-  { day: "Seg", km: 8 },
-  { day: "Ter", km: 0 },
-  { day: "Qua", km: 12 },
-  { day: "Qui", km: 0 },
-  { day: "Sex", km: 15 },
-  { day: "Sáb", km: 22 },
-  { day: "Dom", km: 0 },
-];
+interface TrainingLoadResponse {
+  latest?: {
+    date: string;
+    ctl?: number;
+    atl?: number;
+    tsb?: number;
+    tss?: number;
+  } | null;
+}
 
-function formatPaceDisplay(sec: number) {
+const weekDays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+function startOfWeek(date: Date) {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  const day = copy.getDay();
+  copy.setDate(copy.getDate() - (day === 0 ? 6 : day - 1));
+  return copy;
+}
+
+function isSameOrAfter(a: Date, b: Date) {
+  return a.getTime() >= b.getTime();
+}
+
+function formatPaceDisplay(sec: number | null) {
+  if (!sec) return "—";
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   return `${m}:${s.toString().padStart(2, "0")}/km`;
 }
 
-function formatMetricValue(label: string, value: number) {
-  if (label === "Pace médio") return formatPaceDisplay(value);
-  if (label === "FC média") return `${value} bpm`;
-  if (label === "Carga") return `${value} UA`;
-  if (label === "Sessões") return `${value}`;
-  return `${value} km`;
+function formatDuration(sec: number) {
+  const min = Math.round(sec / 60);
+  if (min < 60) return `${min} min`;
+  return `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}`;
 }
 
-function DeltaIndicator({ delta, unit }: { delta: number; unit: string }) {
-  const isPace = unit === "s/km";
-  const improved = isPace ? delta < 0 : delta > 0;
-  const isNeutral = delta === 0;
-
-  if (isNeutral) {
-    return <span className="text-xs text-text-muted">Igual</span>;
-  }
-
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-0.5 text-xs font-semibold",
-        improved ? "text-success" : "text-danger"
-      )}
-    >
-      {improved ? (
-        <TrendingUp className="h-3 w-3" />
-      ) : (
-        <TrendingDown className="h-3 w-3" />
-      )}
-      {Math.abs(delta).toFixed(1)}%
-    </span>
-  );
+function avg(values: Array<number | null | undefined>) {
+  const valid = values.filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  if (!valid.length) return null;
+  return valid.reduce((sum, value) => sum + value, 0) / valid.length;
 }
-
-const highlightIcons = [
-  <TrendingUp key="up" className="h-4 w-4 text-success" />,
-  <AlertTriangle key="warn" className="h-4 w-4 text-warning" />,
-  <CheckCircle2 key="check" className="h-4 w-4 text-primary" />,
-];
 
 const fadeUp = (delay: number) => ({
   initial: { opacity: 0, y: 16 },
@@ -87,7 +78,57 @@ const fadeUp = (delay: number) => ({
   transition: { delay, duration: 0.4, ease: "easeOut" as const },
 });
 
-export default function MinhaSemanPage() {
+export default function MinhaSemanaPage() {
+  const [logs, setLogs] = useState<AthleteLog[]>([]);
+  const [trainingLoad, setTrainingLoad] = useState<TrainingLoadResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/atleta/logs").then((res) => (res.ok ? res.json() : { logs: [] })),
+      fetch("/api/atleta/training-load").then((res) => (res.ok ? res.json() : null)),
+    ])
+      .then(([logsData, loadData]: [{ logs?: AthleteLog[] }, TrainingLoadResponse | null]) => {
+        setLogs(logsData.logs ?? []);
+        setTrainingLoad(loadData);
+      })
+      .catch(() => {
+        setLogs([]);
+        setTrainingLoad(null);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const analysis = useMemo(() => {
+    const monday = startOfWeek(new Date());
+    const weekLogs = logs.filter((log) => {
+      const date = new Date(log.finishedAt ?? log.createdAt);
+      return isSameOrAfter(date, monday);
+    });
+    const totalDistance = weekLogs.reduce((sum, log) => sum + (log.distanceKm ?? 0), 0);
+    const totalDuration = weekLogs.reduce((sum, log) => sum + (log.durationSec ?? 0), 0);
+    const avgPace = avg(weekLogs.map((log) => log.avgPaceSecPerKm));
+    const avgHr = avg(weekLogs.map((log) => log.avgHr));
+    const sessionLoad = weekLogs.reduce((sum, log) => {
+      if (!log.durationSec || !log.rpe) return sum;
+      return sum + Math.round((log.durationSec / 60) * log.rpe);
+    }, 0);
+
+    const dailyVolume = weekDays.map((day, index) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + index);
+      const iso = d.toISOString().slice(0, 10);
+      const km = weekLogs
+        .filter((log) => (log.finishedAt ?? log.createdAt).slice(0, 10) === iso)
+        .reduce((sum, log) => sum + (log.distanceKm ?? 0), 0);
+      return { day, km: Math.round(km * 10) / 10 };
+    });
+
+    return { weekLogs, totalDistance, totalDuration, avgPace, avgHr, sessionLoad, dailyVolume };
+  }, [logs]);
+
+  const hasData = analysis.weekLogs.length > 0;
+
   return (
     <div className="mx-auto max-w-3xl space-y-7">
       <motion.div {...fadeUp(0)}>
@@ -100,111 +141,126 @@ export default function MinhaSemanPage() {
             <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
               Minha Semana
             </h1>
-            <p className="mt-1 text-sm text-text-muted">{myAnalysis.weekLabel}</p>
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.div {...fadeUp(0.08)} className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {myAnalysis.metrics.map((metric) => (
-          <Card key={metric.label}>
-            <CardContent className="p-3.5 space-y-1.5">
-              <p className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-text-muted">
-                {metric.label}
-                {metric.label === "Carga" && (
-                  <InfoTooltip text="UA = Unidades Arbitrárias. Mede a carga de treino combinando duração (min) e percepção de esforço (RPE de 1 a 10) de cada sessão, somadas na semana." />
-                )}
-              </p>
-              <p className="font-display text-lg font-bold text-text leading-tight">
-                {formatMetricValue(metric.label, metric.value)}
-              </p>
-              <div className="flex items-center gap-1.5">
-                <DeltaIndicator delta={metric.delta} unit={metric.unit} />
-                <span className="text-[10px] text-text-muted">vs sem. ant.</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </motion.div>
-
-      <motion.div {...fadeUp(0.14)}>
-        <Card>
-          <CardContent className="p-5">
-            <h2 className="font-display text-base font-semibold text-text mb-4">
-              Volume por dia (km)
-            </h2>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={dailyVolume} barCategoryGap="30%">
-                <XAxis
-                  dataKey="day"
-                  tick={{ fill: "#64748b", fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: "#64748b", fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={28}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "#0b1220",
-                    border: "1px solid #1e293b",
-                    borderRadius: 10,
-                    fontSize: 12,
-                  }}
-                  itemStyle={{ color: "#f1f5f9" }}
-                  labelStyle={{ color: "#94a3b8" }}
-                  formatter={(v) => [`${v} km`, "Volume"]}
-                />
-                <Bar dataKey="km" radius={[6, 6, 0, 0]}>
-                  {dailyVolume.map((entry, index) => (
-                    <Cell
-                      key={index}
-                      fill={entry.km > 0 ? "#8b5cf6" : "#1e293b"}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      <motion.div {...fadeUp(0.2)}>
-        <h2 className="font-display text-base font-semibold text-text mb-3">Destaques da semana</h2>
-        <div className="space-y-3">
-          {myAnalysis.highlights.map((highlight, i) => (
-            <div
-              key={i}
-              className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4"
-            >
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-card-hover">
-                {highlightIcons[i % highlightIcons.length]}
-              </span>
-              <p className="text-sm text-text-muted leading-relaxed">{highlight}</p>
-            </div>
-          ))}
-          <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
-            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-card-hover">
-              <CheckCircle2 className="h-4 w-4 text-success" />
-            </span>
-            <p className="text-sm text-text-muted leading-relaxed">
-              Aderência de {myAnalysis.adherence}% — você completou todos os treinos da semana.
+            <p className="mt-1 text-sm text-text-muted">
+              Análise calculada somente com treinos registrados ou importados.
             </p>
           </div>
         </div>
       </motion.div>
 
-      <motion.div {...fadeUp(0.26)}>
-        <div className="rounded-2xl border border-primary/25 bg-primary/8 p-5">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">
-            Recomendação do treinador
-          </p>
-          <p className="text-sm text-text-muted leading-relaxed">{myAnalysis.recommendation}</p>
-        </div>
-      </motion.div>
+      {loading ? (
+        <Card>
+          <CardContent className="p-8 text-center text-sm text-text-muted">Carregando dados reais...</CardContent>
+        </Card>
+      ) : !hasData ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Clock className="mx-auto mb-3 h-8 w-8 text-text-muted" />
+            <p className="font-semibold text-text">Ainda não há dados suficientes nesta semana.</p>
+            <p className="mt-1 text-sm text-text-muted">
+              Registre a execução dos treinos ou sincronize uma integração para liberar métricas semanais.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <motion.div {...fadeUp(0.08)} className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            <MetricCard label="Sessões" value={String(analysis.weekLogs.length)} />
+            <MetricCard label="Distância" value={`${analysis.totalDistance.toFixed(1)} km`} />
+            <MetricCard label="Duração" value={formatDuration(analysis.totalDuration)} />
+            <MetricCard label="Pace médio" value={formatPaceDisplay(analysis.avgPace ? Math.round(analysis.avgPace) : null)} />
+            <MetricCard label="Carga" value={`${analysis.sessionLoad} UA`} withInfo />
+          </motion.div>
+
+          <motion.div {...fadeUp(0.14)}>
+            <Card>
+              <CardContent className="p-5">
+                <h2 className="mb-4 font-display text-base font-semibold text-text">
+                  Volume por dia (km)
+                </h2>
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart data={analysis.dailyVolume} barCategoryGap="30%">
+                    <XAxis dataKey="day" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
+                    <Tooltip
+                      contentStyle={{ background: "#0b1220", border: "1px solid #1e293b", borderRadius: 10, fontSize: 12 }}
+                      itemStyle={{ color: "#f1f5f9" }}
+                      labelStyle={{ color: "#94a3b8" }}
+                      formatter={(v) => [`${v} km`, "Volume"]}
+                    />
+                    <Bar dataKey="km" radius={[6, 6, 0, 0]}>
+                      {analysis.dailyVolume.map((entry) => (
+                        <Cell key={entry.day} fill={entry.km > 0 ? "#2563eb" : "#cbd5e1"} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div {...fadeUp(0.2)}>
+            <h2 className="mb-3 font-display text-base font-semibold text-text">Leitura da semana</h2>
+            <div className="space-y-3">
+              <Insight icon={<TrendingUp className="h-4 w-4 text-info" />}>
+                Você registrou {analysis.weekLogs.length} sessão(ões), somando {analysis.totalDistance.toFixed(1)} km.
+              </Insight>
+              {analysis.avgHr && (
+                <Insight icon={<CheckCircle2 className="h-4 w-4 text-success" />}>
+                  Frequência cardíaca média registrada: {Math.round(analysis.avgHr)} bpm.
+                </Insight>
+              )}
+              {trainingLoad?.latest ? (
+                <Insight icon={<BarChart2 className="h-4 w-4 text-primary" />}>
+                  Carga atual: ATL {Math.round(trainingLoad.latest.atl ?? 0)}, CTL {Math.round(trainingLoad.latest.ctl ?? 0)}, TSB {Math.round(trainingLoad.latest.tsb ?? 0)}.
+                </Insight>
+              ) : (
+                <Insight icon={<AlertTriangle className="h-4 w-4 text-warning" />}>
+                  Ainda faltam dados acumulados para estimar ATL, CTL e TSB com boa confiança.
+                </Insight>
+              )}
+            </div>
+          </motion.div>
+
+          <motion.div {...fadeUp(0.26)}>
+            <div className="rounded-2xl border border-primary/25 bg-primary/8 p-5">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">
+                Recomendação
+              </p>
+              <p className="text-sm leading-relaxed text-text-muted">
+                Use esta leitura como apoio. A decisão de ajustar volume, intensidade ou recuperação deve considerar sono, dor, fadiga e orientação do treinador.
+              </p>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function MetricCard({ label, value, withInfo }: { label: string; value: string; withInfo?: boolean }) {
+  return (
+    <Card>
+      <CardContent className="space-y-1.5 p-3.5">
+        <p className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-text-muted">
+          {label}
+          {withInfo && (
+            <InfoTooltip text="UA = unidades arbitrárias. Calculada por duração em minutos multiplicada pelo RPE informado." />
+          )}
+        </p>
+        <p className="font-display text-lg font-bold leading-tight text-text">{value}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Insight({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-card-hover">
+        {icon}
+      </span>
+      <p className={cn("text-sm leading-relaxed text-text-muted")}>{children}</p>
     </div>
   );
 }

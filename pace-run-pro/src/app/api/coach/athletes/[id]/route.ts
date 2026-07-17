@@ -87,6 +87,14 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
       data: { status: "refunded" },
     });
 
+    await tx.trainingPlan.updateMany({
+      where: {
+        athleteId: athlete.id,
+        coachId: coach.id,
+      },
+      data: { coachId: null },
+    });
+
     for (const [coachPlanId, releaseCount] of Object.entries(slotReleasesByPlan)) {
       const plan = await tx.coachPlan.findFirst({
         where: { id: coachPlanId, coachId: coach.id },
@@ -99,6 +107,23 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
         data: { usedSlots: Math.max(0, plan.usedSlots - releaseCount) },
       });
     }
+
+    await tx.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        coachId: coach.id,
+        athleteId: athlete.id,
+        action: "DELETE",
+        entity: "AthleteCoachLink",
+        entityId: athlete.id,
+        message: "Treinador desvinculou atleta e arquivou vinculo operacional de planos antigos.",
+        after: {
+          coachId: null,
+          status: "inativo",
+          releasedSlots: Object.values(slotReleasesByPlan).reduce((sum, count) => sum + count, 0),
+        },
+      },
+    });
   });
 
   return NextResponse.json({

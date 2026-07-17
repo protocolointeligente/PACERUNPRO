@@ -70,7 +70,7 @@ export default async function CoachFinanceiroPage() {
         <Badge variant="primary">Financeiro</Badge>
         <h1 className="mt-3 font-display text-3xl font-bold text-text">Receita, split e recebimento</h1>
         <p className="mt-2 max-w-2xl text-sm text-text-muted">
-          Visão operacional do dinheiro da assessoria com base nos planos contratados e nos dados Asaas cadastrados.
+          Visão operacional do dinheiro da assessoria com base nos planos contratados e nos dados de recebimento cadastrados.
         </p>
       </div>
 
@@ -110,8 +110,8 @@ export default async function CoachFinanceiroPage() {
         <Card>
           <CardContent className="space-y-4 p-5">
             <div>
-              <h2 className="font-display text-lg font-bold text-text">Asaas e split</h2>
-              <p className="text-sm text-text-muted">Dados mínimos para receber com split 90/10.</p>
+              <h2 className="font-display text-lg font-bold text-text">Dados de recebimento</h2>
+              <p className="text-sm text-text-muted">Dados mínimos para conciliação e repasse do treinador.</p>
             </div>
             <BillingSettingsForm initialSettings={coach.user.billingSettings} />
           </CardContent>

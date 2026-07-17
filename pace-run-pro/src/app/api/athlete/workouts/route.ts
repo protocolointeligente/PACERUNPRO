@@ -1,1 +1,5 @@
-export { GET } from "../../atleta/workouts/route";
+import { legacyAthleteApi } from "../_legacy";
+
+export function GET() {
+  return legacyAthleteApi("/api/atleta/workouts");
+}

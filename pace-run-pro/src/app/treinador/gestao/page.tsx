@@ -221,7 +221,7 @@ export default async function GestaoPage() {
             Gestao dos alunos e vendas
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-text-muted">
-            Um unico painel para matricular atletas, acompanhar planos contratados e preparar cobrancas com split Asaas por treinador.
+            Um unico painel para matricular atletas, acompanhar planos contratados e conferir dados de recebimento por treinador.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -313,7 +313,7 @@ export default async function GestaoPage() {
                 Copiar link
               </button>
               <div className="rounded-xl border border-info/25 bg-info/10 p-3 text-xs leading-relaxed text-info">
-                O checkout Asaas deve receber o coachId do convite e criar a cobranca com split 90/10 antes de liberar o acesso do atleta.
+                O checkout recebe o coachId do convite para isolar atleta, plano e pagamento por treinador.
               </div>
             </CardContent>
           </Card>
@@ -321,24 +321,24 @@ export default async function GestaoPage() {
           <Card>
             <CardContent className="space-y-4 p-5">
               <div className="flex items-center justify-between">
-                <h2 className="font-display text-lg font-bold text-text">Asaas split</h2>
+                <h2 className="font-display text-lg font-bold text-text">Recebimento do treinador</h2>
                 <Badge variant={asaasReady ? "success" : "warning"}>{asaasReady ? "Dados prontos" : "Pendente"}</Badge>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-xl border border-border p-3">
-                  <p className="text-text-muted">Plataforma</p>
+                  <p className="text-text-muted">Taxa plataforma</p>
                   <p className="font-display text-2xl font-bold text-text">{money(platformFee)}</p>
                   <p className="text-xs text-text-muted">10%</p>
                 </div>
                 <div className="rounded-xl border border-border p-3">
-                  <p className="text-text-muted">Treinador</p>
+                  <p className="text-text-muted">Repasse previsto</p>
                   <p className="font-display text-2xl font-bold text-text">{money(coachNet)}</p>
                   <p className="text-xs text-text-muted">90%</p>
                 </div>
               </div>
               <div className="flex items-start gap-2 text-xs leading-relaxed text-text-muted">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                O split previsto é 90% treinador e 10% plataforma. O checkout usa estes dados para manter cobranças isoladas por coach.
+                Estes dados deixam o treinador pronto para conciliação financeira. Split automático Asaas depende de homologação da integração.
               </div>
               <BillingSettingsForm initialSettings={coach.user.billingSettings} />
             </CardContent>

@@ -70,19 +70,9 @@ export default async function AthleteListPage() {
     },
   });
 
-  const planAthleteLinks = coach
-    ? await prisma.trainingPlan.findMany({
-        where: { coachId: coach.id },
-        distinct: ["athleteId"],
-        select: { athlete: { select: athleteSelect } },
-        orderBy: { athlete: { user: { name: "asc" } } },
-      })
-    : [];
-
   type CoachAthlete = NonNullable<typeof coach>["athletes"][number];
   const athletesById = new Map<string, CoachAthlete>();
   for (const athlete of coach?.athletes ?? []) athletesById.set(athlete.id, athlete);
-  for (const { athlete } of planAthleteLinks) athletesById.set(athlete.id, athlete);
 
   const athletes: AthleteRow[] = Array.from(athletesById.values()).sort((a, b) => a.user.name.localeCompare(b.user.name)).map((a) => ({
     id: a.id,
