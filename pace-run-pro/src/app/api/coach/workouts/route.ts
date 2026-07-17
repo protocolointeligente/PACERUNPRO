@@ -142,6 +142,8 @@ export async function POST(req: NextRequest) {
       type: workoutType,
       title,
       status: "LIBERADO",
+      modality,
+      source: "manual",
       objective: objective ?? "",
       notes: note ?? undefined,
       structured,

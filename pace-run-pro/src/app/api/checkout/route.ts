@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { createPixOrder, createCreditCardOrder } from "@/lib/pagbank";
 import { checkoutLimiter } from "@/lib/rate-limit";
-import { b2cPlans } from "@/lib/mock-data";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
@@ -39,8 +38,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Faça login antes de prosseguir com o pagamento." }, { status: 401 });
   }
   const userId = session.user.id;
-  const mockPlan = b2cPlans.find((item) => item.id === planId);
-  const marketplacePlan = mockPlan ? null : await prisma.planProduct.findFirst({
+  const marketplacePlan = await prisma.planProduct.findFirst({
     where: { id: planId, published: true },
     select: {
       id: true,
@@ -50,43 +48,64 @@ export async function POST(req: NextRequest) {
       coachId: true,
     },
   });
-  if (!mockPlan && !marketplacePlan) {
-    return NextResponse.json({ error: "Plano invalido." }, { status: 400 });
+  if (!marketplacePlan) {
+    return NextResponse.json({ error: "Plano inválido ou indisponível para venda." }, { status: 400 });
   }
-  const planName = mockPlan?.name ?? marketplacePlan!.title;
-  const amountCents = mockPlan ? Math.round(mockPlan.totalPrice * 100) : marketplacePlan!.priceCents;
-  let purchaseId: string | null = null;
+  const planName = marketplacePlan.title;
+  const amountCents = marketplacePlan.priceCents;
 
-  if (marketplacePlan) {
-    const athlete = await prisma.athlete.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
-    if (!athlete) {
-      return NextResponse.json({ error: "Cadastro de atleta não encontrado para esta compra." }, { status: 400 });
-    }
+  const athlete = await prisma.athlete.findUnique({
+    where: { userId },
+    select: { id: true },
+  });
+  if (!athlete) {
+    return NextResponse.json({ error: "Cadastro de atleta não encontrado para esta compra." }, { status: 400 });
+  }
 
-    const purchase = await prisma.planPurchase.upsert({
-      where: {
-        productId_athleteId: {
-          productId: marketplacePlan.id,
-          athleteId: athlete.id,
-        },
-      },
-      update: {
-        pricePaidCents: amountCents,
-        currency: marketplacePlan.currency,
-        status: "pending",
-      },
-      create: {
+  const purchase = await prisma.planPurchase.upsert({
+    where: {
+      productId_athleteId: {
         productId: marketplacePlan.id,
         athleteId: athlete.id,
-        pricePaidCents: amountCents,
-        currency: marketplacePlan.currency,
-        status: "pending",
+      },
+    },
+    update: {
+      pricePaidCents: amountCents,
+      currency: marketplacePlan.currency,
+      status: amountCents <= 0 ? "paid" : "pending",
+    },
+    create: {
+      productId: marketplacePlan.id,
+      athleteId: athlete.id,
+      pricePaidCents: amountCents,
+      currency: marketplacePlan.currency,
+      status: amountCents <= 0 ? "paid" : "pending",
+    },
+  });
+  const purchaseId = purchase.id;
+
+  if (amountCents <= 0) {
+    await prisma.athlete.update({
+      where: { id: athlete.id },
+      data: { coachId: marketplacePlan.coachId, status: "ativo" },
+    });
+    await prisma.planProduct.update({
+      where: { id: marketplacePlan.id },
+      data: { purchases: { increment: 1 } },
+    });
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: userId,
+        coachId: marketplacePlan.coachId,
+        athleteId: athlete.id,
+        action: "PAYMENT",
+        entity: "PlanPurchase",
+        entityId: purchase.id,
+        message: "Plano gratuito marketplace liberado automaticamente.",
+        after: { status: "paid", amountCents: 0 },
       },
     });
-    purchaseId = purchase.id;
+    return NextResponse.json({ status: "PAID", purchaseId });
   }
 
   const origin =

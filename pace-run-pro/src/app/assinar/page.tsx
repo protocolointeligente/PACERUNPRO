@@ -2,12 +2,34 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { Check, CheckCircle, Copy, Loader2, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { b2cPlans, b2cIncludes } from "@/lib/mock-data";
 import { formatBRL } from "@/lib/utils";
+
+type MarketplacePlan = {
+  id: string;
+  title: string;
+  description: string;
+  sport: string;
+  level: string;
+  durationWeeks: number;
+  priceCents: number;
+  included: string[];
+  featured?: boolean;
+};
+
+const defaultIncludes = [
+  "Plano criado e acompanhado pelo treinador responsável.",
+  "Treinos publicados no calendário do atleta.",
+  "Acompanhamento de carga, aderência e feedback.",
+  "Acesso ao painel do atleta no Pace Run Pro.",
+];
+
+function planPrice(plan: MarketplacePlan) {
+  return plan.priceCents / 100;
+}
 
 // ── Shared input style ────────────────────────────────────────────────────
 const inputClass =
@@ -71,29 +93,27 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
 }
 
 // ── Plan summary card ─────────────────────────────────────────────────────
-function PlanSummaryCard({ planId }: { planId: string }) {
-  const plan = b2cPlans.find((p) => p.id === planId) ?? b2cPlans[2];
+function PlanSummaryCard({ plan }: { plan: MarketplacePlan }) {
+  const price = planPrice(plan);
   return (
     <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
       <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-muted">
         Plano selecionado
       </p>
-      <h4 className="font-display text-lg font-bold text-text">{plan.name}</h4>
+      <h4 className="font-display text-lg font-bold text-text">{plan.title}</h4>
       <p className="text-xs text-text-muted">{plan.description}</p>
       <div className="mt-3 flex items-end gap-1">
         <span className="font-display text-2xl font-extrabold text-text">
-          R$ {formatBRL(plan.pricePerMonth)}
+          R$ {formatBRL(price)}
         </span>
-        <span className="mb-0.5 text-sm text-text-muted">/mês</span>
+        <span className="mb-0.5 text-sm text-text-muted">total</span>
       </div>
-      {plan.months > 1 && (
-        <p className="mt-1 text-xs text-text-muted">
-          Total: R$ {formatBRL(plan.totalPrice)} em {plan.months}x
-        </p>
-      )}
-      {plan.discountPct > 0 && (
+      <p className="mt-1 text-xs text-text-muted">
+        {plan.durationWeeks} semanas · {plan.sport.toLowerCase()} · {plan.level}
+      </p>
+      {plan.featured && (
         <span className="mt-2 inline-block rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">
-          {plan.discountPct}% de desconto
+          Destaque
         </span>
       )}
     </div>
@@ -138,16 +158,17 @@ function PaymentToggle({
 // ── Inner content (reads searchParams) ───────────────────────────────────
 function AssinarContent() {
   const searchParams = useSearchParams();
-  const paramPlano = searchParams.get("plano") ?? "semestral";
-  const validIds = b2cPlans.map((p) => p.id);
-  const defaultPlan = validIds.includes(paramPlano) ? paramPlano : "semestral";
+  const paramPlano = searchParams.get("plano") ?? "";
+  const [plans, setPlans] = useState<MarketplacePlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [plansError, setPlansError] = useState("");
 
   // Step state
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [confirmed, setConfirmed] = useState(false);
 
   // Step 1
-  const [selectedPlan, setSelectedPlan] = useState(defaultPlan);
+  const [selectedPlan, setSelectedPlan] = useState(paramPlano);
 
   // Step 2
   const [nome, setNome] = useState("");
@@ -181,11 +202,42 @@ function AssinarContent() {
   const [couponError, setCouponError] = useState("");
   const [coupon, setCoupon] = useState<{ code: string; type: "PERCENT" | "FREE_MONTHS"; value: number } | null>(null);
 
-  const plan = b2cPlans.find((p) => p.id === selectedPlan) ?? b2cPlans[2];
+  useEffect(() => {
+    let alive = true;
+    async function loadPlans() {
+      setPlansLoading(true);
+      setPlansError("");
+      try {
+        const res = await fetch("/api/loja", { cache: "no-store" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error ?? "Falha ao carregar planos.");
+        const publishedPlans = Array.isArray(data) ? (data as MarketplacePlan[]) : [];
+        if (!alive) return;
+        setPlans(publishedPlans);
+        if (!paramPlano && publishedPlans[0]) setSelectedPlan(publishedPlans[0].id);
+        if (paramPlano && !publishedPlans.some((item) => item.id === paramPlano) && publishedPlans[0]) {
+          setSelectedPlan(publishedPlans[0].id);
+        }
+      } catch {
+        if (alive) setPlansError("Não foi possível carregar os planos publicados.");
+      } finally {
+        if (alive) setPlansLoading(false);
+      }
+    }
+    loadPlans();
+    return () => {
+      alive = false;
+    };
+  }, [paramPlano]);
+
+  const plan = useMemo(
+    () => plans.find((p) => p.id === selectedPlan) ?? plans[0] ?? null,
+    [plans, selectedPlan],
+  );
 
   const discountPct = coupon?.type === "PERCENT" ? coupon.value : 0;
-  const discountedMonthly = plan.pricePerMonth * (1 - discountPct / 100);
-  const discountedTotal = plan.totalPrice * (1 - discountPct / 100);
+  const planTotal = plan ? planPrice(plan) : 0;
+  const discountedTotal = planTotal * (1 - discountPct / 100);
 
   async function applyCoupon() {
     if (!couponCode.trim()) return;
@@ -220,6 +272,7 @@ function AssinarContent() {
   }
 
   async function handleCheckout() {
+    if (!plan) return;
     setCheckoutLoading(true);
     setCheckoutError("");
     try {
@@ -230,7 +283,7 @@ function AssinarContent() {
         body: JSON.stringify({
           method: paymentMethod,
           planId: selectedPlan,
-          planName: plan.name,
+          planName: plan.title,
           amountCents,
           customerName: nome,
           customerEmail: email,
@@ -263,6 +316,7 @@ function AssinarContent() {
 
   // ── Success screen ──────────────────────────────────────────────────────
   if (confirmed) {
+    if (!plan) return null;
     return (
       <div className="flex flex-col items-center gap-6 text-center">
         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-success/15 border border-success/30">
@@ -278,7 +332,7 @@ function AssinarContent() {
           </p>
         </div>
         <div className="rounded-2xl border border-success/20 bg-success/5 px-6 py-4 text-sm text-success">
-          Plano <strong>{plan.name}</strong> · R$ {formatBRL(discountedMonthly)}/mês ativo
+          Plano <strong>{plan.title}</strong> · R$ {formatBRL(discountedTotal)} confirmado
           {coupon?.type === "FREE_MONTHS" &&
             ` · +${coupon.value} ${coupon.value === 1 ? "mês" : "meses"} grátis`}
         </div>
@@ -305,8 +359,26 @@ function AssinarContent() {
             Selecione o período que melhor se encaixa no seu objetivo.
           </p>
 
+          {plansLoading && (
+            <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-sm text-text-muted">
+              Carregando planos publicados...
+            </div>
+          )}
+
+          {plansError && (
+            <div className="mt-8 rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-sm text-red-400">
+              {plansError}
+            </div>
+          )}
+
+          {!plansLoading && !plansError && plans.length === 0 && (
+            <div className="mt-8 rounded-2xl border border-warning/30 bg-warning/10 p-6 text-sm text-warning">
+              Nenhum plano publicado no marketplace no momento.
+            </div>
+          )}
+
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {b2cPlans.map((p) => (
+            {plans.map((p) => (
               <button
                 key={p.id}
                 type="button"
@@ -318,16 +390,16 @@ function AssinarContent() {
                     : "border-border bg-card hover:border-primary/30",
                 ].join(" ")}
               >
-                {p.badge && (
+                {p.featured && (
                   <div className="absolute -top-3 left-5">
                     <Badge variant="primary" className="shadow-lg shadow-primary/25 whitespace-nowrap">
-                      {p.badge}
+                      Destaque
                     </Badge>
                   </div>
                 )}
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-display text-base font-bold text-text">{p.name}</h3>
+                    <h3 className="font-display text-base font-bold text-text">{p.title}</h3>
                     <p className="mt-0.5 text-xs text-text-muted">{p.description}</p>
                   </div>
                   {selectedPlan === p.id && (
@@ -338,20 +410,13 @@ function AssinarContent() {
                 </div>
                 <div className="mt-4 flex items-end gap-1">
                   <span className="font-display text-2xl font-extrabold text-text">
-                    R$ {formatBRL(p.pricePerMonth)}
+                    R$ {formatBRL(planPrice(p))}
                   </span>
-                  <span className="mb-0.5 text-sm text-text-muted">/mês</span>
+                  <span className="mb-0.5 text-sm text-text-muted">total</span>
                 </div>
-                {p.months > 1 && (
-                  <p className="mt-1 text-xs text-text-muted">
-                    Total: R$ {formatBRL(p.totalPrice)} em {p.months}x
-                  </p>
-                )}
-                {p.discountPct > 0 && (
-                  <span className="mt-2 inline-block rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">
-                    {p.discountPct}% OFF
-                  </span>
-                )}
+                <p className="mt-1 text-xs text-text-muted">
+                  {p.durationWeeks} semanas · {p.sport.toLowerCase()} · {p.level}
+                </p>
               </button>
             ))}
           </div>
@@ -360,7 +425,7 @@ function AssinarContent() {
           <div className="mt-8 rounded-2xl border border-border bg-card p-6">
             <p className="mb-4 text-sm font-semibold text-text">Todos os planos incluem:</p>
             <ul className="space-y-2">
-              {b2cIncludes.map((item) => (
+              {(plan?.included?.length ? plan.included : defaultIncludes).map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-sm text-text-muted">
                   <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
                   <span>{item}</span>
@@ -374,6 +439,7 @@ function AssinarContent() {
             size="lg"
             className="mt-8 w-full"
             onClick={() => setStep(2)}
+            disabled={!plan}
           >
             Continuar →
           </Button>
@@ -492,13 +558,13 @@ function AssinarContent() {
 
             {/* Plan summary — desktop right */}
             <div className="hidden lg:block">
-              <PlanSummaryCard planId={selectedPlan} />
+              {plan && <PlanSummaryCard plan={plan} />}
             </div>
           </div>
 
           {/* Plan summary — mobile top */}
           <div className="mt-6 lg:hidden">
-            <PlanSummaryCard planId={selectedPlan} />
+            {plan && <PlanSummaryCard plan={plan} />}
           </div>
 
           <div className="mt-8 flex gap-3">
@@ -541,32 +607,19 @@ function AssinarContent() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-text-muted">Plano</span>
-                    <span className="font-medium text-text">{plan.name}</span>
+                    <span className="font-medium text-text">{plan?.title}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-text-muted">Valor mensal</span>
+                    <span className="text-text-muted">Valor</span>
                     <span className="font-medium text-text">
                       {discountPct > 0 && (
                         <span className="mr-1.5 text-xs text-text-muted line-through">
-                          R$ {formatBRL(plan.pricePerMonth)}
+                          R$ {formatBRL(planTotal)}
                         </span>
                       )}
-                      R$ {formatBRL(discountedMonthly)}/mês
+                      R$ {formatBRL(discountedTotal)}
                     </span>
                   </div>
-                  {plan.months > 1 && (
-                    <div className="flex justify-between">
-                      <span className="text-text-muted">Total cobrado hoje</span>
-                      <span className="font-bold text-text">
-                        {discountPct > 0 && (
-                          <span className="mr-1.5 text-xs font-normal text-text-muted line-through">
-                            R$ {formatBRL(plan.totalPrice)}
-                          </span>
-                        )}
-                        R$ {formatBRL(discountedTotal)}
-                      </span>
-                    </div>
-                  )}
 
                   {coupon?.type === "PERCENT" && (
                     <div className="rounded-xl border border-success/30 bg-success/10 px-3 py-2 text-xs text-success">
@@ -778,13 +831,13 @@ function AssinarContent() {
 
             {/* Plan summary — desktop right */}
             <div className="hidden lg:block">
-              <PlanSummaryCard planId={selectedPlan} />
+              {plan && <PlanSummaryCard plan={plan} />}
             </div>
           </div>
 
           {/* Plan summary — mobile */}
           <div className="mt-6 lg:hidden">
-            <PlanSummaryCard planId={selectedPlan} />
+            {plan && <PlanSummaryCard plan={plan} />}
           </div>
 
           <div className="mt-8 flex gap-3">

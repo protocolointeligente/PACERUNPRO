@@ -290,8 +290,12 @@ body {
 }
 
 .light [class*="bg-[#C6F24E]"],
+.light [class*="bg-[#c6f24e]"],
+.light [class*="bg-[#c6ff3d]"],
 .light [class*="bg-[#D4FF5E]"],
+.light [class*="bg-[#d4ff5e]"],
 .light [class*="bg-[#A6D43B]"],
+.light [class*="bg-[#a6d43b]"],
 .light [class*="bg-[#84cc16]"],
 .light [class*="bg-[#bef264]"],
 .light [class*="bg-[#a3e635]"] {
@@ -300,8 +304,12 @@ body {
 }
 
 .light [class*="text-[#C6F24E]"],
+.light [class*="text-[#c6f24e]"],
+.light [class*="text-[#c6ff3d]"],
 .light [class*="text-[#D4FF5E]"],
+.light [class*="text-[#d4ff5e]"],
 .light [class*="text-[#A6D43B]"],
+.light [class*="text-[#a6d43b]"],
 .light [class*="text-[#84cc16]"],
 .light [class*="text-[#bef264]"],
 .light [class*="text-[#a3e635]"] {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import { modalityNote, normalizeWorkoutType } from "@/lib/workout-normalization";
+import { inferWorkoutModality, modalityNote, normalizeWorkoutType } from "@/lib/workout-normalization";
 
 export const dynamic = "force-dynamic";
 
@@ -154,6 +154,14 @@ export async function PATCH(
   if (body.targetDurationMin !== undefined) data.targetDurationMin = body.targetDurationMin;
   if (body.targetPaceSecPerKm !== undefined) data.targetPaceSecPerKm = body.targetPaceSecPerKm;
   if (body.targetRpe !== undefined) data.targetRpe = body.targetRpe;
+  if (body.sport || body.type || body.title || body.objective !== undefined) {
+    data.modality = inferWorkoutModality({
+      sport: body.sport ?? undefined,
+      type: body.type ?? undefined,
+      title: body.title ?? undefined,
+      objective: body.objective ?? undefined,
+    });
+  }
   const targetAthleteId = body.athleteId ?? resolved.athleteId;
   if (body.athleteId || body.date) {
     if (!resolved.athleteIds.includes(targetAthleteId)) {

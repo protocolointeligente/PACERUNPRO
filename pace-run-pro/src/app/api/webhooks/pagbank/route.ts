@@ -107,6 +107,14 @@ export async function POST(req: NextRequest) {
         data: { purchases: { increment: 1 } },
       });
 
+      await prisma.athlete.update({
+        where: { id: purchase.athleteId },
+        data: {
+          coachId: purchase.product.coachId,
+          status: "ativo",
+        },
+      });
+
       await prisma.auditLog.create({
         data: {
           actorUserId: userId,
