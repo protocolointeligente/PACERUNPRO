@@ -220,7 +220,7 @@ export function AppShell({
       </AnimatePresence>
 
       {/* Main column */}
-      <div className="flex min-h-dvh flex-1 flex-col">
+      <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border/70 bg-background/80 px-3 py-2.5 backdrop-blur-xl sm:px-6 sm:py-3 print:hidden">
           <button
             className="rounded-lg p-1.5 text-text-muted hover:bg-card hover:text-text lg:hidden"
@@ -249,7 +249,7 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="flex-1 px-3 pb-24 pt-4 sm:px-6 sm:pt-5 lg:pb-10">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden px-3 pb-24 pt-4 sm:px-6 sm:pt-5 lg:pb-10">{children}</main>
       </div>
     </div>
   );

@@ -175,7 +175,7 @@ export default function LojaPage() {
           Compre planos de treino criados por treinadores certificados. Conecte o Strava e acompanhe
           sua evolução automaticamente.
         </p>
-        <div className="mt-4 flex justify-center gap-2">
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
           <Link href="/cadastro?perfil=atleta_independente">
             <Button>Criar conta grátis</Button>
           </Link>
@@ -186,9 +186,9 @@ export default function LojaPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4">
+      <div className="flex min-w-0 flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:flex-wrap sm:items-center">
         <Filter className="h-4 w-4 text-text-muted shrink-0" />
-        <div className="relative flex-1 min-w-48">
+        <div className="relative min-w-0 flex-1 sm:min-w-48">
           <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
           <input
             value={search}
@@ -197,7 +197,7 @@ export default function LojaPage() {
             className="w-full rounded-xl border border-border bg-background py-2 pl-8 pr-3 text-sm text-text outline-none focus:border-primary/60"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex min-w-0 flex-wrap gap-2">
           {SPORT_OPTIONS.map((o) => (
             <button
               key={o.value}
@@ -216,7 +216,7 @@ export default function LojaPage() {
         <select
           value={level}
           onChange={(e) => setLevel(e.target.value)}
-          className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs text-text outline-none focus:border-primary/60"
+          className="w-full rounded-xl border border-border bg-card px-3 py-1.5 text-xs text-text outline-none focus:border-primary/60 sm:w-auto"
         >
           {LEVEL_OPTIONS.map((o) => (
             <option key={o.value} value={o.value} className="bg-card">{o.label}</option>

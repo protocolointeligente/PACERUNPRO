@@ -134,28 +134,28 @@ const accentSoft = "bg-[#2563eb]/12 text-[#93c5fd]";
 
 export default function LandingPage() {
   return (
-    <main className="marketing-page min-h-dvh bg-[#05090f] text-white">
-      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#05090f]/92 backdrop-blur">
+    <main className="marketing-page min-h-dvh bg-[#f7f8fa] text-[#17212b] dark:bg-[#05090f] dark:text-white">
+      <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/92 backdrop-blur dark:border-white/10 dark:bg-[#05090f]/92">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
           <Link href="/" className="flex items-center gap-3" aria-label="Pace Run Pro">
             <Logo size={34} />
           </Link>
           <div className="hidden items-center gap-1 md:flex">
-            <a href="#produto" className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">
+            <a href="#produto" className="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white">
               Produto
             </a>
-            <a href="#telas" className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">
+            <a href="#telas" className="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white">
               Telas
             </a>
-            <a href="#passos" className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">
+            <a href="#passos" className="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white">
               Como funciona
             </a>
-            <a href="#planos" className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">
+            <a href="#planos" className="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white">
               Planos
             </a>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/login" className="hidden text-sm font-semibold text-slate-300 hover:text-white sm:block">
+            <Link href="/login" className="hidden text-sm font-semibold text-slate-600 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white sm:block">
               Entrar
             </Link>
             <Link href="#planos">
@@ -167,17 +167,17 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      <section className="relative overflow-hidden border-b border-white/10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,rgba(37,99,235,0.22),transparent_34%),linear-gradient(135deg,rgba(8,18,28,0.95),rgba(5,9,15,1)_55%,rgba(3,8,14,1))]" />
+      <section className="relative overflow-hidden border-b border-slate-200/80 bg-[#eef3f7] dark:border-white/10 dark:bg-[#05090f]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,rgba(37,99,235,0.14),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.96),rgba(239,244,249,0.98)_55%,rgba(226,234,242,0.95))] dark:bg-[radial-gradient(circle_at_70%_10%,rgba(37,99,235,0.22),transparent_34%),linear-gradient(135deg,rgba(8,18,28,0.95),rgba(5,9,15,1)_55%,rgba(3,8,14,1))]" />
         <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-16 lg:grid-cols-[0.88fr_1.12fr] lg:items-center lg:py-24">
           <div>
             <Badge variant="primary" className={`mb-5 ${accentSoft}`}>
               SaaS para treinadores e assessorias
             </Badge>
-            <h1 className="font-display text-4xl font-black leading-tight sm:text-6xl">
+            <h1 className="font-display text-4xl font-black leading-tight text-slate-950 sm:text-6xl dark:text-white">
               Venda planos, prescreva melhor e acompanhe cada atleta com dados reais.
             </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-300">
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-700 dark:text-slate-300">
               O PACERUNPRO centraliza calendário, periodização, biblioteca, alertas, CRM, planos de venda e experiência do atleta
               em uma plataforma feita para treinadores que querem escalar a assessoria sem perder precisão técnica.
             </p>
@@ -188,7 +188,7 @@ export default function LandingPage() {
                 </Button>
               </Link>
               <Link href="#telas">
-                <Button size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
+                <Button size="lg" variant="outline" className="border-slate-300 bg-white/70 text-slate-900 hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
                   Ver a plataforma
                 </Button>
               </Link>
@@ -199,12 +199,12 @@ export default function LandingPage() {
               <Metric icon={Bell} label="Alertas" value="Risco e aderência" />
             </div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 shadow-2xl shadow-black/40">
+          <div className="rounded-2xl border border-slate-200 bg-white/80 p-3 shadow-2xl shadow-slate-900/10 dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/40">
             <div className="mb-3 flex items-center gap-2 px-2">
               <span className="h-3 w-3 rounded-full bg-[#ff5a1f]" />
               <span className="h-3 w-3 rounded-full bg-[#2563eb]" />
               <span className="h-3 w-3 rounded-full bg-sky-400" />
-              <span className="ml-3 text-xs font-semibold text-slate-400">Pace Run Pro em uso real</span>
+              <span className="ml-3 text-xs font-semibold text-slate-500 dark:text-slate-400">Pace Run Pro em uso real</span>
             </div>
             <Image
               src="/marketing/trainer-dashboard.png"
@@ -212,7 +212,7 @@ export default function LandingPage() {
               width={1600}
               height={900}
               priority
-              className="rounded-xl border border-white/10 object-cover"
+              className="rounded-xl border border-slate-200 object-cover dark:border-white/10"
             />
           </div>
         </div>
@@ -435,12 +435,12 @@ function Metric({
   value: string;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
-      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563eb]/12 text-[#60a5fa]">
+    <div className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
+      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563eb]/12 text-[#2563eb] dark:text-[#60a5fa]">
         <Icon className="h-4 w-4" />
       </div>
       <p className="text-xs uppercase text-slate-500">{label}</p>
-      <p className="mt-1 text-sm font-bold text-white">{value}</p>
+      <p className="mt-1 text-sm font-bold text-slate-950 dark:text-white">{value}</p>
     </div>
   );
 }
