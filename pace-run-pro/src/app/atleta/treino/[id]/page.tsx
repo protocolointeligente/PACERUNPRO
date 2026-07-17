@@ -68,7 +68,7 @@ export default async function WorkoutDetailPage({ params }: { params: Promise<{ 
   if (!athlete) notFound();
 
   const workout = await prisma.workout.findFirst({
-    where: { id, week: { plan: { athleteId: athlete.id } } },
+    where: { id, week: { plan: { athleteId: athlete.id, coachId: { not: null } } } },
     select: {
       id: true,
       date: true,

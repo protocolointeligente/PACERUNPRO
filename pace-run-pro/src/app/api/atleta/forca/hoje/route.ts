@@ -21,7 +21,7 @@ export async function GET() {
 
   const workout = await prisma.workout.findFirst({
     where: {
-      week: { plan: { athleteId: athlete.id } },
+      week: { plan: { athleteId: athlete.id, coachId: { not: null } } },
       date: { gte: todayStart, lt: todayEnd },
       type: "FORCA",
       status: { in: ["LIBERADO", "AGENDADO"] },

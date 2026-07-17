@@ -22,7 +22,7 @@ export async function GET(
   const workout = await prisma.workout.findFirst({
     where: {
       id,
-      week: { plan: { athleteId: athlete.id } },
+      week: { plan: { athleteId: athlete.id, coachId: { not: null } } },
       type: "FORCA",
     },
     select: {
