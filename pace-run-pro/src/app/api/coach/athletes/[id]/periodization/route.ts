@@ -32,8 +32,17 @@ export async function DELETE(
   });
   if (!athlete) return NextResponse.json({ error: "Atleta não vinculado" }, { status: 403 });
 
+  const periodizationWhere = {
+    athleteId,
+    coachId: coach.id,
+    OR: [
+      { source: "periodization" },
+      { generationBatches: { some: {} } },
+    ],
+  };
+
   const plans = await prisma.trainingPlan.findMany({
-    where: { athleteId, coachId: coach.id },
+    where: periodizationWhere,
     select: {
       id: true,
       name: true,
@@ -50,9 +59,7 @@ export async function DELETE(
     0,
   );
 
-  const result = await prisma.trainingPlan.deleteMany({
-    where: { athleteId, coachId: coach.id },
-  });
+  const result = await prisma.trainingPlan.deleteMany({ where: periodizationWhere });
 
   await prisma.auditLog.create({
     data: {
