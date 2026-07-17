@@ -29,11 +29,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing metadata" }, { status: 400 });
     }
 
+    const previous = await prisma.planPurchase.findUnique({
+      where: { id: purchaseId },
+      select: {
+        id: true,
+        status: true,
+        pricePaidCents: true,
+        productId: true,
+        athleteId: true,
+        product: { select: { coachId: true } },
+      },
+    });
+
+    if (!previous) {
+      return NextResponse.json({ error: "Purchase not found" }, { status: 404 });
+    }
+
     const purchase = await prisma.planPurchase.update({
       where: { id: purchaseId },
       data: {
         status: "paid",
-        pricePaidCents: session.amount_total ?? 0,
+        pricePaidCents: session.amount_total ?? previous.pricePaidCents,
         stripeSessionId: session.id,
       },
       select: {
@@ -44,10 +60,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    await prisma.planProduct.update({
-      where: { id: purchase.productId },
-      data: { purchases: { increment: 1 } },
-    });
+    if (previous.status !== "paid") {
+      await prisma.planProduct.update({
+        where: { id: purchase.productId },
+        data: { purchases: { increment: 1 } },
+      });
+    }
 
     await prisma.athlete.update({
       where: { id: purchase.athleteId },

@@ -40,12 +40,38 @@ export async function POST(req: NextRequest) {
 
   // Free product — skip Stripe
   if (product.priceCents === 0) {
-    await prisma.planPurchase.upsert({
+    const previous = await prisma.planPurchase.findUnique({
+      where: { productId_athleteId: { productId, athleteId: athlete.id } },
+      select: { id: true, status: true },
+    });
+    const purchase = await prisma.planPurchase.upsert({
       where: { productId_athleteId: { productId, athleteId: athlete.id } },
       update: { status: "paid", pricePaidCents: 0 },
       create: { productId, athleteId: athlete.id, pricePaidCents: 0, currency: "BRL", status: "paid" },
+      select: { id: true },
     });
-    await prisma.planProduct.update({ where: { id: productId }, data: { purchases: { increment: 1 } } });
+    if (previous?.status !== "paid") {
+      await prisma.planProduct.update({ where: { id: productId }, data: { purchases: { increment: 1 } } });
+    }
+    await prisma.athlete.update({
+      where: { id: athlete.id },
+      data: {
+        coachId: product.coachId,
+        status: "ativo",
+      },
+    });
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        coachId: product.coachId,
+        athleteId: athlete.id,
+        action: "ACCESS",
+        entity: "PlanPurchase",
+        entityId: purchase.id,
+        message: "Plano gratuito marketplace liberado automaticamente.",
+        after: { status: "paid", productId, pricePaidCents: 0 },
+      },
+    });
     return NextResponse.json({ free: true, redirectUrl: "/checkout/sucesso?free=1" });
   }
 

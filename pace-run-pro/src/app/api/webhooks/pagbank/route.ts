@@ -91,9 +91,26 @@ export async function POST(req: NextRequest) {
 
   try {
     if (parts.length >= 4 && maybePurchaseId) {
+      const previous = await prisma.planPurchase.findUnique({
+        where: { id: maybePurchaseId },
+        select: {
+          id: true,
+          status: true,
+          pricePaidCents: true,
+          productId: true,
+          athleteId: true,
+          product: { select: { coachId: true } },
+        },
+      });
+
+      if (!previous) {
+        console.warn("[pagbank] compra marketplace não encontrada:", maybePurchaseId);
+        return NextResponse.json({ received: true });
+      }
+
       const purchase = await prisma.planPurchase.update({
         where: { id: maybePurchaseId },
-        data: { status: "paid", pricePaidCents: amountCents || undefined },
+        data: { status: "paid", pricePaidCents: amountCents || previous.pricePaidCents },
         select: {
           id: true,
           productId: true,
@@ -102,10 +119,12 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      await prisma.planProduct.update({
-        where: { id: purchase.productId },
-        data: { purchases: { increment: 1 } },
-      });
+      if (previous.status !== "paid") {
+        await prisma.planProduct.update({
+          where: { id: purchase.productId },
+          data: { purchases: { increment: 1 } },
+        });
+      }
 
       await prisma.athlete.update({
         where: { id: purchase.athleteId },

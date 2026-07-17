@@ -121,6 +121,7 @@ export default function StrengthExecPage() {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(Date.now());
+  const completedPostRef = useRef(false);
 
   useEffect(() => {
     async function load() {
@@ -182,10 +183,38 @@ export default function StrengthExecPage() {
 
   useEffect(() => {
     if (phase === "done") {
+      if (!completedPostRef.current) {
+        completedPostRef.current = true;
+        const elapsedSec = Math.floor((Date.now() - startTimeRef.current) / 1000);
+        const rpes = Object.values(setLogs)
+          .map((log) => log.rpe)
+          .filter((value): value is number => typeof value === "number");
+        const avgRpe = rpes.length
+          ? Math.round(rpes.reduce((sum, value) => sum + value, 0) / rpes.length)
+          : null;
+
+        fetch(`/api/atleta/workouts/${id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            durationSec: elapsedSec > 0 ? elapsedSec : null,
+            rpe: avgRpe,
+            feeling: null,
+            source: "strength_execution",
+            raw: {
+              modality: "FORCA",
+              sessionLabel,
+              exerciseCount: exercises.length,
+              setLogs,
+            },
+          }),
+        }).catch(() => null);
+      }
+
       const t = setTimeout(() => setShowShare(true), 800);
       return () => clearTimeout(t);
     }
-  }, [phase]);
+  }, [exercises.length, id, phase, sessionLabel, setLogs]);
 
   const exercise = exercises[exerciseIdx];
   const totalSets = exercise?.sets ?? 1;

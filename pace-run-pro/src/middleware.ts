@@ -12,6 +12,7 @@ const PROTECTED_API_PREFIXES = [
   "/api/integrations/",
   "/api/checkins",
   "/api/treinador/",
+  "/api/workout-logs/",
 ];
 
 export default auth((req) => {
@@ -39,6 +40,12 @@ export default auth((req) => {
       if (
         (nextUrl.pathname.startsWith("/api/atleta/") || nextUrl.pathname.startsWith("/api/athlete/")) &&
         !["ATHLETE", "ADMIN"].includes(role ?? "")
+      ) {
+        return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+      }
+      if (
+        nextUrl.pathname.startsWith("/api/workout-logs/") &&
+        !["ATHLETE", "COACH", "ADMIN"].includes(role ?? "")
       ) {
         return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
       }
