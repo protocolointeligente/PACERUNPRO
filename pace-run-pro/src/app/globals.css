@@ -49,12 +49,12 @@
 }
 
 .light {
-  --bg: #F7F8FA;
+  --bg: #F6F8FB;
   --card: #FFFFFF;
-  --card-hover: #EFF3F7;
-  --border: #D8E0E8;
+  --card-hover: #EEF3F8;
+  --border: #D6DEE8;
   --text: #17212B;
-  --text-muted: #647282;
+  --text-muted: #5D6B7A;
   --primary: #2563EB;
   --secondary: #0F766E;
   --accent: #0EA5A4;
@@ -118,9 +118,15 @@ body {
 
 .light body {
   background:
-    radial-gradient(ellipse 980px 440px at 50% -18%, rgba(37, 99, 235, 0.045), transparent 62%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 248, 250, 0) 38%),
+    radial-gradient(ellipse 980px 420px at 50% -18%, rgba(37, 99, 235, 0.04), transparent 62%),
+    radial-gradient(ellipse 760px 360px at 100% 18%, rgba(14, 165, 164, 0.035), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(246, 248, 251, 0) 36%),
     var(--color-background);
+}
+
+.light ::selection {
+  background: rgba(37, 99, 235, 0.2);
+  color: #17212B;
 }
 
 ::selection {
@@ -271,7 +277,8 @@ body {
 
 .light [class*="bg-lime"],
 .light [class*="hover:bg-lime"] {
-  background-color: rgba(37, 99, 235, 0.12) !important;
+  background-color: rgba(37, 99, 235, 0.10) !important;
+  color: #1D4ED8 !important;
 }
 
 .light [class*="border-lime"],
@@ -320,6 +327,41 @@ body {
 .light .shadow-primary\/40,
 .light [class*="shadow-lime"] {
   --tw-shadow-color: rgba(37, 99, 235, 0.18) !important;
+}
+
+.light [class*="shadow-primary"] {
+  --tw-shadow-color: rgba(37, 99, 235, 0.16) !important;
+}
+
+.light [style*="#C6F24E"],
+.light [style*="#c6f24e"],
+.light [style*="#D4FF5E"],
+.light [style*="#d4ff5e"],
+.light [style*="#A6D43B"],
+.light [style*="#a6d43b"],
+.light [style*="#84cc16"],
+.light [style*="198, 242, 78"],
+.light [style*="132, 204, 22"] {
+  border-color: rgba(37, 99, 235, 0.3) !important;
+  box-shadow: none !important;
+}
+
+.light button[class*="gradient-primary"],
+.light a[class*="gradient-primary"] {
+  background: #2563EB !important;
+  color: #FFFFFF !important;
+}
+
+.light .bg-primary {
+  background-color: #2563EB !important;
+}
+
+.light .text-primary {
+  color: #2563EB !important;
+}
+
+.light .border-primary {
+  border-color: rgba(37, 99, 235, 0.42) !important;
 }
 
 .no-scrollbar::-webkit-scrollbar {

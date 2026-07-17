@@ -7,9 +7,8 @@ Sentry.init({
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 1.0,
   integrations: [
-    Sentry.replayIntegration({
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
+    Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
   ],
 });
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
