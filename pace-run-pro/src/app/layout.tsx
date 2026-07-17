@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CookieConsent } from "@/components/cookie-consent";
+import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -52,6 +53,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-full flex flex-col font-sans antialiased">
+        <PwaRegister />
         <ThemeToggle />
         {children}
         <CookieConsent />

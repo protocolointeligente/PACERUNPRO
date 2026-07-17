@@ -43,6 +43,7 @@ export const athleteMoreNav: NavItem[] = [
   { href: "/atleta/atividade", label: "Atividades", icon: CheckSquare },
   { href: "/atleta/planos", label: "Planos & periodizacao", icon: ClipboardList },
   { href: "/atleta/previsao", label: "Previsao & estrategia", icon: Target },
+  { href: "/atleta/university", label: "Pace University", icon: GraduationCap },
   { href: "/atleta/tenis", label: "Tenis tracker", icon: Shirt },
   { href: "/atleta/perfil", label: "Perfil", icon: User },
 ];
@@ -65,6 +66,7 @@ export const coachNav: NavItem[] = [
   { href: "/treinador/minha-pagina", label: "Minha pagina", icon: User },
   { href: "/treinador/vouchers", label: "Vouchers", icon: TicketPercent },
   { href: "/treinador/white-label", label: "White Label", icon: Palette },
+  { href: "/treinador/university", label: "Pace University", icon: GraduationCap },
   { href: "/treinador/glossario", label: "Glossario", icon: GraduationCap },
   { href: "/treinador/perfil", label: "Meu perfil", icon: User },
 ];

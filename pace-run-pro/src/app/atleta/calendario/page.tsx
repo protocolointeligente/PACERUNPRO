@@ -41,18 +41,18 @@ interface RaceRow {
 
 const calendarLegend = [
   { type: "corrida", color: "#38bdf8", label: "Corrida" },
-  { type: "ciclismo", color: "#84cc16", label: "Ciclismo" },
-  { type: "natacao", color: "#0ea5e9", label: "Natacao" },
+  { type: "ciclismo", color: "#0f766e", label: "Ciclismo" },
+  { type: "natacao", color: "#0ea5e9", label: "Natação" },
   { type: "forca", color: "#8b5cf6", label: "Força" },
   { type: "funcional", color: "#a855f7", label: "Funcional" },
-  { type: "mobilidade", color: "#84cc16", label: "Mobilidade" },
+  { type: "mobilidade", color: "#64748b", label: "Mobilidade" },
   { type: "recuperacao", color: "#94a3b8", label: "Recuperação" },
 ];
 
 const TYPE_LABELS: Record<string, string> = {
   corrida: "Corrida",
   ciclismo: "Ciclismo",
-  natacao: "Natacao",
+  natacao: "Natação",
   triathlon: "Triathlon",
   forca: "Força",
   funcional: "Funcional",
@@ -65,21 +65,21 @@ const TYPE_COLORS: Record<string, string> = {
   corrida: "#38bdf8",
   forca: "#8b5cf6",
   funcional: "#a855f7",
-  mobilidade: "#84cc16",
+  mobilidade: "#64748b",
   recuperacao: "#94a3b8",
-  prova: "#facc15",
-  ciclismo: "#65a30d",
+  prova: "#f97316",
+  ciclismo: "#0f766e",
   natacao: "#0ea5e9",
 };
 
 const RUN_SUBTYPE_COLORS: Record<string, string> = {
   "Regenerativo": "#94a3b8",
-  "Rodagem leve": "#84cc16",
-  "Longão": "#22c55e",
+  "Rodagem leve": "#2563eb",
+  "Longão": "#0f766e",
   "Técnica": "#06b6d4",
   "Progressivo": "#38bdf8",
   "Fartlek": "#a78bfa",
-  "Tempo Run": "#eab308",
+  "Tempo Run": "#b45309",
   "Subida": "#fb923c",
   "Intervalado longo": "#f97316",
   "Intervalado curto": "#ef4444",
@@ -225,8 +225,8 @@ export default function CalendarPage() {
     const items = [
       { type: "corrida", label: "Corrida", icon: Footprints },
       { type: "ciclismo", label: "Ciclismo", icon: Bike },
-      { type: "natacao", label: "Natacao", icon: Waves },
-      { type: "forca", label: "Forca", icon: Dumbbell },
+      { type: "natacao", label: "Natação", icon: Waves },
+      { type: "forca", label: "Força", icon: Dumbbell },
     ];
     return items.map((item) => {
       const list = workouts.filter((workout) => workout.type === item.type);
@@ -307,7 +307,7 @@ export default function CalendarPage() {
                     </div>
                   </div>
                   <p className="mt-3 truncate text-xs text-text-muted">
-                    {item.next ? `Proximo: ${item.next.title}` : "Sem treino liberado"}
+                    {item.next ? `Próximo: ${item.next.title}` : "Sem treino liberado"}
                   </p>
                 </div>
                 {item.next ? (

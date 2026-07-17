@@ -58,8 +58,10 @@ interface WorkoutData {
   } | null;
 }
 
-function normName(n: string) {
-  return n.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+interface SetLog {
+  load: string;
+  reps: string;
+  rpe?: number;
 }
 
 function playBeep() {
@@ -115,6 +117,7 @@ export default function StrengthExecPage() {
   const [restRemaining, setRestRemaining] = useState(0);
   const [restTotal, setRestTotal] = useState(0);
   const [showShare, setShowShare] = useState(false);
+  const [setLogs, setSetLogs] = useState<Record<string, SetLog>>({});
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(Date.now());
@@ -128,24 +131,23 @@ export default function StrengthExecPage() {
         if (wData?.strengthWorkout?.blocks) {
           setSessionLabel(wData.strengthWorkout.label ?? wData.title);
           setExercises(
-            wData.strengthWorkout.blocks.map((b) => ({
-              id: b.exercise.id,
-              name: b.exercise.name,
-              category: b.exercise.category,
-              sets: b.sets,
-              reps: b.reps,
-              restSec: b.restSec ?? 60,
-              targetRpe: b.rpe ?? null,
-              gifUrl: resolveExerciseMedia({
+            wData.strengthWorkout.blocks.map((b) => {
+              const media = resolveExerciseMedia({
                 imageUrl: b.exercise.imageUrl,
                 videos: b.exercise.videos,
-              }).kind === "none"
-                ? undefined
-                : resolveExerciseMedia({
-                    imageUrl: b.exercise.imageUrl,
-                    videos: b.exercise.videos,
-                  }).url ?? undefined,
-            }))
+              });
+
+              return {
+                id: b.exercise.id,
+                name: b.exercise.name,
+                category: b.exercise.category,
+                sets: b.sets,
+                reps: b.reps,
+                restSec: b.restSec ?? 60,
+                targetRpe: b.rpe ?? null,
+                gifUrl: media.kind === "none" ? undefined : media.url ?? undefined,
+              };
+            })
           );
         }
       } finally {
@@ -154,6 +156,23 @@ export default function StrengthExecPage() {
     }
     load();
   }, [id]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`prp:strength-session:${id}`);
+      if (stored) setSetLogs(JSON.parse(stored) as Record<string, SetLog>);
+    } catch {
+      setSetLogs({});
+    }
+  }, [id]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`prp:strength-session:${id}`, JSON.stringify(setLogs));
+    } catch {
+      // Mantem o fluxo mesmo quando armazenamento local estiver indisponivel.
+    }
+  }, [id, setLogs]);
 
   useEffect(() => {
     return () => {
@@ -170,8 +189,22 @@ export default function StrengthExecPage() {
 
   const exercise = exercises[exerciseIdx];
   const totalSets = exercise?.sets ?? 1;
+  const currentLogKey = exercise ? `${exercise.id}:${currentSet}` : "";
+  const currentLog = currentLogKey ? setLogs[currentLogKey] : undefined;
   const isLastExercise = exerciseIdx === exercises.length - 1;
   const remainingExercises = exercises.slice(exerciseIdx + 1);
+
+  const updateCurrentLog = useCallback((patch: Partial<SetLog>) => {
+    if (!exercise || !currentLogKey) return;
+    setSetLogs((prev) => ({
+      ...prev,
+      [currentLogKey]: {
+        load: prev[currentLogKey]?.load ?? "",
+        reps: prev[currentLogKey]?.reps ?? exercise.reps,
+        ...patch,
+      },
+    }));
+  }, [currentLogKey, exercise]);
 
   const startRest = useCallback((secs: number, onFinish: () => void) => {
     setRestTotal(secs);
@@ -200,6 +233,15 @@ export default function StrengthExecPage() {
 
   const completeSet = useCallback(() => {
     if (!exercise) return;
+    setSetLogs((prev) => ({
+      ...prev,
+      [`${exercise.id}:${currentSet}`]: {
+        load: prev[`${exercise.id}:${currentSet}`]?.load ?? "",
+        reps: prev[`${exercise.id}:${currentSet}`]?.reps ?? exercise.reps,
+        rpe: prev[`${exercise.id}:${currentSet}`]?.rpe,
+      },
+    }));
+
     if (currentSet < totalSets) {
       const nextSet = currentSet + 1;
       startRest(exercise.restSec, () => {
@@ -211,7 +253,18 @@ export default function StrengthExecPage() {
     }
   }, [currentSet, totalSets, exercise, startRest]);
 
-  const confirmRpe = useCallback(() => {
+  const confirmRpe = useCallback((rpe?: number) => {
+    if (exercise && typeof rpe === "number") {
+      setSetLogs((prev) => ({
+        ...prev,
+        [`${exercise.id}:${currentSet}`]: {
+          load: prev[`${exercise.id}:${currentSet}`]?.load ?? "",
+          reps: prev[`${exercise.id}:${currentSet}`]?.reps ?? exercise.reps,
+          rpe,
+        },
+      }));
+    }
+
     if (isLastExercise) {
       setPhase("done");
     } else {
@@ -219,7 +272,7 @@ export default function StrengthExecPage() {
         setPhase("between");
       });
     }
-  }, [isLastExercise, exercise, startRest]);
+  }, [currentSet, isLastExercise, exercise, startRest]);
 
   const skipRest = useCallback(
     (onSkip: () => void) => {
@@ -267,7 +320,7 @@ export default function StrengthExecPage() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
             className="mb-6 flex h-24 w-24 items-center justify-center rounded-full"
-            style={{ backgroundColor: "rgba(132,204,22,0.15)", color: "#84cc16" }}
+            style={{ backgroundColor: "rgba(37,99,235,0.15)", color: "#2563eb" }}
           >
             <CheckCircle2 className="h-12 w-12" />
           </motion.div>
@@ -399,12 +452,12 @@ export default function StrengthExecPage() {
                       <span
                         className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold"
                         style={{
-                          borderColor: "rgba(132,204,22,0.3)",
-                          backgroundColor: "rgba(132,204,22,0.1)",
-                          color: "#84cc16",
+                          borderColor: "rgba(37,99,235,0.3)",
+                          backgroundColor: "rgba(37,99,235,0.1)",
+                          color: "#2563eb",
                         }}
                       >
-                        <span className="h-2 w-2 animate-pulse rounded-full" style={{ backgroundColor: "#84cc16" }} />
+                        <span className="h-2 w-2 animate-pulse rounded-full" style={{ backgroundColor: "#2563eb" }} />
                         EXECUTAR
                       </span>
                     </div>
@@ -414,6 +467,28 @@ export default function StrengthExecPage() {
                         {currentSet}
                         <span className="text-3xl text-text-muted">/{totalSets}</span>
                       </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="space-y-1.5">
+                        <span className="text-xs font-semibold text-text-muted">Carga usada</span>
+                        <input
+                          inputMode="decimal"
+                          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+                          placeholder="kg"
+                          value={currentLog?.load ?? ""}
+                          onChange={(event) => updateCurrentLog({ load: event.target.value })}
+                        />
+                      </label>
+                      <label className="space-y-1.5">
+                        <span className="text-xs font-semibold text-text-muted">Reps feitas</span>
+                        <input
+                          inputMode="numeric"
+                          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+                          placeholder={exercise.reps}
+                          value={currentLog?.reps ?? exercise.reps}
+                          onChange={(event) => updateCurrentLog({ reps: event.target.value })}
+                        />
+                      </label>
                     </div>
                     <Button
                       size="lg"
@@ -533,7 +608,7 @@ export default function StrengthExecPage() {
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => (
                           <button
                             key={v}
-                            onClick={confirmRpe}
+                            onClick={() => confirmRpe(v)}
                             className={cn(
                               "rounded-xl border py-3 text-sm font-bold transition-colors",
                               RPE_COLORS[v]
@@ -546,7 +621,7 @@ export default function StrengthExecPage() {
                     </div>
                     <div className="flex justify-center">
                       <button
-                        onClick={confirmRpe}
+                        onClick={() => confirmRpe()}
                         className="text-xs text-text-muted transition-colors hover:text-text"
                       >
                         Pular avaliação
@@ -568,9 +643,9 @@ export default function StrengthExecPage() {
                       <span
                         className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold"
                         style={{
-                          borderColor: "rgba(132,204,22,0.3)",
-                          backgroundColor: "rgba(132,204,22,0.1)",
-                          color: "#84cc16",
+                          borderColor: "rgba(37,99,235,0.3)",
+                          backgroundColor: "rgba(37,99,235,0.1)",
+                          color: "#2563eb",
                         }}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" />

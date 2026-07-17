@@ -16,6 +16,7 @@ import {
   RotateCcw,
   Search,
   Trash2,
+  Trophy,
   Users,
   Waves,
   X,
@@ -29,7 +30,7 @@ import { cn } from "@/lib/utils";
 
 type TemplateScope = "PERSONAL" | "TEAM";
 type DbTemplateCategory = "CORRIDA" | "FORCA" | "MOBILIDADE" | "FUNCIONAL";
-type TemplateCategory = DbTemplateCategory | "CICLISMO" | "NATACAO";
+type TemplateCategory = DbTemplateCategory | "CICLISMO" | "NATACAO" | "TRIATHLON";
 
 interface Template {
   id: string;
@@ -62,7 +63,8 @@ const inputClass =
 const CATEGORY_LABELS: Record<string, string> = {
   CORRIDA: "Corrida",
   CICLISMO: "Ciclismo",
-  NATACAO: "Natacao",
+  NATACAO: "Natação",
+  TRIATHLON: "Triathlon",
   FORCA: "Força",
   MOBILIDADE: "Mobilidade",
   FUNCIONAL: "Funcional",
@@ -70,10 +72,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const CATEGORY_COLORS: Record<string, string> = {
   CORRIDA: "text-sky-400 bg-sky-400/10",
-  CICLISMO: "text-lime-400 bg-lime-400/10",
+  CICLISMO: "text-teal-400 bg-teal-400/10",
   NATACAO: "text-cyan-400 bg-cyan-400/10",
+  TRIATHLON: "text-blue-400 bg-blue-400/10",
   FORCA: "text-violet-400 bg-violet-400/10",
-  MOBILIDADE: "text-lime-400 bg-lime-400/10",
+  MOBILIDADE: "text-slate-300 bg-slate-400/10",
   FUNCIONAL: "text-orange-400 bg-orange-400/10",
 };
 
@@ -81,6 +84,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   CORRIDA: Flame,
   CICLISMO: Bike,
   NATACAO: Waves,
+  TRIATHLON: Trophy,
   FORCA: Dumbbell,
   MOBILIDADE: RotateCcw,
   FUNCIONAL: Globe,
@@ -252,12 +256,12 @@ const SYSTEM_TEMPLATES: Template[] = [
   },
   {
     id: "system-swim-tech",
-    name: "Natacao tecnica + educativo",
+    name: "Natação técnica + educativo",
     description: "Sessao tecnica para eficiencia.",
     category: "NATACAO",
     workoutType: "TECNICA",
     scope: "TEAM",
-    tags: ["sistema", "natacao", "tecnica"],
+    tags: ["sistema", "natação", "tecnica"],
     objective: "Melhorar alinhamento, respiracao e pegada.",
     warmup: "300m livre leve.",
     mainSet: "8x50m educativos + 8x100m Z2 com 20s pausa.",
@@ -279,7 +283,7 @@ const SYSTEM_TEMPLATES: Template[] = [
     category: "NATACAO",
     workoutType: "INTERVALADO_CURTO",
     scope: "TEAM",
-    tags: ["sistema", "natacao", "css"],
+    tags: ["sistema", "natação", "css"],
     objective: "Sustentar ritmo critico com controle tecnico.",
     warmup: "400m leve + 4x50m progressivo.",
     mainSet: "16x100m em CSS com 15-20s pausa.",
@@ -301,7 +305,7 @@ const SYSTEM_TEMPLATES: Template[] = [
     category: "NATACAO",
     workoutType: "RODAGEM_LEVE",
     scope: "TEAM",
-    tags: ["sistema", "natacao", "aerobio"],
+    tags: ["sistema", "natação", "aerobio"],
     objective: "Construir resistencia na agua.",
     warmup: "300m leve.",
     mainSet: "3x500m Z2 com 45s pausa.",
@@ -318,13 +322,13 @@ const SYSTEM_TEMPLATES: Template[] = [
   },
   {
     id: "system-strength-full",
-    name: "Forca full body RPE 7",
-    description: "Sessao geral de forca para endurance.",
+    name: "Força full body RPE 7",
+    description: "Sessao geral de força para endurance.",
     category: "FORCA",
     workoutType: "FORCA",
     scope: "TEAM",
-    tags: ["sistema", "forca", "full body"],
-    objective: "Desenvolver forca geral com fadiga controlada.",
+    tags: ["sistema", "força", "full body"],
+    objective: "Desenvolver força geral com fadiga controlada.",
     warmup: "Mobilidade + ativacao 8 min.",
     mainSet: "Agachamento 3x6, supino 3x8, remada 3x8, stiff 3x8.",
     cooldown: "Mobilidade leve.",
@@ -340,13 +344,13 @@ const SYSTEM_TEMPLATES: Template[] = [
   },
   {
     id: "system-strength-lower",
-    name: "Forca inferior corredores",
+    name: "Força inferior corredores",
     description: "Inferiores com foco em corrida.",
     category: "FORCA",
     workoutType: "FORCA",
     scope: "TEAM",
-    tags: ["sistema", "forca", "corrida"],
-    objective: "Forca e resiliencia de quadril, joelho e tornozelo.",
+    tags: ["sistema", "força", "corrida"],
+    objective: "Força e resiliencia de quadril, joelho e tornozelo.",
     warmup: "Ativacao gluteos + mobilidade tornozelo.",
     mainSet: "Agachamento 4x5, avanco 3x8, panturrilha 4x10, prancha 3x40s.",
     cooldown: "Alongamento leve.",
@@ -367,7 +371,7 @@ const SYSTEM_TEMPLATES: Template[] = [
     category: "FORCA",
     workoutType: "FUNCIONAL",
     scope: "TEAM",
-    tags: ["sistema", "forca", "core", "mobilidade"],
+    tags: ["sistema", "força", "core", "mobilidade"],
     objective: "Controle de tronco e mobilidade sem gerar fadiga alta.",
     warmup: "Respiracao + mobilidade coluna.",
     mainSet: "Dead bug 3x10, prancha 3x45s, ponte 3x12, mobilidade quadril 8 min.",
@@ -378,6 +382,72 @@ const SYSTEM_TEMPLATES: Template[] = [
     targetRpe: 5,
     targetDistanceKm: null,
     targetDurationMin: 30,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-tri-base-week",
+    name: "Triathlon base semanal",
+    description: "Modelo de microciclo com natação, bike, corrida e força leve.",
+    category: "TRIATHLON",
+    workoutType: "TRIATHLON",
+    scope: "TEAM",
+    tags: ["sistema", "triathlon", "base", "multimodal"],
+    objective: "Organizar estimulos de base sem conflito entre modalidades.",
+    warmup: "Distribuir aquecimentos especificos por sessao.",
+    mainSet: "Natação técnica 45min, bike Z2 75min, corrida Z2 45min, força 35min.",
+    cooldown: "Encerrar cada sessao com 5-10 min leve.",
+    notes: "Usar como semana inicial para atletas intermediarios com 4-6h disponiveis.",
+    targetPaceSecPerKm: null,
+    targetHrZone: "Z2 predominante",
+    targetRpe: 5,
+    targetDistanceKm: null,
+    targetDurationMin: 200,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-tri-brick",
+    name: "Brick bike + corrida",
+    description: "Treino combinado para adaptar transicao bike-corrida.",
+    category: "TRIATHLON",
+    workoutType: "TRIATHLON",
+    scope: "TEAM",
+    tags: ["sistema", "triathlon", "brick", "transicao"],
+    objective: "Melhorar sensacao de corrida apos pedal controlado.",
+    warmup: "Bike 15 min progressivo.",
+    mainSet: "Bike 50-70 min Z2/Z3 leve + transicao rapida + corrida 15-25 min Z2.",
+    cooldown: "5 min caminhada/trote leve.",
+    notes: "Nao transformar o brick em prova; foco em controle e transicao.",
+    targetPaceSecPerKm: null,
+    targetHrZone: "Bike Z2-Z3 / corrida Z2",
+    targetRpe: 6,
+    targetDistanceKm: null,
+    targetDurationMin: 95,
+    usedCount: 0,
+    createdAt: "2026-07-13T00:00:00.000Z",
+    coach: systemCoach,
+  },
+  {
+    id: "system-tri-specific",
+    name: "Triathlon especifico equilibrado",
+    description: "Semana de fase especifica com uma sessao-chave por modalidade.",
+    category: "TRIATHLON",
+    workoutType: "TRIATHLON",
+    scope: "TEAM",
+    tags: ["sistema", "triathlon", "especifico", "prova"],
+    objective: "Combinar limiar controlado, endurance e tecnica mantendo recuperacao.",
+    warmup: "Aquecimento especifico antes das sessoes-chave.",
+    mainSet: "Natação CSS 55min, bike sweet spot 70min, corrida tempo 50min, longo Z2 75min.",
+    cooldown: "Volta a calma por modalidade e check-in de fadiga.",
+    notes: "Indicado para atletas com base consolidada; ajustar volume por nivel.",
+    targetPaceSecPerKm: null,
+    targetHrZone: "Z2-Z4 conforme modalidade",
+    targetRpe: 7,
+    targetDistanceKm: null,
+    targetDurationMin: 250,
     usedCount: 0,
     createdAt: "2026-07-13T00:00:00.000Z",
     coach: systemCoach,
@@ -531,7 +601,7 @@ export default function BibliotecaPage() {
           ))}
         </div>
 
-        {(["", "CORRIDA", "CICLISMO", "NATACAO", "FORCA", "MOBILIDADE", "FUNCIONAL"] as const).map((c) => (
+        {(["", "CORRIDA", "CICLISMO", "NATACAO", "TRIATHLON", "FORCA", "MOBILIDADE", "FUNCIONAL"] as const).map((c) => (
           <button
             key={c}
             onClick={() => setCategory(c)}
@@ -702,7 +772,7 @@ export default function BibliotecaPage() {
                   <select className={inputClass} value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as TemplateCategory }))}>
                     <option value="CORRIDA">Corrida</option>
                     <option value="CICLISMO">Ciclismo</option>
-                    <option value="NATACAO">Natacao</option>
+                    <option value="NATACAO">Natação</option>
                     <option value="FORCA">Força</option>
                     <option value="MOBILIDADE">Mobilidade</option>
                     <option value="FUNCIONAL">Funcional</option>

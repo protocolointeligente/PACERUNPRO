@@ -1,17 +1,26 @@
 // Pace Run Pro — Service Worker
 // Push notifications + offline-first cache strategies.
 
-const CACHE_STATIC = "prp-static-v4";
-const CACHE_PAGES  = "prp-pages-v4";
-const CACHE_RSC    = "prp-rsc-v4";
-const CACHE_API    = "prp-api-v4";
+const CACHE_STATIC = "prp-static-v5";
+const CACHE_PAGES  = "prp-pages-v5";
+const CACHE_RSC    = "prp-rsc-v5";
+const CACHE_API    = "prp-api-v5";
 
 // Static assets to precache on install
 const PRECACHE_URLS = [
   "/",
+  "/offline.html",
   "/atleta/dashboard",
+  "/atleta/calendario",
+  "/atleta/forca",
   "/manifest.webmanifest",
   "/favicon-32.png",
+  "/exercises.json",
+  "/exercises/agachamento.gif",
+  "/exercises/prancha.gif",
+  "/exercises/ponte.gif",
+  "/exercises/panturrilha.gif",
+  "/exercises/mobilidade.gif",
   "/icons/apple-touch-icon.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
@@ -54,6 +63,14 @@ async function networkFirst(cacheName, request, fallback) {
   } catch {
     return (await cache.match(request)) ?? fallback();
   }
+}
+
+async function offlinePageFallback(request) {
+  return (
+    (await caches.match(request)) ??
+    (await caches.match("/offline.html")) ??
+    offlineResponse("Offline")
+  );
 }
 
 self.addEventListener("install", (e) => {
@@ -100,7 +117,7 @@ self.addEventListener("fetch", (e) => {
   if (
     url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/icons/") ||
-    url.pathname.match(/\.(png|jpg|jpeg|svg|webp|woff2?|ico)$/)
+    url.pathname.match(/\.(png|jpg|jpeg|svg|webp|gif|json|woff2?|ico)$/)
   ) {
     e.respondWith(
       caches.match(request).then((cached) =>
@@ -129,9 +146,7 @@ self.addEventListener("fetch", (e) => {
   // Authenticated HTML pages: network-first to avoid serving old dashboards/menus after a deploy.
   if (request.mode === "navigate" || request.headers.get("accept")?.includes("text/html")) {
     e.respondWith(
-      networkFirst(CACHE_PAGES, request, () =>
-        offlineResponse("Offline")
-      )
+      networkFirst(CACHE_PAGES, request, () => offlinePageFallback(request))
     );
     return;
   }
