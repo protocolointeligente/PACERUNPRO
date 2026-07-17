@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { type StravaActivity } from "@/lib/integrations/strava";
+import { inferWorkoutModality } from "@/lib/workout-normalization";
 
 export function stravaTypeToWorkoutType(type: string): string {
   switch (type) {
@@ -14,20 +15,58 @@ export function stravaTypeToWorkoutType(type: string): string {
   }
 }
 
+function stravaTypeToModality(type: string): string {
+  switch (type) {
+    case "Run":
+    case "TrailRun":
+    case "VirtualRun":
+      return "corrida";
+    case "Ride":
+    case "VirtualRide":
+      return "ciclismo";
+    case "Swim":
+      return "natacao";
+    case "WeightTraining":
+      return "forca";
+    case "Workout":
+      return "funcional";
+    default:
+      return "corrida";
+  }
+}
+
 export async function findMatchingWorkout(athleteId: string, activity: StravaActivity) {
   const actDate = new Date(activity.start_date);
   const windowStart = new Date(actDate.getTime() - 12 * 60 * 60 * 1000);
   const windowEnd = new Date(actDate.getTime() + 12 * 60 * 60 * 1000);
+  const activityModality = stravaTypeToModality(activity.type);
 
-  return prisma.workout.findFirst({
+  const candidates = await prisma.workout.findMany({
     where: {
       week: { plan: { athleteId } },
       date: { gte: windowStart, lte: windowEnd },
       status: { in: ["AGENDADO", "LIBERADO", "AJUSTADO"] },
     },
     orderBy: { date: "asc" },
-    select: { id: true },
+    select: {
+      id: true,
+      date: true,
+      title: true,
+      type: true,
+      modality: true,
+      objective: true,
+      notes: true,
+    },
   });
+
+  return candidates
+    .map((workout) => ({
+      id: workout.id,
+      modality: workout.modality ?? inferWorkoutModality(workout),
+      timeDelta: Math.abs(workout.date.getTime() - actDate.getTime()),
+    }))
+    .filter((workout) => workout.modality === activityModality)
+    .sort((a, b) => a.timeDelta - b.timeDelta)[0] ?? null;
 }
 
 export async function updateAthleteAdherenceFromWorkouts(athleteId: string) {

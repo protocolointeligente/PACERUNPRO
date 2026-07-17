@@ -29,20 +29,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing metadata" }, { status: 400 });
     }
 
-    // Mark purchase as paid
-    await prisma.planPurchase.update({
+    const purchase = await prisma.planPurchase.update({
       where: { id: purchaseId },
       data: {
         status: "paid",
         pricePaidCents: session.amount_total ?? 0,
         stripeSessionId: session.id,
       },
+      select: {
+        id: true,
+        productId: true,
+        athleteId: true,
+        product: { select: { coachId: true } },
+      },
     });
 
-    // Increment purchase counter on product
     await prisma.planProduct.update({
-      where: { id: productId },
+      where: { id: purchase.productId },
       data: { purchases: { increment: 1 } },
+    });
+
+    await prisma.athlete.update({
+      where: { id: purchase.athleteId },
+      data: {
+        coachId: purchase.product.coachId,
+        status: "ativo",
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.client_reference_id ?? null,
+        coachId: purchase.product.coachId,
+        athleteId: purchase.athleteId,
+        action: "PAYMENT",
+        entity: "PlanPurchase",
+        entityId: purchase.id,
+        message: "Compra de plano marketplace confirmada pelo Stripe.",
+        after: { status: "paid", amountCents: session.amount_total ?? 0, productId },
+      },
     });
   }
 

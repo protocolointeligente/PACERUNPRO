@@ -85,7 +85,7 @@ const PLAN_OPTIONS: { value: string; label: string }[] = [
   { value: "TEAM",    label: "Unlimited (b2b-unlimited)" },
 ];
 
-function EditPlanButton({ coachId, currentPlan }: { coachId: string; currentPlan: string }) {
+function EditPlanButton({ coachId }: { coachId: string }) {
   const [open, setOpen] = useState(false);
   const [plan, setPlan] = useState("TEAM");
   const [saving, setSaving] = useState(false);
@@ -347,7 +347,7 @@ export default function AssessoriasPage() {
                           Aprovar
                         </Button>
                       )}
-                      <EditPlanButton coachId={a.id} currentPlan={a.plan} />
+                      <EditPlanButton coachId={a.id} />
                     </div>
                   </CardContent>
                 </Card>

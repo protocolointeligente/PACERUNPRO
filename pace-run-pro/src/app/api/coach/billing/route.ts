@@ -45,6 +45,19 @@ export async function PUT(req: NextRequest) {
   const receivingMethod = body.receivingMethod
     ? (body.receivingMethod.toUpperCase() as ReceivingMethod)
     : undefined;
+  const asaasReady = Boolean(
+    receivingMethod === "ASAAS" &&
+      body.cpfCnpj?.trim() &&
+      body.pixKey?.trim() &&
+      body.asaasAccountId?.trim() &&
+      body.asaasWalletId?.trim(),
+  );
+  const asaasOnboardingStatus =
+    body.asaasOnboardingStatus === "review"
+      ? "review"
+      : asaasReady
+        ? "ready"
+        : "pending";
 
   const data = {
     razaoSocial: body.razaoSocial ?? null,
@@ -59,7 +72,7 @@ export async function PUT(req: NextRequest) {
     asaasAccountId: body.asaasAccountId ?? null,
     asaasWalletId: body.asaasWalletId ?? null,
     asaasApiKeyLast4: body.asaasApiKey ? body.asaasApiKey.slice(-4) : undefined,
-    asaasOnboardingStatus: body.asaasOnboardingStatus ?? "pending",
+    asaasOnboardingStatus,
     autoChargeEnabled: body.autoChargeEnabled ?? false,
     autoChargeDayOfMonth: body.autoChargeDayOfMonth ?? 5,
     gracePeriodDays: body.gracePeriodDays ?? 3,

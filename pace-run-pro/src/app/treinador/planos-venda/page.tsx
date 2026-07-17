@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import type { ReactNode } from "react";
-import { CreditCard, Users } from "lucide-react";
+import { CreditCard, ExternalLink, Users } from "lucide-react";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,12 @@ export const dynamic = "force-dynamic";
 
 function money(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
+}
+
+function coachPlanIdFromProduct(content: unknown) {
+  if (!content || typeof content !== "object") return null;
+  const value = (content as { coachPlanId?: unknown }).coachPlanId;
+  return typeof value === "string" ? value : null;
 }
 
 export default async function CoachSalesPlansPage() {
@@ -33,6 +40,15 @@ export default async function CoachSalesPlansPage() {
           maxSlots: true,
           usedSlots: true,
           purchases: { select: { status: true } },
+        },
+      },
+      planProducts: {
+        select: {
+          title: true,
+          slug: true,
+          published: true,
+          purchases: true,
+          planContent: true,
         },
       },
     },
@@ -70,6 +86,7 @@ export default async function CoachSalesPlansPage() {
             </Card>
           ) : coach.plans.map((plan) => {
             const paid = plan.purchases.filter((purchase) => purchase.status === "paid").length;
+            const product = coach.planProducts.find((item) => coachPlanIdFromProduct(item.planContent) === plan.id);
             return (
               <Card key={plan.id}>
                 <CardContent className="space-y-3 p-5">
@@ -78,6 +95,9 @@ export default async function CoachSalesPlansPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="font-display text-xl font-bold text-text">{plan.name}</h2>
                         <Badge variant={plan.active ? "success" : "outline"}>{plan.active ? "Ativo" : "Pausado"}</Badge>
+                        <Badge variant={product?.published ? "primary" : "outline"}>
+                          {product?.published ? "Publicado na loja" : "Fora da loja"}
+                        </Badge>
                       </div>
                       <p className="mt-1 text-sm text-text-muted">{plan.description ?? "Sem descrição."}</p>
                     </div>
@@ -86,12 +106,17 @@ export default async function CoachSalesPlansPage() {
                   <div className="grid gap-2 text-sm sm:grid-cols-3">
                     <Info icon={<CreditCard className="h-4 w-4" />} label="Período" value={plan.period.toLowerCase()} />
                     <Info icon={<Users className="h-4 w-4" />} label="Vagas" value={`${plan.usedSlots}/${plan.maxSlots ?? "∞"}`} />
-                    <Info icon={<Users className="h-4 w-4" />} label="Pagantes" value={String(paid)} />
+                    <Info icon={<Users className="h-4 w-4" />} label="Pagantes" value={String(product?.purchases ?? paid)} />
                   </div>
                   {plan.features.length > 0 && (
                     <ul className="grid gap-1 text-sm text-text-muted sm:grid-cols-2">
                       {plan.features.map((feature) => <li key={feature}>• {feature}</li>)}
                     </ul>
+                  )}
+                  {product?.slug && (
+                    <Link href={`/loja/${product.slug}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+                      Abrir página de compra <ExternalLink className="h-4 w-4" />
+                    </Link>
                   )}
                 </CardContent>
               </Card>

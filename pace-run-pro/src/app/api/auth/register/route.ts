@@ -94,6 +94,18 @@ export async function POST(req: NextRequest) {
     }
 
     const recommendedPlanId = isCoach ? recommendPlanId(Number(studentCount) || 1) : null;
+    if (isCoach) {
+      const renewsAt = new Date();
+      renewsAt.setDate(renewsAt.getDate() + 30);
+      await prisma.subscription.create({
+        data: {
+          userId: user.id,
+          plan: "COACH",
+          status: "ACTIVE",
+          renewsAt,
+        },
+      });
+    }
 
     return NextResponse.json({ user, recommendedPlanId }, { status: 201 });
   } catch (err) {

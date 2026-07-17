@@ -58,7 +58,7 @@ export function CreateCoachPlanForm() {
         }),
       });
       if (!res.ok) throw new Error("Não foi possível criar o plano.");
-      setMessage("Plano criado e disponível para contratação.");
+      setMessage("Plano criado, publicado na loja e disponível para contratação.");
       setName("");
       setDescription("");
       setPrice("");
