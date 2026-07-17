@@ -4,7 +4,7 @@ import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, CalendarDays, Dumbbell, ShieldCheck, Users } from "lucide-react";
 import { Logo } from "@/components/logo";
 
 // ── Shared input style ────────────────────────────────────────────────────
@@ -23,6 +23,9 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState<"athlete" | "coach">("coach");
+
+  const defaultCallbackUrl = profile === "coach" ? "/treinador/dashboard" : "/atleta/dashboard";
 
   async function handleCredentials(e: React.FormEvent) {
     e.preventDefault();
@@ -43,17 +46,50 @@ function LoginContent() {
 
     // Full page navigation so the server picks up the new session cookie
     // and each layout applies role-based routing (COACH → /treinador, ADMIN → /admin)
-    window.location.assign(callbackUrl || "/atleta/dashboard");
+    window.location.assign(callbackUrl || defaultCallbackUrl);
   }
 
   function handleGoogle() {
-    signIn("google", { callbackUrl: callbackUrl || "/atleta/dashboard" });
+    signIn("google", { callbackUrl: callbackUrl || defaultCallbackUrl });
   }
 
   return (
-    <div className="w-full max-w-md mx-auto mt-16 px-6 pb-16">
-      <div className="rounded-2xl border border-border bg-card p-8 shadow-2xl shadow-black/40">
-        {/* Header */}
+    <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-16">
+      <section className="hidden lg:block">
+        <div className="rounded-3xl border border-border bg-card p-8 shadow-2xl shadow-black/20">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Área segura PACERUNPRO
+          </span>
+          <h1 className="mt-6 font-display text-4xl font-black leading-tight text-text">
+            Uma entrada, duas experiências.
+          </h1>
+          <p className="mt-4 text-sm leading-relaxed text-text-muted">
+            Treinadores entram para gerir atletas, planos, métricas e prescrição. Atletas entram para executar treinos,
+            registrar feedback e acompanhar evolução com clareza.
+          </p>
+          <div className="mt-8 grid gap-3">
+            {[
+              { icon: Users, title: "Treinador", text: "Calendário, periodização, CRM, biblioteca e métricas por atleta." },
+              { icon: CalendarDays, title: "Atleta", text: "Agenda única de treinos, provas, força com GIFs e check-ins." },
+              { icon: Dumbbell, title: "Performance", text: "Dados de carga, volume, aderência e feedback no mesmo ecossistema." },
+            ].map(({ icon: Icon, title, text }) => (
+              <div key={title} className="flex gap-3 rounded-2xl border border-border bg-background/60 p-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-text">{title}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-text-muted">{text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="w-full max-w-md justify-self-center">
+        <div className="rounded-3xl border border-border bg-card p-6 shadow-2xl shadow-black/20 sm:p-8">
         <div className="mb-8 text-center">
           <div className="mb-5 flex justify-center">
             <Logo size={40} />
@@ -62,8 +98,29 @@ function LoginContent() {
             Entrar na sua conta
           </h1>
           <p className="mt-2 text-sm text-text-muted">
-            Bem-vindo de volta! Continue sua jornada.
+            Escolha o perfil e continue sua jornada.
           </p>
+        </div>
+
+        <div className="mb-6 grid grid-cols-2 gap-2 rounded-2xl border border-border bg-background p-1.5">
+          {[
+            { id: "coach" as const, label: "Treinador", icon: Users },
+            { id: "athlete" as const, label: "Atleta", icon: CalendarDays },
+          ].map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setProfile(id)}
+              className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors ${
+                profile === id
+                  ? "bg-primary text-white shadow-sm shadow-primary/25"
+                  : "text-text-muted hover:bg-card-hover hover:text-text"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* Google button */}
@@ -207,6 +264,7 @@ function LoginContent() {
           </Link>
           .
         </p>
+        </div>
       </div>
     </div>
   );
@@ -217,15 +275,18 @@ export default function LoginPage() {
   return (
     <>
       {/* Nav */}
-      <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+      <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <Link href="/">
             <Logo size={32} />
           </Link>
+          <Link href="/cadastro?perfil=treinador" className="text-sm font-semibold text-primary hover:text-primary/80">
+            Criar conta
+          </Link>
         </div>
       </nav>
 
-      <main>
+      <main className="min-h-[calc(100dvh-73px)] bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.12),transparent_30rem)]">
         <Suspense fallback={null}>
           <LoginContent />
         </Suspense>

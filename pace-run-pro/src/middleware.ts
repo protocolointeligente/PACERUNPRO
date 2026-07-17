@@ -26,6 +26,23 @@ export default auth((req) => {
     if (isProtectedApi && !isLoggedIn) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
+    if (isProtectedApi) {
+      if (nextUrl.pathname.startsWith("/api/admin/") && role !== "ADMIN") {
+        return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+      }
+      if (
+        (nextUrl.pathname.startsWith("/api/coach/") || nextUrl.pathname.startsWith("/api/treinador/")) &&
+        !["COACH", "ADMIN"].includes(role ?? "")
+      ) {
+        return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+      }
+      if (
+        (nextUrl.pathname.startsWith("/api/atleta/") || nextUrl.pathname.startsWith("/api/athlete/")) &&
+        !["ATHLETE", "ADMIN"].includes(role ?? "")
+      ) {
+        return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+      }
+    }
     return NextResponse.next();
   }
 

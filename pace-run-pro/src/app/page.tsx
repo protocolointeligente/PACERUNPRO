@@ -128,6 +128,10 @@ const plans = [
   },
 ];
 
+const primaryCta = "bg-[#2563eb] text-white shadow-lg shadow-[#2563eb]/25 hover:bg-[#1d4ed8]";
+const accentText = "text-[#60a5fa]";
+const accentSoft = "bg-[#2563eb]/12 text-[#93c5fd]";
+
 export default function LandingPage() {
   return (
     <main className="marketing-page min-h-dvh bg-[#05090f] text-white">
@@ -155,7 +159,7 @@ export default function LandingPage() {
               Entrar
             </Link>
             <Link href="#planos">
-              <Button size="sm" className="bg-[#c6ff3d] text-black shadow-lg shadow-[#c6ff3d]/20 hover:bg-[#aef12f]">
+              <Button size="sm" className={primaryCta}>
                 Começar agora <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -164,22 +168,22 @@ export default function LandingPage() {
       </nav>
 
       <section className="relative overflow-hidden border-b border-white/10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,rgba(198,255,61,0.16),transparent_34%),linear-gradient(135deg,rgba(8,20,16,0.95),rgba(5,9,15,1)_55%,rgba(3,8,14,1))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,rgba(37,99,235,0.22),transparent_34%),linear-gradient(135deg,rgba(8,18,28,0.95),rgba(5,9,15,1)_55%,rgba(3,8,14,1))]" />
         <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-16 lg:grid-cols-[0.88fr_1.12fr] lg:items-center lg:py-24">
           <div>
-            <Badge variant="primary" className="mb-5 bg-[#c6ff3d]/15 text-[#c6ff3d]">
+            <Badge variant="primary" className={`mb-5 ${accentSoft}`}>
               SaaS para treinadores e assessorias
             </Badge>
             <h1 className="font-display text-4xl font-black leading-tight sm:text-6xl">
-              Receba, gerencie, prescreva e controle tudo em um único lugar.
+              Venda planos, prescreva melhor e acompanhe cada atleta com dados reais.
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-300">
-              O Pace Run Pro centraliza calendário, periodização, biblioteca, alertas, CRM e experiência do atleta
-              em uma plataforma feita para treinadores que querem vender melhor e entregar treino com excelência.
+              O PACERUNPRO centraliza calendário, periodização, biblioteca, alertas, CRM, planos de venda e experiência do atleta
+              em uma plataforma feita para treinadores que querem escalar a assessoria sem perder precisão técnica.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="#planos">
-                <Button size="lg" className="bg-[#c6ff3d] text-black shadow-xl shadow-[#c6ff3d]/20 hover:bg-[#aef12f]">
+                <Button size="lg" className={primaryCta}>
                   Começar agora <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -198,7 +202,7 @@ export default function LandingPage() {
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 shadow-2xl shadow-black/40">
             <div className="mb-3 flex items-center gap-2 px-2">
               <span className="h-3 w-3 rounded-full bg-[#ff5a1f]" />
-              <span className="h-3 w-3 rounded-full bg-[#c6ff3d]" />
+              <span className="h-3 w-3 rounded-full bg-[#2563eb]" />
               <span className="h-3 w-3 rounded-full bg-sky-400" />
               <span className="ml-3 text-xs font-semibold text-slate-400">Pace Run Pro em uso real</span>
             </div>
@@ -230,7 +234,7 @@ export default function LandingPage() {
           {features.map(({ icon: Icon, title, text }) => (
             <Card key={title} className="border-white/10 bg-[#0b121a]">
               <CardContent className="p-6">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#c6ff3d]/12 text-[#c6ff3d]">
+                <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl ${accentSoft}`}>
                   <Icon className="h-5 w-5" />
                 </div>
                 <h3 className="font-display text-xl font-bold text-white">{title}</h3>
@@ -278,7 +282,7 @@ export default function LandingPage() {
 
       <section id="passos" className="mx-auto max-w-7xl px-5 py-16">
         <div className="mb-10 max-w-3xl">
-          <Badge variant="primary" className="mb-4 bg-[#c6ff3d]/15 text-[#c6ff3d]">
+          <Badge variant="primary" className={`mb-4 ${accentSoft}`}>
             Comece em 4 passos
           </Badge>
           <h2 className="font-display text-3xl font-black sm:text-5xl">
@@ -289,7 +293,7 @@ export default function LandingPage() {
           {steps.map(({ icon: Icon, title, text }, index) => (
             <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
               <div className="mb-5 flex items-center justify-between">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/8 text-[#c6ff3d]">
+                <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-white/8 ${accentText}`}>
                   <Icon className="h-5 w-5" />
                 </div>
                 <span className="font-mono text-xs text-slate-500">{String(index + 1).padStart(2, "0")}</span>
@@ -343,7 +347,7 @@ export default function LandingPage() {
               key={plan.name}
               className={`rounded-2xl border p-6 ${
                 plan.highlight
-                  ? "border-[#c6ff3d]/50 bg-[#c6ff3d]/10 shadow-xl shadow-[#c6ff3d]/10"
+                  ? "border-[#2563eb]/55 bg-[#2563eb]/12 shadow-xl shadow-[#2563eb]/10"
                   : "border-white/10 bg-[#0b121a]"
               }`}
             >
@@ -361,7 +365,7 @@ export default function LandingPage() {
               <div className="mt-6 space-y-3">
                 {plan.features.map((item) => (
                   <div key={item} className="flex items-center gap-3 text-sm text-slate-300">
-                    <CheckCircle2 className="h-4 w-4 text-[#c6ff3d]" />
+                    <CheckCircle2 className="h-4 w-4 text-[#60a5fa]" />
                     {item}
                   </div>
                 ))}
@@ -370,7 +374,7 @@ export default function LandingPage() {
                 <Button
                   className={`w-full ${
                     plan.highlight
-                      ? "bg-[#c6ff3d] text-black hover:bg-[#aef12f]"
+                      ? primaryCta
                       : "border-white/15 bg-white/5 text-white hover:bg-white/10"
                   }`}
                   variant={plan.highlight ? "primary" : "outline"}
@@ -386,7 +390,7 @@ export default function LandingPage() {
       <section className="border-t border-white/10 bg-[#07111d] py-16">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 md:flex-row md:items-center md:justify-between">
           <div className="max-w-2xl">
-            <Badge variant="primary" className="mb-4 bg-[#c6ff3d]/15 text-[#c6ff3d]">
+            <Badge variant="primary" className={`mb-4 ${accentSoft}`}>
               Pronto para profissionalizar sua entrega?
             </Badge>
             <h2 className="font-display text-3xl font-black sm:text-5xl">
@@ -394,7 +398,7 @@ export default function LandingPage() {
             </h2>
           </div>
           <Link href="#planos">
-            <Button size="lg" className="bg-[#c6ff3d] text-black shadow-xl shadow-[#c6ff3d]/20 hover:bg-[#aef12f]">
+            <Button size="lg" className={primaryCta}>
               Começar agora <Sparkles className="h-4 w-4" />
             </Button>
           </Link>
@@ -432,7 +436,7 @@ function Metric({
 }) {
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
-      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#c6ff3d]/12 text-[#c6ff3d]">
+      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563eb]/12 text-[#60a5fa]">
         <Icon className="h-4 w-4" />
       </div>
       <p className="text-xs uppercase text-slate-500">{label}</p>
