@@ -3,16 +3,13 @@ import {
   Bell,
   BarChart2,
   CalendarDays,
-  DollarSign,
   GraduationCap,
   User,
   BookOpen,
   Layers,
   BriefcaseBusiness,
-  ClipboardList,
   LayoutGrid,
   TicketPercent,
-  Users,
 } from "lucide-react";
 import type { NavItem } from "@/components/layout/nav-config";
 
@@ -56,9 +53,6 @@ const workflowNav: NavItem[] = [
 
 const businessNav: NavItem[] = [
   { href: "/treinador/gestao", label: "Gestao", icon: BriefcaseBusiness },
-  { href: "/treinador/crm", label: "CRM", icon: Users },
-  { href: "/treinador/planos-venda", label: "Planos de venda", icon: ClipboardList },
-  { href: "/treinador/financeiro", label: "Financeiro", icon: DollarSign },
   { href: "/treinador/minha-loja", label: "Minha loja", icon: LayoutGrid },
   { href: "/treinador/vouchers", label: "Vouchers", icon: TicketPercent },
   { href: "/treinador/university", label: "Pace University", icon: GraduationCap },

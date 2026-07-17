@@ -14,6 +14,10 @@ function money(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
 
+function safeNumber(value: number | null | undefined) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
 export default async function CoachStorePage() {
   const session = await getSession();
   if (!session?.user?.id) redirect("/login");
@@ -45,10 +49,13 @@ export default async function CoachStorePage() {
 
   if (!coach) redirect("/login");
 
-  const origin = process.env.NEXT_PUBLIC_APP_URL ?? "https://pacerunpro.com.br";
-  const storeUrl = `${origin}/loja${coach.slug ? `?coach=${coach.slug}` : ""}`;
+  const origin = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.pacerunpro.com.br";
+  const storeUrl = coach.slug ? `${origin}/loja?coach=${coach.slug}` : `${origin}/loja`;
   const published = coach.planProducts.filter((product) => product.published);
-  const grossSales = coach.planProducts.reduce((sum, product) => sum + product.priceCents * product.purchases, 0);
+  const grossSales = coach.planProducts.reduce(
+    (sum, product) => sum + safeNumber(product.priceCents) * safeNumber(product.purchases),
+    0
+  );
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -101,16 +108,20 @@ export default async function CoachStorePage() {
                 <p className="mt-1 line-clamp-2 text-sm text-text-muted">{product.description || "Sem descrição."}</p>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs text-text-muted">
-                <span>{product.sport}</span>
-                <span>{product.level}</span>
-                <span>{product.durationWeeks} semanas</span>
-                <span>{product.purchases} venda(s)</span>
+                <span>{product.sport || "Geral"}</span>
+                <span>{product.level || "Sem nivel"}</span>
+                <span>{safeNumber(product.durationWeeks)} semanas</span>
+                <span>{safeNumber(product.purchases)} venda(s)</span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <p className="font-display text-2xl font-bold text-text">{money(product.priceCents)}</p>
-                <a href={`${origin}/loja/${product.slug}`} target="_blank" rel="noreferrer" className="text-sm font-semibold text-primary">
-                  Ver <ExternalLink className="inline h-3.5 w-3.5" />
-                </a>
+                <p className="font-display text-2xl font-bold text-text">{money(safeNumber(product.priceCents))}</p>
+                {product.slug ? (
+                  <a href={`${origin}/loja/${product.slug}`} target="_blank" rel="noreferrer" className="text-sm font-semibold text-primary">
+                    Ver <ExternalLink className="inline h-3.5 w-3.5" />
+                  </a>
+                ) : (
+                  <span className="text-xs font-semibold text-text-muted">Sem link</span>
+                )}
               </div>
             </CardContent>
           </Card>

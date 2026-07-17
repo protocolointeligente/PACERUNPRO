@@ -1,9 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BookOpen, CheckCircle2, ChevronDown, Clock, GraduationCap, PlayCircle } from "lucide-react";
-import { getPaceCourses } from "@/lib/pace-university";
+import {
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  GraduationCap,
+  PlayCircle,
+  Route,
+} from "lucide-react";
+import { getPaceCourses, type PaceCourse } from "@/lib/pace-university";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -11,130 +19,225 @@ interface PaceUniversityPageProps {
   audience: "athlete" | "coach";
 }
 
+function audienceCopy(audience: "athlete" | "coach") {
+  if (audience === "coach") {
+    return {
+      title: "Trilhas para prescrever, analisar e vender melhor",
+      subtitle:
+        "Conteudo pratico para leitura de metricas, periodizacao multimodal, gestao da assessoria e tomada de decisao com dados reais.",
+    };
+  }
+
+  return {
+    title: "Trilhas para treinar melhor e entender seu plano",
+    subtitle:
+      "Aulas curtas para executar treinos, interpretar zonas, registrar feedback e transformar seus dados em evolucao consistente.",
+  };
+}
+
 export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
   const courses = getPaceCourses(audience);
   const totalMinutes = courses.reduce((sum, course) => sum + course.durationMin, 0);
-  const [openCourseId, setOpenCourseId] = useState(courses[0]?.id ?? "");
-  const [openLessonKey, setOpenLessonKey] = useState("");
+  const copy = audienceCopy(audience);
+  const [selectedCourseId, setSelectedCourseId] = useState(courses[0]?.id ?? "");
+  const [selectedLessonKey, setSelectedLessonKey] = useState("");
 
-  const openCourse = useMemo(
-    () => courses.find((course) => course.id === openCourseId) ?? courses[0],
-    [courses, openCourseId]
+  const selectedCourse = useMemo(
+    () => courses.find((course) => course.id === selectedCourseId) ?? courses[0],
+    [courses, selectedCourseId]
   );
+  const selectedLesson =
+    selectedCourse?.lessons.find((lesson) => `${selectedCourse.id}:${lesson.title}` === selectedLessonKey) ??
+    selectedCourse?.lessons[0];
+
+  if (!selectedCourse) {
+    return (
+      <div className="mx-auto max-w-5xl">
+        <Card>
+          <CardContent className="p-8 text-sm text-text-muted">
+            Nenhuma trilha cadastrada para este perfil ainda.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <Badge variant="primary" className="mb-3 gap-1.5">
             <GraduationCap className="h-3.5 w-3.5" />
             Pace University
           </Badge>
-          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
-            Trilhas praticas de performance
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-text-muted">
-            Conteudo operacional para executar melhor os treinos, interpretar metricas e transformar feedback em decisao de treinamento.
-          </p>
+          <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">{copy.title}</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-text-muted">{copy.subtitle}</p>
         </div>
-        <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-text-muted">
-          <span className="font-semibold text-text">{courses.length}</span> cursos · <span className="font-semibold text-text">{Math.round(totalMinutes / 60)}h</span> de conteudo inicial
+        <div className="grid min-w-48 grid-cols-2 gap-2 rounded-2xl border border-border bg-card p-3 text-sm">
+          <Metric value={String(courses.length)} label="trilhas" />
+          <Metric value={`${Math.round(totalMinutes / 60)}h`} label="conteudo" />
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {courses.map((course) => {
-          const Icon = course.icon;
-          const isOpen = openCourse?.id === course.id;
-          return (
-            <Card
+      <div className="grid gap-4 lg:grid-cols-[0.9fr_1.4fr]">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
+            <Route className="h-4 w-4" />
+            Trilhas disponiveis
+          </div>
+          {courses.map((course) => (
+            <CourseButton
               key={course.id}
-              className={cn(
-                "overflow-hidden transition hover:border-primary/35 hover:bg-card-hover",
-                isOpen && "border-primary/45 bg-primary/5"
-              )}
-            >
-              <CardContent className="p-5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOpenCourseId((current) => (current === course.id ? "" : course.id));
-                    setOpenLessonKey("");
-                  }}
-                  className="flex w-full items-start gap-4 text-left"
-                >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-display text-lg font-bold text-text">{course.title}</h2>
-                      <span className="rounded-full border border-border px-2 py-0.5 text-[11px] font-semibold text-text-muted">
-                        {course.level}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm leading-relaxed text-text-muted">{course.description}</p>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-text-muted">
-                      <span className="inline-flex items-center gap-1 rounded-lg border border-border bg-card-hover/40 px-2 py-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        {course.durationMin} min
-                      </span>
-                      <span className="inline-flex items-center gap-1 rounded-lg border border-border bg-card-hover/40 px-2 py-1">
-                        <BookOpen className="h-3.5 w-3.5" />
-                        {course.lessons.length} aulas
-                      </span>
-                    </div>
-                  </div>
-                  <ChevronDown className={cn("mt-3 h-5 w-5 shrink-0 text-text-muted transition", isOpen && "rotate-180 text-primary")} />
-                </button>
+              course={course}
+              selected={course.id === selectedCourse.id}
+              onSelect={() => {
+                setSelectedCourseId(course.id);
+                setSelectedLessonKey(`${course.id}:${course.lessons[0]?.title ?? ""}`);
+              }}
+            />
+          ))}
+        </div>
 
-                {isOpen ? (
-                  <div className="mt-5 divide-y divide-border rounded-2xl border border-border bg-background/50">
-                    {course.lessons.map((lesson, index) => {
-                      const lessonKey = `${course.id}:${lesson.title}`;
-                      const lessonOpen = openLessonKey === lessonKey;
-                      return (
-                        <button
-                          key={lesson.title}
-                          type="button"
-                          onClick={() => setOpenLessonKey((current) => current === lessonKey ? "" : lessonKey)}
-                          className="block w-full p-3 text-left transition hover:bg-card-hover/60"
-                        >
-                          <div className="grid gap-2 sm:grid-cols-[36px_1fr_72px] sm:items-center">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-card text-xs font-bold text-text-muted">
-                              {String(index + 1).padStart(2, "0")}
-                            </span>
-                            <div>
-                              <p className="text-sm font-semibold text-text">{lesson.title}</p>
-                              <p className="text-xs leading-relaxed text-text-muted">{lesson.objective}</p>
-                            </div>
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-text-muted sm:justify-end">
-                              <PlayCircle className="h-3.5 w-3.5" />
-                              {lesson.durationMin} min
-                            </span>
-                          </div>
-                          {lessonOpen ? (
-                            <div className="mt-3 rounded-xl border border-primary/25 bg-primary/5 p-3 text-xs leading-6 text-text-muted sm:ml-11">
-                              <p className="font-semibold text-text">Como aplicar agora</p>
-                              <p className="mt-1">
-                                Use esta aula como checklist rapido antes ou depois do treino. Leia o objetivo, compare com o treino prescrito e registre um feedback curto para orientar a proxima decisao.
-                              </p>
-                              <div className="mt-3 flex items-center gap-2 text-primary">
-                                <CheckCircle2 className="h-4 w-4" />
-                                <span className="font-semibold">Aula aberta</span>
-                              </div>
-                            </div>
-                          ) : null}
-                        </button>
-                      );
-                    })}
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <div className="border-b border-border bg-card-hover/40 p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="info">{selectedCourse.level}</Badge>
+                    <span className="inline-flex items-center gap-1 text-xs text-text-muted">
+                      <Clock className="h-3.5 w-3.5" />
+                      {selectedCourse.durationMin} min
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs text-text-muted">
+                      <BookOpen className="h-3.5 w-3.5" />
+                      {selectedCourse.lessons.length} aulas
+                    </span>
                   </div>
+                  <h2 className="mt-3 font-display text-2xl font-bold text-text">{selectedCourse.title}</h2>
+                  <p className="mt-2 text-sm leading-relaxed text-text-muted">{selectedCourse.description}</p>
+                </div>
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <selectedCourse.icon className="h-5 w-5" />
+                </span>
+              </div>
+            </div>
+
+            <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="border-b border-border lg:border-b-0 lg:border-r">
+                {selectedCourse.lessons.map((lesson, index) => {
+                  const lessonKey = `${selectedCourse.id}:${lesson.title}`;
+                  const active = selectedLesson?.title === lesson.title;
+                  return (
+                    <button
+                      key={lessonKey}
+                      type="button"
+                      onClick={() => setSelectedLessonKey(lessonKey)}
+                      className={cn(
+                        "flex w-full items-start gap-3 border-b border-border px-4 py-3 text-left transition last:border-b-0 hover:bg-card-hover/50",
+                        active && "bg-primary/10"
+                      )}
+                    >
+                      <span className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold",
+                        active ? "bg-primary text-background" : "bg-card-hover text-text-muted"
+                      )}>
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-text">{lesson.title}</span>
+                        <span className="mt-1 block text-xs leading-relaxed text-text-muted">{lesson.objective}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-4 p-5">
+                {selectedLesson ? (
+                  <>
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                      <PlayCircle className="h-4 w-4" />
+                      Aula aberta
+                    </div>
+                    <div>
+                      <h3 className="font-display text-xl font-bold text-text">{selectedLesson.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-text-muted">{selectedLesson.objective}</p>
+                    </div>
+                    <div className="rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                      <p className="font-semibold text-text">Como aplicar agora</p>
+                      <p className="mt-2 text-sm leading-relaxed text-text-muted">
+                        Use esta aula como checklist rapido. Compare o objetivo com o treino ou decisao da semana,
+                        registre feedback objetivo e transforme a informacao em ajuste de carga, intensidade ou recuperacao.
+                      </p>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <Info label="Duracao" value={`${selectedLesson.durationMin} min`} />
+                      <Info label="Status" value="Disponivel" />
+                    </div>
+                    <Button type="button" variant="secondary" size="sm" className="w-full sm:w-auto">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Marcar como estudada
+                    </Button>
+                  </>
                 ) : null}
-              </CardContent>
-            </Card>
-          );
-        })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+    </div>
+  );
+}
+
+function CourseButton({
+  course,
+  selected,
+  onSelect,
+}: {
+  course: PaceCourse;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const Icon = course.icon;
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "flex w-full items-start gap-3 rounded-2xl border border-border bg-card p-4 text-left transition hover:border-primary/35 hover:bg-card-hover",
+        selected && "border-primary/45 bg-primary/10"
+      )}
+    >
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold text-text">{course.title}</span>
+        <span className="mt-1 line-clamp-2 block text-xs leading-relaxed text-text-muted">{course.description}</span>
+        <span className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-text-muted">
+          <span className="rounded-full border border-border px-2 py-0.5">{course.level}</span>
+          <span className="rounded-full border border-border px-2 py-0.5">{course.lessons.length} aulas</span>
+        </span>
+      </span>
+    </button>
+  );
+}
+
+function Metric({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-background/50 p-3">
+      <p className="font-display text-2xl font-bold text-text">{value}</p>
+      <p className="text-xs uppercase tracking-wide text-text-muted">{label}</p>
+    </div>
+  );
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-card-hover/40 p-3">
+      <p className="text-xs uppercase tracking-wide text-text-muted">{label}</p>
+      <p className="mt-1 font-semibold text-text">{value}</p>
     </div>
   );
 }
