@@ -338,7 +338,7 @@ export default async function GestaoPage() {
               </div>
               <div className="flex items-start gap-2 text-xs leading-relaxed text-text-muted">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                Estes dados deixam o treinador pronto para conciliação financeira. Split automático Asaas depende de homologação da integração.
+                Estes dados deixam o treinador pronto para conciliação financeira e repasse. Integrações automáticas de pagamento devem ser ativadas somente após homologação.
               </div>
               <BillingSettingsForm initialSettings={coach.user.billingSettings} />
             </CardContent>

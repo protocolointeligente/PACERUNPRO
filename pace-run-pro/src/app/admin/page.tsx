@@ -39,7 +39,7 @@ const adminAreas = [
   {
     href: "/admin/financeiro",
     icon: WalletCards,
-    title: "Financeiro e split",
+    title: "Financeiro e repasses",
     text: "Acompanhar assinatura do treinador, mensalidades dos atletas e repasse 90/10.",
   },
   {
@@ -71,7 +71,7 @@ const adminAreas = [
 const noCodeControls = [
   "Editar precos, limites de atletas e recursos por plano.",
   "Ativar, suspender ou reatribuir treinador/atleta.",
-  "Configurar checkout, split Asaas e status de pagamento.",
+  "Configurar checkout, recebimento, repasses e status de pagamento.",
   "Reenviar convite seguro para atleta por treinador.",
   "Auditar rotas antigas, webhooks e logs de erro.",
   "Controlar cursos Pace University e conteudos padrao.",

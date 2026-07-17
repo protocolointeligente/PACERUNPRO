@@ -1,4 +1,37 @@
+import fs from "node:fs";
+import path from "node:path";
+import { loadEnvConfig } from "@next/env";
 import { Client } from "pg";
+
+loadEnvConfig(process.cwd());
+
+const CONNECTION_ENV_KEYS = [
+  "DATABASE_URL",
+  "DATABASE_URL_UNPOOLED",
+  "DATABASE_POSTGRES_PRISMA_URL",
+  "DATABASE_POSTGRES_URL",
+  "DATABASE_POSTGRES_URL_NON_POOLING",
+];
+
+function loadEnvTxtFallback() {
+  const envTxtPath = path.join(process.cwd(), ".env.txt");
+  if (!fs.existsSync(envTxtPath)) return;
+
+  for (const rawLine of fs.readFileSync(envTxtPath, "utf8").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const match = line.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+    if (!match) continue;
+    const [, key, rawValue] = match;
+    if (process.env[key]) continue;
+    process.env[key] = rawValue.replace(/^["']|["']$/g, "");
+  }
+}
+
+function getConnectionString() {
+  loadEnvTxtFallback();
+  return CONNECTION_ENV_KEYS.map((key) => process.env[key]?.trim()).find(Boolean);
+}
 
 const REQUIRED_SOFT_DELETE_COLUMNS = [
   { table: "users", column: "deletedAt" },
@@ -50,10 +83,12 @@ function printRows(title: string, rows: QueryResultRow[]) {
 }
 
 async function main() {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = getConnectionString();
 
   if (!connectionString) {
-    throw new Error("DATABASE_URL is required for read-only audit.");
+    throw new Error(
+      `Read-only audit requires a database connection string. Set one of: ${CONNECTION_ENV_KEYS.join(", ")}.`
+    );
   }
 
   const client = new Client({ connectionString });

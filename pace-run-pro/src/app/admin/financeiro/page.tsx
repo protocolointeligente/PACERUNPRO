@@ -68,9 +68,9 @@ export default async function FinanceiroPage() {
     <div className="mx-auto max-w-7xl space-y-6">
       <div>
         <Badge variant="success">Financeiro</Badge>
-        <h1 className="mt-3 font-display text-3xl font-bold text-text">Receita, assinaturas e split</h1>
+        <h1 className="mt-3 font-display text-3xl font-bold text-text">Receita, assinaturas e repasses</h1>
         <p className="mt-2 max-w-2xl text-sm text-text-muted">
-          Numeros vindos do banco. Quando Asaas entrar, esta tela deve consolidar assinatura do treinador,
+          Numeros vindos do banco. Quando a integração financeira for homologada, esta tela deve consolidar assinatura do treinador,
           mensalidades dos atletas, webhooks e repasses 90/10.
         </p>
         {financeData.error && (
@@ -91,7 +91,7 @@ export default async function FinanceiroPage() {
         <Card>
           <CardContent className="space-y-4 p-5">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-text">Split de vendas dos treinadores</h2>
+              <h2 className="font-display text-lg font-bold text-text">Repasse de vendas dos treinadores</h2>
               <Badge variant="primary">90/10</Badge>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
@@ -100,7 +100,7 @@ export default async function FinanceiroPage() {
               <SplitBox label="Treinadores" value={money(coachSplit)} />
             </div>
             <p className="text-xs leading-relaxed text-text-muted">
-              Esta simulacao usa `PlanPurchase.status = paid`. Na integracao Asaas, cada webhook deve gravar
+              Esta visão usa `PlanPurchase.status = paid`. Na integração financeira, cada webhook deve gravar
               o status e os IDs externos para reconciliacao.
             </p>
           </CardContent>

@@ -186,7 +186,7 @@ export function BillingSettingsForm({ initialSettings }: { initialSettings: Bill
           autoChargeDayOfMonth: Number(form.autoChargeDayOfMonth) || 5,
         }),
       });
-      if (!res.ok) throw new Error("Não foi possível salvar os dados Asaas.");
+      if (!res.ok) throw new Error("Não foi possível salvar os dados de recebimento.");
       setMessage("Dados de recebimento salvos.");
       window.location.reload();
     } catch (error) {
@@ -200,7 +200,7 @@ export function BillingSettingsForm({ initialSettings }: { initialSettings: Bill
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <Badge variant={form.asaasOnboardingStatus === "ready" ? "success" : "warning"}>
-          {form.asaasOnboardingStatus === "ready" ? "Asaas pronto" : "Configuração pendente"}
+          {form.asaasOnboardingStatus === "ready" ? "Dados de recebimento prontos" : "Recebimento pendente"}
         </Badge>
         <label className="flex items-center gap-2 text-xs font-semibold text-text-muted">
           <input
@@ -216,8 +216,8 @@ export function BillingSettingsForm({ initialSettings }: { initialSettings: Bill
         <input className={inputClass()} value={form.cpfCnpj} onChange={(e) => update("cpfCnpj", e.target.value)} placeholder="CPF ou CNPJ" />
         <input className={inputClass()} value={form.responsavel} onChange={(e) => update("responsavel", e.target.value)} placeholder="Responsável financeiro" />
         <input className={inputClass()} value={form.pixKey} onChange={(e) => update("pixKey", e.target.value)} placeholder="Chave PIX de recebimento" />
-        <input className={inputClass()} value={form.asaasAccountId} onChange={(e) => update("asaasAccountId", e.target.value)} placeholder="ID da conta Asaas" />
-        <input className={inputClass()} value={form.asaasWalletId} onChange={(e) => update("asaasWalletId", e.target.value)} placeholder="Wallet ID para split" />
+        <input className={inputClass()} value={form.asaasAccountId} onChange={(e) => update("asaasAccountId", e.target.value)} placeholder="ID da conta de recebimento" />
+        <input className={inputClass()} value={form.asaasWalletId} onChange={(e) => update("asaasWalletId", e.target.value)} placeholder="Carteira de repasse" />
         <input className={inputClass()} value={form.bankName} onChange={(e) => update("bankName", e.target.value)} placeholder="Banco" />
         <input className={inputClass()} value={form.bankAgency} onChange={(e) => update("bankAgency", e.target.value)} placeholder="Agência" />
         <input className={inputClass()} value={form.bankAccount} onChange={(e) => update("bankAccount", e.target.value)} placeholder="Conta" />
@@ -226,7 +226,7 @@ export function BillingSettingsForm({ initialSettings }: { initialSettings: Bill
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" size="sm" disabled={saving}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <WalletCards className="h-4 w-4" />}
-          Salvar Asaas
+          Salvar dados de recebimento
         </Button>
         {message && (
           <span className="inline-flex items-center gap-1 text-xs text-text-muted">

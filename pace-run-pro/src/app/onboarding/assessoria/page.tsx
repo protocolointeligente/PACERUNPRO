@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import QRCode from "react-qr-code";
-import { Check, CheckCircle2, Clock, Loader2, Zap } from "lucide-react";
+import { Check, Clock, Loader2, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { b2bPlans } from "@/lib/mock-data";
@@ -99,46 +98,7 @@ function B2bPlanSummaryCard({
   );
 }
 
-type PaymentMethod = "cartao" | "pix";
-
-function PaymentToggle({
-  value,
-  onChange,
-}: {
-  value: PaymentMethod;
-  onChange: (v: PaymentMethod) => void;
-}) {
-  const options: { id: PaymentMethod; label: string }[] = [
-    { id: "cartao", label: "Cartão de crédito" },
-    { id: "pix", label: "PIX" },
-  ];
-  return (
-    <div className="flex gap-2">
-      {options.map((o) => (
-        <button
-          key={o.id}
-          type="button"
-          onClick={() => onChange(o.id)}
-          className={[
-            "flex-1 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all",
-            value === o.id
-              ? "border-primary/60 bg-primary/10 text-primary"
-              : "border-border bg-card text-text-muted hover:border-primary/30 hover:text-text",
-          ].join(" ")}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-interface PixResult {
-  pixText: string;
-  pixQrCodeUrl: string | null;
-}
-
-const STEP_LABELS = ["Plano", "Assessoria", "Treinador", "Pagamento"];
+const STEP_LABELS = ["Plano", "Assessoria", "Treinador", "Ativação"];
 
 function AssessoriaContent() {
   const router = useRouter();
@@ -151,8 +111,6 @@ function AssessoriaContent() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [pixResult, setPixResult] = useState<PixResult | null>(null);
-  const [pixCopied, setPixCopied] = useState(false);
 
   // Step 1
   const [selectedPlan, setSelectedPlan] = useState(defaultPlan);
@@ -177,20 +135,12 @@ function AssessoriaContent() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [creatingAccount, setCreatingAccount] = useState(false);
   const [createAccountError, setCreateAccountError] = useState<string | null>(null);
-  const [createdUserId, setCreatedUserId] = useState<string | null>(null);
-
-  // Step 4
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cartao");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardName, setCardName] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
 
   const plan = b2bPlans.find((p) => p.id === selectedPlan) ?? b2bPlans[1];
   const isWhiteLabel = selectedPlan === "b2b-unlimited";
   const isFree = plan.price === 0;
 
-  // ── White-label approval screen ─────────────────────────────────────────
+  // ── Assisted activation screen ──────────────────────────────────────────
   if (submitted) {
     return (
       <div className="flex flex-col items-center gap-6 text-center">
@@ -201,8 +151,9 @@ function AssessoriaContent() {
           <Badge variant="warning" className="mb-4">Aguardando configuração</Badge>
           <h2 className="font-display text-3xl font-extrabold text-text">Solicitação recebida!</h2>
           <p className="mx-auto mt-4 max-w-md text-text-muted">
-            Sua solicitação White Label foi recebida. Nossa equipe entrará em contato em até 1 dia
-            útil pelo WhatsApp para iniciar a configuração do seu ambiente personalizado.
+            {isWhiteLabel
+              ? "Sua solicitação White Label foi recebida. Nossa equipe entrará em contato em até 1 dia útil pelo WhatsApp para iniciar a configuração do seu ambiente personalizado."
+              : "Recebemos sua solicitação de ativação. Nossa equipe vai confirmar os dados comerciais e liberar o acesso pelo canal oficial, sem cobrar cartão ou PIX nesta tela."}
           </p>
         </div>
         <div className="rounded-2xl border border-warning/20 bg-warning/5 px-6 py-4 text-sm text-warning">
@@ -212,70 +163,6 @@ function AssessoriaContent() {
         <Link href="/">
           <Button variant="outline" size="lg">Voltar ao início</Button>
         </Link>
-      </div>
-    );
-  }
-
-  // ── PIX awaiting screen ──────────────────────────────────────────────────
-  if (pixResult) {
-    function handleCopyPix() {
-      void navigator.clipboard.writeText(pixResult!.pixText).then(() => {
-        setPixCopied(true);
-        setTimeout(() => setPixCopied(false), 2500);
-      });
-    }
-
-    return (
-      <div className="flex flex-col items-center gap-6 text-center">
-        <div>
-          <Badge variant="primary" className="mb-4">PIX gerado</Badge>
-          <h2 className="font-display text-3xl font-extrabold text-text">Escaneie o QR Code PIX</h2>
-          <p className="mx-auto mt-3 max-w-md text-sm text-text-muted">
-            Após o pagamento, sua conta será ativada automaticamente em instantes.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
-          {pixResult.pixText ? (
-            <QRCode value={pixResult.pixText} size={200} />
-          ) : (
-            <div className="flex h-[200px] w-[200px] items-center justify-center text-xs text-text-muted">
-              QR Code indisponível
-            </div>
-          )}
-        </div>
-
-        {pixResult.pixText && (
-          <div className="w-full max-w-sm space-y-2">
-            <p className="text-xs text-text-muted">Ou copie o código PIX:</p>
-            <div className="flex gap-2">
-              <input
-                readOnly
-                value={pixResult.pixText}
-                className={`${inputClass} truncate cursor-default text-xs`}
-              />
-              <Button variant="outline" size="md" className="shrink-0" onClick={handleCopyPix}>
-                {pixCopied ? <CheckCircle2 className="h-4 w-4 text-success" /> : "Copiar"}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        <div className="rounded-2xl border border-primary/20 bg-primary/5 px-6 py-4 text-sm text-text-muted">
-          Valor: <strong className="text-text">R$ {formatBRL(plan.price)}/mês</strong> ·{" "}
-          Plano <strong className="text-text">{plan.name}</strong>
-        </div>
-
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={() => router.push("/treinador/dashboard?onboarding=pix")}
-        >
-          Continuar para minha conta →
-        </Button>
-        <p className="text-xs text-text-muted">
-          Sua conta será ativada automaticamente assim que o PIX for confirmado.
-        </p>
       </div>
     );
   }
@@ -304,12 +191,11 @@ function AssessoriaContent() {
           studentCount: Number(numAtletas) || 1,
         }),
       });
-      const data = await res.json() as { user?: { id: string }; error?: string };
+      const data = await res.json() as { error?: string };
       if (!res.ok) {
         setCreateAccountError(data.error ?? "Erro ao criar conta.");
         return;
       }
-      setCreatedUserId(data.user!.id);
       setStep(4);
     } catch {
       setCreateAccountError("Erro de conexão. Verifique sua internet.");
@@ -322,74 +208,25 @@ function AssessoriaContent() {
   async function handleSubmit() {
     setSubmitError(null);
 
-    // White Label → manual review flow
-    if (isWhiteLabel) {
-      setSubmitted(true);
-      return;
-    }
-
     // Free plan → skip payment
     if (isFree) {
       router.push("/treinador/dashboard?onboarding=success");
       return;
     }
 
+    // Paid B2B plans use assisted activation until recurring billing is homologated.
     setSubmitting(true);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          method: paymentMethod,
-          planId: selectedPlan,
-          planName: plan.name,
-          amountCents: Math.round(plan.price * 100),
-          customerName: nomeResponsavel,
-          customerEmail: emailResponsavel,
-          customerCpf: cnpj,
-          userId: createdUserId ?? undefined,
-          cardNumber: paymentMethod === "cartao" ? cardNumber : undefined,
-          cardName: paymentMethod === "cartao" ? cardName : undefined,
-          cardExpiry: paymentMethod === "cartao" ? cardExpiry : undefined,
-          cardCvv: paymentMethod === "cartao" ? cardCvv : undefined,
-        }),
-      });
-
-      const data = await res.json() as Record<string, unknown>;
-
-      if (!res.ok) {
-        setSubmitError((data.error as string | undefined) ?? "Erro ao processar pagamento. Tente novamente.");
-        return;
-      }
-
-      if (paymentMethod === "pix") {
-        setPixResult({
-          pixText: (data.pixText as string | undefined) ?? "",
-          pixQrCodeUrl: (data.pixQrCodeUrl as string | null | undefined) ?? null,
-        });
-      } else {
-        // Cartão
-        const status = data.status as string | undefined;
-        if (status === "PAID" || status === "AUTHORIZED") {
-          router.push("/treinador/dashboard?onboarding=success");
-        } else {
-          setSubmitError("Pagamento recusado. Verifique os dados do cartão e tente novamente.");
-        }
-      }
-    } catch {
-      setSubmitError("Erro de conexão. Verifique sua internet e tente novamente.");
-    } finally {
+    window.setTimeout(() => {
+      setSubmitted(true);
       setSubmitting(false);
-    }
+    }, 350);
   }
 
   const submitLabel = isFree
     ? "Criar conta grátis"
     : isWhiteLabel
     ? "Enviar solicitação"
-    : paymentMethod === "pix"
-    ? "Gerar QR Code PIX"
-    : "Confirmar e pagar";
+    : "Enviar para ativação";
 
   return (
     <>
@@ -774,11 +611,11 @@ function AssessoriaContent() {
         </div>
       )}
 
-      {/* ── Step 4 — Revisão e pagamento ── */}
+      {/* ── Step 4 — Revisão e ativação ── */}
       {step === 4 && (
         <div>
           <h1 className="mt-8 font-display text-3xl font-extrabold text-text">
-            Confirmar e pagar
+            Confirmar ativação
           </h1>
           <p className="mt-2 text-sm text-text-muted">
             Revise os dados e conclua o processo de onboarding.
@@ -811,76 +648,15 @@ function AssessoriaContent() {
                 </div>
               </div>
 
-              {/* Payment method — only if paid plan */}
+              {/* Assisted activation — only if paid plan */}
               {!isFree && !isWhiteLabel && (
-                <div className="space-y-4">
-                  <p className="text-sm font-semibold text-text">Forma de pagamento</p>
-                  <PaymentToggle value={paymentMethod} onChange={setPaymentMethod} />
-
-                  {paymentMethod === "cartao" && (
-                    <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
-                      <label className="block">
-                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
-                          Número do cartão
-                        </span>
-                        <input
-                          value={cardNumber}
-                          onChange={(e) => setCardNumber(e.target.value)}
-                          placeholder="0000 0000 0000 0000"
-                          maxLength={19}
-                          className={inputClass}
-                        />
-                      </label>
-                      <label className="block">
-                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
-                          Nome no cartão
-                        </span>
-                        <input
-                          value={cardName}
-                          onChange={(e) => setCardName(e.target.value)}
-                          placeholder="Exatamente como no cartão"
-                          className={inputClass}
-                        />
-                      </label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <label className="block">
-                          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
-                            Validade
-                          </span>
-                          <input
-                            value={cardExpiry}
-                            onChange={(e) => setCardExpiry(e.target.value)}
-                            placeholder="MM/AA"
-                            maxLength={5}
-                            className={inputClass}
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
-                            CVV
-                          </span>
-                          <input
-                            value={cardCvv}
-                            onChange={(e) => setCardCvv(e.target.value)}
-                            placeholder="000"
-                            maxLength={4}
-                            className={inputClass}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  )}
-
-                  {paymentMethod === "pix" && (
-                    <div className="rounded-2xl border border-border bg-card p-5 text-sm text-text-muted">
-                      <p className="font-medium text-text">Como funciona o PIX:</p>
-                      <ol className="mt-2 list-decimal space-y-1 pl-4 text-xs">
-                        <li>Clique em &quot;Gerar QR Code PIX&quot; abaixo</li>
-                        <li>Escaneie o código com seu app de banco</li>
-                        <li>Sua conta é ativada automaticamente após a confirmação</li>
-                      </ol>
-                    </div>
-                  )}
+                <div className="rounded-2xl border border-info/25 bg-info/10 p-5 text-sm text-info">
+                  <p className="font-semibold">Ativação assistida nesta fase</p>
+                  <p className="mt-1 text-xs leading-relaxed">
+                    Planos pagos B2B não solicitam cartão ou PIX nesta tela. A equipe confirma os
+                    dados comerciais, libera o acesso e orienta a cobrança pelo canal financeiro
+                    homologado.
+                  </p>
                 </div>
               )}
 

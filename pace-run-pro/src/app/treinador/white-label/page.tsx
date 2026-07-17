@@ -42,7 +42,7 @@ export default async function CoachWhiteLabelPage() {
     { label: "Especialidades definidas", done: coach.specialties.length > 0, icon: <CheckCircle2 className="h-4 w-4" /> },
     { label: "Contato comercial informado", done: Boolean(coach.whatsapp), icon: <CheckCircle2 className="h-4 w-4" /> },
     {
-      label: "Recebimento Asaas pronto",
+      label: "Dados de recebimento prontos",
       done: Boolean(coach.user.billingSettings?.receivingMethod === "ASAAS" && coach.user.billingSettings.asaasAccountId && coach.user.billingSettings.asaasWalletId),
       icon: <ShieldCheck className="h-4 w-4" />,
     },
