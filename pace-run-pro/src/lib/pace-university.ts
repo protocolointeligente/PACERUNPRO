@@ -1,12 +1,29 @@
 import type { LucideIcon } from "lucide-react";
 import { Activity, BarChart3, Dumbbell, HeartPulse, Smartphone, Target, Trophy, Watch } from "lucide-react";
+import { withEditorialContent } from "./pace-university-editorial";
 
 export type PaceCourseAudience = "athlete" | "coach" | "both";
 
 export interface PaceLesson {
+  id?: string;
   title: string;
   durationMin: number;
   objective: string;
+  content?: string;
+  example?: string;
+  commonMistakes?: string[];
+  activity?: string;
+  summary?: string;
+  quiz?: PaceQuizQuestion[];
+  references?: string[];
+  status?: "draft" | "review" | "approved" | "published" | "archived";
+}
+
+export interface PaceQuizQuestion {
+  prompt: string;
+  options: string[];
+  answer: number;
+  explanation: string;
 }
 
 export interface PaceCourse {
@@ -20,7 +37,7 @@ export interface PaceCourse {
   lessons: PaceLesson[];
 }
 
-export const paceUniversityCourses: PaceCourse[] = [
+const basePaceUniversityCourses: PaceCourse[] = [
   {
     id: "zonas-intensidade-rpe",
     title: "Zonas, RPE e controle de intensidade",
@@ -151,6 +168,8 @@ export const paceUniversityCourses: PaceCourse[] = [
     ],
   },
 ];
+
+export const paceUniversityCourses: PaceCourse[] = basePaceUniversityCourses.map(withEditorialContent);
 
 export function getPaceCourses(audience: "athlete" | "coach") {
   return paceUniversityCourses.filter((course) => course.audience === "both" || course.audience === audience);
