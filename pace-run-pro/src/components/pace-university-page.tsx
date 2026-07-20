@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowLeft,
   BookOpen,
   CheckCircle2,
   Clock,
@@ -142,8 +143,15 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[0.9fr_1.4fr]">
-        <div className="space-y-3">
+      {selectedLessonKey ? (
+        <Button type="button" variant="outline" size="sm" onClick={() => setSelectedLessonKey("")} className="gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Voltar para as trilhas
+        </Button>
+      ) : null}
+
+      <div className={cn("grid gap-4", selectedLessonKey ? "lg:grid-cols-1" : "lg:grid-cols-[0.9fr_1.4fr]")}>
+        <div className={cn("space-y-3", selectedLessonKey && "hidden")}>
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
             <Route className="h-4 w-4" />
             Trilhas disponiveis
@@ -194,7 +202,7 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
             </div>
 
             <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="border-b border-border lg:border-b-0 lg:border-r">
+              <div className={cn("border-b border-border lg:border-b-0 lg:border-r", selectedLessonKey && "hidden")}>
                 {selectedCourse.lessons.map((lesson, index) => {
                   const key = lessonKey(selectedCourse.id, lesson.title);
                   const active = selectedLesson?.title === lesson.title;
@@ -227,7 +235,7 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
                 })}
               </div>
 
-              <div className="space-y-4 p-5">
+              <div className={cn("space-y-4 p-5", selectedLessonKey && "lg:col-span-2 p-6 sm:p-8 lg:p-12")}>
                 {selectedLesson ? (
                   <>
                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
@@ -239,8 +247,8 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
                       <p className="mt-2 text-sm leading-relaxed text-text-muted">{selectedLesson.objective}</p>
                     </div>
                     {selectedLesson.content ? (
-                      <div className="prose prose-invert max-w-none text-sm leading-7 text-text-muted whitespace-pre-line">
-                        {selectedLesson.content}
+                      <div className="max-w-4xl text-base leading-8 text-text-muted">
+                        <RichText text={selectedLesson.content} />
                       </div>
                     ) : (
                       <div className="rounded-2xl border border-warning/30 bg-warning/5 p-4">
@@ -367,5 +375,25 @@ function Section({ title, text }: { title: string; text: string }) {
       <h4 className="font-semibold text-text">{title}</h4>
       <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-text-muted">{text}</p>
     </section>
+  );
+}
+
+function RichText({ text }: { text: string }) {
+  return (
+    <div className="space-y-5">
+      {text.split(/\n\n+/).map((block, index) => {
+        const lines = block.split("\n");
+        const heading = lines[0].match(/^##\s+(.+)/);
+        if (heading) {
+          return (
+            <section key={`${heading[1]}-${index}`}>
+              <h4 className="mb-2 font-display text-lg font-bold text-text">{heading[1]}</h4>
+              <p className="whitespace-pre-line">{lines.slice(1).join("\n").trim()}</p>
+            </section>
+          );
+        }
+        return <p key={index} className="whitespace-pre-line">{block}</p>;
+      })}
+    </div>
   );
 }

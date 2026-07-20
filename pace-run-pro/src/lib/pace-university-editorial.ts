@@ -1,10 +1,10 @@
 import type { PaceCourse, PaceLesson, PaceQuizQuestion } from "./pace-university";
 
 const references = {
-  science: "ENKY 19 — Base Científica e Regras de Treinamento",
-  metrics: "ENKY 18 — Métricas, Indicadores e Dashboards",
-  product: "ENKY 13 — Product Vision & Scope",
-  intelligence: "ENKY 20 — ENKY Intelligence no Produto",
+  science: "Método PaceRunPro — princípios de treinamento e progressão",
+  metrics: "Método PaceRunPro — leitura de carga, resposta e aderência",
+  product: "PaceRunPro — execução, registro e revisão do treino",
+  intelligence: "PaceRunPro — tomada de decisão contextual",
 };
 
 function question(title: string, objective: string): PaceQuizQuestion {
@@ -66,14 +66,59 @@ function lessonGuidance(title: string): { concept: string; steps: string; decisi
   return { concept: "A aula transforma um princípio de treinamento em um procedimento repetível, observável e ajustável.", steps: "Defina o objetivo; prepare a sessão; execute com uma variável principal sob controle; registre o resultado; e revise a decisão com o histórico.", decision: "Ajuste uma variável por vez e escolha a menor mudança capaz de aproximar o treino do objetivo." };
 }
 
+const trackPlans: Record<string, { promise: string; method: string; progression: string }> = {
+  "zonas-intensidade-rpe": {
+    promise: "aprender a controlar o estímulo pelo efeito pretendido, combinando zona, RPE e resposta do atleta",
+    method: "classificar o objetivo da sessão, escolher a métrica dominante e confirmar a execução pelo comportamento do esforço",
+    progression: "da distinção entre zonas para a calibragem individual e, depois, para a tomada de decisão quando os sinais entram em conflito",
+  },
+  "execucao-corrida": {
+    promise: "executar os principais formatos de corrida com ritmo, recuperação e técnica coerentes com o objetivo",
+    method: "ler a sessão antes de começar, construir a intensidade progressivamente e registrar o que aconteceu em cada bloco",
+    progression: "da rodagem fácil para estímulos com variação de ritmo, limiar e intervalos, terminando com revisão pós-treino",
+  },
+  "forca-endurance": {
+    promise: "usar a força para melhorar capacidade de produzir e repetir esforço sem prejudicar os treinos de endurance",
+    method: "preservar o padrão de movimento, controlar RPE/RIR, progredir uma variável por vez e respeitar a recuperação",
+    progression: "da justificativa da força para a escolha de carga, qualidade técnica, progressão semanal e registro que permite revisar o plano",
+  },
+  "metricas-feedback": {
+    promise: "transformar carga, aderência e feedback em decisões de treinamento claras e justificáveis",
+    method: "separar dado observado de interpretação, comparar planejado e realizado e procurar tendência antes de agir",
+    progression: "da consistência do treino para carga externa, carga interna, fadiga e fechamento de uma revisão semanal",
+  },
+  "triatlo-multimodal": {
+    promise: "organizar natação, ciclismo, corrida e força sem deixar que uma modalidade destrua a qualidade da outra",
+    method: "definir prioridade, distribuir estímulos, estimar custo de recuperação e ajustar a semana pelo que foi realizado",
+    progression: "da distribuição de frequência para a ordem dos treinos, sessões combinadas, volume, descarga e publicação da semana",
+  },
+  "estrategia-prova": {
+    promise: "chegar à prova com meta, ritmo, recuperação e estratégia compatíveis com o nível real de preparo",
+    method: "usar histórico e sinais atuais para definir cenário, executar com margem e aprender com o resultado",
+    progression: "da meta realista para taper, controle no dia, análise pós-prova e retorno gradual à rotina",
+  },
+  "execucao-app-mobile": {
+    promise: "usar o treino prescrito como orientação prática para executar melhor cada sessão",
+    method: "ler objetivo, intensidade, sequência e critérios de registro antes de iniciar o treino",
+    progression: "da leitura do treino para a execução, o registro de força, o feedback e a continuidade quando houver imprevisto",
+  },
+  "dados-relogio-strava": {
+    promise: "interpretar dados de treino sem confundir precisão do dispositivo com qualidade da decisão",
+    method: "verificar origem, unidade, completude e contexto antes de comparar o planejado ao realizado",
+    progression: "da escolha do dado relevante para comparação, leitura de métricas, recuperação, preenchimento e auditoria semanal",
+  },
+};
+
 export function editorializeLesson(course: PaceCourse, lesson: PaceLesson): PaceLesson {
   const domain = domainFor(course);
   const guidance = lessonGuidance(lesson.title);
+  const track = trackPlans[course.id] ?? trackPlans["zonas-intensidade-rpe"];
   const content = [
-    `## O que esta aula resolve\n\n${lesson.objective} ${guidance.concept} Nesta aula, você vai sair com um procedimento aplicável à rotina, e não apenas com uma definição.`,
-    `## Conteúdo essencial\n\n${guidance.steps} O objetivo vem antes da métrica: primeiro descreva o estímulo que deveria acontecer, depois escolha os sinais que permitem verificar se ele aconteceu. Compare o atleta consigo mesmo, considerando nível, histórico, sono, estresse, dor, técnica, disponibilidade e fase da periodização.`,
+    `## O lugar desta aula na trilha\n\nEsta trilha ensina a ${track.promise}. A sequência foi construída ${track.progression}. Portanto, esta aula não deve ser estudada isoladamente: ela desenvolve o próximo passo do tema “${course.title}” e prepara a decisão da aula seguinte.`,
+    `## O que esta aula resolve\n\n${lesson.objective} ${guidance.concept} Ao final, o atleta ou treinador deve conseguir explicar o objetivo do treino, executar o procedimento e justificar um ajuste sem usar uma métrica isolada como resposta automática.`,
+    `## Conteúdo essencial\n\n${guidance.steps} Na lógica do PaceRunPro, o treino começa com uma intenção clara: ${track.method}. O objetivo vem antes da métrica; depois são observados execução, percepção, contexto e recuperação. Compare o atleta consigo mesmo, considerando nível, histórico, sono, estresse, dor, técnica, disponibilidade e fase da periodização.`,
     `## Aplicação passo a passo\n\n1. Escreva o objetivo da sessão em uma frase.\n2. Defina a variável principal e uma faixa aceitável, sem exigir um número perfeito.\n3. Observe execução, percepção e contexto durante ou logo após o treino.\n4. Compare planejado e realizado, descrevendo a diferença antes de julgá-la.\n5. Registre uma decisão pequena, reversível e com motivo explícito.\n\n${guidance.decision}`,
-    `## Relação com a ENKY\n\nNa plataforma, esta aula ajuda o treinador a ${domain.application}. A ENKY 19 fornece o raciocínio científico; a ENKY 18 organiza métricas e indicadores; e a ENKY 20 orienta recomendações explicáveis, com indicação de incerteza. O sistema apoia a decisão, mas não substitui avaliação profissional, especialmente diante de dor ou sinais persistentes.`,
+    `## Relação com o PaceRunPro\n\nNa plataforma, esta aula ajuda o treinador a ${domain.application}. O método PaceRunPro organiza objetivo, execução, resposta e revisão em um ciclo simples: prescrever com clareza, observar o que aconteceu, registrar contexto e ajustar somente o necessário. O sistema apoia a decisão, mas não substitui avaliação profissional, especialmente diante de dor ou sinais persistentes.`,
   ].join("\n\n");
 
   const example = `Um treinador acompanha um atleta que deveria completar uma sessão relacionada a “${lesson.title}”. O atleta entrega parte do planejado, relata esforço acima do habitual e registra sono ruim. Em vez de concluir que houve falta de disciplina ou aumentar a cobrança, o treinador compara a sessão com o histórico, verifica se o padrão se repete e decide entre manter, reduzir ou reorganizar o próximo estímulo. A justificativa fica registrada para orientar a próxima revisão.`;
