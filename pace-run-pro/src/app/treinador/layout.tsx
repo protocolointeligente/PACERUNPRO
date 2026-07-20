@@ -2,6 +2,7 @@ import { getSession } from "@/lib/auth-guard";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import TreinadorLayoutClient from "./_layout-client";
+import { subscriptionToBillingPlan } from "@/lib/billing-plans";
 
 function subPlanToBillingPlan(plan: string): string {
   if (plan === "TEAM") return "b2b-unlimited";
@@ -31,6 +32,10 @@ export default async function TreinadorLayout({ children }: { children: React.Re
   }).catch(() => null);
 
   const sub = user?.subscriptions?.[0];
+  if (!sub || (sub.status !== "ACTIVE" && sub.status !== "TRIAL")) {
+    const pendingPlan = sub ? subscriptionToBillingPlan(sub.plan) : "b2b-starter";
+    redirect(`/pagamento?plano=${pendingPlan}`);
+  }
   const planId =
     sub?.status === "ACTIVE" || sub?.status === "TRIAL"
       ? subPlanToBillingPlan(sub.plan)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac } from "crypto";
+import { createHash, timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { SubscriptionPlan } from "@prisma/client";
 
@@ -13,17 +13,21 @@ function planIdToEnum(planId: string): SubscriptionPlan {
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
 
-  // Verificação HMAC-SHA256 obrigatória em produção
-  const webhookSecret = process.env.PAGBANK_WEBHOOK_SECRET;
-  if (!webhookSecret && process.env.NODE_ENV === "production") {
-    console.error("[pagbank] PAGBANK_WEBHOOK_SECRET não configurado em produção");
+  // PagBank: SHA-256 de "{token}-{payload bruto}", recebido em x-authenticity-token.
+  const pagBankToken = process.env.PAGBANK_TOKEN;
+  if (!pagBankToken && process.env.NODE_ENV === "production") {
+    console.error("[pagbank] PAGBANK_TOKEN não configurado em produção");
     return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
   }
-  if (webhookSecret) {
-    // PagBank envia a assinatura no header x-pagbank-signature como hex HMAC-SHA256
-    const receivedSig = req.headers.get("x-pagbank-signature") ?? "";
-    const expectedSig = createHmac("sha256", webhookSecret).update(rawBody).digest("hex");
-    if (receivedSig !== expectedSig) {
+  if (pagBankToken) {
+    const receivedSig = req.headers.get("x-authenticity-token") ?? "";
+    const expectedSig = createHash("sha256").update(`${pagBankToken}-${rawBody}`).digest("hex");
+    const receivedBuffer = Buffer.from(receivedSig, "utf8");
+    const expectedBuffer = Buffer.from(expectedSig, "utf8");
+    if (
+      receivedBuffer.length !== expectedBuffer.length ||
+      !timingSafeEqual(receivedBuffer, expectedBuffer)
+    ) {
       console.warn("[pagbank] assinatura inválida recebida");
       return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
     }

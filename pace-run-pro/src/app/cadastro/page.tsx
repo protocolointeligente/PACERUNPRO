@@ -146,7 +146,7 @@ function CadastroContent() {
       } else if (recommendedPlan?.id === "b2b-free" || data.recommendedPlanId === "b2b-free") {
         router.push("/treinador/dashboard");
       } else {
-        router.push(`/onboarding/assessoria?plano=${recommendedPlan?.id ?? data.recommendedPlanId}`);
+        router.push(`/pagamento?plano=${recommendedPlan?.id ?? data.recommendedPlanId}`);
       }
     } catch {
       setError("Não foi possível criar sua conta. Tente novamente.");
