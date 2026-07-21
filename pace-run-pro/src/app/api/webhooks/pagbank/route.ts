@@ -41,6 +41,17 @@ export async function POST(req: NextRequest) {
   }
 
   const eventId = event.id as string | undefined;
+  const providerEventId = eventId ?? createHash("sha256").update(rawBody).digest("hex");
+  try {
+    await prisma.webhookEvent.create({
+      data: { provider: "pagbank", providerEventId, payload: JSON.parse(JSON.stringify(event)), status: "processing" },
+    });
+  } catch (error) {
+    if ((error as { code?: string }).code === "P2002") {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+    throw error;
+  }
   console.log("[pagbank webhook] recebido id:", eventId, rawBody.slice(0, 200));
 
   // ── Encontra cobrança paga ──────────────────────────────────────────────
@@ -151,6 +162,22 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      const grossCents = amountCents || previous.pricePaidCents;
+      await prisma.paymentLedgerEntry.create({
+        data: {
+          provider: "pagbank",
+          providerEventId,
+          providerOrderId: typeof event.id === "string" ? event.id : undefined,
+          userId,
+          coachId: purchase.product.coachId,
+          grossCents,
+          platformFeeCents: Math.round(grossCents * 0.1),
+          netCents: grossCents - Math.round(grossCents * 0.1),
+          metadata: { splitConfigured: Boolean(process.env.PAGBANK_PLATFORM_ACCOUNT_ID) },
+        },
+      });
+      await prisma.webhookEvent.update({ where: { providerEventId }, data: { status: "processed", processedAt: new Date() } });
+
       console.log("[pagbank] compra marketplace paga:", purchase.id);
       return NextResponse.json({ received: true });
     }
@@ -190,6 +217,21 @@ export async function POST(req: NextRequest) {
         paidAt: new Date(),
       },
     });
+
+    const platformFeeCents = Math.round(amountCents * 0.1);
+    await prisma.paymentLedgerEntry.create({
+      data: {
+        provider: "pagbank",
+        providerEventId,
+        providerOrderId: typeof event.id === "string" ? event.id : undefined,
+        userId,
+        grossCents: amountCents,
+        platformFeeCents,
+        netCents: amountCents - platformFeeCents,
+        metadata: { splitConfigured: Boolean(process.env.PAGBANK_PLATFORM_ACCOUNT_ID) },
+      },
+    });
+    await prisma.webhookEvent.update({ where: { providerEventId }, data: { status: "processed", processedAt: new Date() } });
 
     console.log("[pagbank] assinatura ativada — usuário:", userId, "plano:", plan);
   } catch (err) {

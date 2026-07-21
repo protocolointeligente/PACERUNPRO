@@ -933,6 +933,40 @@ model Payment {
   @@map("payments")
 }
 
+model PaymentLedgerEntry {
+  id              String   @id @default(cuid())
+  provider        String
+  providerEventId String   @unique
+  providerOrderId String?
+  providerChargeId String?
+  userId          String?
+  coachId         String?
+  grossCents      Int
+  platformFeeCents Int
+  netCents        Int
+  currency        String   @default("BRL")
+  status          String   @default("PAID")
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([provider, createdAt])
+  @@index([coachId, createdAt])
+  @@map("payment_ledger_entries")
+}
+
+model WebhookEvent {
+  id              String   @id @default(cuid())
+  provider        String
+  providerEventId String   @unique
+  payload         Json
+  status          String   @default("received")
+  receivedAt      DateTime @default(now())
+  processedAt     DateTime?
+
+  @@index([provider, receivedAt])
+  @@map("webhook_events")
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Vouchers de desconto
 // ────────────────────────────────────────────────────────────────────────────
