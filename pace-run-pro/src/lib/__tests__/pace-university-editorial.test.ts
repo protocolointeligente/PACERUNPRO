@@ -10,5 +10,6 @@ describe("Pace University editorial coverage", () => {
       lesson.content && lesson.example && lesson.activity && lesson.summary &&
       lesson.commonMistakes?.length && lesson.quiz?.length && lesson.references?.length && lesson.status === "review"
     )).toBe(true);
+    expect(lessons.every((lesson) => !lesson.content?.includes("Na lógica do PaceRunPro"))).toBe(true);
   });
 });
