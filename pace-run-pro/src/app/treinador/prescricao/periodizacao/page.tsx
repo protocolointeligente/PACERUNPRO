@@ -881,6 +881,19 @@ export default function PeriodizacaoPage() {
     try {
       if (!allSuggestionsAccepted) setAllSuggestions("accepted");
       await persistPlanForAthletes(true);
+      const athleteId = selectedAthletes[0];
+      const releaseResults = await Promise.all(weeks.map((week) => {
+        const weekStart = new Date(`${periodizationSettings.startDate}T12:00:00`);
+        weekStart.setDate(weekStart.getDate() + (week.week - 1) * 7);
+        return fetch(`/api/coach/athletes/${athleteId}/weeks`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ weekStart: toCalendarDate(weekStart), released: true }),
+        });
+      }));
+      if (releaseResults.some((response) => !response.ok)) {
+        throw new Error("O plano foi salvo, mas uma ou mais semanas não puderam ser liberadas.");
+      }
       setLiberated(true);
       await refreshSavedPlans();
       try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }

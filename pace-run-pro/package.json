@@ -10,6 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "env:validate": "node scripts/validate-env.mjs",
+    "bootstrap:local": "powershell -ExecutionPolicy Bypass -File scripts/bootstrap-local.ps1",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",

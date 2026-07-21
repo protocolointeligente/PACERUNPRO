@@ -99,9 +99,10 @@ export async function POST(req: NextRequest) {
   ]);
 
   const body = await req.json();
-  const { workoutId, targetAthleteIds } = body as {
+  const { workoutId, targetAthleteIds, targetDate } = body as {
     workoutId: string;
     targetAthleteIds: string[];
+    targetDate?: string;
   };
 
   if (!workoutId || !Array.isArray(targetAthleteIds) || targetAthleteIds.length === 0) {
@@ -144,9 +145,11 @@ export async function POST(req: NextRequest) {
 
   let created = 0;
   let skipped = 0;
+  const createdIds: string[] = [];
   for (const athleteId of validTargets) {
     // Skip if this athlete already has a workout on the same date
-    const sourceDay = dateKey(source.date);
+    const destinationDate = targetDate ? new Date(`${targetDate}T12:00:00.000Z`) : source.date;
+    const sourceDay = dateKey(destinationDate);
     const existing = await prisma.workout.findFirst({
       where: {
         date: {
@@ -161,11 +164,11 @@ export async function POST(req: NextRequest) {
     });
     if (existing) { skipped++; continue; }
 
-    const week = await findOrCreatePlanAndWeek(athleteId, coach.id, source.date);
-    await prisma.workout.create({
+    const week = await findOrCreatePlanAndWeek(athleteId, coach.id, destinationDate);
+    const copied = await prisma.workout.create({
       data: {
         weekId: week.id,
-        date: source.date,
+        date: destinationDate,
         type: source.type as WorkoutType,
         title: source.title,
         status: "LIBERADO",
@@ -183,8 +186,9 @@ export async function POST(req: NextRequest) {
         ...(source.targetDurationMin != null ? { targetDurationMin: source.targetDurationMin } : {}),
       },
     });
+    createdIds.push(copied.id);
     created++;
   }
 
-  return NextResponse.json({ created, skipped });
+  return NextResponse.json({ created, skipped, createdIds });
 }

@@ -179,7 +179,7 @@ function WorkoutModal({ wo, onClose }: { wo: CalWorkout; onClose: () => void }) 
 
 // ── Calendar Grid ─────────────────────────────────────────────────────────────
 
-export function AthleteCalendar({ initialWorkouts }: Props) {
+export function AthleteCalendar({ athleteId, initialWorkouts }: Props) {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -188,6 +188,7 @@ export function AthleteCalendar({ initialWorkouts }: Props) {
   const [dragOverDate, setDragOverDate] = useState<string | null>(null);
   const [selectedWo, setSelectedWo] = useState<CalWorkout | null>(null);
   const [saving, setSaving] = useState(false);
+  const [dragMode, setDragMode] = useState<"move" | "copy">("move");
 
   // Build calendar grid
   const firstDay = startOfMonth(year, month);
@@ -224,25 +225,40 @@ export function AthleteCalendar({ initialWorkouts }: Props) {
     const wo = workouts.find((w) => w.id === draggingId);
     if (!wo || wo.date === targetDate) { setDraggingId(null); setDragOverDate(null); return; }
 
-    // Optimistic update
-    setWorkouts((prev) => prev.map((w) => w.id === draggingId ? { ...w, date: targetDate } : w));
+    const previousDate = wo.date;
+    if (dragMode === "move") {
+      setWorkouts((prev) => prev.map((w) => w.id === draggingId ? { ...w, date: targetDate } : w));
+    }
     setDraggingId(null);
     setDragOverDate(null);
 
     setSaving(true);
     try {
-      await fetch(`/api/coach/workouts/${draggingId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: `${targetDate}T12:00:00.000Z` }),
-      });
+      const response = dragMode === "move"
+        ? await fetch(`/api/coach/workouts/${draggingId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ date: `${targetDate}T12:00:00.000Z` }),
+          })
+        : await fetch("/api/coach/workouts/copy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ workoutId: draggingId, targetAthleteIds: [athleteId], targetDate }),
+          });
+      if (!response.ok) throw new Error("Falha ao salvar operação do calendário");
+      if (dragMode === "copy") {
+        const data = await response.json();
+        const copiedId = data.createdIds?.[0];
+        if (copiedId) setWorkouts((prev) => [...prev, { ...wo, id: copiedId, date: targetDate, status: "LIBERADO" }]);
+      }
     } catch {
-      // Rollback on error
-      setWorkouts((prev) => prev.map((w) => w.id === draggingId ? { ...w, date: wo.date } : w));
+      if (dragMode === "move") {
+        setWorkouts((prev) => prev.map((w) => w.id === draggingId ? { ...w, date: previousDate } : w));
+      }
     } finally {
       setSaving(false);
     }
-  }, [draggingId, dragOverDate, workouts]);
+  }, [athleteId, dragMode, draggingId, dragOverDate, workouts]);
 
   return (
     <div className="space-y-3">
@@ -266,8 +282,18 @@ export function AthleteCalendar({ initialWorkouts }: Props) {
       </div>
 
       {saving && (
-        <p className="text-center text-xs text-text-muted animate-pulse">Reagendando treino…</p>
+        <p className="text-center text-xs text-text-muted animate-pulse">Salvando operação do calendário…</p>
       )}
+
+      <div className="flex items-center justify-end gap-1" role="group" aria-label="Operação ao arrastar">
+        <span className="mr-2 text-[11px] text-text-muted">Ao arrastar:</span>
+        {(["move", "copy"] as const).map((mode) => (
+          <button key={mode} type="button" onClick={() => setDragMode(mode)}
+            className={cn("rounded-lg border px-2.5 py-1 text-[11px]", dragMode === mode ? "border-primary bg-primary/10 text-primary" : "border-border text-text-muted hover:text-text")}>
+            {mode === "move" ? "Mover" : "Copiar"}
+          </button>
+        ))}
+      </div>
 
       {/* Day headers */}
       <div className="grid grid-cols-7 gap-px">
@@ -361,7 +387,7 @@ export function AthleteCalendar({ initialWorkouts }: Props) {
         ))}
         <span className="flex items-center gap-1 text-[10px] text-text-muted">
           <GripVertical className="h-3 w-3" />
-          Arraste para reagendar
+          Arraste para {dragMode === "move" ? "reagendar" : "copiar"}
         </span>
       </div>
 
