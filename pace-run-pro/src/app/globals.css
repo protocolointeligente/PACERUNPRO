@@ -170,6 +170,55 @@ body {
   color: #17212b !important;
 }
 
+/* Landing page: dark mode is the default app theme. The page contains
+   marketing-specific utility colors, so keep their dark contrast explicit
+   and let the .light rules below opt into the light palette. */
+.marketing-page {
+  background: #05090f !important;
+  color: #eceae3 !important;
+}
+
+.marketing-page nav,
+.marketing-page section,
+.marketing-page footer {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.marketing-page nav {
+  background: rgba(5, 9, 15, 0.92) !important;
+}
+
+.marketing-page .text-slate-600,
+.marketing-page .text-slate-700 {
+  color: #cbd5e1 !important;
+}
+
+.marketing-page .text-slate-500,
+.marketing-page .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.marketing-page .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+.marketing-page .text-slate-900,
+.marketing-page .text-slate-950 {
+  color: #f8fafc !important;
+}
+
+.marketing-page [class*="bg-[#f7f8fa]"],
+.marketing-page [class*="bg-[#eef3f7]"],
+.marketing-page [class*="bg-white/80"],
+.marketing-page [class*="bg-white/92"],
+.marketing-page [class*="bg-white/70"] {
+  background-color: #05090f !important;
+}
+
+.marketing-page [class*="border-slate-200"] {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
 .light .marketing-page nav {
   background: rgba(255, 255, 255, 0.92) !important;
   border-color: rgba(100, 114, 130, 0.20) !important;
