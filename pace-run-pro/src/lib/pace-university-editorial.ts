@@ -1,4 +1,19 @@
 import type { PaceCourse, PaceLesson, PaceQuizQuestion } from "./pace-university";
+import { suppliedPaceUniversityText } from "./pace-university-supplied";
+
+function suppliedLessonSections(): Map<string, string> {
+  const sections = new Map<string, string>();
+  const matches = Array.from(suppliedPaceUniversityText.matchAll(/^## Aula \d+ — (.+)$/gm));
+  matches.forEach((match, index) => {
+    const title = match[1].trim();
+    const start = (match.index ?? 0) + match[0].length;
+    const end = index + 1 < matches.length ? (matches[index + 1].index ?? suppliedPaceUniversityText.length) : suppliedPaceUniversityText.indexOf("# Padrão obrigatório");
+    sections.set(title, suppliedPaceUniversityText.slice(start, end).trim());
+  });
+  return sections;
+}
+
+const suppliedSections = suppliedLessonSections();
 
 const references = {
   science: "Método PaceRunPro — princípios de treinamento e progressão",
@@ -145,7 +160,7 @@ export function editorializeLesson(course: PaceCourse, lesson: PaceLesson): Pace
   const content = [
     `## O lugar desta aula na trilha\n\nEsta trilha ensina a ${track.promise}. A sequência foi construída ${track.progression}. Portanto, esta aula não deve ser estudada isoladamente: ela desenvolve o próximo passo do tema “${course.title}” e prepara a decisão da aula seguinte.`,
     `## O que esta aula resolve\n\n${lesson.objective} ${guidance.concept} Ao final, o atleta ou treinador deve conseguir explicar o objetivo do treino, executar o procedimento e justificar um ajuste sem usar uma métrica isolada como resposta automática.`,
-    `## Conteúdo essencial\n\n${suppliedLessonContent[lesson.title] ?? `${guidance.steps} Na lógica do PaceRunPro, o treino começa com uma intenção clara: ${track.method}. O objetivo vem antes da métrica; depois são observados execução, percepção, contexto e recuperação. Compare o atleta consigo mesmo, considerando nível, histórico, sono, estresse, dor, técnica, disponibilidade e fase da periodização.`}`,
+    `## Conteúdo da aula\n\n${suppliedSections.get(lesson.title) ?? suppliedLessonContent[lesson.title] ?? `${guidance.steps} O treino começa com uma intenção clara: ${track.method}. O objetivo vem antes da métrica; depois são observados execução, percepção, contexto e recuperação.`}`,
     `## Aplicação passo a passo\n\n1. Escreva o objetivo da sessão em uma frase.\n2. Defina a variável principal e uma faixa aceitável, sem exigir um número perfeito.\n3. Observe execução, percepção e contexto durante ou logo após o treino.\n4. Compare planejado e realizado, descrevendo a diferença antes de julgá-la.\n5. Registre uma decisão pequena, reversível e com motivo explícito.\n\n${guidance.decision}`,
     `## Relação com o PaceRunPro\n\nNa plataforma, esta aula ajuda o treinador a ${domain.application}. O método PaceRunPro organiza objetivo, execução, resposta e revisão em um ciclo simples: prescrever com clareza, observar o que aconteceu, registrar contexto e ajustar somente o necessário. O sistema apoia a decisão, mas não substitui avaliação profissional, especialmente diante de dor ou sinais persistentes.`,
   ].join("\n\n");
