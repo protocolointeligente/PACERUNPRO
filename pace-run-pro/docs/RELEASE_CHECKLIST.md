@@ -7,6 +7,16 @@ Branch: `agent/enforce-paid-registration`
 
 **Não liberar para produção ainda.** O código local está compilando e os contratos passam, mas a homologação real está bloqueada por credenciais/infraestrutura ausentes nesta sessão.
 
+## Fase 5 — evidências executadas
+
+- Servidor local iniciado em `http://localhost:3002` porque a porta 3000 estava ocupada.
+- Evento PagBank inválido: **403 `Invalid signature`** — passou.
+- Evento PagBank válido: **500** — falhou ao persistir `WebhookEvent` por `ECONNREFUSED` no PostgreSQL.
+- Evento PagBank duplicado: **500** — não foi possível alcançar a verificação de duplicidade sem PostgreSQL.
+- E2E publicado: **não executado** — `NEXT_PUBLIC_APP_URL`/URL pública não configurada.
+- Split sandbox: **não executado** — token, conta plataforma e recebedor reais ausentes.
+- Decisão final: **NO-GO** até banco, URL publicada e PagBank sandbox serem configurados.
+
 ## Evidências locais
 
 - [x] `npm run audit:ownership` — 65 rotas escopadas verificadas.
