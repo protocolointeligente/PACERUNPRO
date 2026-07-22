@@ -226,8 +226,18 @@ body {
 
 .light .marketing-page section,
 .light .marketing-page footer {
-  background: #eef3f7 !important;
+  color: #17212b;
   border-color: rgba(100, 114, 130, 0.22) !important;
+}
+
+/* Keep the light landing page airy while retaining separation between bands. */
+.light .marketing-page > section {
+  background-color: transparent;
+}
+
+.light .marketing-page > section[class*="bg-[#07111d"],
+.light .marketing-page > section[class*="bg-[#07111c"] {
+  background-color: #eef3f7;
 }
 
 .light .marketing-page [class*="bg-[#05090f]"],
@@ -242,7 +252,35 @@ body {
 .light .marketing-page .text-white,
 .light .marketing-page .text-slate-300,
 .light .marketing-page .text-slate-400 {
-  color: #151a1c !important;
+  color: #334155 !important;
+}
+
+.light .marketing-page .text-white {
+  color: #17212b !important;
+}
+
+/* Light-mode overrides must outrank the marketing dark-palette mappings above. */
+.light .marketing-page .text-slate-950,
+.light .marketing-page .text-slate-900 {
+  color: #17212b !important;
+}
+
+.light .marketing-page nav .text-slate-600,
+.light .marketing-page nav .text-slate-700,
+.light .marketing-page nav .text-slate-300 {
+  color: #475569 !important;
+}
+
+.light .marketing-page h1,
+.light .marketing-page h2,
+.light .marketing-page h3,
+.light .marketing-page h4 {
+  color: #17212b;
+}
+
+.light .marketing-page p.text-slate-300,
+.light .marketing-page p.text-slate-400 {
+  color: #475569 !important;
 }
 
 .light .marketing-page .text-slate-500 {
