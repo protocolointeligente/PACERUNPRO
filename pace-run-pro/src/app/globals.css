@@ -485,6 +485,10 @@ body {
   text-shadow: none !important;
 }
 
+.light .calendar-workout-chip * {
+  color: #17212b !important;
+}
+
 .light .calendar-workout-chip[data-workout-type="REGENERATIVO"] { background-color: #6ee7b7 !important; }
 .light .calendar-workout-chip[data-workout-type="RODAGEM_LEVE"] { background-color: #93c5fd !important; }
 .light .calendar-workout-chip[data-workout-type="PROGRESSIVO"] { background-color: #60a5fa !important; }
