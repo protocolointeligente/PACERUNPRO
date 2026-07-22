@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import { exchangeStravaCode, fetchStravaActivities } from "@/lib/integrations/strava";
+import {
+  exchangeStravaCode,
+  fetchStravaActivities,
+  getStravaRedirectConfig,
+  logStravaOAuthConfig,
+} from "@/lib/integrations/strava";
 import { persistStravaActivity } from "@/lib/integrations/strava-sync";
 import { encrypt } from "@/lib/encryption";
 
@@ -11,13 +17,28 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
 
-  if (error || !code) {
-    return NextResponse.redirect(new URL("/atleta/perfil?tab=dispositivos&error=strava_denied", request.url));
+  const storedState = request.cookies.get("strava_state")?.value ?? "";
+  const receivedState = state ?? "";
+  const storedStateBuffer = Buffer.from(storedState, "utf8");
+  const receivedStateBuffer = Buffer.from(receivedState, "utf8");
+  const validState =
+    storedStateBuffer.length > 0 &&
+    storedStateBuffer.length === receivedStateBuffer.length &&
+    timingSafeEqual(storedStateBuffer, receivedStateBuffer);
+  if (!validState) {
+    const csrfResponse = NextResponse.redirect(
+      new URL("/atleta/perfil?tab=dispositivos&error=strava_csrf", request.url),
+    );
+    csrfResponse.cookies.delete("strava_state");
+    return csrfResponse;
   }
 
-  const storedState = request.cookies.get("strava_state")?.value;
-  if (!storedState || storedState !== state) {
-    return NextResponse.redirect(new URL("/atleta/perfil?tab=dispositivos&error=strava_csrf", request.url));
+  if (error || !code) {
+    const deniedResponse = NextResponse.redirect(
+      new URL("/atleta/perfil?tab=dispositivos&error=strava_denied", request.url),
+    );
+    deniedResponse.cookies.delete("strava_state");
+    return deniedResponse;
   }
 
   const session = await getSession();
@@ -28,7 +49,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const token = await exchangeStravaCode(code);
+    const redirectConfig = getStravaRedirectConfig();
+    logStravaOAuthConfig(redirectConfig);
+    const token = await exchangeStravaCode(code, redirectConfig.redirectUri);
     const externalId = token.athlete?.id ? String(token.athlete.id) : null;
 
     const device = await prisma.connectedDevice.upsert({

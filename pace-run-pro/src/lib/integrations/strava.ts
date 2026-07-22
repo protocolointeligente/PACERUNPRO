@@ -1,5 +1,103 @@
 const STRAVA_OAUTH_BASE = "https://www.strava.com/oauth";
 const STRAVA_API_BASE = "https://www.strava.com/api/v3";
+export const STRAVA_CALLBACK_PATH = "/api/auth/strava/callback";
+const PRODUCTION_APP_URL = "https://www.pacerunpro.com.br";
+
+type StravaRedirectSource =
+  | "STRAVA_REDIRECT_URI"
+  | "APP_URL"
+  | "NEXT_PUBLIC_APP_URL"
+  | "VERCEL_URL"
+  | "production_default"
+  | "development_default";
+
+export interface StravaRedirectConfig {
+  redirectUri: string;
+  domain: string;
+  callbackPath: string;
+  environment: string;
+  source: StravaRedirectSource;
+}
+
+function configuredValue(value: string | undefined): string | null {
+  const normalized = value?.trim().replace(/^['"]|['"]$/g, "");
+  return normalized ? normalized : null;
+}
+
+function absoluteUrl(value: string, variableName: string): URL {
+  const withProtocol = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+  try {
+    return new URL(withProtocol);
+  } catch {
+    throw new Error(`${variableName} must be a valid absolute URL`);
+  }
+}
+
+export function getStravaRedirectConfig(): StravaRedirectConfig {
+  const environment = process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "development";
+  const isProduction = environment === "production" || process.env.NODE_ENV === "production";
+  const explicitRedirect = configuredValue(process.env.STRAVA_REDIRECT_URI);
+  const appUrl = configuredValue(process.env.APP_URL);
+  const publicAppUrl = configuredValue(process.env.NEXT_PUBLIC_APP_URL);
+  const vercelUrl = configuredValue(process.env.VERCEL_URL);
+
+  let redirectUrl: URL;
+  let source: StravaRedirectSource;
+
+  if (explicitRedirect) {
+    redirectUrl = absoluteUrl(explicitRedirect, "STRAVA_REDIRECT_URI");
+    source = "STRAVA_REDIRECT_URI";
+  } else if (appUrl) {
+    redirectUrl = new URL(STRAVA_CALLBACK_PATH, absoluteUrl(appUrl, "APP_URL"));
+    source = "APP_URL";
+  } else if (publicAppUrl) {
+    redirectUrl = new URL(STRAVA_CALLBACK_PATH, absoluteUrl(publicAppUrl, "NEXT_PUBLIC_APP_URL"));
+    source = "NEXT_PUBLIC_APP_URL";
+  } else if (!isProduction && vercelUrl) {
+    redirectUrl = new URL(STRAVA_CALLBACK_PATH, absoluteUrl(vercelUrl, "VERCEL_URL"));
+    source = "VERCEL_URL";
+  } else if (isProduction) {
+    redirectUrl = new URL(STRAVA_CALLBACK_PATH, PRODUCTION_APP_URL);
+    source = "production_default";
+  } else {
+    redirectUrl = new URL(STRAVA_CALLBACK_PATH, "http://localhost:3000");
+    source = "development_default";
+  }
+
+  if (redirectUrl.pathname !== STRAVA_CALLBACK_PATH) {
+    throw new Error(`STRAVA_REDIRECT_URI must use callback path ${STRAVA_CALLBACK_PATH}`);
+  }
+  if (isProduction && redirectUrl.protocol !== "https:") {
+    throw new Error("STRAVA_REDIRECT_URI must use HTTPS in production");
+  }
+
+  const configuredOrigins = [appUrl, publicAppUrl]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => absoluteUrl(value, "app URL").origin);
+  if (new Set(configuredOrigins).size > 1) {
+    console.warn("[strava oauth] APP_URL and NEXT_PUBLIC_APP_URL use different origins");
+  }
+  if (isProduction && vercelUrl && absoluteUrl(vercelUrl, "VERCEL_URL").origin !== redirectUrl.origin) {
+    console.info("[strava oauth] ignoring VERCEL_URL for stable production OAuth callback");
+  }
+
+  return {
+    redirectUri: redirectUrl.toString(),
+    domain: redirectUrl.host,
+    callbackPath: redirectUrl.pathname,
+    environment,
+    source,
+  };
+}
+
+export function logStravaOAuthConfig(config: StravaRedirectConfig): void {
+  console.info("[strava oauth] configuration", {
+    domain: config.domain,
+    callbackPath: config.callbackPath,
+    environment: config.environment,
+    source: config.source,
+  });
+}
 
 export interface StravaTokenResponse {
   token_type: string;
@@ -34,18 +132,20 @@ export class StravaApiError extends Error {
 }
 
 export function getStravaAuthorizeUrl(redirectUri: string, state: string): string {
-  const params = new URLSearchParams({
-    client_id: process.env.STRAVA_CLIENT_ID ?? "",
-    redirect_uri: redirectUri,
-    response_type: "code",
-    approval_prompt: "auto",
-    scope: "read,activity:read_all",
-    state,
-  });
-  return `${STRAVA_OAUTH_BASE}/authorize?${params.toString()}`;
+  const clientId = process.env.STRAVA_CLIENT_ID ?? "";
+  return `${STRAVA_OAUTH_BASE}/authorize` +
+    `?client_id=${encodeURIComponent(clientId)}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    "&response_type=code" +
+    "&approval_prompt=auto" +
+    `&scope=${encodeURIComponent("read,activity:read_all")}` +
+    `&state=${encodeURIComponent(state)}`;
 }
 
-export async function exchangeStravaCode(code: string): Promise<StravaTokenResponse> {
+export async function exchangeStravaCode(
+  code: string,
+  redirectUri: string,
+): Promise<StravaTokenResponse> {
   const res = await fetch(`${STRAVA_OAUTH_BASE}/token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -53,6 +153,7 @@ export async function exchangeStravaCode(code: string): Promise<StravaTokenRespo
       client_id: process.env.STRAVA_CLIENT_ID,
       client_secret: process.env.STRAVA_CLIENT_SECRET,
       code,
+      redirect_uri: redirectUri,
       grant_type: "authorization_code",
     }),
   });
