@@ -477,6 +477,30 @@ body {
   border-color: var(--marketing-line) !important;
 }
 
+/* Calendar workout chips: preserve the dark palette, but use readable ink and
+   stronger surfaces in the light theme. */
+.light .calendar-workout-chip {
+  color: #17212b !important;
+  border-color: rgba(23, 33, 43, 0.22) !important;
+  text-shadow: none !important;
+}
+
+.light .calendar-workout-chip[data-workout-type="REGENERATIVO"] { background-color: #6ee7b7 !important; }
+.light .calendar-workout-chip[data-workout-type="RODAGEM_LEVE"] { background-color: #93c5fd !important; }
+.light .calendar-workout-chip[data-workout-type="PROGRESSIVO"] { background-color: #60a5fa !important; }
+.light .calendar-workout-chip[data-workout-type="LONGAO"] { background-color: #a5b4fc !important; }
+.light .calendar-workout-chip[data-workout-type="FARTLEK"] { background-color: #fbbf24 !important; }
+.light .calendar-workout-chip[data-workout-type="TECNICA"] { background-color: #5eead4 !important; }
+.light .calendar-workout-chip[data-workout-type="SUBIDA"] { background-color: #fb923c !important; }
+.light .calendar-workout-chip[data-workout-type="TEMPO_RUN"] { background-color: #fb923c !important; }
+.light .calendar-workout-chip[data-workout-type="INTERVALADO_LONGO"] { background-color: #fb7185 !important; }
+.light .calendar-workout-chip[data-workout-type="INTERVALADO_CURTO"] { background-color: #f87171 !important; }
+.light .calendar-workout-chip[data-workout-type="PROVA"] { background-color: #f87171 !important; }
+.light .calendar-workout-chip[data-workout-type="FORCA"] { background-color: #a78bfa !important; }
+.light .calendar-workout-chip[data-workout-type="FUNCIONAL"] { background-color: #c084fc !important; }
+.light .calendar-workout-chip[data-workout-type="MOBILIDADE"] { background-color: #86efac !important; }
+.light .calendar-workout-chip[data-workout-type="RECUPERACAO"] { background-color: #cbd5e1 !important; }
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

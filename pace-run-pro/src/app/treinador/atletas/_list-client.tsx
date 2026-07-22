@@ -445,11 +445,12 @@ function WorkoutDot({
       onDragEnd={onDragEnd}
       title={`${cfg.label} - TSS ${workout.tss}`}
       className={cn(
-        "group/workout min-h-[42px] cursor-grab rounded-md border border-white/10 px-2 py-1.5 text-left shadow-sm transition active:cursor-grabbing",
+        "calendar-workout-chip group/workout min-h-[42px] cursor-grab rounded-md border border-white/10 px-2 py-1.5 text-left shadow-sm transition active:cursor-grabbing",
         cfg.bg, cfg.text,
         isCompleted && "ring-2 ring-success ring-offset-1",
         isMissed && "opacity-45",
       )}
+      data-workout-type={workout.type}
     >
       <div className="flex items-center gap-1">
         <GripVertical className="h-3 w-3 shrink-0 opacity-60" />
