@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { authRegisterLimiter } from "@/lib/rate-limit";
+import { BILLING_PLANS, isBillingPlanId, type BillingPlanId } from "@/lib/billing-plans";
 
-function recommendPlanId(athleteCount: number): string {
+function recommendPlanId(athleteCount: number): BillingPlanId {
   if (athleteCount <= 1) return "b2b-free";
   if (athleteCount <= 20) return "b2b-starter";
   if (athleteCount <= 80) return "b2b-pro";
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { name, email, password, phone, city, goal, role, studentCount, coachId, salesPlanId } = await req.json();
+    const { name, email, password, phone, city, goal, role, studentCount, planId, coachId, salesPlanId } = await req.json();
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Campos obrigatórios faltando." }, { status: 400 });
     }
@@ -93,15 +94,18 @@ export async function POST(req: NextRequest) {
       ).catch(() => null);
     }
 
-    const recommendedPlanId = isCoach ? recommendPlanId(Number(studentCount) || 1) : null;
-    if (isCoach) {
-      const renewsAt = new Date();
-      renewsAt.setDate(renewsAt.getDate() + 30);
+    const recommendedPlanId = isCoach
+      ? (isBillingPlanId(planId) ? planId : recommendPlanId(Number(studentCount) || 1))
+      : null;
+    if (isCoach && recommendedPlanId) {
+      const selectedPlan = BILLING_PLANS[recommendedPlanId];
+      const isFreePlan = selectedPlan.amountCents === 0;
+      const renewsAt = isFreePlan ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null;
       await prisma.subscription.create({
         data: {
           userId: user.id,
-          plan: "COACH",
-          status: "ACTIVE",
+          plan: selectedPlan.subscriptionPlan,
+          status: isFreePlan ? "ACTIVE" : "PAST_DUE",
           renewsAt,
         },
       });

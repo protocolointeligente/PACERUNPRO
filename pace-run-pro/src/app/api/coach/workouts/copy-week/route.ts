@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { WorkoutType } from "@prisma/client";
+import { copyWeekSchema, validationError } from "@/lib/api-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -103,17 +104,9 @@ export async function POST(req: NextRequest) {
     ...planAthletes.map((plan) => plan.athleteId),
   ]);
 
-  const body = await req.json();
-  const { sourceAthleteId, weekStart: weekStartStr, targetWeekStart: targetWeekStartStr, targetAthleteIds } = body as {
-    sourceAthleteId: string;
-    weekStart: string;
-    targetWeekStart?: string;
-    targetAthleteIds: string[];
-  };
-
-  if (!sourceAthleteId || !weekStartStr || !Array.isArray(targetAthleteIds) || targetAthleteIds.length === 0) {
-    return NextResponse.json({ error: "Dados incompletos" }, { status: 400 });
-  }
+  const parsed = copyWeekSchema.safeParse(await req.json());
+  if (!parsed.success) return NextResponse.json(validationError(parsed.error), { status: 400 });
+  const { sourceAthleteId, weekStart: weekStartStr, targetWeekStart: targetWeekStartStr, targetAthleteIds } = parsed.data;
 
   if (!coachAthleteIds.has(sourceAthleteId)) {
     return NextResponse.json({ error: "Atleta fonte inválido" }, { status: 403 });

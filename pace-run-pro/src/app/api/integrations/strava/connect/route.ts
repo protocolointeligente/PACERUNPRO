@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { getSession } from "@/lib/auth-guard";
-import { getStravaAuthorizeUrl } from "@/lib/integrations/strava";
+import {
+  getStravaAuthorizeUrl,
+  getStravaRedirectConfig,
+  logStravaOAuthConfig,
+} from "@/lib/integrations/strava";
 
 export async function GET(request: NextRequest) {
   const session = await getSession();
@@ -18,8 +22,11 @@ export async function GET(request: NextRequest) {
   }
 
   const state = randomBytes(16).toString("hex");
-  const redirectUri = new URL("/api/auth/strava/callback", request.url).toString();
-  const response = NextResponse.redirect(getStravaAuthorizeUrl(redirectUri, state));
+  const redirectConfig = getStravaRedirectConfig();
+  logStravaOAuthConfig(redirectConfig);
+  const response = NextResponse.redirect(
+    getStravaAuthorizeUrl(redirectConfig.redirectUri, state),
+  );
   response.cookies.set("strava_state", state, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { Check, Clock, Loader2, Zap } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { Check, Loader2, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { b2bPlans } from "@/lib/mock-data";
@@ -108,7 +109,6 @@ function AssessoriaContent() {
   const defaultPlan = validIds.includes(paramPlano) ? paramPlano : "b2b-pro";
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -140,33 +140,6 @@ function AssessoriaContent() {
   const isWhiteLabel = selectedPlan === "b2b-unlimited";
   const isFree = plan.price === 0;
 
-  // ── Assisted activation screen ──────────────────────────────────────────
-  if (submitted) {
-    return (
-      <div className="flex flex-col items-center gap-6 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-warning/15 border border-warning/30">
-          <Clock className="h-10 w-10 text-warning" />
-        </div>
-        <div>
-          <Badge variant="warning" className="mb-4">Aguardando configuração</Badge>
-          <h2 className="font-display text-3xl font-extrabold text-text">Solicitação recebida!</h2>
-          <p className="mx-auto mt-4 max-w-md text-text-muted">
-            {isWhiteLabel
-              ? "Sua solicitação White Label foi recebida. Nossa equipe entrará em contato em até 1 dia útil pelo WhatsApp para iniciar a configuração do seu ambiente personalizado."
-              : "Recebemos sua solicitação de ativação. Nossa equipe vai confirmar os dados comerciais e liberar o acesso pelo canal oficial, sem cobrar cartão ou PIX nesta tela."}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-warning/20 bg-warning/5 px-6 py-4 text-sm text-warning">
-          Assessoria <strong>{nomeAssessoria || "cadastrada"}</strong> · Plano{" "}
-          <strong>{plan.name}</strong>
-        </div>
-        <Link href="/">
-          <Button variant="outline" size="lg">Voltar ao início</Button>
-        </Link>
-      </div>
-    );
-  }
-
   // ── Account creation (step 3 → 4) ────────────────────────────────────────
   async function handleCreateAccount() {
     setCreateAccountError(null);
@@ -189,11 +162,22 @@ function AssessoriaContent() {
           password: senha,
           role: "COACH",
           studentCount: Number(numAtletas) || 1,
+          planId: selectedPlan,
         }),
       });
       const data = await res.json() as { error?: string };
       if (!res.ok) {
         setCreateAccountError(data.error ?? "Erro ao criar conta.");
+        return;
+      }
+      const login = await signIn("credentials", {
+        email: emailCoach,
+        password: senha,
+        redirect: false,
+      });
+      if (login?.error) {
+        setCreateAccountError("Conta criada. Faça login para continuar ao pagamento.");
+        router.push(`/login?callbackUrl=${encodeURIComponent(`/pagamento?plano=${selectedPlan}`)}`);
         return;
       }
       setStep(4);
@@ -214,19 +198,13 @@ function AssessoriaContent() {
       return;
     }
 
-    // Paid B2B plans use assisted activation until recurring billing is homologated.
     setSubmitting(true);
-    window.setTimeout(() => {
-      setSubmitted(true);
-      setSubmitting(false);
-    }, 350);
+    router.push(`/pagamento?plano=${selectedPlan}`);
   }
 
   const submitLabel = isFree
     ? "Criar conta grátis"
-    : isWhiteLabel
-    ? "Enviar solicitação"
-    : "Enviar para ativação";
+    : "Ir para pagamento";
 
   return (
     <>
@@ -648,14 +626,13 @@ function AssessoriaContent() {
                 </div>
               </div>
 
-              {/* Assisted activation — only if paid plan */}
+              {/* PagBank payment — only if paid plan */}
               {!isFree && !isWhiteLabel && (
                 <div className="rounded-2xl border border-info/25 bg-info/10 p-5 text-sm text-info">
-                  <p className="font-semibold">Ativação assistida nesta fase</p>
+                  <p className="font-semibold">Pagamento seguro pelo PagBank</p>
                   <p className="mt-1 text-xs leading-relaxed">
-                    Planos pagos B2B não solicitam cartão ou PIX nesta tela. A equipe confirma os
-                    dados comerciais, libera o acesso e orienta a cobrança pelo canal financeiro
-                    homologado.
+                    Na próxima tela você gera o PIX. O acesso ao sistema só será liberado depois
+                    que o PagBank confirmar o pagamento pelo webhook.
                   </p>
                 </div>
               )}

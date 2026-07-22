@@ -164,6 +164,9 @@ export default function LojaPage() {
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
       {/* Hero */}
       <div className="text-center">
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+          PaceRunPro · um braço da Enky Human Performance
+        </p>
         <div className="mb-3 flex items-center justify-center gap-2">
           <Trophy className="h-5 w-5 text-primary" />
           <Badge variant="primary">Loja de planilhas</Badge>
@@ -174,6 +177,9 @@ export default function LojaPage() {
         <p className="mt-3 text-sm text-text-muted max-w-lg mx-auto">
           Compre planos de treino criados por treinadores certificados. Conecte o Strava e acompanhe
           sua evolução automaticamente.
+        </p>
+        <p className="mx-auto mt-2 max-w-lg text-xs text-text-muted">
+          A tecnologia PaceRunPro faz parte do ecossistema Enky Human Performance.
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           <Link href="/cadastro?perfil=atleta_independente">

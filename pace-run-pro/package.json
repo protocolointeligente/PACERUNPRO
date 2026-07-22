@@ -10,6 +10,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "env:validate": "node scripts/validate-env.mjs",
+    "bootstrap:local": "powershell -ExecutionPolicy Bypass -File scripts/bootstrap-local.ps1",
+    "audit:ownership": "node scripts/audit-api-ownership.mjs",
+    "pagbank:simulate": "node scripts/pagbank-webhook-simulator.mjs",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
@@ -49,6 +53,7 @@
     "recharts": "^3.8.1",
     "stripe": "^22.2.3",
     "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

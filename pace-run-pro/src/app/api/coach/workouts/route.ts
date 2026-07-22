@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { displayWorkoutType, inferWorkoutModality, modalityNote, normalizeWorkoutType } from "@/lib/workout-normalization";
+import { createWorkoutSchema, validationError } from "@/lib/api-validation";
 
 export const dynamic = "force-dynamic";
 
@@ -24,38 +25,9 @@ export async function POST(req: NextRequest) {
   });
   if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
 
-  const body = await req.json();
-  const {
-    athleteId,
-    date,
-    title,
-    type,
-    structured = false,
-    blocks,
-    targetDistanceKm,
-    targetDurationMin,
-    targetPaceSecPerKm,
-    targetRpe,
-    objective,
-    sport,
-  } = body as {
-    athleteId: string;
-    date: string;
-    title: string;
-    type: string;
-    structured?: boolean;
-    blocks?: unknown;
-    targetDistanceKm?: number;
-    targetDurationMin?: number;
-    targetPaceSecPerKm?: number;
-    targetRpe?: number;
-    objective?: string;
-    sport?: string;
-  };
-
-  if (!athleteId || !date || !title || !type) {
-    return NextResponse.json({ error: "Dados incompletos" }, { status: 400 });
-  }
+  const parsed = createWorkoutSchema.safeParse(await req.json());
+  if (!parsed.success) return NextResponse.json(validationError(parsed.error), { status: 400 });
+  const { athleteId, date, title, type, structured, blocks, targetDistanceKm, targetDurationMin, targetPaceSecPerKm, targetRpe, objective, sport } = parsed.data;
 
   const athlete = await prisma.athlete.findFirst({
     where: {

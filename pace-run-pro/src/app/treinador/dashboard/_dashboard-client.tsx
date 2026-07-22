@@ -164,7 +164,10 @@ export default function CoachDashboard({
       <motion.div variants={fadeUp} initial="hidden" animate="show"
         className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm text-text-muted">Painel do treinador</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+            PaceRunPro · Enky Human Performance
+          </p>
+          <p className="mt-1 text-sm text-text-muted">Painel do treinador · PaceRunPro · by Enky Human Performance</p>
           <h1 className="font-display text-2xl font-bold text-text sm:text-3xl">
             Olá, {firstName}
           </h1>

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowLeft,
   BookOpen,
   CheckCircle2,
   Clock,
@@ -10,6 +11,7 @@ import {
   Route,
 } from "lucide-react";
 import { getPaceCourses, type PaceCourse } from "@/lib/pace-university";
+import { estimatePaceLessonMinutes, validatePaceLesson } from "@/lib/pace-university-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -79,6 +81,7 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
     selectedCourseLessons[0];
   const selectedLessonIndex = selectedCourseLessons.findIndex((lesson) => lesson.title === selectedLesson?.title);
   const selectedLessonDone = selectedCourse && selectedLesson ? completedLessonKeys.has(lessonKey(selectedCourse.id, selectedLesson.title)) : false;
+  const lessonQuality = selectedLesson ? validatePaceLesson(selectedLesson) : null;
   const selectedCourseDoneCount = selectedCourse ? selectedCourse.lessons.filter((lesson) =>
     completedLessonKeys.has(lessonKey(selectedCourse.id, lesson.title))
   ).length : 0;
@@ -140,8 +143,15 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[0.9fr_1.4fr]">
-        <div className="space-y-3">
+      {selectedLessonKey ? (
+        <Button type="button" variant="outline" size="sm" onClick={() => setSelectedLessonKey("")} className="gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Voltar para as trilhas
+        </Button>
+      ) : null}
+
+      <div className={cn("grid gap-4", selectedLessonKey ? "lg:grid-cols-1" : "lg:grid-cols-[0.9fr_1.4fr]")}>
+        <div className={cn("space-y-3", selectedLessonKey && "hidden")}>
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
             <Route className="h-4 w-4" />
             Trilhas disponiveis
@@ -192,7 +202,7 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
             </div>
 
             <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="border-b border-border lg:border-b-0 lg:border-r">
+              <div className={cn("border-b border-border lg:border-b-0 lg:border-r", selectedLessonKey && "hidden")}>
                 {selectedCourse.lessons.map((lesson, index) => {
                   const key = lessonKey(selectedCourse.id, lesson.title);
                   const active = selectedLesson?.title === lesson.title;
@@ -225,7 +235,7 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
                 })}
               </div>
 
-              <div className="space-y-4 p-5">
+              <div className={cn("space-y-4 p-5", selectedLessonKey && "lg:col-span-2 p-6 sm:p-8 lg:p-12")}>
                 {selectedLesson ? (
                   <>
                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
@@ -236,13 +246,50 @@ export function PaceUniversityPage({ audience }: PaceUniversityPageProps) {
                       <h3 className="font-display text-xl font-bold text-text">{selectedLesson.title}</h3>
                       <p className="mt-2 text-sm leading-relaxed text-text-muted">{selectedLesson.objective}</p>
                     </div>
-                    <div className="rounded-2xl border border-primary/25 bg-primary/5 p-4">
-                      <p className="font-semibold text-text">Como aplicar agora</p>
-                      <p className="mt-2 text-sm leading-relaxed text-text-muted">
-                        Use esta aula como checklist rapido. Compare o objetivo com o treino ou decisao da semana,
-                        registre feedback objetivo e transforme a informacao em ajuste de carga, intensidade ou recuperacao.
+                    {selectedLesson.content ? (
+                      <div className="max-w-4xl text-base leading-8 text-text-muted">
+                        <RichText text={selectedLesson.content} />
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-warning/30 bg-warning/5 p-4">
+                        <p className="font-semibold text-text">Conteúdo em revisão editorial</p>
+                        <p className="mt-2 text-sm leading-relaxed text-text-muted">
+                          Esta aula ainda não possui conteúdo completo publicado. O objetivo e a duração ficam visíveis,
+                          mas a aula não deve ser considerada concluída como formação até a revisão editorial.
+                        </p>
+                      </div>
+                    )}
+                    {selectedLesson.example ? <Section title="Exemplo prático" text={selectedLesson.example} /> : null}
+                    {selectedLesson.commonMistakes?.length ? (
+                      <section className="rounded-2xl border border-warning/25 bg-warning/5 p-4">
+                        <h4 className="font-semibold text-text">Erros comuns</h4>
+                        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-text-muted">
+                          {selectedLesson.commonMistakes.map((mistake) => <li key={mistake}>{mistake}</li>)}
+                        </ul>
+                      </section>
+                    ) : null}
+                    {selectedLesson.activity ? <Section title="Atividade" text={selectedLesson.activity} /> : null}
+                    {selectedLesson.summary ? <Section title="Resumo" text={selectedLesson.summary} /> : null}
+                    {selectedLesson.quiz?.length ? (
+                      <section className="rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                        <h4 className="font-semibold text-text">Verificação de aprendizagem</h4>
+                        {selectedLesson.quiz.map((question) => (
+                          <div key={question.prompt} className="mt-3">
+                            <p className="text-sm font-medium leading-relaxed text-text">{question.prompt}</p>
+                            <ol className="mt-2 list-[upper-alpha] space-y-1 pl-5 text-sm text-text-muted">
+                              {question.options.map((option) => <li key={option}>{option}</li>)}
+                            </ol>
+                            <p className="mt-2 text-xs leading-relaxed text-text-muted">Resposta esperada: alternativa A. {question.explanation}</p>
+                          </div>
+                        ))}
+                      </section>
+                    ) : null}
+                    {selectedLesson.references?.length ? <Section title="Referências da aula" text={selectedLesson.references.join("\n")} /> : null}
+                    {lessonQuality && !lessonQuality.valid ? (
+                      <p className="text-xs text-warning">
+                        Validação editorial: {lessonQuality.issues.join("; ")}. Estimativa atual: {estimatePaceLessonMinutes(selectedLesson)} min.
                       </p>
-                    </div>
+                    ) : null}
                     <div className="grid gap-2 sm:grid-cols-2">
                       <Info label="Duracao" value={`${selectedLesson.durationMin} min`} />
                       <Info label="Status" value={selectedLessonDone ? "Estudada" : "Disponivel"} />
@@ -318,6 +365,35 @@ function Info({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl border border-border bg-card-hover/40 p-3">
       <p className="text-xs uppercase tracking-wide text-text-muted">{label}</p>
       <p className="mt-1 font-semibold text-text">{value}</p>
+    </div>
+  );
+}
+
+function Section({ title, text }: { title: string; text: string }) {
+  return (
+    <section className="rounded-2xl border border-border bg-card-hover/30 p-4">
+      <h4 className="font-semibold text-text">{title}</h4>
+      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-text-muted">{text}</p>
+    </section>
+  );
+}
+
+function RichText({ text }: { text: string }) {
+  return (
+    <div className="space-y-5">
+      {text.split(/\n\n+/).map((block, index) => {
+        const lines = block.split("\n");
+        const heading = lines[0].match(/^##\s+(.+)/);
+        if (heading) {
+          return (
+            <section key={`${heading[1]}-${index}`}>
+              <h4 className="mb-2 font-display text-lg font-bold text-text">{heading[1]}</h4>
+              <p className="whitespace-pre-line">{lines.slice(1).join("\n").trim()}</p>
+            </section>
+          );
+        }
+        return <p key={index} className="whitespace-pre-line">{block}</p>;
+      })}
     </div>
   );
 }
