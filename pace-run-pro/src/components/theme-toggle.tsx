@@ -19,6 +19,7 @@ function systemPrefersLight() {
 function applyTheme(mode: ThemeMode) {
   const light = mode === "light" || (mode === "system" && systemPrefersLight());
   document.documentElement.classList.toggle("light", light);
+  document.documentElement.classList.toggle("dark", !light);
   document.documentElement.dataset.theme = mode;
 }
 

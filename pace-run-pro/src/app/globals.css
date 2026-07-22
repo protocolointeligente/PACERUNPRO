@@ -413,6 +413,70 @@ body {
   border-color: rgba(37, 99, 235, 0.42) !important;
 }
 
+/* Final landing-page contrast contract. Keep this scoped to the marketing page. */
+.marketing-page {
+  --marketing-ink: #f8fafc;
+  --marketing-muted: #cbd5e1;
+  --marketing-surface: #0b121a;
+  --marketing-line: rgba(255, 255, 255, 0.14);
+}
+
+.marketing-page h1,
+.marketing-page h2,
+.marketing-page h3,
+.marketing-page h4,
+.marketing-page .text-white,
+.marketing-page .text-slate-900,
+.marketing-page .text-slate-950 {
+  color: var(--marketing-ink) !important;
+}
+
+.marketing-page .text-slate-300,
+.marketing-page .text-slate-400,
+.marketing-page .text-slate-500,
+.marketing-page .text-slate-600,
+.marketing-page .text-slate-700 {
+  color: var(--marketing-muted) !important;
+}
+
+.marketing-page nav,
+.marketing-page section,
+.marketing-page footer {
+  border-color: var(--marketing-line) !important;
+}
+
+.light .marketing-page {
+  --marketing-ink: #17212b;
+  --marketing-muted: #475569;
+  --marketing-surface: #ffffff;
+  --marketing-line: #d6dee8;
+  background: #f7f8fa !important;
+  color: var(--marketing-ink) !important;
+}
+
+.light .marketing-page > section,
+.light .marketing-page > footer {
+  background-color: transparent !important;
+}
+
+.light .marketing-page > section[class*="bg-[#07111d"],
+.light .marketing-page > section[class*="bg-[#07111c"] {
+  background-color: #eef3f7 !important;
+}
+
+.light .marketing-page [class*="bg-[#0b121a"],
+.light .marketing-page [class*="bg-white/[0.03]"],
+.light .marketing-page [class*="bg-white/[0.04]"],
+.light .marketing-page [class*="bg-white/[0.025]"] {
+  background-color: var(--marketing-surface) !important;
+}
+
+.light .marketing-page [class*="border-white/10"],
+.light .marketing-page [class*="border-white/15"],
+.light .marketing-page [class*="border-slate-200"] {
+  border-color: var(--marketing-line) !important;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

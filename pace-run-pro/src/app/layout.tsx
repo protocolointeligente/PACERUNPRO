@@ -36,7 +36,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const themeScript = `(function(){try{var t=localStorage.getItem("theme")||"system";var light=t==="light"||(t==="system"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches);document.documentElement.classList.toggle("light",light);document.documentElement.dataset.theme=t;}catch(e){}})();`;
+const themeScript = `(function(){try{var t=localStorage.getItem("theme")||"system";var light=t==="light"||(t==="system"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches);document.documentElement.classList.toggle("light",light);document.documentElement.classList.toggle("dark",!light);document.documentElement.dataset.theme=t;}catch(e){}})();`;
 
 export default function RootLayout({
   children,
