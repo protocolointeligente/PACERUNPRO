@@ -36,6 +36,14 @@ const WO_CONFIG: Record<string, { label: string; short: string; bg: string; text
   FUNCIONAL:         { label: "Funcional",           short: "FN", bg: "bg-purple-500",  text: "text-white" },
   MOBILIDADE:        { label: "Mobilidade",          short: "MB", bg: "bg-green-400",   text: "text-white" },
   RECUPERACAO:       { label: "Recuperação",         short: "RC", bg: "bg-gray-400",    text: "text-white" },
+  NATACAO_TECNICA:   { label: "Natação técnica",     short: "T",  bg: "bg-teal-400",    text: "text-white" },
+  NATACAO_AEROBIO:   { label: "Aeróbio contínuo",    short: "Z2", bg: "bg-sky-400",     text: "text-white" },
+  NATACAO_CSS_CURTO: { label: "CSS curto",           short: "IC", bg: "bg-red-600",     text: "text-white" },
+  NATACAO_CSS_LONGO: { label: "CSS longo",           short: "IL", bg: "bg-rose-500",    text: "text-white" },
+  NATACAO_REGENERATIVA: { label: "Soltura regenerativa", short: "Z1", bg: "bg-emerald-400", text: "text-white" },
+  FORCA_SUPERIOR:    { label: "Força superior",      short: "FC", bg: "bg-violet-500",  text: "text-white" },
+  FORCA_INFERIOR:    { label: "Força inferior",      short: "FC", bg: "bg-violet-500",  text: "text-white" },
+  FORCA_FULL_BODY:   { label: "Full body",            short: "FC", bg: "bg-violet-500",  text: "text-white" },
 };
 
 const WO_DEFAULT = { label: "Treino", short: "?", bg: "bg-gray-400", text: "text-white" };
