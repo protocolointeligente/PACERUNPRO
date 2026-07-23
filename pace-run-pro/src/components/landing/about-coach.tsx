@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Award, Footprints, GraduationCap, HeartPulse, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { coachOverview } from "@/lib/mock-data";
+import { coachOverview } from "@/lib/mock-data-coach";
 
 const credentials = [
   { icon: GraduationCap, label: "Professor universitário" },

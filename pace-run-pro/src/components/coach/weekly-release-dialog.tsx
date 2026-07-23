@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { weekWorkouts, TYPE_LABELS, getSubtypeColor } from "@/lib/mock-data";
+import { getSubtypeColor } from "@/lib/mock-data";
+import { weekWorkouts } from "@/lib/mock-data-dashboard";
+import { getWorkoutVisualConfig } from "@/lib/workout-visual-config";
 import { cn } from "@/lib/utils";
 
 const dayLabels = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
@@ -108,13 +110,13 @@ export function WeeklyReleaseDialog({ athleteName }: { athleteName: string }) {
                   <input type="checkbox" checked={checked} onChange={() => toggle(w.id)} className="h-4 w-4 accent-primary" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-semibold text-text">{w.title}</p>
-                    <p className="text-[11px] text-text-muted">{dayLabels[i] ?? ""} · {TYPE_LABELS[w.type]}</p>
+                    <p className="text-[11px] text-text-muted">{dayLabels[i] ?? ""} · {getWorkoutVisualConfig(w.type).label}</p>
                   </div>
                   {(() => {
                     const color = getSubtypeColor(w.type, w.subtype);
                     return (
                       <Badge style={{ borderColor: `${color}55`, color, backgroundColor: `${color}1a` }} className="shrink-0 border">
-                        {w.subtype ?? TYPE_LABELS[w.type]}
+                        {w.subtype ?? getWorkoutVisualConfig(w.type).label}
                       </Badge>
                     );
                   })()}

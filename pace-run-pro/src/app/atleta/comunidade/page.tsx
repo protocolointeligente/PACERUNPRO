@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { type ActivityPost, type MonthlyChallenge } from "@/lib/mock-data";
+import { type ActivityPost, type MonthlyChallenge } from "@/lib/mock-data-community";
 import { cn } from "@/lib/utils";
 
 interface Club { id: string; name: string; members: number; location: string }

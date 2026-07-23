@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Clock, MapPin, Lock, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TYPE_LABELS, getSubtypeColor } from "@/lib/mock-data";
+import { getSubtypeColor } from "@/lib/mock-data";
+import { getWorkoutVisualConfig } from "@/lib/workout-visual-config";
 import { formatPace } from "@/lib/utils";
 import type { WorkoutSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -39,7 +40,7 @@ export function WorkoutCard({ workout, href }: { workout: WorkoutSummary; href?:
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <Badge style={{ borderColor: `${workout.color}55`, color: workout.color, backgroundColor: `${workout.color}1a` }} className="border">
-            {TYPE_LABELS[workout.type]}
+            {getWorkoutVisualConfig(workout.type).label}
           </Badge>
           {workout.subtype && (
             <span

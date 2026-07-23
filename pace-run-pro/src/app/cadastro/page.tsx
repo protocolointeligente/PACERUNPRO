@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Building2, Dumbbell, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
-import { b2bPlans, getRecommendedB2BPlan } from "@/lib/mock-data";
+import { b2bPlans, getRecommendedB2BPlan } from "@/lib/mock-data-billing";
 import { formatBRL } from "@/lib/utils";
 
 const inputClass =

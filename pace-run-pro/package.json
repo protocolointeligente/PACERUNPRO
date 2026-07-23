@@ -13,6 +13,7 @@
     "env:validate": "node scripts/validate-env.mjs",
     "bootstrap:local": "powershell -ExecutionPolicy Bypass -File scripts/bootstrap-local.ps1",
     "audit:ownership": "node scripts/audit-api-ownership.mjs",
+    "audit:prisma-api": "node scripts/audit-prisma-api.mjs",
     "pagbank:simulate": "node scripts/pagbank-webhook-simulator.mjs",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy",

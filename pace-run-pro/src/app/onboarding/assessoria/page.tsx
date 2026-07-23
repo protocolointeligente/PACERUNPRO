@@ -7,7 +7,7 @@ import { signIn } from "next-auth/react";
 import { Check, Loader2, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { b2bPlans } from "@/lib/mock-data";
+import { b2bPlans } from "@/lib/mock-data-billing";
 import { formatBRL } from "@/lib/utils";
 
 const inputClass =

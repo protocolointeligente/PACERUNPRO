@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import type { Shoe } from "@/lib/mock-data";
+import type { Shoe } from "@/lib/mock-data-athlete";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 

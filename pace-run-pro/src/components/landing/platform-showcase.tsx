@@ -26,9 +26,9 @@ import {
   weekWorkouts,
   weeklyVolumeSeries,
   TYPE_COLORS,
-  TYPE_LABELS,
   getSubtypeColor,
 } from "@/lib/mock-data";
+import { getWorkoutVisualConfig } from "@/lib/workout-visual-config";
 import { cn, formatPace } from "@/lib/utils";
 
 const WEEKDAY_LABELS = ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"];
@@ -290,7 +290,7 @@ export function PlatformShowcase() {
                         }}
                         className="mb-1.5 border text-[10px]"
                       >
-                        {TYPE_LABELS[w.type]}
+                        {getWorkoutVisualConfig(w.type).label}
                       </Badge>
                       <p className="text-xs font-semibold leading-snug text-text">{w.title}</p>
                       <div className="mt-1.5 flex flex-wrap gap-2 text-[11px] text-text-muted">

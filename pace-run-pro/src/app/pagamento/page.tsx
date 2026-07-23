@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, Copy, Loader2, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { b2bPlans } from "@/lib/mock-data";
+import { b2bPlans } from "@/lib/mock-data-billing";
 import { formatBRL } from "@/lib/utils";
 
 function PaymentContent() {

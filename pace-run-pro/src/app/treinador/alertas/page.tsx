@@ -17,7 +17,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type SmartAlert, type AlertSeverity } from "@/lib/mock-data";
+import { type SmartAlert, type AlertSeverity } from "@/lib/mock-data-coach";
 import { cn } from "@/lib/utils";
 
 interface ExpiringPlan {
