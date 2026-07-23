@@ -22,4 +22,12 @@ describe("workout visual configuration", () => {
   it("returns a safe fallback for unknown types", () => {
     expect(getWorkoutVisualConfig("UNKNOWN")).toEqual(WORKOUT_VISUAL_CONFIG.DEFAULT);
   });
+
+  it("reuses base visuals for quick-prescription modality templates", () => {
+    expect(getWorkoutVisualConfig("NATACAO_TECNICA").short).toBe("T");
+    expect(getWorkoutVisualConfig("NATACAO_CSS_CURTO").short).toBe("IC");
+    expect(getWorkoutVisualConfig("NATACAO_CSS_LONGO").short).toBe("IL");
+    expect(getWorkoutVisualConfig("FORCA_SUPERIOR").short).toBe("FC");
+    expect(getWorkoutVisualConfig("FORCA_FULL_BODY").short).toBe("FC");
+  });
 });

@@ -31,8 +31,25 @@ export const WORKOUT_VISUAL_CONFIG: Record<string, WorkoutVisualDefinition> & { 
   DEFAULT: { ...RUN, status: { completed: "ring-2 ring-success ring-offset-1", missed: "opacity-45" }, label: "Treino", short: "?", light: { background: "#cbd5e1", foreground: "#17212b", border: "#94a3b8" }, dark: { background: "#4b5563", foreground: "#f9fafb", border: "#9ca3af" } },
 };
 
+// Quick-prescription templates use modality-specific names. Reuse the same
+// visual language as the base workout types instead of falling back to "?".
+const WORKOUT_VISUAL_ALIASES: Record<string, string> = {
+  NATACAO_TECNICA: "TECNICA",
+  NATACAO_AEROBIO: "RODAGEM_LEVE",
+  NATACAO_CSS_CURTO: "INTERVALADO_CURTO",
+  NATACAO_CSS_LONGO: "INTERVALADO_LONGO",
+  NATACAO_REGENERATIVA: "REGENERATIVO",
+  FORCA_SUPERIOR: "FORCA",
+  FORCA_INFERIOR: "FORCA",
+  FORCA_FULL_BODY: "FORCA",
+  FORCA_FULLBODY: "FORCA",
+  CORE_FUNCIONAL: "FUNCIONAL",
+};
+
 export function getWorkoutVisualConfig(type?: string | null): WorkoutVisualDefinition {
-  const config = WORKOUT_VISUAL_CONFIG[String(type ?? "").toUpperCase()] ?? WORKOUT_VISUAL_CONFIG.DEFAULT;
+  const key = String(type ?? "").toUpperCase();
+  const visualKey = WORKOUT_VISUAL_ALIASES[key] ?? key;
+  const config = WORKOUT_VISUAL_CONFIG[visualKey] ?? WORKOUT_VISUAL_CONFIG.DEFAULT;
   return {
     ...config,
     status: config.status ?? { completed: "ring-2 ring-success ring-offset-1", missed: "opacity-45" },
