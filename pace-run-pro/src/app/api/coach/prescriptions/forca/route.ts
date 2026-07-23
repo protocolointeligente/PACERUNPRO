@@ -43,6 +43,9 @@ interface PrescribedExercise {
   libraryId: string;
   name: string;
   category?: string;
+  gifUrl?: string;
+  imageUrl?: string;
+  youtubeUrl?: string;
   sets: number;
   reps: string;
   rest: string;
@@ -147,9 +150,24 @@ export async function POST(req: NextRequest) {
       const category: ExerciseCategory = CATEGORY_MAP[ex.category ?? ""] ?? "HIPERTROFIA";
       const dbExercise = await prisma.exercise.upsert({
         where: { id: ex.libraryId },
-        update: { name: ex.name },
-        create: { id: ex.libraryId, name: ex.name, category, coachId: null },
+        update: {
+          name: ex.name,
+          ...(ex.gifUrl || ex.imageUrl ? { imageUrl: ex.gifUrl ?? ex.imageUrl } : {}),
+        },
+        create: {
+          id: ex.libraryId,
+          name: ex.name,
+          category,
+          imageUrl: ex.gifUrl ?? ex.imageUrl,
+          coachId: null,
+        },
       });
+      if (ex.youtubeUrl) {
+        await prisma.exerciseVideo.deleteMany({ where: { exerciseId: dbExercise.id } });
+        await prisma.exerciseVideo.create({
+          data: { exerciseId: dbExercise.id, url: ex.youtubeUrl, title: ex.name },
+        });
+      }
       exerciseIds.push(dbExercise.id);
     }
 

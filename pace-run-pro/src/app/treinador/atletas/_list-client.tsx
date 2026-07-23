@@ -778,7 +778,22 @@ interface StrengthExerciseOption {
   category: string;
   gifUrl?: string;
   imageUrl?: string;
+  youtubeUrl?: string;
   description?: string;
+}
+
+interface StrengthExerciseDraft {
+  line: string;
+  libraryId: string;
+  name: string;
+  category?: string;
+  gifUrl?: string;
+  imageUrl?: string;
+  youtubeUrl?: string;
+  sets: number;
+  reps: string;
+  rest: string;
+  rpe: number;
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -972,7 +987,7 @@ export function IntervalsPrescribeModal({
   const [rir, setRir] = useState("");
   const [restSec, setRestSec] = useState("90");
   const [description, setDescription] = useState(seedWorkout?.objective ?? "");
-  const [strengthExercises, setStrengthExercises] = useState<string[]>([]);
+  const [strengthExercises, setStrengthExercises] = useState<StrengthExerciseDraft[]>([]);
   const [steps, setSteps] = useState(
     seedStructuredSteps ||
     (rawWorkoutType(seedRawType) === "FORCA"
@@ -1031,13 +1046,25 @@ export function IntervalsPrescribeModal({
 
   function addStrengthExercise() {
     const line = `${strengthExercise} ${sets}x${reps}${loadKg ? ` x ${loadKg}kg` : ""}${rpe ? ` RPE ${rpe}` : ""}${rir ? ` RIR ${rir}` : ""} descanso ${restSec}s`;
-    setStrengthExercises((prev) => [...prev, line]);
+    setStrengthExercises((prev) => [...prev, {
+      line,
+      libraryId: selectedExercise?.id ?? `manual-${strengthExercise.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+      name: strengthExercise,
+      category: selectedExercise?.category,
+      gifUrl: selectedExercise?.gifUrl,
+      imageUrl: selectedExercise?.imageUrl,
+      youtubeUrl: selectedExercise?.youtubeUrl,
+      sets: Number(sets) || 1,
+      reps: reps || "—",
+      rest: restSec,
+      rpe: Number(rpe) || 0,
+    }]);
     setSteps((prev) => `${prev}${prev ? "\n" : ""}${line}`);
   }
 
   function removeStrengthExercise(index: number) {
     setStrengthExercises((prev) => {
-      const removed = prev[index];
+      const removed = prev[index]?.line;
       setSteps((current) => current.split("\n").filter((line) => line !== removed).join("\n"));
       return prev.filter((_, itemIndex) => itemIndex !== index);
     });
@@ -1052,8 +1079,46 @@ export function IntervalsPrescribeModal({
     setError("");
     try {
       const strengthSummary = strengthExercises.length > 0
-        ? strengthExercises.join("\n")
+        ? strengthExercises.map((exercise) => exercise.line).join("\n")
         : `${strengthExercise}: ${sets}x${reps}${loadKg ? ` x ${loadKg}kg` : ""}${rpe ? ` RPE ${rpe}` : ""}${rir ? ` RIR ${rir}` : ""} / descanso ${restSec}s`;
+      if (sport === "Forca" && !editingWorkout) {
+        const monday = new Date(`${payload.date}T12:00:00`);
+        const dayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+        const dayLabel = dayLabels[monday.getDay()];
+        monday.setDate(monday.getDate() - (monday.getDay() === 0 ? 6 : monday.getDay() - 1));
+        const fallbackExercise: StrengthExerciseDraft = {
+          line: strengthSummary,
+          libraryId: selectedExercise?.id ?? `manual-${strengthExercise.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+          name: strengthExercise,
+          category: selectedExercise?.category,
+          gifUrl: selectedExercise?.gifUrl,
+          imageUrl: selectedExercise?.imageUrl,
+          youtubeUrl: selectedExercise?.youtubeUrl,
+          sets: Number(sets) || 1,
+          reps: reps || "—",
+          rest: restSec,
+          rpe: Number(rpe) || 0,
+        };
+        const exercises = strengthExercises.length > 0 ? strengthExercises : [fallbackExercise];
+        const res = await fetch("/api/coach/prescriptions/forca", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            athleteId: payload.athleteId,
+            startDate: monday.toISOString().slice(0, 10),
+            division: "Personalizada",
+            sessions: [{ label: title.trim(), dayLabels: [dayLabel], exercises }],
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          setError(data?.error ?? "Erro ao salvar treino de força.");
+          return;
+        }
+        onSaved(null);
+        onClose();
+        return;
+      }
       const structuredSteps = sport === "Forca"
         ? (strengthExercises.length > 0 ? steps : `${strengthSummary}\n${steps}`)
         : steps;
@@ -1319,7 +1384,7 @@ export function IntervalsPrescribeModal({
                   <div className="grid gap-1">
                     {strengthExercises.map((exercise, index) => (
                       <div key={`${exercise}-${index}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] text-slate-800 dark:border-border dark:bg-background/50 dark:text-text">
-                        <span className="truncate">{exercise}</span>
+                        <span className="truncate">{exercise.line}</span>
                         <button
                           type="button"
                           onClick={() => removeStrengthExercise(index)}
