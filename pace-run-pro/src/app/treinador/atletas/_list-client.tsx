@@ -237,6 +237,12 @@ function formatPace(secPerKm: number): string {
   return `${Math.floor(secPerKm / 60)}:${String(secPerKm % 60).padStart(2, "0")}/km`;
 }
 
+function youtubeEmbedUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([^?&#/]+)/i);
+  return match?.[1] ? `https://www.youtube.com/embed/${match[1]}` : null;
+}
+
 // ── Workout Detail Modal ──────────────────────────────────────────────────────
 
 interface ModalPayload {
@@ -783,6 +789,7 @@ interface StrengthExerciseOption {
 }
 
 interface StrengthExerciseDraft {
+  id: string;
   line: string;
   libraryId: string;
   name: string;
@@ -790,6 +797,7 @@ interface StrengthExerciseDraft {
   gifUrl?: string;
   imageUrl?: string;
   youtubeUrl?: string;
+  loadKg: string;
   sets: number;
   reps: string;
   rest: string;
@@ -1047,6 +1055,7 @@ export function IntervalsPrescribeModal({
   function addStrengthExercise() {
     const line = `${strengthExercise} ${sets}x${reps}${loadKg ? ` x ${loadKg}kg` : ""}${rpe ? ` RPE ${rpe}` : ""}${rir ? ` RIR ${rir}` : ""} descanso ${restSec}s`;
     setStrengthExercises((prev) => [...prev, {
+      id: `${selectedExercise?.id ?? strengthExercise}-${Date.now()}`,
       line,
       libraryId: selectedExercise?.id ?? `manual-${strengthExercise.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
       name: strengthExercise,
@@ -1054,6 +1063,7 @@ export function IntervalsPrescribeModal({
       gifUrl: selectedExercise?.gifUrl,
       imageUrl: selectedExercise?.imageUrl,
       youtubeUrl: selectedExercise?.youtubeUrl,
+      loadKg,
       sets: Number(sets) || 1,
       reps: reps || "—",
       rest: restSec,
@@ -1087,6 +1097,7 @@ export function IntervalsPrescribeModal({
         const dayLabel = dayLabels[monday.getDay()];
         monday.setDate(monday.getDate() - (monday.getDay() === 0 ? 6 : monday.getDay() - 1));
         const fallbackExercise: StrengthExerciseDraft = {
+          id: `fallback-${Date.now()}`,
           line: strengthSummary,
           libraryId: selectedExercise?.id ?? `manual-${strengthExercise.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
           name: strengthExercise,
@@ -1094,6 +1105,7 @@ export function IntervalsPrescribeModal({
           gifUrl: selectedExercise?.gifUrl,
           imageUrl: selectedExercise?.imageUrl,
           youtubeUrl: selectedExercise?.youtubeUrl,
+          loadKg,
           sets: Number(sets) || 1,
           reps: reps || "—",
           rest: restSec,
@@ -1107,7 +1119,23 @@ export function IntervalsPrescribeModal({
             athleteId: payload.athleteId,
             startDate: monday.toISOString().slice(0, 10),
             division: "Personalizada",
-            sessions: [{ label: title.trim(), dayLabels: [dayLabel], exercises }],
+            sessions: [{
+              label: title.trim(),
+              dayLabels: [dayLabel],
+              exercises: exercises.map((exercise) => ({
+                libraryId: exercise.libraryId,
+                name: exercise.name,
+                category: exercise.category,
+                gifUrl: exercise.gifUrl,
+                imageUrl: exercise.imageUrl,
+                youtubeUrl: exercise.youtubeUrl,
+                sets: exercise.sets,
+                reps: exercise.reps,
+                load: exercise.loadKg || null,
+                rest: exercise.rest,
+                rpe: exercise.rpe,
+              })),
+            }],
           }),
         });
         if (!res.ok) {
@@ -1353,7 +1381,9 @@ export function IntervalsPrescribeModal({
                           : "border-slate-200 bg-white text-slate-700 hover:border-[#5b2df5]/40 dark:border-border dark:bg-background/50 dark:text-text"
                       )}
                     >
-                      {(exercise.gifUrl || exercise.imageUrl) ? (
+                      {youtubeEmbedUrl(exercise.youtubeUrl) ? (
+                        <iframe src={youtubeEmbedUrl(exercise.youtubeUrl)!} title={exercise.name} className="h-10 w-14 shrink-0 rounded-md border border-border" />
+                      ) : (exercise.gifUrl || exercise.imageUrl) ? (
                         <img src={exercise.gifUrl ?? exercise.imageUrl} alt="" className="h-10 w-14 shrink-0 rounded-md border border-border object-cover" />
                       ) : (
                         <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-md border border-border bg-card-hover/40">
@@ -1381,10 +1411,22 @@ export function IntervalsPrescribeModal({
                   Adicionar exercicio ao treino
                 </button>
                 {strengthExercises.length > 0 && (
-                  <div className="grid gap-1">
+                  <div className="space-y-2">
                     {strengthExercises.map((exercise, index) => (
-                      <div key={`${exercise}-${index}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] text-slate-800 dark:border-border dark:bg-background/50 dark:text-text">
-                        <span className="truncate">{exercise.line}</span>
+                      <div key={exercise.id} className="rounded-lg border border-slate-200 bg-white p-2 text-[11px] text-slate-800 dark:border-border dark:bg-background/50 dark:text-text">
+                        <div className="flex items-start gap-2">
+                          {youtubeEmbedUrl(exercise.youtubeUrl) ? (
+                            <iframe src={youtubeEmbedUrl(exercise.youtubeUrl)!} title={exercise.name} className="h-16 w-24 shrink-0 rounded-md border border-border" />
+                          ) : exercise.gifUrl || exercise.imageUrl ? (
+                            <img src={exercise.gifUrl ?? exercise.imageUrl} alt={exercise.name} className="h-16 w-24 shrink-0 rounded-md border border-border object-cover" />
+                          ) : <span className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md border border-border"><Dumbbell className="h-4 w-4" /></span>}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold">{index + 1}. {exercise.name}</p>
+                            <p className="mt-1 text-[10px] text-text-muted">
+                              {exercise.sets} séries × {exercise.reps} reps × {exercise.loadKg || "peso livre"} × RPE {exercise.rpe || "—"} × {exercise.rest}s intervalo
+                            </p>
+                          </div>
+                        </div>
                         <button
                           type="button"
                           onClick={() => removeStrengthExercise(index)}

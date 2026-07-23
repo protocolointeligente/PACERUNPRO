@@ -31,6 +31,7 @@ interface ExerciseData {
   sets: number;
   reps: string;
   restSec: number;
+  plannedLoad?: string | null;
   targetRpe: number | null;
   gifUrl?: string;
 }
@@ -145,6 +146,7 @@ export default function StrengthExecPage() {
                 sets: b.sets,
                 reps: b.reps,
                 restSec: b.restSec ?? 60,
+                plannedLoad: b.load ?? null,
                 targetRpe: b.rpe ?? null,
                 gifUrl: media.kind === "none" ? undefined : media.url ?? undefined,
               };
@@ -451,6 +453,7 @@ export default function StrengthExecPage() {
               <h2 className="font-display text-xl font-bold text-text">{exercise.name}</h2>
 
               <div className="mt-3 flex flex-wrap gap-2 text-xs text-text-muted">
+                {exercise.plannedLoad && <span className="flex items-center gap-1.5 rounded-lg border border-border bg-card-hover/60 px-2.5 py-1.5 text-text-muted">Carga {exercise.plannedLoad}</span>}
                 <span className="flex items-center gap-1.5 rounded-lg border border-border bg-card-hover/60 px-2.5 py-1.5">
                   <Repeat className="h-3.5 w-3.5 text-primary" />
                   {exercise.sets} séries · {exercise.reps}

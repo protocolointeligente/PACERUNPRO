@@ -48,6 +48,7 @@ interface PrescribedExercise {
   youtubeUrl?: string;
   sets: number;
   reps: string;
+  load?: string;
   rest: string;
   rpe: number;
 }
@@ -204,6 +205,7 @@ export async function POST(req: NextRequest) {
                   order: idx + 1,
                   sets: ex.sets,
                   reps: ex.reps,
+                  load: ex.load || null,
                   restSec: parseRestSec(ex.rest),
                   rpe: ex.rpe,
                 })),

@@ -42,6 +42,7 @@ export async function GET(
               order: true,
               sets: true,
               reps: true,
+              load: true,
               restSec: true,
               rpe: true,
               notes: true,

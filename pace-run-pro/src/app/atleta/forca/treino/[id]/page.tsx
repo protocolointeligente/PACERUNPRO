@@ -14,6 +14,7 @@ interface StrengthBlock {
   order: number;
   sets: number;
   reps: string;
+  load?: string | null;
   restSec?: number | null;
   rpe?: number | null;
   notes?: string | null;
@@ -182,6 +183,7 @@ export default function StrengthTreinoPreviewPage() {
                             {block.restSec}s descanso
                           </span>
                         )}
+                        {block.load && <span>carga {block.load}</span>}
                         {block.rpe && (
                           <span className="flex items-center gap-1">
                             <Flame className="h-3 w-3" />
