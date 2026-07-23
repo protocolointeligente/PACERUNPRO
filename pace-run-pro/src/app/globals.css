@@ -519,6 +519,25 @@ body {
   color: #526b12 !important;
 }
 
+/* Brand tokens for the marketing logo and the first hero surface. */
+.marketing-page {
+  --primary: #c6f24e;
+  --text: #17212b;
+}
+
+.dark .marketing-page {
+  --text: #f8fafc;
+}
+
+.dark .marketing-page > section:first-of-type {
+  background-color: #05090f !important;
+}
+
+.dark .marketing-page > section:first-of-type > div:first-child {
+  background: radial-gradient(circle at 70% 10%, rgba(198, 242, 78, 0.12), transparent 34%),
+    linear-gradient(135deg, rgba(8, 18, 28, 0.95), #05090f 55%, #03080e) !important;
+}
+
 /* Calendar workout chips: preserve the dark palette, but use readable ink and
    stronger surfaces in the light theme. */
 .light .calendar-workout-chip {
@@ -546,6 +565,25 @@ body {
 .light .calendar-workout-chip[data-workout-type="FUNCIONAL"] { background-color: #c084fc !important; }
 .light .calendar-workout-chip[data-workout-type="MOBILIDADE"] { background-color: #86efac !important; }
 .light .calendar-workout-chip[data-workout-type="RECUPERACAO"] { background-color: #cbd5e1 !important; }
+
+/* Landing logo and hero surface use explicit brand tokens in both themes. */
+.marketing-page {
+  --primary: #c6f24e;
+  --text: #17212b;
+}
+
+.dark .marketing-page {
+  --text: #f8fafc;
+}
+
+.dark .marketing-page > section:first-of-type {
+  background-color: #05090f !important;
+}
+
+.dark .marketing-page > section:first-of-type > div:first-child {
+  background: radial-gradient(circle at 70% 10%, rgba(198, 242, 78, 0.12), transparent 34%),
+    linear-gradient(135deg, rgba(8, 18, 28, 0.95), #05090f 55%, #03080e) !important;
+}
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
