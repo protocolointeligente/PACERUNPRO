@@ -24,7 +24,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Dados do voucher inválidos." }, { status: 400 });
+  }
   const { code, type, value, audience, maxUses, expiresAt, note } = body as {
     code?: string;
     type?: VoucherType;
@@ -35,8 +38,14 @@ export async function POST(req: NextRequest) {
     note?: string | null;
   };
 
-  if (!code || !type || typeof value !== "number") {
+  if (!code?.trim() || !type || !["PERCENT", "FREE_MONTHS"].includes(type) || typeof value !== "number" || !Number.isFinite(value)) {
     return NextResponse.json({ error: "Campos obrigatórios faltando." }, { status: 400 });
+  }
+  if (audience && !["ALL", "B2C", "B2B"].includes(audience)) {
+    return NextResponse.json({ error: "Público do voucher inválido." }, { status: 400 });
+  }
+  if (maxUses !== null && maxUses !== undefined && (!Number.isInteger(maxUses) || maxUses < 1)) {
+    return NextResponse.json({ error: "O limite de usos deve ser um número inteiro maior que zero." }, { status: 400 });
   }
   if (type === "PERCENT" && (value < 1 || value > 100)) {
     return NextResponse.json({ error: "Desconto percentual deve ser entre 1 e 100." }, { status: 400 });
@@ -62,7 +71,14 @@ export async function POST(req: NextRequest) {
       note: note ?? null,
       createdById: session.user.id,
     },
+  }).catch((error) => {
+    if (error?.code === "P2002") return null;
+    throw error;
   });
+
+  if (!voucher) {
+    return NextResponse.json({ error: "Já existe um voucher com esse código." }, { status: 409 });
+  }
 
   return NextResponse.json({ voucher }, { status: 201 });
 }

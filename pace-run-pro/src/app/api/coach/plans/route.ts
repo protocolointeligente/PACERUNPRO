@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const body = (await req.json()) as {
+  const body = (await req.json().catch(() => null)) as {
     name: string;
     description?: string;
     priceCents: number;
@@ -58,13 +58,24 @@ export async function POST(req: NextRequest) {
     highlight?: boolean;
     maxSlots?: number | null;
     sortOrder?: number;
-  };
+  } | null;
+
+  if (!body) return NextResponse.json({ error: "Dados do plano inválidos" }, { status: 400 });
 
   const coach = await prisma.coach.findUnique({ where: { userId: session.user.id }, select: { id: true } });
   if (!coach) return NextResponse.json({ error: "Coach não encontrado" }, { status: 404 });
 
   if (!body.name?.trim()) {
     return NextResponse.json({ error: "Nome do plano obrigatório" }, { status: 400 });
+  }
+
+  if (!Number.isInteger(body.priceCents) || body.priceCents < 0) {
+    return NextResponse.json({ error: "Informe um valor válido para o plano" }, { status: 400 });
+  }
+
+  const validPeriods = ["MENSAL", "TRIMESTRAL", "SEMESTRAL", "ANUAL"] as const;
+  if (body.period && !validPeriods.includes(body.period as (typeof validPeriods)[number])) {
+    return NextResponse.json({ error: "Periodicidade inválida" }, { status: 400 });
   }
 
   const period = (body.period as "MENSAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL") ?? "MENSAL";
