@@ -55,8 +55,8 @@
   --border: #D6DEE8;
   --text: #17212B;
   --text-muted: #5D6B7A;
-  --primary: #2563EB;
-  --secondary: #0F766E;
+  --primary: #526B12;
+  --secondary: #3F6212;
   --accent: #0EA5A4;
   --violet: #6D5BD0;
   --success: #168A53;
@@ -267,9 +267,9 @@ body {
 }
 
 .light .gradient-primary {
-  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 58%, #1D4ED8 100%);
-  color: #FFFFFF !important;
-  box-shadow: 0 14px 34px rgba(37, 99, 235, 0.18) !important;
+  background: linear-gradient(135deg, #D4FF5E 0%, #C6F24E 58%, #A6D43B 100%);
+  color: #0A0C0F !important;
+  box-shadow: 0 14px 34px rgba(82, 107, 18, 0.18) !important;
 }
 
 .gradient-primary * {
@@ -286,12 +286,12 @@ body {
 }
 
 .light .gradient-violet {
-  background: linear-gradient(135deg, #0EA5A4 0%, #2563EB 100%);
-  color: #FFFFFF !important;
+  background: linear-gradient(135deg, #46E0C8 0%, #6BE6A0 55%, #C6F24E 100%);
+  color: #0A0C0F !important;
 }
 
 .light .gradient-text {
-  background: linear-gradient(100deg, #17212B 0%, #17212B 52%, #2563EB 100%);
+  background: linear-gradient(100deg, #17212B 0%, #17212B 52%, #526B12 100%);
   -webkit-background-clip: text;
   background-clip: text;
 }
@@ -321,28 +321,28 @@ body {
 }
 
 .light [class*="text-lime"] {
-  color: #2563EB !important;
+  color: #526B12 !important;
 }
 
 .light [class*="bg-lime"],
 .light [class*="hover:bg-lime"] {
-  background-color: rgba(37, 99, 235, 0.10) !important;
-  color: #1D4ED8 !important;
+  background-color: rgba(198, 242, 78, 0.22) !important;
+  color: #526B12 !important;
 }
 
 .light [class*="border-lime"],
 .light [class*="ring-lime"],
 .light [class*="hover:border-lime"] {
-  border-color: rgba(37, 99, 235, 0.32) !important;
-  --tw-ring-color: rgba(37, 99, 235, 0.28) !important;
+  border-color: rgba(82, 107, 18, 0.32) !important;
+  --tw-ring-color: rgba(82, 107, 18, 0.28) !important;
 }
 
 .light [class*="from-lime"],
 .light [class*="via-lime"],
 .light [class*="to-lime"] {
-  --tw-gradient-from: #2563EB var(--tw-gradient-from-position) !important;
-  --tw-gradient-via: #0EA5A4 var(--tw-gradient-via-position) !important;
-  --tw-gradient-to: #1D4ED8 var(--tw-gradient-to-position) !important;
+  --tw-gradient-from: #D4FF5E var(--tw-gradient-from-position) !important;
+  --tw-gradient-via: #C6F24E var(--tw-gradient-via-position) !important;
+  --tw-gradient-to: #A6D43B var(--tw-gradient-to-position) !important;
 }
 
 .light [class*="bg-[#C6F24E]"],
@@ -355,8 +355,8 @@ body {
 .light [class*="bg-[#84cc16]"],
 .light [class*="bg-[#bef264]"],
 .light [class*="bg-[#a3e635]"] {
-  background-color: #2563EB !important;
-  color: #FFFFFF !important;
+  background-color: #C6F24E !important;
+  color: #0A0C0F !important;
 }
 
 .light [class*="text-[#C6F24E]"],
@@ -369,17 +369,17 @@ body {
 .light [class*="text-[#84cc16]"],
 .light [class*="text-[#bef264]"],
 .light [class*="text-[#a3e635]"] {
-  color: #2563EB !important;
+  color: #526B12 !important;
 }
 
 .light .shadow-primary\/25,
 .light .shadow-primary\/40,
 .light [class*="shadow-lime"] {
-  --tw-shadow-color: rgba(37, 99, 235, 0.18) !important;
+  --tw-shadow-color: rgba(82, 107, 18, 0.18) !important;
 }
 
 .light [class*="shadow-primary"] {
-  --tw-shadow-color: rgba(37, 99, 235, 0.16) !important;
+  --tw-shadow-color: rgba(82, 107, 18, 0.16) !important;
 }
 
 .light [style*="#C6F24E"],
@@ -391,26 +391,26 @@ body {
 .light [style*="#84cc16"],
 .light [style*="198, 242, 78"],
 .light [style*="132, 204, 22"] {
-  border-color: rgba(37, 99, 235, 0.3) !important;
+  border-color: rgba(82, 107, 18, 0.3) !important;
   box-shadow: none !important;
 }
 
 .light button[class*="gradient-primary"],
 .light a[class*="gradient-primary"] {
-  background: #2563EB !important;
-  color: #FFFFFF !important;
+  background: #C6F24E !important;
+  color: #0A0C0F !important;
 }
 
 .light .bg-primary {
-  background-color: #2563EB !important;
+  background-color: #C6F24E !important;
 }
 
 .light .text-primary {
-  color: #2563EB !important;
+  color: #526B12 !important;
 }
 
 .light .border-primary {
-  border-color: rgba(37, 99, 235, 0.42) !important;
+  border-color: rgba(82, 107, 18, 0.42) !important;
 }
 
 /* Final landing-page contrast contract. Keep this scoped to the marketing page. */
