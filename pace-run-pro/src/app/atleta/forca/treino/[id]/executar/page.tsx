@@ -146,7 +146,7 @@ export default function StrengthExecPage() {
                 sets: b.sets,
                 reps: b.reps,
                 restSec: b.restSec ?? 60,
-                plannedLoad: b.load ?? null,
+                plannedLoad: null,
                 targetRpe: b.rpe ?? null,
                 gifUrl: media.kind === "none" ? undefined : media.url ?? undefined,
               };
