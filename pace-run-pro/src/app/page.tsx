@@ -226,26 +226,26 @@ export default function LandingPage() {
           <h2 className="font-display text-3xl font-black sm:text-5xl">
             Três pilares para uma rotina de treino mais profissional.
           </h2>
-          <p className="mt-4 text-slate-300">
+          <p className="mt-4 text-slate-700 dark:text-slate-300">
             Menos planilhas soltas, menos mensagens perdidas e mais clareza para transformar planejamento em treino entregue.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {features.map(({ icon: Icon, title, text }) => (
-            <Card key={title} className="border-white/10 bg-[#0b121a]">
+            <Card key={title} className="border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#0b121a]">
               <CardContent className="p-6">
                 <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl ${accentSoft}`}>
                   <Icon className="h-5 w-5" />
                 </div>
-                <h3 className="font-display text-xl font-bold text-white">{title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-400">{text}</p>
+                <h3 className="font-display text-xl font-bold text-slate-950 dark:text-white">{title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-slate-700 dark:text-slate-400">{text}</p>
               </CardContent>
             </Card>
           ))}
         </div>
       </section>
 
-      <section id="telas" className="border-y border-white/10 bg-[#07111d] py-16">
+      <section id="telas" className="border-y border-slate-200 bg-slate-50 py-16 dark:border-white/10 dark:bg-[#07111d]">
         <div className="mx-auto max-w-7xl px-5">
           <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="max-w-3xl">
@@ -256,13 +256,13 @@ export default function LandingPage() {
                 O treinador vê exatamente onde cada atleta está.
               </h2>
             </div>
-            <p className="max-w-md text-sm leading-relaxed text-slate-400">
+            <p className="max-w-md text-sm leading-relaxed text-slate-700 dark:text-slate-400">
               Prints reais da plataforma para mostrar a experiência que o treinador usa no dia a dia.
             </p>
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
             {screenshots.map((screen) => (
-              <div key={screen.title} className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b121a]">
+              <div key={screen.title} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#0b121a]">
                 <Image
                   src={screen.src}
                   alt={screen.title}
@@ -272,7 +272,7 @@ export default function LandingPage() {
                 />
                 <div className="p-5">
                   <h3 className="font-display text-lg font-bold">{screen.title}</h3>
-                  <p className="mt-2 text-sm text-slate-400">{screen.text}</p>
+                  <p className="mt-2 text-sm text-slate-700 dark:text-slate-400">{screen.text}</p>
                 </div>
               </div>
             ))}
@@ -291,21 +291,21 @@ export default function LandingPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {steps.map(({ icon: Icon, title, text }, index) => (
-            <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <div key={title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
               <div className="mb-5 flex items-center justify-between">
                 <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-white/8 ${accentText}`}>
                   <Icon className="h-5 w-5" />
                 </div>
-                <span className="font-mono text-xs text-slate-500">{String(index + 1).padStart(2, "0")}</span>
+                <span className="font-mono text-xs text-slate-600 dark:text-slate-500">{String(index + 1).padStart(2, "0")}</span>
               </div>
               <h3 className="font-display text-lg font-bold">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{text}</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-400">{text}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="border-y border-white/10 bg-white/[0.025] py-16">
+      <section className="border-y border-slate-200 bg-slate-50 py-16 dark:border-white/10 dark:bg-white/[0.025]">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <div>
             <Badge variant="warning" className="mb-4 bg-orange-500/15 text-orange-300">
@@ -314,13 +314,13 @@ export default function LandingPage() {
             <h2 className="font-display text-3xl font-black sm:text-5xl">
               Uma operação mais clara para o treinador e mais premium para o atleta.
             </h2>
-            <p className="mt-4 text-slate-300">
+            <p className="mt-4 text-slate-700 dark:text-slate-300">
               A plataforma foi pensada para entregar treino com contexto, visual forte e menos retrabalho na rotina da assessoria.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {differentiators.map((item) => (
-              <div key={item} className="flex gap-3 rounded-xl border border-white/10 bg-[#0b121a] p-4 text-sm text-slate-300">
+              <div key={item} className="flex gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-sm dark:border-white/10 dark:bg-[#0b121a] dark:text-slate-300">
                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
                 {item}
               </div>
@@ -337,7 +337,7 @@ export default function LandingPage() {
           <h2 className="font-display text-3xl font-black sm:text-5xl">
             Escolha o plano ideal para sua assessoria crescer.
           </h2>
-          <p className="mt-4 text-slate-300">
+          <p className="mt-4 text-slate-700 dark:text-slate-300">
             Comece simples e evolua conforme sua carteira de atletas, equipe e necessidade de gestão.
           </p>
         </div>
@@ -348,23 +348,23 @@ export default function LandingPage() {
               className={`rounded-2xl border p-6 ${
                 plan.highlight
                   ? "border-[#2563eb]/55 bg-[#2563eb]/12 shadow-xl shadow-[#2563eb]/10"
-                  : "border-white/10 bg-[#0b121a]"
+                  : "border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#0b121a]"
               }`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h3 className="font-display text-2xl font-black">{plan.name}</h3>
-                  <p className="mt-2 text-sm text-slate-400">{plan.description}</p>
+                  <p className="mt-2 text-sm text-slate-700 dark:text-slate-400">{plan.description}</p>
                 </div>
                 {plan.highlight ? <Badge variant="primary">Popular</Badge> : null}
               </div>
               <div className="mt-6">
                 <span className="font-display text-4xl font-black">{plan.price}</span>
-                <span className="ml-1 text-sm text-slate-400">/mês</span>
+                <span className="ml-1 text-sm text-slate-700 dark:text-slate-400">/mês</span>
               </div>
               <div className="mt-6 space-y-3">
                 {plan.features.map((item) => (
-                  <div key={item} className="flex items-center gap-3 text-sm text-slate-300">
+                  <div key={item} className="flex items-center gap-3 text-sm text-slate-800 dark:text-slate-300">
                     <CheckCircle2 className="h-4 w-4 text-[#60a5fa]" />
                     {item}
                   </div>
@@ -375,7 +375,7 @@ export default function LandingPage() {
                   className={`w-full ${
                     plan.highlight
                       ? primaryCta
-                      : "border-white/15 bg-white/5 text-white hover:bg-white/10"
+                      : "border-slate-300 bg-slate-100 text-slate-950 hover:bg-slate-200 dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
                   }`}
                   variant={plan.highlight ? "primary" : "outline"}
                 >
