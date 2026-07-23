@@ -21,4 +21,10 @@ describe("resolveExerciseMedia", () => {
     expect(media.kind).toBe("image");
     expect(media.url).toBe("https://example.com/image.jpg");
   });
+
+  it("converte links do YouTube em URL de incorporação", () => {
+    const media = resolveExerciseMedia({ videos: [{ url: "https://www.youtube.com/watch?v=abc123" }] });
+    expect(media.kind).toBe("embed");
+    expect(media.url).toBe("https://www.youtube.com/embed/abc123");
+  });
 });

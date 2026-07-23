@@ -1,4 +1,4 @@
-export type ExerciseMediaKind = "video" | "image" | "none";
+export type ExerciseMediaKind = "video" | "embed" | "image" | "none";
 
 interface ExerciseVideoLike {
   url?: string | null;
@@ -22,9 +22,25 @@ function normalizeDriveUrl(url?: string | null): string | null {
   return trimmed;
 }
 
+function normalizeYoutubeUrl(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    let videoId: string | null = null;
+    if (parsed.hostname === "youtu.be") videoId = parsed.pathname.slice(1).split("/")[0] || null;
+    if (parsed.hostname.endsWith("youtube.com")) {
+      videoId = parsed.searchParams.get("v") || parsed.pathname.match(/\/embed\/([^/]+)/)?.[1] || parsed.pathname.match(/\/shorts\/([^/]+)/)?.[1] || null;
+    }
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+  } catch {
+    return null;
+  }
+}
+
 export function resolveExerciseMedia(exercise: ExerciseMediaSource) {
   const videoUrl = normalizeDriveUrl(exercise.videos?.[0]?.url);
   if (videoUrl) {
+    const youtubeUrl = normalizeYoutubeUrl(videoUrl);
+    if (youtubeUrl) return { kind: "embed" as const, url: youtubeUrl };
     return { kind: "video" as const, url: videoUrl };
   }
 

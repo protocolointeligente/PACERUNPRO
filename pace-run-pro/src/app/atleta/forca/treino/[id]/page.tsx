@@ -131,7 +131,15 @@ export default function StrengthTreinoPreviewPage() {
                   <div className="flex items-stretch">
                     <div className="h-28 w-36 shrink-0 bg-card-hover">
                       {media.kind !== "none" ? (
-                        media.kind === "video" ? (
+                        media.kind === "embed" ? (
+                          <iframe
+                            src={media.url}
+                            title={`Vídeo demonstrativo de ${block.exercise.name}`}
+                            className="h-full w-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        ) : media.kind === "video" ? (
                           <video
                             src={media.url}
                             className="h-full w-full object-cover"
