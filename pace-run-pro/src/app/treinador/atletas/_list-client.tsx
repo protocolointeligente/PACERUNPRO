@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { getWorkoutVisualConfig } from "@/lib/workout-visual-config";
 
 // ── Workout type visual config ───────────────────────────────────────────────
 
@@ -40,7 +41,9 @@ const WO_CONFIG: Record<string, { label: string; short: string; bg: string; text
 const WO_DEFAULT = { label: "Treino", short: "?", bg: "bg-gray-400", text: "text-white" };
 
 function woCfg(type: string) {
-  return WO_CONFIG[type] ?? WO_DEFAULT;
+  const visual = getWorkoutVisualConfig(type);
+  const legacy = WO_CONFIG[type] ?? WO_DEFAULT;
+  return { ...legacy, ...visual, bg: legacy.bg, text: legacy.text };
 }
 
 function WorkoutIcon({ type, className }: { type: string; className?: string }) {

@@ -6,10 +6,12 @@ import {
   GripVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getWorkoutVisualConfig } from "@/lib/workout-visual-config";
 import { Badge } from "@/components/ui/badge";
 
 // ── Workout type config ───────────────────────────────────────────────────────
 
+/* Visual labels and theme-safe colors live in workout-visual-config. */
 const WO_CONFIG: Record<string, { label: string; short: string; bg: string; dot: string }> = {
   REGENERATIVO:      { label: "Regenerativo",       short: "Z1", bg: "bg-emerald-400", dot: "#4ade80" },
   RODAGEM_LEVE:      { label: "Rodagem Leve",        short: "Z2", bg: "bg-sky-400",     dot: "#38bdf8" },
@@ -29,7 +31,12 @@ const WO_CONFIG: Record<string, { label: string; short: string; bg: string; dot:
 };
 
 function woCfg(type: string) {
-  return WO_CONFIG[type] ?? { label: "Treino", short: "?", bg: "bg-gray-400", dot: "#9ca3af" };
+  const visual = getWorkoutVisualConfig(type);
+  return {
+    ...visual,
+    bg: WO_CONFIG[type]?.bg ?? "bg-gray-400",
+    dot: visual.light.border,
+  };
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
