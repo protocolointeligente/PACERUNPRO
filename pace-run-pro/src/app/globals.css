@@ -459,8 +459,8 @@ body {
   background-color: transparent !important;
 }
 
-.light .marketing-page > section[class*="bg-[#07111d"],
-.light .marketing-page > section[class*="bg-[#07111c"] {
+.light .marketing-page > section[class*="bg-[#07111d]"],
+.light .marketing-page > section[class*="bg-[#07111c]"] {
   background-color: #eef3f7 !important;
 }
 
@@ -475,6 +475,48 @@ body {
 .light .marketing-page [class*="border-white/15"],
 .light .marketing-page [class*="border-slate-200"] {
   border-color: var(--marketing-line) !important;
+}
+
+/* Marketing contrast contract: utility classes in the page are intentionally
+   normalized here so every surface keeps readable ink in both themes. */
+.dark .marketing-page [class*="bg-white"],
+.dark .marketing-page [class*="bg-[#f7f8fa]"],
+.dark .marketing-page [class*="bg-[#eef3f7]"],
+.dark .marketing-page [class*="bg-slate-50"] {
+  background-color: #0b121a !important;
+}
+
+.dark .marketing-page [class*="text-slate-950"],
+.dark .marketing-page [class*="text-slate-900"],
+.dark .marketing-page [class*="text-slate-800"] {
+  color: #f8fafc !important;
+}
+
+.dark .marketing-page [class*="text-slate-700"],
+.dark .marketing-page [class*="text-slate-600"],
+.dark .marketing-page [class*="text-slate-500"],
+.dark .marketing-page [class*="text-slate-400"],
+.dark .marketing-page [class*="text-slate-300"] {
+  color: #cbd5e1 !important;
+}
+
+.dark .marketing-page [class*="border-slate-200"] {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+.light .marketing-page [class*="bg-[#c6f24e]"],
+.light .marketing-page [class*="bg-[#d4ff5e]"],
+.light .marketing-page [class*="bg-[#a6d43b]"],
+.light .marketing-page [class*="bg-[#2563eb]"],
+.light .marketing-page [class*="bg-[#1d4ed8]"] {
+  background-color: #c6f24e !important;
+  color: #0a0c0f !important;
+}
+
+.light .marketing-page [class*="text-[#2563eb]"],
+.light .marketing-page [class*="text-[#60a5fa]"],
+.light .marketing-page [class*="text-[#93c5fd]"] {
+  color: #526b12 !important;
 }
 
 /* Calendar workout chips: preserve the dark palette, but use readable ink and

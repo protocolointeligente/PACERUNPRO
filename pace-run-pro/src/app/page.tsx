@@ -128,9 +128,9 @@ const plans = [
   },
 ];
 
-const primaryCta = "bg-[#2563eb] text-white shadow-lg shadow-[#2563eb]/25 hover:bg-[#1d4ed8]";
-const accentText = "text-[#60a5fa]";
-const accentSoft = "bg-[#2563eb]/12 text-[#93c5fd]";
+const primaryCta = "bg-[#c6f24e] text-[#0a0c0f] shadow-lg shadow-[#9dbf32]/25 hover:bg-[#d4ff5e]";
+const accentText = "text-[#46e0c8]";
+const accentSoft = "bg-[#c6f24e]/12 text-[#9dbd3d] dark:text-[#c6f24e]";
 
 export default function LandingPage() {
   return (
@@ -168,7 +168,7 @@ export default function LandingPage() {
       </nav>
 
       <section className="relative overflow-hidden border-b border-slate-200/80 bg-[#eef3f7] dark:border-white/10 dark:bg-[#05090f]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,rgba(37,99,235,0.14),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.96),rgba(239,244,249,0.98)_55%,rgba(226,234,242,0.95))] dark:bg-[radial-gradient(circle_at_70%_10%,rgba(37,99,235,0.22),transparent_34%),linear-gradient(135deg,rgba(8,18,28,0.95),rgba(5,9,15,1)_55%,rgba(3,8,14,1))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,rgba(198,242,78,0.12),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.96),rgba(239,244,249,0.98)_55%,rgba(226,234,242,0.95))] dark:bg-[radial-gradient(circle_at_70%_10%,rgba(198,242,78,0.12),transparent_34%),linear-gradient(135deg,rgba(8,18,28,0.95),rgba(5,9,15,1)_55%,rgba(3,8,14,1))]" />
         <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-16 lg:grid-cols-[0.88fr_1.12fr] lg:items-center lg:py-24">
           <div>
             <Badge variant="primary" className={`mb-5 ${accentSoft}`}>
@@ -202,8 +202,8 @@ export default function LandingPage() {
           <div className="rounded-2xl border border-slate-200 bg-white/80 p-3 shadow-2xl shadow-slate-900/10 dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/40">
             <div className="mb-3 flex items-center gap-2 px-2">
               <span className="h-3 w-3 rounded-full bg-[#ff5a1f]" />
-              <span className="h-3 w-3 rounded-full bg-[#2563eb]" />
-              <span className="h-3 w-3 rounded-full bg-sky-400" />
+              <span className="h-3 w-3 rounded-full bg-[#c6f24e]" />
+              <span className="h-3 w-3 rounded-full bg-[#46e0c8]" />
               <span className="ml-3 text-xs font-semibold text-slate-500 dark:text-slate-400">Pace Run Pro em uso real</span>
             </div>
             <Image
@@ -308,7 +308,7 @@ export default function LandingPage() {
       <section className="border-y border-slate-200 bg-slate-50 py-16 dark:border-white/10 dark:bg-white/[0.025]">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <div>
-            <Badge variant="warning" className="mb-4 bg-orange-500/15 text-orange-300">
+            <Badge variant="warning" className="mb-4 bg-orange-500/15 text-orange-700 dark:text-orange-300">
               Diferenciais
             </Badge>
             <h2 className="font-display text-3xl font-black sm:text-5xl">
@@ -365,7 +365,7 @@ export default function LandingPage() {
               <div className="mt-6 space-y-3">
                 {plan.features.map((item) => (
                   <div key={item} className="flex items-center gap-3 text-sm text-slate-800 dark:text-slate-300">
-                    <CheckCircle2 className="h-4 w-4 text-[#60a5fa]" />
+                    <CheckCircle2 className="h-4 w-4 text-[#46e0c8]" />
                     {item}
                   </div>
                 ))}
@@ -409,13 +409,13 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
           <Logo size={30} />
           <div className="flex flex-wrap gap-4">
-            <Link href="/termos" className="hover:text-white">
+            <Link href="/termos" className="text-slate-700 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white">
               Termos
             </Link>
-            <Link href="/privacidade" className="hover:text-white">
+            <Link href="/privacidade" className="text-slate-700 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white">
               Privacidade
             </Link>
-            <Link href="/login" className="hover:text-white">
+            <Link href="/login" className="text-slate-700 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white">
               Entrar
             </Link>
           </div>
@@ -436,7 +436,7 @@ function Metric({
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm shadow-slate-900/5 dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
-      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563eb]/12 text-[#2563eb] dark:text-[#60a5fa]">
+      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#c6f24e]/12 text-[#78951f] dark:text-[#c6f24e]">
         <Icon className="h-4 w-4" />
       </div>
       <p className="text-xs uppercase text-slate-500">{label}</p>

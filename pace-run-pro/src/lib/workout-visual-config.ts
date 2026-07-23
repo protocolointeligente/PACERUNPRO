@@ -38,3 +38,7 @@ export function getWorkoutVisualConfig(type?: string | null): WorkoutVisualDefin
     status: config.status ?? { completed: "ring-2 ring-success ring-offset-1", missed: "opacity-45" },
   };
 }
+
+export function getWorkoutVisualColor(type?: string | null, theme: "light" | "dark" = "light") {
+  return getWorkoutVisualConfig(type)[theme].border;
+}
